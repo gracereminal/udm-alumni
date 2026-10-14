@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<title>UDM Alumni</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</helmet>
+<div data-m="nav" style="width:{{ navW }};min-width:{{ navW }};height:calc(100dvh - var(--sw-h,45px) - 24px);position:sticky;top:calc(var(--sw-h,45px) + 12px);margin:12px 0 12px 12px;border-radius:16px;background:#00332B;box-shadow:0 12px 32px -12px rgba(0,51,43,.45);display:flex;flex-direction:column;padding:18px 12px 14px;box-sizing:border-box;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;font-family:Inter,system-ui,sans-serif;color:#EAF3F1;transition:width .2s,min-width .2s">
+  <div data-m="nav-bar" style="display:none;align-items:center;gap:10px;width:100%">
+    <img src="alumni-logo.png" alt="Universidad de Manila" style="width:44px;height:44px;object-fit:contain;flex:none" />
+    <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:1px">
+      <div style="font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">UDM Alumni</div>
+      <div style="font-size:9.5px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#F0C428;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ currentLabel }}</div>
+    </div>
+    <div onClick="{{ toggleMenu }}" aria-label="Open menu" style="width:44px;height:44px;flex:none;border-radius:12px;background:rgba(234,243,241,.08);display:flex;align-items:center;justify-content:center;cursor:pointer">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" style="width:20px;height:20px"><path d="{{ menuIcon }}"></path></svg>
+    </div>
+  </div>
+  <sc-if value="{{ menuOpen }}" hint-placeholder-val="{{ false }}">
+    <div data-m="nav-menu" style="display:none;flex-direction:column;gap:2px;width:100%;padding:12px 0 4px;margin-top:10px;border-top:1px solid rgba(234,243,241,.12)">
+      <sc-for list="{{ menuItems }}" as="item" hint-placeholder-count="5">
+        <div onClick="{{ item.onClick }}" style="display:flex;align-items:center;gap:12px;min-height:48px;padding:0 12px;border-radius:12px;background:{{ item.bg }};color:{{ item.color }};font-weight:{{ item.fontWeight }};opacity:{{ item.rowOpacity }};cursor:{{ item.cursor }}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="{{ item.dotColor }}" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="width:19px;height:19px;flex:none"><path d="{{ item.icon }}"></path></svg>
+          <div style="font-size:15px">{{ item.label }}</div>
+        </div>
+      </sc-for>
+      <div style="display:flex;align-items:center;gap:10px;padding:12px 12px 4px;margin-top:6px;border-top:1px solid rgba(234,243,241,.12)">
+        <div style="flex:1;min-width:0;font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ userName }}</div>
+        <div onClick="{{ onSignOut }}" style="flex:none;min-height:44px;display:flex;align-items:center;padding:0 14px;border-radius:12px;border:1px solid rgba(234,243,241,.2);font-size:13.5px;font-weight:600;cursor:pointer">Sign Out</div>
+      </div>
+    </div>
+  </sc-if>
+
+  <div data-m="nav-full" style="display:flex;flex-direction:{{ headDir }};align-items:center;justify-content:space-between;gap:12px;margin-bottom:26px;padding:0 4px 0 6px">
+    <div data-m="nav-head" style="display:flex;align-items:center;gap:11px;min-width:0">
+      <img src="alumni-logo.png" alt="Universidad de Manila" style="width:48px;height:48px;object-fit:contain;flex:none" />
+      <sc-if value="{{ expanded }}" hint-placeholder-val="{{ true }}">
+        <div data-m="nav-label" style="font-weight:700;font-size:17px;letter-spacing:-.3px;white-space:nowrap">UDM Alumni</div>
+      </sc-if>
+    </div>
+    <div data-m="nav-collapse" onClick="{{ toggleCollapse }}" title="{{ collapseTitle }}" aria-label="{{ collapseTitle }}" style="width:32px;height:32px;flex:none;border-radius:10px;border:1px solid rgba(234,243,241,.16);display:flex;align-items:center;justify-content:center;color:rgba(234,243,241,.75);cursor:pointer;transition:background .15s" style-hover="{{ softHover }}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><rect x="3.5" y="4.5" width="17" height="15" rx="3"></rect><path d="M9.5 4.5v15"></path></svg>
+    </div>
+  </div>
+
+  <sc-if value="{{ expanded }}" hint-placeholder-val="{{ true }}">
+    <div data-m="nav-full" style="font-size:10px;font-weight:700;letter-spacing:1.3px;text-transform:uppercase;color:rgba(234,243,241,.42);margin:0 12px 10px"><span data-m="nav-label">Menu</span></div>
+  </sc-if>
+  <div data-m="nav-full" style="display:flex;flex-direction:column;gap:3px">
+    <sc-for list="{{ items }}" as="item" hint-placeholder-count="5">
+      <div data-m="nav-item" onClick="{{ item.onClick }}" title="{{ item.label }}" style-hover="{{ item.hoverStyle }}" style="position:relative;display:flex;align-items:center;justify-content:{{ itemJustify }};gap:12px;padding:11px 14px;border-radius:12px;background:{{ item.bg }};color:{{ item.color }};font-weight:{{ item.fontWeight }};opacity:{{ item.rowOpacity }};cursor:{{ item.cursor }};transition:background .15s">
+        <div style="position:absolute;left:0;top:10px;bottom:10px;width:3px;border-radius:0 3px 3px 0;background:{{ item.bar }}"></div>
+        <svg viewBox="0 0 24 24" fill="none" stroke="{{ item.dotColor }}" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="width:19px;height:19px;flex:none">
+          <path d="{{ item.icon }}"></path>
+        </svg>
+        <sc-if value="{{ expanded }}" hint-placeholder-val="{{ true }}">
+          <div data-m="nav-label" style="font-size:14px;flex:1;min-width:0;line-height:1.3;text-wrap:pretty">{{ item.label }}</div>
+        </sc-if>
+      </div>
+    </sc-for>
+  </div>
+
+  <div data-m="nav-full" style="flex:1;min-height:24px"></div>
+
+  <div data-m="nav-full" style="display:flex;flex-direction:column;gap:3px;padding:8px;margin:0 -4px;border-radius:14px;background:rgba(234,243,241,.05);border:1px solid rgba(234,243,241,.08)">
+    <div data-m="nav-item" title="{{ userName }}" style="display:flex;align-items:center;justify-content:{{ itemJustify }};gap:10px;padding:6px 6px">
+      <div style="width:34px;height:34px;border-radius:50%;flex:none;background:{{ avatarBg }};border:1px solid rgba(240,196,40,.45);color:#E2C68A;display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:700;letter-spacing:.3px;overflow:hidden">
+        <sc-if value="{{ noAvatar }}" hint-placeholder-val="{{ true }}">{{ initials }}</sc-if>
+      </div>
+      <sc-if value="{{ expanded }}" hint-placeholder-val="{{ true }}">
+        <div data-m="nav-label" style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px">
+          <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ userName }}</div>
+          <div style="font-size:9.5px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#F0C428;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ roleLabel }}</div>
+        </div>
+      </sc-if>
+    </div>
+    <div data-m="nav-item" onClick="{{ onSignOut }}" title="Sign Out" style-hover="{{ signOutHover }}" style="display:flex;align-items:center;justify-content:{{ itemJustify }};gap:12px;padding:10px 12px;border-radius:10px;font-size:14px;font-weight:500;color:#F0C428;cursor:pointer;transition:background .15s,color .15s">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="width:19px;height:19px;flex:none">
+        <path d="M15 17l5-5-5-5"></path>
+        <path d="M20 12H9"></path>
+        <path d="M13 3H5a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h8"></path>
+      </svg>
+      <sc-if value="{{ expanded }}" hint-placeholder-val="{{ true }}">
+        <div data-m="nav-label">Sign Out</div>
+      </sc-if>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;items&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;Array&lt;{id:string,label:string,onClick:Function,bg:string,color:string,fontWeight:number,rowOpacity:number,dotColor:string,cursor:string}&gt;&quot;},&quot;roleLabel&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Alumni&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;userName&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Maria Dela Cruz&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;onSignOut&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;Function&quot;}}">
+class Component extends DCLogic {
+  state = { open: false, collapsed: false };
+  renderVals() {
+    const name = this.props.userName ?? "Maria Dela Cruz";
+    const initials = String(name).trim().split(/\s+/).filter(w => w && !/^(dr|mr|mrs|ms|prof|engr|atty)\.?$/i.test(w)).slice(0, 2).map(w => w[0].toUpperCase()).join("");
+    const av = this.props.avatarUrl;
+    const hasAv = !!av && av !== "none";
+    const items = this.props.items || [];
+    const isOn = it => it.fontWeight >= 600 || (it.bg && it.bg !== 'transparent');
+    const cur = items.find(isOn);
+    const col = this.state.collapsed;
+    return {
+      initials,
+      noAvatar: !hasAv,
+      avatarBg: hasAv ? av : "rgba(240,196,40,.18)",
+      signOutHover: { background: "rgba(234,243,241,.08)", color: "#EAF3F1" },
+      softHover: { background: "rgba(234,243,241,.08)" },
+      expanded: !col,
+      navW: col ? "84px" : "240px",
+      headDir: col ? "column" : "row",
+      itemJustify: col ? "center" : "flex-start",
+      collapseTitle: col ? "Expand sidebar" : "Collapse sidebar",
+      toggleCollapse: () => this.setState(s => ({ collapsed: !s.collapsed })),
+      menuOpen: this.state.open,
+      menuIcon: this.state.open ? "M6 6l12 12M18 6L6 18" : "M4 7h16M4 12h16M4 17h16",
+      toggleMenu: () => this.setState(s => ({ open: !s.open })),
+      currentLabel: cur ? cur.label : (this.props.roleLabel ?? "Alumni"),
+      items: items.map(it => Object.assign({}, it, { bar: isOn(it) ? '#F0C428' : 'transparent' })),
+      menuItems: items.map(it => Object.assign({}, it, { onClick: () => { this.setState({ open: false }); it.onClick && it.onClick(); } }))
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+{
+  "name": "udm-alumni",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "install:client": "npm --prefix client install",
+    "dev": "npm --prefix client run dev",
+    "build": "npm --prefix client run build",
+    "preview": "npm --prefix client run preview"
+  }
+}

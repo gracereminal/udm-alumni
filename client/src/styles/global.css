@@ -1,0 +1,8 @@
+@import './prototype.css';
+
+html, body, #root { margin: 0; }
+body { margin: 0; background: #F3F6F4; font-family: Inter, system-ui, sans-serif; }
+* { -webkit-tap-highlight-color: transparent; }
+button { font-family: inherit; }
+.udm-spin { animation: udm-spin .8s linear infinite; }
+@keyframes udm-spin { to { transform: rotate(360deg); } }
