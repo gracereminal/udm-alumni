@@ -1,0 +1,102 @@
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import AlumniDashboardView from '../../views/AlumniDashboardView';
+import { useProfile } from '../../context/ProfileContext';
+import { useJobs } from '../../context/JobsContext';
+import { useEvents } from '../../context/EventsContext';
+import { isAnswered, visibleQs, visibleSections } from '../../data/formDefs';
+import { initials } from '../../lib/format';
+
+/** Alumni Dashboard — profile summary, survey status, announcements & events feed, job matches. */
+export default function AlumniDashboard() {
+  const navigate = useNavigate();
+  const { a, surveySubmitted, alumniName, avatar } = useProfile();
+  const { activeJobs } = useJobs();
+  const { announcementItems } = useEvents();
+  const [bannerDismissed, setBannerDismissed] = useState(false);
+  const [annTab, setAnnTab] = useState('all');
+
+  const ink = '#0A0A0A';
+  const muted = 'rgba(0,0,0,.62)';
+  const set = (id) => isAnswered(a, id);
+  const av = (id, fb) => {
+    const v = a[id];
+    if (Array.isArray(v)) return v.length ? v.join(', ') : fb || 'Not answered';
+    return v != null && String(v).trim() !== '' ? v : fb || 'Not answered';
+  };
+  const f = (label, id, fb) => ({ label, value: av(id, fb), color: set(id) ? ink : muted });
+
+  const sections = visibleSections(a);
+  let total = 0;
+  let done = 0;
+  sections.forEach((sec) => visibleQs(sec, a).forEach((q) => { total++; if (set(q.id)) done++; }));
+  const pct = total ? Math.round((done / total) * 100) : 0;
+  const employed = a.ever_employed === 'Yes';
+  const selfEmp = a.job_status === 'Self-employed' || a.org_type === 'Self-owned business';
+  const empValue = a.ever_employed == null ? 'Not answered' : employed ? a.job_status || 'Employed' : 'Not yet employed';
+  const relevance = a.job_related === 'Yes' ? 'Related to course' : a.job_related === 'No' ? 'Not related to course' : 'Not answered';
+  const complete = surveySubmitted || pct >= 100;
+  const remaining = Math.max(total - done, 0);
+
+  const items = announcementItems();
+  const evs = items.filter((x) => x.isEvent);
+  const ns = items.filter((x) => !x.isEvent);
+  const feed = (annTab === 'events' ? evs : annTab === 'announcements' ? ns : items)
+    .map((it) => ({ ...it, onOpen: it.isEvent ? () => navigate('/alumni/events', { state: { eventId: it.id } }) : null }));
+  const annTabs = [['all', 'All', items.length], ['announcements', 'Announcements', ns.length], ['events', 'Events', evs.length]].map(([k, label, count]) => {
+    const on = k === annTab;
+    return {
+      label, count, selected: on ? 'true' : 'false', line: on ? '#0F3D2E' : 'transparent', weight: on ? 700 : 600, color: on ? '#0B1220' : '#64748B',
+      countColor: on ? '#0F3D2E' : '#64748B', countBg: on ? '#E6F0EB' : '#F1F3F5', onClick: () => setAnnTab(k),
+    };
+  });
+
+  const v = {
+    alumniName,
+    avatarInitials: initials(alumniName),
+    avatarCss: avatar ? `url("${avatar}") center/cover no-repeat` : 'none',
+    hasAvatar: !!avatar,
+    noAvatar: !avatar,
+    surveyComplete: complete,
+    surveyIncomplete: !complete,
+    showSurveyBanner: !complete && !bannerDismissed,
+    showSurveyGhostCta: complete || bannerDismissed,
+    surveyGhostCtaLabel: complete ? 'Review Answers' : 'Continue Profile',
+    dismissSurveyBanner: () => setBannerDismissed(true),
+    dashSurveyPct: `${pct}%`,
+    dashSurveyRemainingLabel: remaining === 1 ? '1 question still needs an answer.' : `${remaining} questions still need answers.`,
+    jobsOrder: complete ? 1 : 2,
+    announceOrder: complete ? 2 : 1,
+    jobsTitleSize: complete ? '17px' : '14px',
+    jobsCardShadow: complete ? '0 10px 28px rgba(0,40,33,.10)' : 'none',
+    dashMetrics: [
+      { label: 'Portal Status', value: 'Active', sub: 'Alumni account in good standing', tag: 'VERIFIED ALUMNI', valueColor: '#0A0A0A', tagColor: '#0F8A5F', tagBg: '#E1F3EA' },
+      {
+        label: 'Employment Status', value: empValue, sub: employed ? av('org_type', 'Organization type pending') : 'Section IV response',
+        tag: employed ? 'EMPLOYED' : a.ever_employed === 'No' ? 'UNEMPLOYED' : 'PENDING', valueColor: set('ever_employed') ? ink : muted,
+        tagColor: employed ? '#0F8A5F' : '#8A6D1F', tagBg: employed ? '#E1F3EA' : '#FBF0D8',
+      },
+      {
+        label: 'Months Before First Job', value: av('time_to_job'), sub: employed ? 'Months after graduating from UDM' : 'Answer Section V to record this',
+        tag: set('time_to_job') ? 'RECORDED' : 'PENDING', valueColor: set('time_to_job') ? ink : muted,
+        tagColor: set('time_to_job') ? '#0F3D2E' : '#8A6D1F', tagBg: set('time_to_job') ? '#E6F0EB' : '#FBF0D8',
+      },
+      {
+        label: 'Course Relevance', value: relevance, sub: av('occ_class', 'Occupational classification pending'),
+        tag: selfEmp ? 'SELF-EMPLOYED' : 'GRADUATE OUTCOME', valueColor: set('job_related') ? ink : muted, tagColor: 'rgba(0,0,0,.5)', tagBg: '#F2F0EA',
+      },
+    ],
+    annTabs,
+    annFeed: feed,
+    annFeedEmpty: feed.length === 0,
+    annShowFooter: annTab !== 'announcements',
+    annFeedEmptyText: annTab === 'events' ? 'No upcoming events right now.' : annTab === 'announcements' ? 'No announcements right now.' : 'Nothing posted yet.',
+    dashJobs: activeJobs.slice(0, 3),
+    goJobs: () => navigate('/alumni/jobs'),
+    goEvents: () => navigate('/alumni/events'),
+    goProfile: () => navigate('/alumni/profile'),
+    goSurvey: () => navigate('/alumni/profile'),
+  };
+  void f;
+  return <AlumniDashboardView {...v} />;
+}
