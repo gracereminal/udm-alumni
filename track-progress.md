@@ -11,7 +11,9 @@ Status legend: ✅ implemented · 🟡 partial · ⬜ not started · 🧪 tested
 - Record new issues, fixes and decisions below as they happen.
 
 ## Snapshot
-- Frontend-only React 18 + Vite 5 + React Router 6 SPA in `client/`. State is React context + `localStorage` (no backend; `backend/` holds only `.gitkeep`).
+- React 18 + Vite 5 + React Router 6 SPA in `client/`; state is still React context + `localStorage` until the Phase 6 frontend swap.
+- **Backend (Phases 1–5 of `docs/plan-backend.md`) built in `backend/`** (2026-10-14): Express 5 + Postgres 16, 28-table schema + stat views, auth/sessions, records, survey, stats, reports, outreach, jobs, events, notifications, files, scheduled jobs. `npm test`: 82/82 pass; `eslint`: clean. Not deployed (no hosting accounts yet).
+- Git repo initialised 2026-10-14 (baseline commit before backend work). No remote yet.
 - Deployed to Vercel as an SPA (root `vercel.json`).
 - `npm run build` ✅ passes (JS bundle 737 kB, over the 500 kB warning). `vitest`: 5/5 pass. `eslint`: **0 errors, 0 warnings** (fixed 2026-10-14, see below).
 
@@ -35,12 +37,12 @@ Status legend: ✅ implemented · 🟡 partial · ⬜ not started · 🧪 tested
 - ✅ Tooling: ESLint (+jsx-a11y), Vitest + Testing Library + vitest-axe, coverage, bundle analyzer, Prettier.
 
 ## In progress
-- 🟡 Backend: only planned (`docs/plan-backend.md`, ERD in `docs/UDM Alumni ERD.dc.html`). No code written.
+- ✅🧪 Backend API Phases 1–5 (`backend/`, see `backend/README.md`). ERD updated to 28 entities / 38 relationships.
+- ⬜ Phase 0 hosting (Render/Neon or Railway, staging DB) and Phase 7 production — need accounts owned by the university.
 - 🟡 Test suite: tooling smoke test (`src/test/setup.test.jsx`) and `lib/a11y.test.js`; no feature tests.
 
 ## Pending
-- ⬜ Backend API (Express + PostgreSQL + zod, JWT cookie auth, multer uploads) per `plan-backend.md`; replace `localStorage`/seed data and typed stats with SQL-derived stats.
-- ⬜ Real password-reset email (Google); the demo inbox is temporary (see memory note).
+- 🟡 Real password-reset email: API side done (`services/mailer.js`, Gmail API driver tested with a mocked Google client); needs the Workspace service account + domain-wide delegation, then the frontend swap removes the demo inbox.
 - ⬜ Replace hardcoded college for the dept role (`DEPT_COLLEGE` in `lib/collegeDash.js`) with the account's college.
 - ⬜ Remove hardcoded/fake stats (`FULL_TOTALS`, `CCS_TOTALS`, etc.) once backend exists.
 - ⬜ Real file upload (profile photo, proof documents).
@@ -77,8 +79,20 @@ Fixed 2026-10-14 following `docs/cleaning-code.md` (backup of the pre-fix `src/`
 | Mobile/responsive layouts | 👁 Not re-verified this session |
 | Keyboard/visual behavior after a11y fixes | 👁 Not checked in a browser; codemod-based, verify by hand |
 | Deployed Vercel site | Not checked this session |
+| Backend `npm test` (Vitest + Supertest, embedded Postgres 16) | 🧪 82/82 pass 2026-10-14: auth, reset, scope, invariants, notifications, outreach, jobs/events, platform |
+| Backend `npm run lint` | 🧪 clean |
 
 ## Decision log
+- 2026-10-14: **Backend open questions — defaults chosen (all reversible):**
+  - Employment groups: employed = `ever_employed = Yes` and still working there; self-employed = `job_status = Self-employed` or `org_type = Self-owned business`; further studies = unemployed reason includes "Advance or further study"; `still_working = No` counts as not employed. Part-time / Business Owner labels are dropped (the survey never asks them).
+  - Employment rate = employed ÷ (traced − further studies), the "labour force" both dashboards already describe. Toggle: `APP_SETTING.employment_rate_excludes_further_studies`.
+  - Months to first job: buckets stored (`time_to_job_bucket`); averages use the bucket midpoint (`months_to_first_job`, numeric(4,1) instead of TINYINT so 3.5 fits).
+  - One open `SURVEY_CYCLE` at a time (partial unique index); stats use the open cycle, else the latest one.
+  - Coverage target is 60% everywhere (dashboards said 65%, Reports 60%); stored in `APP_SETTING`.
+  - `PROGRAM.code` is unique as `<college>-<abbr>` (e.g. `CCS-BSIT`), because BSIT, BPA and BSBA-MM repeat across colleges; the display code is `PROGRAM.abbr`. "Others" is a COLLEGE row (`OTH`) so typed programs have a declared college.
+  - Events: added `reg_status = full` and `EVENT.ended_at` for the admin "Full" / "Move to past" controls.
+  - A survey response becomes "submitted" (traced) once `ever_employed` is answered; later saves re-derive the typed columns.
+- 2026-10-14: Local Postgres is the `embedded-postgres` npm package (no system install needed); the cluster must be UTF8 (`--encoding=UTF8`), Windows otherwise defaults to WIN1252.
 - 2026-10-14: The tracker lives at the project root (`track-progress.md`); `docs/track-progress.md` points here. Status was derived from reading the code and running build/lint/tests, not from earlier documentation.
 - 2026-10-14: Applied `docs/cleaning-code.md` to Known issues: a11y via shared `lib/a11y.js` helpers instead of rewriting markup (keeps visuals); `prop-types` rule disabled rather than adding PropTypes; stray `.md` and `stats.html` left for manual deletion.
 - 2026-10-14: Deleted dead `AlumniSurvey.jsx` at the user's request.
