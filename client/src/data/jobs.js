@@ -1,0 +1,25 @@
+// Job board seed data.
+export const STRIPE = 'repeating-linear-gradient(135deg,#E9E5DB 0 10px,#F1EEE7 10px 20px)';
+
+export const JOBS_DATA = [
+  { id: 'job-brightline', title: 'Junior Backend Developer', company: 'Brightline Tech', location: 'Manila · Hybrid', type: 'Full-time', badge: 'Alumni Founded', badgeKind: 'alumni', salary: '₱35,000 - ₱48,000', salaryNote: 'per month', posted: 'Posted 2 days ago', tags: ['Node.js', 'SQL', 'Express', 'AWS'], note: '2 UDM alumni work here',
+    desc: 'Build and maintain REST APIs for Brightline’s logistics platform. You will pair with senior engineers, write tests, and ship weekly. Fresh graduates with solid Node.js and SQL fundamentals are welcome.', deadline: 'Oct 25, 2026', applyVia: 'careers@brightline.tech' },
+  { id: 'job-nimbus', title: 'Product Marketing Associate', company: 'Nimbus Systems', location: 'Cebu · Remote', type: 'Full-time', badge: 'UDM Referral Available', badgeKind: 'alumni', salary: '₱40,000 - ₱55,000', salaryNote: 'per month', posted: 'Posted 5 days ago', tags: ['Marketing', 'SaaS', 'Growth Marketing'], note: '',
+    desc: 'Own go-to-market messaging for Nimbus’ SaaS suite: launch campaigns, write product copy, and work with sales on enablement. Marketing, communication or business graduates preferred.', deadline: 'Oct 30, 2026', applyVia: 'talent@nimbus.systems' },
+  { id: 'job-veyra', title: 'Data Analyst Intern', company: 'Veyra Analytics', location: 'Quezon City · On-site', type: 'Internship', badge: 'Alumni Hiring Partner', badgeKind: 'alumni', salary: '₱18,000 - ₱22,000', salaryNote: 'allowance / month', posted: 'Posted 1 week ago', tags: ['SQL', 'Excel', 'Python', 'Power BI'], note: '',
+    desc: '6-month internship supporting client reporting. You will clean data, build Power BI dashboards and present weekly findings. Open to final-year students and recent graduates.', deadline: 'Oct 15, 2026', applyVia: 'talent@veyra.ai' },
+  { id: 'job-formwell', title: 'UX/UI Designer', company: 'Formwell Studio', location: 'Pasig · Hybrid', type: 'Full-time', badge: 'Lead by Alumni', badgeKind: 'alumni', salary: '₱45,000 - ₱65,000', salaryNote: 'per month', posted: 'Posted 3 days ago', tags: ['Figma', 'Design Systems', 'User Research'], note: '',
+    desc: 'Design end-to-end product experiences for fintech and e-commerce clients, maintain the studio design system and run usability sessions. A portfolio is required.', deadline: 'Nov 5, 2026', applyVia: 'hello@formwell.studio' },
+  { id: 'job-northpoint', title: 'Cloud Support Engineer', company: 'Northpoint Cloud', location: 'Davao · Remote', type: 'Full-time', badge: 'Urgent Hiring', badgeKind: 'urgent', salary: '₱50,000 - ₱70,000', salaryNote: 'per month', posted: 'Posted 6 hours ago', tags: ['AWS', 'Linux', 'Docker', 'Terraform'], note: 'Fast-track interview for UDM grads',
+    desc: 'Troubleshoot customer workloads on AWS, own incident follow-ups and write runbooks. Rotating on-call with allowance. Applications close October 10.', deadline: 'Oct 10, 2026', applyVia: 'jobs@northpoint.cloud' },
+];
+
+// Alumni-submitted listings awaiting admin approval.
+export const JOB_QUEUE = [
+  { title: 'QA Automation Engineer', company: 'Seaboard Digital', location: 'Manila · Hybrid', type: 'Full-time', by: 'Maria Santos', batch: 'BSIT 2023', when: 'Submitted 2h ago', photo: null, salary: '₱38,000 - ₱50,000', salaryNote: 'per month', tags: ['Selenium', 'Cypress', 'CI/CD', 'JavaScript'], email: 'maria.santos@udm.edu.ph', applyVia: 'careers@seaboard.digital', deadline: 'Oct 20, 2026', desc: 'Seaboard Digital is hiring a QA Automation Engineer to build and maintain end-to-end test suites for its banking apps. 1–2 years of test automation experience preferred; fresh grads with strong JavaScript fundamentals are welcome to apply. I work on the QA team and can refer UDM alumni directly.' },
+  { title: 'IT Support Associate', company: 'Coastal Bank', location: 'Makati · On-site', type: 'Full-time', by: 'Rafael De La Cruz', batch: 'BSIT 2021', when: 'Submitted yesterday', photo: null, salary: '₱25,000 - ₱30,000', salaryNote: 'per month', tags: ['Help Desk', 'Windows', 'Networking'], email: 'rafael.delacruz@udm.edu.ph', applyVia: 'hr.recruitment@coastalbank.ph', deadline: 'Oct 12, 2026', desc: 'Entry-level IT support role at the Makati head office. Handles employee tickets, device setup and basic network troubleshooting. Rotating shifts, with HMO from day one. Open to BSIT and BSCS graduates.' },
+  { title: 'Finance Analyst', company: 'Veyra Analytics', location: 'Quezon City · Hybrid', type: 'Contract', by: 'Patricia Anne Lim', batch: 'BSBA 2020', when: 'Submitted Sep 17', photo: null, salary: '₱32,000 - ₱40,000', salaryNote: 'per month', tags: ['Excel', 'Financial Modeling', 'Power BI'], email: 'patricia.lim@udm.edu.ph', applyVia: 'talent@veyra.ai', deadline: 'Oct 5, 2026', desc: '6-month contract, extendable, supporting month-end close and client reporting. Strong Excel required; Power BI is a plus. Hybrid set-up, 3 days on-site in Quezon City.' },
+];
+
+export const jobKey = (j) => j.id || `${j.title}|${j.company}`;
+
