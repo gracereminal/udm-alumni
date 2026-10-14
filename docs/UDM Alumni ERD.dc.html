@@ -14,11 +14,11 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@700;800&amp;family=JetBrains+Mono:wght@400;500;700&amp;display=swap" rel="stylesheet">
 <style>body{margin:0;background:#F3F6F4}a{color:#0F3D2E}a:hover{color:#0B2A20}</style>
 </helmet>
-<div onClick="{{ clearPin }}" style="position:relative;width:2720px;height:2120px;background:#F3F6F4;font-family:Inter,system-ui,sans-serif;color:#0B1220">
+<div onClick="{{ clearPin }}" style="position:relative;width:2720px;height:2400px;background:#F3F6F4;font-family:Inter,system-ui,sans-serif;color:#0B1220">
   <div style="position:absolute;left:80px;top:40px;display:flex;flex-direction:column;gap:6px;max-width:1100px">
     <div style="font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#0F3D2E">UDM Alumni Tracer · Data model</div>
     <div style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:32px;letter-spacing:-.8px;line-height:1.1">Entity Relationship Diagram</div>
-    <div style="font-size:13.5px;color:#64748B;text-wrap:pretty">26 entities · 35 relationships · updated for record archiving &amp; duplicate merges, event cancellation, standalone announcements and code-based password reset · derived from the high-fidelity mockups and the System Design Description v1.0. Hover a table to trace its relationships; click to pin it.</div>
+    <div style="font-size:13.5px;color:#64748B;text-wrap:pretty">28 entities · 38 relationships · updated for the backend (APP_SETTING, AUTH_SESSION, contact visibility, survey answers, notification read state), record archiving &amp; duplicate merges, event cancellation, standalone announcements and code-based password reset · derived from the high-fidelity mockups and the System Design Description v1.0. Hover a table to trace its relationships; click to pin it.</div>
   </div>
   <div style="position:absolute;left:1600px;top:40px;width:1040px;display:flex;flex-direction:column;gap:12px">
     <div style="display:flex;flex-wrap:wrap;gap:22px;align-items:center;font-size:12px;color:#475569">
@@ -38,7 +38,7 @@
     </div>
   </div>
   {{ wires }}
-  <sc-for list="{{ tables }}" as="t" hint-placeholder-count="26">
+  <sc-for list="{{ tables }}" as="t" hint-placeholder-count="28">
     <div onMouseEnter="{{ t.enter }}" onMouseLeave="{{ t.leave }}" onClick="{{ t.click }}" style="position:absolute;left:{{ t.x }}px;top:{{ t.y }}px;width:280px;box-sizing:border-box;background:#fff;border:1px solid {{ t.border }};border-radius:10px;box-shadow:{{ t.shadow }};overflow:hidden;opacity:{{ t.opacity }};transition:opacity .15s,box-shadow .15s;cursor:pointer">
       <div style="height:44px;box-sizing:border-box;border-top:3px solid {{ t.color }};border-bottom:1px solid #EEF0F3;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 12px 0 14px">
         <div style="font-family:'JetBrains Mono',monospace;font-weight:700;font-size:12.5px;letter-spacing:.02em;white-space:nowrap">{{ t.name }}</div>
@@ -68,32 +68,34 @@ const DOMAINS = {
   audit: ['Reporting & audit', '#A0442C'],
 };
 const TABLES = [
-  ['USER_ACCOUNT', 'identity', 3, 200, 'user_id INT PK|email VARCHAR(120) UK|password_hash VARCHAR(255)|role ENUM|college_id INT FK|display_name VARCHAR(120)|account_status ENUM|last_login_at TIMESTAMP|created_at TIMESTAMP'],
-  ['PASSWORD_RESET', 'identity', 2, 200, 'reset_id INT PK|user_id INT FK|code_hash CHAR(64)|token_hash VARCHAR(255)|sent_to VARCHAR(120)|attempts TINYINT|expires_at TIMESTAMP|used_at TIMESTAMP'],
-  ['NOTIFICATION', 'identity', 4, 200, 'notification_id INT PK|user_id INT FK|type ENUM|message VARCHAR(255)|link_url VARCHAR(255)|is_read BOOLEAN|created_at TIMESTAMP'],
-  ['AUDIT_LOG', 'audit', 0, 200, 'log_id INT PK|actor_id INT FK|entity_type VARCHAR(40)|entity_id INT|action VARCHAR(60)|details JSON|created_at TIMESTAMP|reversible_until TIMESTAMP'],
-  ['REPORT_EXPORT', 'audit', 0, 500, 'export_id INT PK|generated_by INT FK|report_type ENUM|filters JSON|sections JSON|format ENUM|file_size INT|status ENUM|created_at TIMESTAMP'],
-  ['COLLEGE', 'academic', 1, 200, 'college_id INT PK|code VARCHAR(10) UK|name VARCHAR(120)|is_historical BOOLEAN'],
-  ['PROGRAM', 'academic', 1, 400, 'program_id INT PK|college_id INT FK|code VARCHAR(20) UK|name VARCHAR(160)|degree_level ENUM|is_active BOOLEAN'],
-  ['ALUMNUS', 'profile', 3, 560, 'alumni_id INT PK|user_id INT FK·UK|membership_id VARCHAR(20) UK|student_no VARCHAR(20) UK|program_id INT FK|year_graduated YEAR|last_name VARCHAR(60)|first_name VARCHAR(60)|middle_name VARCHAR(60)|suffix VARCHAR(10)|married_name VARCHAR(120)|birth_date DATE|sex ENUM|civil_status ENUM|address TEXT|mobile_no VARCHAR(15)|is_indigenous BOOLEAN|pwd_type ENUM|photo_url VARCHAR(255)|verification_status ENUM|record_source ENUM|flag_note TEXT|merged_into_id INT FK|archived_at TIMESTAMP|privacy_consent_at TIMESTAMP|marketing_opt_in BOOLEAN|created_at TIMESTAMP|updated_at TIMESTAMP'],
+  ['USER_ACCOUNT', 'identity', 3, 200, 'user_id INT PK|email VARCHAR(120) UK|password_hash VARCHAR(255)|role ENUM|college_id INT FK|display_name VARCHAR(120)|role_label VARCHAR(60)|account_status ENUM|must_change_password BOOLEAN|failed_login_count TINYINT|locked_until TIMESTAMP|last_login_at TIMESTAMP|created_at TIMESTAMP|updated_at TIMESTAMP'],
+  ['PASSWORD_RESET', 'identity', 2, 200, 'reset_id INT PK|user_id INT FK|code_hash CHAR(64)|token_hash VARCHAR(255) UK|sent_to VARCHAR(120)|attempts TINYINT|expires_at TIMESTAMP|used_at TIMESTAMP|created_at TIMESTAMP'],
+  ['AUTH_SESSION', 'identity', 6, 200, 'session_id INT PK|user_id INT FK|session_hash CHAR(64) UK|user_agent VARCHAR(255)|ip VARCHAR(64)|created_at TIMESTAMP|last_seen_at TIMESTAMP|expires_at TIMESTAMP|revoked_at TIMESTAMP'],
+  ['NOTIFICATION', 'identity', 4, 200, 'notification_id INT PK|user_id INT FK|type VARCHAR(40)|title VARCHAR(160)|message VARCHAR(255)|link_url VARCHAR(255)|dedupe_key VARCHAR(120)|read_at TIMESTAMP|created_at TIMESTAMP'],
+  ['AUDIT_LOG', 'audit', 0, 200, 'log_id INT PK|actor_id INT FK|entity_type VARCHAR(40)|entity_id INT|action VARCHAR(60)|details JSON|ip VARCHAR(64)|created_at TIMESTAMP|reversible_until TIMESTAMP'],
+  ['REPORT_EXPORT', 'audit', 0, 520, 'export_id INT PK|generated_by INT FK|report_type ENUM|filters JSON|sections JSON|format ENUM|file_size INT|record_count INT|scope_label VARCHAR(200)|status ENUM|created_at TIMESTAMP'],
+  ['APP_SETTING', 'audit', 0, 900, 'key VARCHAR(60) PK|value JSON|updated_by INT FK|updated_at TIMESTAMP'],
+  ['COLLEGE', 'academic', 1, 200, 'college_id INT PK|code VARCHAR(10) UK|name VARCHAR(120) UK|is_historical BOOLEAN|sort_order TINYINT'],
+  ['PROGRAM', 'academic', 1, 420, 'program_id INT PK|college_id INT FK|code VARCHAR(20) UK|abbr VARCHAR(20)|name VARCHAR(160)|degree_level ENUM|is_active BOOLEAN'],
+  ['ALUMNUS', 'profile', 3, 640, 'alumni_id INT PK|user_id INT FK·UK|membership_id VARCHAR(20) UK|student_no VARCHAR(20) UK|program_id INT FK|course_other VARCHAR(160)|declared_college_id INT FK|year_graduated YEAR|last_name VARCHAR(60)|first_name VARCHAR(60)|middle_name VARCHAR(60)|suffix VARCHAR(10)|married_name VARCHAR(120)|birth_date DATE|sex ENUM|civil_status ENUM|present_address TEXT|permanent_address TEXT|mobile_no VARCHAR(15)|is_indigenous BOOLEAN|indigenous_group VARCHAR(80)|pwd_type ENUM|photo_url VARCHAR(255)|industry VARCHAR(120)|bio TEXT|verification_status ENUM|record_source ENUM|flag_note TEXT|merged_into_id INT FK|archived_at TIMESTAMP|privacy_consent_at TIMESTAMP|marketing_opt_in BOOLEAN|directory_opt_in BOOLEAN|show_email BOOLEAN|show_mobile BOOLEAN|profile_saved_at TIMESTAMP|created_at TIMESTAMP|updated_at TIMESTAMP'],
   ['SOCIAL_LINK', 'profile', 2, 560, 'link_id INT PK|alumni_id INT FK|platform ENUM|url VARCHAR(255)|is_visible BOOLEAN'],
   ['CREDENTIAL', 'profile', 2, 780, 'credential_id INT PK|alumni_id INT FK|type ENUM|title VARCHAR(160)|issuer VARCHAR(120)|date_taken DATE|rating VARCHAR(20)'],
   ['ALUMNI_SKILL', 'profile', 2, 1060, 'alumni_id INT PK·FK|skill_id INT PK·FK|is_top BOOLEAN'],
-  ['SKILL', 'profile', 1, 1060, 'skill_id INT PK|name VARCHAR(60) UK|category VARCHAR(40)'],
-  ['SURVEY_CYCLE', 'tracer', 5, 200, 'cycle_id INT PK|label VARCHAR(40)|opens_on DATE|closes_on DATE|status ENUM'],
-  ['SURVEY_RESPONSE', 'tracer', 4, 560, 'response_id INT PK|alumni_id INT FK|cycle_id INT FK|status ENUM|completion_pct TINYINT|current_section TINYINT|first_gen_grad BOOLEAN|passed_udmcat BOOLEAN|reason_udm JSON|reason_program JSON|feedback TEXT|saved_at TIMESTAMP|submitted_at TIMESTAMP'],
-  ['EMPLOYMENT_RECORD', 'tracer', 5, 560, 'employment_id INT PK|alumni_id INT FK|response_id INT FK|employment_status ENUM|job_title VARCHAR(120)|employer_name VARCHAR(160)|org_type ENUM|line_of_business VARCHAR(120)|occupation_class VARCHAR(120)|place_of_work ENUM|is_self_employed BOOLEAN|months_to_first_job TINYINT|how_found ENUM|course_relevance ENUM|is_current BOOLEAN|reported_at TIMESTAMP'],
-  ['PROOF_DOCUMENT', 'tracer', 6, 560, 'document_id INT PK|employment_id INT FK|file_name VARCHAR(160)|file_url VARCHAR(255)|mime_type VARCHAR(60)|uploaded_at TIMESTAMP'],
-  ['RECORD_REVIEW', 'tracer', 4, 990, 'review_id INT PK|alumni_id INT FK|reviewer_id INT FK|action ENUM|from_status ENUM|to_status ENUM|changes JSON|reason TEXT|created_at TIMESTAMP'],
-  ['OUTREACH_CONTACT', 'tracer', 4, 1310, 'contact_id INT PK|alumni_id INT FK|contacted_by INT FK|method ENUM|note TEXT|contacted_at TIMESTAMP'],
-  ['JOB_POSTING', 'jobs', 1, 1300, 'job_id INT PK|posted_by INT FK|reviewed_by INT FK|title VARCHAR(160)|company VARCHAR(160)|company_photo_url VARCHAR(255)|location VARCHAR(120)|employment_type ENUM|salary_range VARCHAR(60)|deadline DATE|how_to_apply TEXT|description TEXT|source ENUM|approval_status ENUM|published_at TIMESTAMP|created_at TIMESTAMP'],
+  ['SKILL', 'profile', 1, 1080, 'skill_id INT PK|name VARCHAR(60) UK|category VARCHAR(40)'],
+  ['SURVEY_CYCLE', 'tracer', 5, 200, 'cycle_id INT PK|label VARCHAR(40) UK|opens_on DATE|closes_on DATE|status ENUM'],
+  ['SURVEY_RESPONSE', 'tracer', 4, 560, 'response_id INT PK|alumni_id INT FK|cycle_id INT FK|status ENUM|completion_pct TINYINT|current_section TINYINT|first_gen_grad BOOLEAN|passed_udmcat BOOLEAN|reason_udm JSON|reason_program JSON|feedback TEXT|answers JSON|saved_at TIMESTAMP|submitted_at TIMESTAMP'],
+  ['EMPLOYMENT_RECORD', 'tracer', 5, 560, 'employment_id INT PK|alumni_id INT FK|response_id INT FK|employment_status ENUM|job_title VARCHAR(120)|employer_name VARCHAR(160)|org_type ENUM|line_of_business VARCHAR(120)|occupation_class VARCHAR(120)|place_of_work ENUM|job_status ENUM|job_location VARCHAR(160)|is_self_employed BOOLEAN|time_to_job_bucket ENUM|months_to_first_job DECIMAL(4,1)|how_found ENUM|course_relevance ENUM|is_current BOOLEAN|reported_at TIMESTAMP'],
+  ['PROOF_DOCUMENT', 'tracer', 6, 560, 'document_id INT PK|employment_id INT FK|file_name VARCHAR(160)|file_url VARCHAR(255)|mime_type VARCHAR(60)|file_size INT|uploaded_at TIMESTAMP'],
+  ['RECORD_REVIEW', 'tracer', 4, 1000, 'review_id INT PK|alumni_id INT FK|reviewer_id INT FK|action ENUM|from_status ENUM|to_status ENUM|changes JSON|reason TEXT|created_at TIMESTAMP'],
+  ['OUTREACH_CONTACT', 'tracer', 4, 1320, 'contact_id INT PK|alumni_id INT FK|contacted_by INT FK|method ENUM|template VARCHAR(40)|note TEXT|outcome ENUM|contacted_at TIMESTAMP'],
+  ['JOB_POSTING', 'jobs', 1, 1300, 'job_id INT PK|posted_by INT FK|reviewed_by INT FK|title VARCHAR(160)|company VARCHAR(160)|company_photo_url VARCHAR(255)|location VARCHAR(120)|employment_type ENUM|salary_range VARCHAR(60)|salary_note VARCHAR(60)|deadline DATE|how_to_apply TEXT|description TEXT|badge VARCHAR(60)|note VARCHAR(160)|source ENUM|approval_status ENUM|is_active BOOLEAN|reject_reason TEXT|published_at TIMESTAMP|created_at TIMESTAMP|updated_at TIMESTAMP|deleted_at TIMESTAMP'],
   ['JOB_SKILL', 'jobs', 0, 1300, 'job_id INT PK·FK|skill_id INT PK·FK'],
   ['SAVED_JOB', 'jobs', 2, 1300, 'alumni_id INT PK·FK|job_id INT PK·FK|saved_at TIMESTAMP|applied_at TIMESTAMP'],
-  ['EVENT', 'events', 4, 1560, 'event_id INT PK|created_by INT FK|title VARCHAR(160)|category ENUM|organizer VARCHAR(120)|starts_at DATETIME|ends_at DATETIME|venue VARCHAR(160)|fee_text VARCHAR(120)|capacity INT|cover_photo_url VARCHAR(255)|highlights JSON|body TEXT|reg_status ENUM|published_at TIMESTAMP|cancelled_at TIMESTAMP|updated_at TIMESTAMP'],
-  ['EVENT_AGENDA_ITEM', 'events', 5, 1560, 'item_id INT PK|event_id INT FK|start_time TIME|label VARCHAR(160)|sort_order TINYINT'],
-  ['EVENT_REG_FIELD', 'events', 5, 1780, 'field_id INT PK|event_id INT FK|field_key VARCHAR(40)|label VARCHAR(120)|hint VARCHAR(160)|options JSON'],
-  ['EVENT_REGISTRATION', 'events', 3, 1400, 'registration_id INT PK|event_id INT FK|alumni_id INT FK|rsvp ENUM|answers JSON|registered_at TIMESTAMP|cancelled_at TIMESTAMP'],
-  ['ANNOUNCEMENT', 'events', 3, 1680, 'announcement_id INT PK|event_id INT FK|author_id INT FK|kind ENUM|source VARCHAR(120)|title VARCHAR(160)|body TEXT|is_hidden BOOLEAN|published_at TIMESTAMP|updated_at TIMESTAMP|expires_at TIMESTAMP'],
+  ['EVENT', 'events', 4, 1600, 'event_id INT PK|created_by INT FK|title VARCHAR(160)|category ENUM|organizer VARCHAR(120)|starts_at DATETIME|ends_at DATETIME|venue VARCHAR(160)|fee_text VARCHAR(120)|capacity INT|cover_photo_url VARCHAR(255)|highlights JSON|teaser VARCHAR(255)|body TEXT|reg_status ENUM|published_at TIMESTAMP|cancelled_at TIMESTAMP|ended_at TIMESTAMP|created_at TIMESTAMP|updated_at TIMESTAMP|deleted_at TIMESTAMP'],
+  ['EVENT_AGENDA_ITEM', 'events', 5, 1600, 'item_id INT PK|event_id INT FK|start_time TIME|label VARCHAR(160)|sort_order TINYINT'],
+  ['EVENT_REG_FIELD', 'events', 5, 1820, 'field_id INT PK|event_id INT FK|field_key VARCHAR(40)|label VARCHAR(120)|hint VARCHAR(160)|options JSON|sort_order TINYINT'],
+  ['EVENT_REGISTRATION', 'events', 3, 1740, 'registration_id INT PK|event_id INT FK|alumni_id INT FK|rsvp ENUM|answers JSON|registered_at TIMESTAMP|cancelled_at TIMESTAMP'],
+  ['ANNOUNCEMENT', 'events', 3, 2000, 'announcement_id INT PK|event_id INT FK·UK|author_id INT FK|kind ENUM|source VARCHAR(120)|title VARCHAR(160)|body TEXT|is_hidden BOOLEAN|published_at TIMESTAMP|updated_at TIMESTAMP|expires_at TIMESTAMP'],
 ].map(([name, domain, c, y, cols]) => ({ name, domain, c, y, cols: cols.split('|').map((s) => { const [n, type, key] = s.split(' '); return { n, type, key: key || '' }; }) }));
 const EDGES = [
   'USER_ACCOUNT.college_id>COLLEGE.college_id', 'PROGRAM.college_id>COLLEGE.college_id',
@@ -113,6 +115,7 @@ const EDGES = [
   'EVENT.created_by>USER_ACCOUNT.user_id', 'EVENT_AGENDA_ITEM.event_id>EVENT.event_id', 'EVENT_REG_FIELD.event_id>EVENT.event_id',
   'EVENT_REGISTRATION.event_id>EVENT.event_id', 'EVENT_REGISTRATION.alumni_id>ALUMNUS.alumni_id',
   'ANNOUNCEMENT.event_id>EVENT.event_id:one', 'ANNOUNCEMENT.author_id>USER_ACCOUNT.user_id',
+  'AUTH_SESSION.user_id>USER_ACCOUNT.user_id', 'ALUMNUS.declared_college_id>COLLEGE.college_id', 'APP_SETTING.updated_by>USER_ACCOUNT.user_id',
 ];
 const W = 280, colX = (c) => 80 + c * 380, gapX = (k) => colX(k) - 50;
 const byName = Object.fromEntries(TABLES.map((t) => [t.name, t]));
@@ -179,7 +182,7 @@ class Component extends DCLogic {
     }
     const on = (e) => hl && (e.ts === hl || e.td === hl);
     const order = ROUTES.map((e, i) => [e, i]).sort((a, b) => (on(a[0]) ? 1 : 0) - (on(b[0]) ? 1 : 0));
-    const wires = React.createElement('svg', { width: 2720, height: 2120, style: { position: 'absolute', left: 0, top: 0, pointerEvents: 'none' } },
+    const wires = React.createElement('svg', { width: 2720, height: 2400, style: { position: 'absolute', left: 0, top: 0, pointerEvents: 'none' } },
       order.map(([e, i]) => this.wire(e, i, on(e), hl && !on(e))));
     const keyStyle = { PK: ['#8A6A16', '#F6EED8'], FK: ['#0F3D2E', '#E6F0EB'], UK: ['#475569', '#EEF1F5'] };
     return {
