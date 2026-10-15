@@ -2,5 +2,8 @@
   "installCommand": "npm --prefix client install",
   "buildCommand": "npm run build",
   "outputDirectory": "client/dist",
-  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "https://udm-alumni-api-staging.onrender.com/api/$1" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
 }
