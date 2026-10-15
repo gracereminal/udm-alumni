@@ -52,3 +52,27 @@ ${button(link, 'Sign in and answer the survey')}
   const text = `Hi ${first},\n\n${collegeName || 'Your college'} is updating its graduate tracer records and we haven't received your survey answers yet.\nSign in and answer the survey: ${link}\n\nUDM Alumni Relations Office`;
   return { subject: 'Your UDM alumni survey is waiting', html, text };
 }
+
+export function proofRequestEmail({ appUrl, name, docs, dueDays, note }) {
+  const first = firstName(name);
+  const link = `${appUrl}/signin`;
+  const list = docs.map((d) => `<li>${esc(d)}</li>`).join('');
+  const html = layout(appUrl, `
+<div style="font-weight:800;font-size:22px;letter-spacing:-.4px;color:#0A1F18;margin-bottom:14px">Proof needed for your alumni record</div>
+<p style="margin:0 0 12px">Hi ${first},</p>
+<p style="margin:0 0 12px">To verify your alumni record, the Alumni Office needs the following within <strong>${Number(dueDays)} days</strong>:</p>
+<ul style="margin:0 0 16px;padding-left:20px">${list}</ul>
+${note ? `<p style="margin:0 0 16px">${esc(note)}</p>` : ''}
+${button(link, 'Sign in to upload')}
+<div style="font-size:13px;color:#5F6B66">Upload the files from your alumni profile. PDF, JPG or PNG, up to 5 MB each.</div>`);
+  const text = `Hi ${first},\n\nTo verify your alumni record, please upload within ${dueDays} days:\n${docs.map((d) => `- ${d}`).join('\n')}\n${note ? `\n${note}\n` : ''}\nSign in: ${link}\n\nUDM Alumni Relations Office`;
+  return { subject: 'Proof needed for your UDM alumni record', html, text };
+}
+
+/** Staff-written follow-up (Records "Send email"). The body is plain text; a sign-in link is always appended. */
+export function customEmail({ appUrl, subject, body }) {
+  const link = `${appUrl}/signin`;
+  const paras = String(body).split(/\n\s*\n/).map((p) => `<p style="margin:0 0 12px">${esc(p).replace(/\n/g, '<br>')}</p>`).join('');
+  const html = layout(appUrl, `${paras}${button(link, 'Open my alumni record')}`);
+  return { subject: String(subject).slice(0, 200), html, text: `${body}\n\nOpen your alumni record: ${link}` };
+}

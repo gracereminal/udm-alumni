@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { as, one, register } from './helpers.js';
+import request from 'supertest';
+import { app, as, one, register } from './helpers.js';
+
+// Smallest valid PNG (1x1); content sniffing decides the type.
+const PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==', 'base64');
 
 describe('jobs', () => {
   it('admin postings go live; alumni postings wait in the queue until approved', async () => {
@@ -101,6 +105,36 @@ describe('events', () => {
     expect((await admin.get(`/events/${ev.id}`)).body.statusKey).toBe('open');
     const regs = (await admin.get(`/events/${ev.id}/registrations`)).body;
     expect(regs.active).toBe(2);
+  });
+
+  it('uploads, replaces and removes an event cover; a file shared by a duplicate stays until its last event lets go', async () => {
+    const admin = await as('admin');
+    const ev = (await admin.post('/events', newEvent({ title: 'Cover' }))).body;
+    const put = () => admin.agent.post(`/api/v1/events/${ev.id}/photo`).set('X-Requested-With', 'x').attach('photo', PNG, 'cover.png');
+    const first = (await put()).body.photo;
+    expect(first).toMatch(/^\/api\/v1\/files\/public\/.+\.png$/);
+    const second = (await put()).body.photo;
+    expect(second).not.toBe(first);
+    expect((await request(app).get(first)).status).toBe(404);
+
+    const dup = (await admin.post(`/events/${ev.id}/duplicate`)).body;
+    expect(dup.photo).toBe(second);
+    // The composer's "Duplicate" creates through POST /events and keeps the cover via coverFrom.
+    const copy = await admin.post('/events', newEvent({ title: 'Cover copy', coverFrom: ev.id }));
+    expect(copy.status).toBe(201);
+    expect(copy.body.photo).toBe(second);
+    const removed = await admin.del(`/events/${ev.id}/photo`);
+    expect(removed.status).toBe(200);
+    expect(removed.body.photo).toBeNull();
+    expect((await request(app).get(second)).status).toBe(200);
+    expect((await admin.del(`/events/${dup.id}/photo`)).body.photo).toBeNull();
+    expect((await request(app).get(second)).status).toBe(200);
+    expect((await admin.del(`/events/${copy.body.id}/photo`)).body.photo).toBeNull();
+    expect((await request(app).get(second)).status).toBe(404);
+
+    const alum = await as('alumni');
+    expect((await alum.del(`/events/${ev.id}/photo`)).status).toBe(403);
+    expect((await admin.del('/events/999999999/photo')).status).toBe(404);
   });
 
   it('status controls, move to past, hide announcement and duplicate', async () => {

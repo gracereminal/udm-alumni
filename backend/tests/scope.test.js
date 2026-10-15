@@ -38,6 +38,14 @@ describe('dept scope (own college only)', () => {
     expect(rep.body.scope).toBe('College of Computing Studies');
   });
 
+  it('gets university-wide benchmark rates without any counts', async () => {
+    const dept = await as('dept');
+    const b = (await dept.get('/stats/benchmark')).body;
+    expect(Object.keys(b).sort()).toEqual(['alignedRate', 'coverage', 'employmentRate', 'firstGenRate']);
+    const all = (await (await as('admin')).get('/stats/summary')).body;
+    expect(b.employmentRate).toBe(all.employmentRate);
+  });
+
   it('cannot create a record in another college', async () => {
     const dept = await as('dept');
     const res = await dept.post('/alumni', { last_name: 'X', first_name: 'Y', college: 'College of Health Sciences', course: 'Bachelor of Science in Nursing', year_graduated: 2024 });

@@ -23,6 +23,21 @@ emails (links and codes) are printed to the API console.
 Demo accounts: `maria.delacruz@udmalumni.edu` (or Alumni ID `AM-2024-00567` / `2024-00567-UDM`),
 `ccs.dean@udmalumni.edu`, `admin@udmalumni.edu`.
 
+## Production setup
+
+Production starts with no people in it. Run only:
+
+```bash
+npm run migrate -- up    # schema + views
+npm run seed:lookups     # colleges, programs, skills, settings, first survey cycle
+npm run create-user -- --role admin --email <real admin email> --name "Alumni Office Admin"
+npm run create-user -- --role dept --college CCS --email <dean email> --name "<name>" --label "College Dean"
+```
+
+Alumni then register themselves (public registration can only create `alumni` accounts); staff accounts are
+created by an admin. **Never run `seed:demo` against production**: it adds ~650 fake alumni and accounts with the
+public password `demoPass123`, and `--reset` truncates `user_account`.
+
 ## Scripts
 
 | Script | What it does |
@@ -30,8 +45,10 @@ Demo accounts: `maria.delacruz@udmalumni.edu` (or Alumni ID `AM-2024-00567` / `2
 | `npm run dev` / `npm start` | API with / without file watching |
 | `npm run migrate -- up` | apply migrations (production: the host's pre-deploy command) |
 | `npm run seed:lookups` | idempotent lookups |
-| `npm run seed:demo` | demo data; refuses with `NODE_ENV=production` |
+| `npm run seed:demo` | **local/staging only.** Refuses with `NODE_ENV=production`, a `sslmode=` database URL, or any non-local host unless `ALLOW_DEMO_SEED=true` |
 | `npm run create-user -- --role admin --email … --name "…"` | staff account with a one-time password (`--role dept --college CCS` for a college account) |
+| `npm run google:token -- --client-id … --client-secret …` | one-time Gmail sign-in that prints `GOOGLE_OAUTH_REFRESH_TOKEN` (personal Gmail sender) |
+| `npm run mail:test -- --to <email>` | send one test email through `MAIL_DRIVER` (checks Gmail API / SMTP credentials) |
 | `npm test` | Vitest + Supertest on a throwaway seeded database (embedded Postgres, or `TEST_DATABASE_ADMIN_URL`) |
 | `npm run lint` | ESLint |
 
@@ -48,7 +65,7 @@ src/jobs/                   coverage-alerts, notification-retention, token-clean
 src/lib/                    vocab (form labels <-> enums), validation (server copy of the client rules), survey defs
 migrations/                 schema + views (.sql)
 seed/                       lookups.js (all envs), demo.js (demo/staging only), catalog.js
-scripts/                    create-user.js, local-db.js
+scripts/                    create-user.js, local-db.js, mail-test.js, google-oauth-token.js
 tests/                      auth, reset, scope, invariants, notifications, outreach, jobs/events, platform
 ```
 

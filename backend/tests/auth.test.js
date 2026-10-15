@@ -39,6 +39,16 @@ describe('registration', () => {
     expect(me.body.a.mobile).toBe('09175550199');
   });
 
+  it('ignores role, college and verification fields sent to public registration', async () => {
+    const { user, membershipId } = await register({
+      role: 'admin', college_id: 1, collegeId: 1, role_label: 'Administrator', account_status: 'active', must_change_password: false,
+      verification_status: 'verified', status: 'verified', user_id: 1,
+    });
+    expect(user.role).toBe('alumni');
+    const u = await one('SELECT u.role, u.college_id, u.role_label, a.verification_status, a.record_source FROM alumnus a JOIN user_account u USING (user_id) WHERE a.membership_id = $1', [membershipId]);
+    expect(u).toMatchObject({ role: 'alumni', college_id: null, role_label: null, verification_status: 'pending', record_source: 'self_registration' });
+  });
+
   it('rejects a duplicate email', async () => {
     const { form } = await register();
     const res = await client().post('/auth/register', regForm({ email: form.email.toUpperCase() }));

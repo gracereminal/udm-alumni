@@ -20,6 +20,9 @@ const schema = z.object({
   MAIL_FROM: z.string().default('UDM Alumni <no-reply@udmalumni.edu>'),
   GOOGLE_SERVICE_ACCOUNT_JSON: z.string().optional(),
   GOOGLE_IMPERSONATE_USER: z.string().optional(),
+  GOOGLE_OAUTH_CLIENT_ID: z.string().optional(),
+  GOOGLE_OAUTH_CLIENT_SECRET: z.string().optional(),
+  GOOGLE_OAUTH_REFRESH_TOKEN: z.string().optional(),
   SMTP_URL: z.string().optional(),
   STORAGE_DRIVER: z.enum(['local', 's3']).default('local'),
   STORAGE_LOCAL_DIR: z.string().default('uploads'),
@@ -37,8 +40,18 @@ const schema = z.object({
   LOGIN_LOCKOUT_MINUTES: z.coerce.number().positive().default(15),
 });
 
+// Neon Object Storage (and other S3 hosts) hand out AWS-standard names; accept them when the S3_* ones are unset.
+const S3_ALIASES = {
+  S3_ENDPOINT: 'AWS_ENDPOINT_URL_S3',
+  S3_REGION: 'AWS_REGION',
+  S3_ACCESS_KEY_ID: 'AWS_ACCESS_KEY_ID',
+  S3_SECRET_ACCESS_KEY: 'AWS_SECRET_ACCESS_KEY',
+};
+
 export function parseConfig(env = process.env) {
-  const parsed = schema.safeParse(env);
+  const merged = { ...env };
+  for (const [name, alias] of Object.entries(S3_ALIASES)) if (!merged[name] && merged[alias]) merged[name] = merged[alias];
+  const parsed = schema.safeParse(merged);
   if (!parsed.success) {
     const msg = parsed.error.issues.map((i) => `  ${i.path.join('.')}: ${i.message}`).join('\n');
     throw new Error(`Invalid environment configuration:\n${msg}`);
@@ -47,10 +60,14 @@ export function parseConfig(env = process.env) {
   const problems = [];
   if (c.NODE_ENV === 'production') {
     if (['console', 'memory'].includes(c.MAIL_DRIVER)) problems.push(`MAIL_DRIVER=${c.MAIL_DRIVER} is not allowed in production (use google or smtp)`);
-    if (c.MAIL_DRIVER === 'google' && (!c.GOOGLE_SERVICE_ACCOUNT_JSON || !c.GOOGLE_IMPERSONATE_USER)) problems.push('GOOGLE_SERVICE_ACCOUNT_JSON and GOOGLE_IMPERSONATE_USER are required for MAIL_DRIVER=google');
     if (c.STORAGE_DRIVER !== 's3') problems.push('STORAGE_DRIVER must be s3 in production (host disks are ephemeral)');
     if (!c.CRON_SECRET || c.CRON_SECRET.length < 24) problems.push('CRON_SECRET (24+ characters) is required in production');
     if (!/sslmode=require/.test(c.DATABASE_URL)) problems.push('DATABASE_URL must use sslmode=require in production');
+  }
+  if (c.MAIL_DRIVER === 'google') {
+    const oauth = c.GOOGLE_OAUTH_CLIENT_ID && c.GOOGLE_OAUTH_CLIENT_SECRET && c.GOOGLE_OAUTH_REFRESH_TOKEN;
+    const serviceAccount = c.GOOGLE_SERVICE_ACCOUNT_JSON && c.GOOGLE_IMPERSONATE_USER;
+    if (!oauth && !serviceAccount) problems.push('MAIL_DRIVER=google needs GOOGLE_OAUTH_CLIENT_ID + GOOGLE_OAUTH_CLIENT_SECRET + GOOGLE_OAUTH_REFRESH_TOKEN (personal Gmail) or GOOGLE_SERVICE_ACCOUNT_JSON + GOOGLE_IMPERSONATE_USER (Workspace)');
   }
   if (c.MAIL_DRIVER === 'smtp' && !c.SMTP_URL) problems.push('SMTP_URL is required for MAIL_DRIVER=smtp');
   if (c.STORAGE_DRIVER === 's3' && (!c.S3_BUCKET || !c.S3_ACCESS_KEY_ID || !c.S3_SECRET_ACCESS_KEY)) problems.push('S3_BUCKET, S3_ACCESS_KEY_ID and S3_SECRET_ACCESS_KEY are required for STORAGE_DRIVER=s3');

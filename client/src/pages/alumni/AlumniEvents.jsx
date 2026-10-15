@@ -15,6 +15,7 @@ export default function AlumniEvents() {
   const [selId, setSelId] = useState(location.state?.eventId || null);
   const [filter, setFilter] = useState('All');
   const [dlg, setDlg] = useState(null);
+  const [busy, setBusy] = useState(false);
 
   useEffect(() => { if (location.state?.eventId) { setSelId(location.state.eventId); setFilter('All'); } }, [location.state]);
 
@@ -32,7 +33,7 @@ export default function AlumniEvents() {
   const sk = evStatusKey(ev, rsvps);
   const sm = EV_STATUS_META[sk];
   const reg = rsvps[ev.id];
-  const n = (ev.regCount || 0) + (reg ? 1 : 0);
+  const n = evCount(ev);
   const cap = ev.capacity;
   const open = sk === 'open';
   const dEv = dlg && events.find((x) => x.id === dlg.id);
@@ -40,7 +41,11 @@ export default function AlumniEvents() {
   const dReady = !!dEv && (dEv.regFields || []).every((f) => ans[f.key]);
   const regAns = reg ? Object.values(reg).filter(Boolean).join(' · ') : '';
 
-  const doRegister = (e, answers) => { register(e, answers); setDlg(null); toast(`You’re registered for ${e.title}.`); };
+  const doRegister = (e, answers) => {
+    if (busy) return;
+    setBusy(true);
+    register(e, answers).then(() => { setDlg(null); toast(`You’re registered for ${e.title}.`); }, (err) => toast(err.message || 'Couldn’t register. Please try again.', false)).finally(() => setBusy(false));
+  };
   const v = {
     evFilters: FILTERS.map((f) => ({
       label: f, bg: f === filter ? '#fff' : 'transparent', color: f === filter ? '#0F3D2E' : '#64748B', shadow: f === filter ? '0 1px 2px rgba(16,24,40,.08)' : 'none', onClick: () => setFilter(f),
@@ -81,8 +86,8 @@ export default function AlumniEvents() {
     regHover: open && !reg ? 'background:#0B3125' : '',
     isRegistered: !!reg,
     regConfirmText: `You’re registered for ${ev.title}.`,
-    regConfirmSub: `${regAns ? `${regAns} · ` : ''}A confirmation and your entry pass were sent to your email.`,
-    cancelReg: () => { cancelRegistration(ev.id); toast(`Your registration for ${ev.title} was cancelled.`); },
+    regConfirmSub: `${regAns ? `${regAns} · ` : ''}Your registration is saved to your account. Bring your alumni ID to the event.`,
+    cancelReg: () => cancelRegistration(ev.id).then(() => toast(`Your registration for ${ev.title} was cancelled.`), (err) => toast(err.message || 'Couldn’t cancel. Please try again.', false)),
     toggleRsvp: () => {
       if (!open || reg) return;
       if (ev.regFields && ev.regFields.length) setDlg({ id: ev.id, answers: {} });
@@ -110,7 +115,6 @@ export default function AlumniEvents() {
       toggleCalendar(ev.id);
     },
   };
-  void evCount;
   return <EventsView {...v} />;
 }
 

@@ -64,13 +64,15 @@ export default function AdminJobs() {
   const toggleStatus = (j) => {
     const key = jobKey(j);
     const next = j.status === 'active' ? 'inactive' : 'active';
-    jobsCtx.setJobStatus(key, next);
-    ct.toast(next === 'active' ? `“${j.title}” is live again.` : `“${j.title}” was deactivated and hidden from alumni.`);
+    jobsCtx.setJobStatus(key, next).then(
+      () => ct.toast(next === 'active' ? `“${j.title}” is live again.` : `“${j.title}” was deactivated and hidden from alumni.`),
+      (err) => ct.toast(err.message || 'Couldn’t update the posting. Please try again.', false),
+    );
   };
   const remove = (j) => ct.askConfirm({
     title: 'Delete this job posting?', body: 'It is removed from the Job Board for every alumnus. Applications already submitted are kept in the alumnus’ history.', detail: `${j.title} · ${j.company}`,
     cancelLabel: 'Keep posting', okLabel: 'Delete posting', busyLabel: 'Deleting…', danger: true, async: true,
-    onOk: () => ct.runAsync(() => { jobsCtx.deleteJob(jobKey(j)); if (editKey === jobKey(j)) clear(); ct.toast('Job posting deleted.'); }, 'Couldn’t delete the posting. Please try again.'),
+    onOk: () => ct.runAsync(async () => { await jobsCtx.deleteJob(jobKey(j)); if (editKey === jobKey(j)) clear(); ct.toast('Job posting deleted.'); }, 'Couldn’t delete the posting. Please try again.'),
   });
 
   const queue = jobsCtx.queue;

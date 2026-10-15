@@ -1,7 +1,7 @@
 # Web App Redesign Instructions
 
 ## Objective
-Redesign the web application based on the provided `UDM Alumni.dc.html` file.
+Redesign the web application based on the provided `.dc.html` file.
 
 ## Important Instructions
 - Follow the reference design as closely as possible.

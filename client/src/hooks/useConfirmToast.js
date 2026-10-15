@@ -23,14 +23,11 @@ export default function useConfirmToast() {
     toastT.current = setTimeout(() => setTm(null), 5000);
   }, []);
   const closeConfirm = useCallback(() => { setConfirm(null); setCfBusy(false); setCfErr(''); }, []);
-  /** Helpers for async confirm handlers (simulated latency + optional failure). */
-  const runAsync = useCallback((work, failMsg) => {
+  /** Runs an async confirm handler (an API call); the dialog stays open with the error if it fails. */
+  const runAsync = useCallback(async (work, failMsg) => {
     if (busyRef.current) return;
     busyRef.current = true; setCfBusy(true); setCfErr('');
-    setTimeout(() => {
-      busyRef.current = false;
-      try { work(); closeConfirm(); } catch { setCfBusy(false); setCfErr(failMsg || 'Something went wrong. Please try again.'); }
-    }, 700);
+    try { await work(); closeConfirm(); } catch (err) { setCfBusy(false); setCfErr((err && err.status && err.message) || failMsg || 'Something went wrong. Please try again.'); } finally { busyRef.current = false; }
   }, [closeConfirm]);
 
   useEffect(() => {

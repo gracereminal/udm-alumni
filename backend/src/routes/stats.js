@@ -30,6 +30,15 @@ router.get('/summary', validate({ query: statFilters }), async (req, res, next) 
   } catch (err) { next(err); }
 });
 
+// University-wide rates for the college dashboard's "college vs university" comparison. Rates only, no counts,
+// so a dept user learns nothing about other colleges' alumni.
+router.get('/benchmark', async (_req, res, next) => {
+  try {
+    const m = await aggregate({ role: 'admin' }, {});
+    res.json({ employmentRate: m.employmentRate, alignedRate: m.alignedRate, coverage: m.coverage, firstGenRate: m.firstGenRate });
+  } catch (err) { next(err); }
+});
+
 router.get('/by-batch', validate({ query: statFilters }), async (req, res, next) => {
   try { res.json(await labelRows(await aggregate(req.user, req.valid.query, 'batch'), 'batch')); } catch (err) { next(err); }
 });

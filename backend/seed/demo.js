@@ -164,8 +164,26 @@ async function setSkills(db, alumniId, names) {
   }
 }
 
+const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1', '::1', '[::1]']);
+
+/**
+ * Demo data (fake alumni, public demo password, and --reset's TRUNCATE of user_account) must never reach a real
+ * database. NODE_ENV alone is not enough: a shell with a production DATABASE_URL and the default NODE_ENV would pass,
+ * so the target database is checked too.
+ */
+export function assertDemoSeedAllowed(env = process.env) {
+  if (env.NODE_ENV === 'production') throw new Error('Refusing to seed demo data with NODE_ENV=production.');
+  const url = env.DATABASE_URL || '';
+  if (/sslmode=(require|verify-ca|verify-full)/.test(url)) throw new Error('Refusing to seed demo data: DATABASE_URL looks like a production database (sslmode is set).');
+  let host = '';
+  try { host = new URL(url).hostname; } catch { /* unparseable URL is treated as non-local */ }
+  if (!LOCAL_HOSTS.has(host) && !['true', '1'].includes(env.ALLOW_DEMO_SEED)) {
+    throw new Error(`Refusing to seed demo data into non-local database host "${host || 'unknown'}". Use a local database, or set ALLOW_DEMO_SEED=true for a staging database.`);
+  }
+}
+
 export async function seedDemo(db, { count = 640, reset = false } = {}) {
-  if (process.env.NODE_ENV === 'production') throw new Error('Refusing to seed demo data with NODE_ENV=production.');
+  assertDemoSeedAllowed();
   const { rows: [{ n }] } = await db.query('SELECT count(*)::int AS n FROM alumnus');
   if (n > 0 && !reset) throw new Error('Alumni already exist. Re-run with --reset to wipe non-lookup data first.');
   if (reset) {

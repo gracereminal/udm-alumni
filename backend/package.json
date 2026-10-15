@@ -14,6 +14,8 @@
     "seed:lookups": "node seed/lookups.js",
     "seed:demo": "node seed/demo.js",
     "create-user": "node scripts/create-user.js",
+    "mail:test": "node scripts/mail-test.js",
+    "google:token": "node scripts/google-oauth-token.js",
     "test": "vitest run",
     "lint": "eslint ."
   },

@@ -1,6 +1,6 @@
 # plan-backend.md
 
-Backend and deployment plan for the UDM Alumni Tracer. Last checked against the code and `docs/UDM Alumni ERD.dc.html` on 2026-10-14.
+Backend and deployment plan for the UDM Alumni Tracer. Last checked against the code and `docs/UDM Alumni ERD.dc.html` on 2026-10-15.
 
 ## Context
 The UDM Alumni Tracer is a React/Vite SPA with no backend. All state sits in React context plus `localStorage`, and every statistic is fake or hardcoded: the `3482` literals in `data/records.js` and `lib/adminDash.js`, the hash-based `repStat()` in `lib/analytics.js`, and the hand-typed `DEPT_COURSE_DATA` in `lib/collegeDash.js`. The staff records, public directory, registrations, job queue and RSVP lists contain overlapping people with conflicting IDs.
@@ -10,8 +10,11 @@ The UDM Alumni Tracer is a React/Vite SPA with no backend. All state sits in Rea
 2. Contacts are fields on the same alumni record that Records, Directory, Profile and the Survey all use.
 3. The API, database, file storage and email run in production next to the existing Vercel frontend (see "Deployment").
 
-## Current frontend state (as of 2026-10-14)
-- `client/` is a working React 18 + Vite 5 + React Router 6 SPA, deployed to Vercel (project `udm-alumni-demo`) with `npx vercel --prod --yes`. The root `vercel.json` installs and builds `client/`, serves `client/dist` and rewrites all routes to `index.html`. `client/vercel.json` holds a duplicate rewrite that is not used, because the Vercel project root is the repo root. `backend/` holds only `.gitkeep`, so nothing in this plan is built yet. The project is **not a git repository**.
+## Current state (as of 2026-10-15)
+- `client/` is a working React 18 + Vite 5 + React Router 6 SPA, deployed to Vercel (project `udm-alumni-demo`) with `npx vercel --prod --yes`. The root `vercel.json` installs and builds `client/`, serves `client/dist` and rewrites all routes to `index.html`. `client/vercel.json` holds a duplicate rewrite that is not used, because the Vercel project root is the repo root. The project is a local git repository (branch `master`, no remote yet). `backend/` holds the Express + Postgres API (phases 1–5, see Phases), and the client talks to it through `client/src/lib/api.js`; nothing is deployed beyond Vercel yet.
+- **Running locally** (see `backend/README.md`): `npm --prefix backend run db:local` (embedded Postgres 16 on `:5433`, keep it running), `npm --prefix backend run migrate up`, `seed:lookups` and `seed:demo` once (local/staging only, never production), then `npm --prefix backend run dev` (API on `:4000`) and `npm --prefix client run dev` (Vite proxies `/api`). Re-run `migrate up` after pulling a new migration: the tests build a fresh DB each run, so they pass even when the dev DB is behind.
+- **Registration works end to end** (checked 2026-10-15): `/register/consent` → … → success calls `POST /auth/register`, which creates the `USER_ACCOUNT`, the `ALUMNUS` (a membership ID such as `AM-2024-30001`, status `pending`, source `self_registration`) and the password hash in one transaction, signs the alumnus in, and notifies admin and that college's users. The new alumnus appears in Records (admin: all; dept: own college), in the admin dashboard's recent registrations and in the bell.
+- The bullets below describe the prototype this plan started from; they are kept because the server rules and field mappings are taken from them.
 - All three roles (alumni, college/department, admin) are implemented against React context + `localStorage`: Records, Reports, Jobs and Events management, outreach, notifications, the search overlay and the contact modal.
 - Registration is Privacy Consent → Personal Information → **Contact & Social Media** → Educational Background → **Account Password** → Success (`data/formDefs.js` `regStepDefs` + `regPasswordStep`). `POST /auth/register` must accept all of these fields (see ERD gap 9). The password step (`reg_pw`, `reg_pw2`) is held in component state only and never persisted today. The API receives it once and stores only the password hash.
 - Registration validation lives in `lib/validation.js` (`validateRegStep`, `validateProfile`). The server must repeat every rule with `zod`:
@@ -224,7 +227,7 @@ Found by comparing the UI with the ERD columns:
 14. **Update the ERD** (`docs/UDM Alumni ERD.dc.html`): entities 26 → 28 (`APP_SETTING`, `AUTH_SESSION`), relationships 35 → 37 (`AUTH_SESSION.user_id → USER_ACCOUNT`, `ALUMNUS.declared_college_id → COLLEGE`).
 
 ## Password reset email (Google integration)
-The frontend currently ships a simulated "Sample Email Inbox" (`client/src/pages/auth/ResetInbox.jsx`, route `/forgot-password/inbox`, state in `context/ResetFlowContext.jsx`). It is a prototype stand-in only. Once the backend exists, reset emails are delivered for real to the user's own inbox (Gmail or any other provider), and the demo inbox is removed.
+**Status (2026-10-15):** done except the Google credentials. The simulated "Sample Email Inbox" (`ResetInbox.jsx`, `/forgot-password/inbox`) is deleted, the reset email is built in `backend/src/services/emailTemplates.js`, `/reset-password` handles the link, and `ForgotPassword` calls the real endpoints. Until the Workspace service account exists, `MAIL_DRIVER=console` prints each email (link and code) in the API console.
 
 **Sending**
 - `services/mailer.js` is shared by password reset and outreach emails. It sends through the Gmail API as the Google Workspace sender `no-reply@udmalumni.edu` (decided). It authenticates with a Workspace service account using domain-wide delegation, impersonating that address with the `gmail.send` scope only. Google SMTP with an app password is the fallback if delegation is not available.
@@ -237,7 +240,6 @@ The frontend currently ships a simulated "Sample Email Inbox" (`client/src/pages
 
   Workspace sending limits (about 2,000 messages per day per user) are far above the expected reset and outreach volume.
 - Until the credentials exist, `MAIL_DRIVER=console` logs each email (including the link and the code) to the server console. This mode is allowed only when `NODE_ENV !== 'production'`, and the API refuses to start in production with the console driver.
-- The sample inbox page is a design reference only. In production there is no in-app inbox. `ResetInbox.jsx` (`buildMessages`) is the template source for the HTML email; once the email is built, the page is removed.
 - The email matches the mockup: the UDM header, "Reset your password" with a **Reset Password** button, the 6-digit code, the steps, "expires in 30 minutes and can only be used once", and the plain link `{APP_URL}/reset-password?token=...`.
 
 **Flow**
@@ -247,7 +249,7 @@ The frontend currently ships a simulated "Sample Email Inbox" (`client/src/pages
 4. `POST /auth/reset-password {token|resetSession, password}` validates the password rules (8+ characters, one number, one uppercase letter). It sets the hash, marks `used_at`, revokes every `AUTH_SESSION` ("other active sessions have been signed out") and writes `AUDIT_LOG`. A token works once.
 5. Requesting a new reset invalidates earlier unused ones for that account.
 
-**Frontend changes when this lands**
+**Frontend changes (done)**
 - Add the route `/reset-password`, which reads `?token=`, calls verify, and renders step 3 (valid) or step 5 (expired) of `ForgotPassword`. It must sit outside `PublicOnly` or work while signed out, and the existing SPA rewrite already serves it.
 - `ForgotPassword` calls the endpoints above instead of accepting any 6 digits. Remove the "Prototype: any 6 digits will work" hint.
 - Delete `ResetInbox.jsx`, its route `/forgot-password/inbox`, the "Demo / Open the sample inbox to view the reset email" row and `goInbox` in `ForgotPasswordView`/`ForgotPassword`, and the `linkUsed`/`sentAt` demo fields in `ResetFlowContext`.
@@ -272,13 +274,13 @@ The frontend currently ships a simulated "Sample Email Inbox" (`client/src/pages
 | Reports | `GET /reports/:type?college&course&year` (`type` ∈ `ched`, `employability`, `coverage`, `employer`, `inclusion`), `GET /reports/exports`, `POST /reports/exports` (logs `REPORT_EXPORT`) | admin, dept |
 | Outreach | `POST /outreach` (sends the email and logs it), `PATCH /outreach/:id` (outcome), list via `GET /stats/unresponsive` | dept (own college), admin |
 | Jobs | `GET/POST /jobs`, `PATCH/DELETE /jobs/:id`, `POST /jobs/:id/approve\|reject\|deactivate`, `/save`, `/apply` | per role |
-| Events | CRUD, `POST /events/:id/duplicate`, `POST /events/:id/rsvp\|cancel`, `POST /events/:id/cancel-event`, `GET /events/:id/registrations`, announcements CRUD | per role |
+| Events | CRUD, `POST /events/:id/duplicate`, `POST/DELETE /events/:id/photo` (cover), `POST /events/:id/rsvp\|cancel`, `POST /events/:id/cancel-event`, `GET /events/:id/registrations`, announcements CRUD | per role |
 | Notifications | `GET /notifications`, `POST /notifications/:id/read`, `POST /notifications/read-all` | signed-in (own only) |
 | Users | `GET/POST/PATCH /users` (create dept/admin accounts, set `college_id`, disable accounts) | admin |
 | Settings / audit | `GET/PUT /settings`, `GET /audit` | admin |
 | Internal jobs | `POST /internal/jobs/:name` (needs the `CRON_SECRET` header) | scheduler only |
 
-There is no admin screen for user management yet. Until one is built, staff accounts are created with `npm run create-user` (see Deployment).
+There is no admin screen for user management yet. `GET /users` works (admin only) but nothing in the UI calls it. Until a screen is built, staff accounts are created with `npm run create-user` (see Deployment). Alumni accounts are visible in Records (the `hasAccount` flag marks records with a login).
 
 ## Screen to data map
 | Screen | Source |
@@ -338,7 +340,7 @@ Browser ──► Vercel (udm-alumni-demo)
               └─ /*      ──rewrite──►  client/dist/index.html
 Scheduler (host cron) ──► POST /api/v1/internal/jobs/:name
 ```
-- **Recommended hosts (to confirm, see Open questions):** the API on Render (Web Service, Node 20) and Postgres on Neon. Place both in the **Singapore** region, the closest to Manila, and keep them in the same region to avoid cross-region query latency. Railway (API + Postgres together) is the alternative. Object storage: Cloudflare R2 or any S3-compatible bucket.
+- **Recommended hosts (to confirm, see Open questions):** the API on Render (Web Service, Node 20) and Postgres on Neon. Place both in the **Singapore** region, the closest to Manila, and keep them in the same region to avoid cross-region query latency. Railway (API + Postgres together) is the alternative. Object storage: Neon Object Storage (same project and region as the database), or any S3-compatible bucket such as Cloudflare R2.
 - **Same origin through Vercel.** The browser calls `/api/v1/...` on the Vercel domain, and Vercel proxies it to the API. As a result:
   - auth cookies are first-party (`HttpOnly; Secure; SameSite=Lax; Path=/`), so they are not blocked as third-party cookies;
   - production needs no CORS, and `CORS_ORIGIN` is only used if the API is ever called directly.
@@ -384,7 +386,7 @@ Vercel preview deployments must point their `/api` rewrite (or `VITE_API_URL`) a
 `config/` validates all of these at startup and exits with a clear error if any is missing. Secrets live only in the host's and Vercel's environment settings. `.gitignore` already excludes `.env*`. The current root `.env.local` holds a Vercel OIDC token and must not be committed or shared.
 
 ### Release procedure
-1. **Source control first.** Run `git init`, make a baseline commit, and push to a private GitHub repo. Render, Railway and Vercel's Git integration deploy from it, and migrations need history. Until then, Vercel keeps deploying with `npx vercel --prod --yes`.
+1. **Source control first.** The local repo exists (`f153dfa` baseline, `24574bd` phases 1–5); push it to a private GitHub repo. Render, Railway and Vercel's Git integration deploy from it, and migrations need history. Until then, Vercel keeps deploying with `npx vercel --prod --yes`.
 2. **Migrations run before the new code starts:** the host's pre-deploy command is `npm --prefix backend run migrate up`. Migrations must be backward-compatible with the running version (add columns before code uses them, drop them in a later release). Views are recreated in migrations.
 3. **Lookups:** `npm --prefix backend run seed:lookups` runs after migrations. It is idempotent.
 4. **Deploy order:** API first, then check `GET /api/v1/health`, then the frontend (Vercel). Rollback: redeploy the previous API build. A migration that has run is only reversed with a new forward migration.
@@ -422,6 +424,7 @@ In-process timers are not used, because instances may sleep or run as several co
 - [ ] Git repo created; `.env.local` and other secrets not committed
 - [ ] Hosts chosen; API and DB in the same region (Singapore)
 - [ ] Production env vars set; the API starts with `NODE_ENV=production`
+- [ ] Production database has only `migrate` + `seed:lookups` + `create-user` run against it. `seed:demo` (~650 fake alumni, public demo password) is local/staging only and refuses production-style database URLs
 - [ ] Migrations and `seed:lookups` applied; first admin created with `create-user`
 - [ ] `vercel.json` `/api` rewrite deployed; `client/vercel.json` removed
 - [ ] Google Workspace delegation granted; SPF/DKIM/DMARC pass; reset email received in a Gmail inbox
@@ -440,6 +443,8 @@ In-process timers are not used, because instances may sleep or run as several co
 5. Jobs, events, announcements, notifications, outreach, scheduled jobs
 6. Frontend swap and removal of the fake-stat code (on staging)
 7. Production: go-live checklist, cutover, and monitoring
+
+**Progress (2026-10-15):** phases 1–5 are committed (`24574bd`). Phase 6 is done in the working tree: every context reads the API (`lib/api.js`), `RecordsContext`, `demoAccounts.js`, `ResetInbox.jsx`, `TODAY_ISO`, the seed events and every hardcoded total are deleted, and only the survey draft stays in `localStorage`. The admin event panel lists real `EVENT_REGISTRATION` rows. Not committed yet. Registration, sign-in and the Records listing were checked against the local API on 2026-10-15. Next: an admin **Users** screen over `GET/POST/PATCH /users` (optional, see API), then phase 0/7: pushing to GitHub, deploying to staging, the `vercel.json` `/api` rewrite and deleting `client/vercel.json`. Known gap: removing an event's cover photo has no endpoint yet (upload/replace works).
 
 ## Verification
 - **Invariant tests** (Supertest on a seeded DB):

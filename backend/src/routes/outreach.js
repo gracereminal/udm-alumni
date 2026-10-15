@@ -11,7 +11,7 @@ import { badRequest, notFound, tooMany } from '../lib/errors.js';
 import { id } from '../lib/validation.js';
 import { audit, fromReq } from '../services/audit.js';
 import { sendMail } from '../services/mailer.js';
-import { outreachEmail } from '../services/emailTemplates.js';
+import { customEmail, outreachEmail } from '../services/emailTemplates.js';
 import { notify } from '../services/notifications.js';
 import { getSettings } from '../services/settings.js';
 
@@ -23,16 +23,18 @@ const contactSelect = `SELECT contact_id AS id, alumni_id AS "alumniId", method,
 router.post('/', outreachLimiter(), validate({ body: z.object({
   alumniId: id,
   method: z.enum(['email', 'phone', 'facebook', 'messenger', 'linkedin']).default('email'),
-  template: z.enum(['survey_followup']).default('survey_followup'),
+  template: z.enum(['survey_followup', 'custom']).default('survey_followup'),
+  subject: z.string().trim().max(200).optional(),
+  body: z.string().trim().max(5000).optional(),
   note: z.string().trim().max(1000).optional(),
-}) }), async (req, res, next) => {
+}).refine((b) => b.template !== 'custom' || (b.subject && b.body), { message: 'Enter a subject and a message.', path: ['body'] }) }), async (req, res, next) => {
   try {
-    const { alumniId, method, template, note } = req.valid.body;
+    const { alumniId, method, template, subject, body, note } = req.valid.body;
     await assertAlumnusInScope(req.user, alumniId);
     const settings = await getSettings();
     const row = await tx(async (db) => {
       const a = await one(
-        `SELECT a.alumni_id, a.first_name, a.last_name, a.user_id, u.email, c.name AS college_name
+        `SELECT a.alumni_id, a.first_name, a.last_name, a.user_id, COALESCE(u.email, a.contact_email) AS email, c.name AS college_name
            FROM alumnus a LEFT JOIN user_account u ON u.user_id = a.user_id
            LEFT JOIN program p ON p.program_id = a.program_id
            LEFT JOIN college c ON c.college_id = COALESCE(p.college_id, a.declared_college_id)
@@ -54,8 +56,8 @@ router.post('/', outreachLimiter(), validate({ body: z.object({
       );
       await audit(db, fromReq(req, { entityType: 'alumnus', entityId: alumniId, action: 'outreach', details: { method, template: method === 'email' ? template : null } }));
       if (method === 'email') {
-        const mail = outreachEmail({ appUrl: config.APP_URL, name: a.first_name, collegeName: a.college_name });
-        if (a.user_id) await notify(db, [a.user_id], { type: 'outreach', title: mail.subject, message: `${a.college_name || 'Your college'} asked you to complete the alumni survey.`, link: 'profile' });
+        const mail = template === 'custom' ? customEmail({ appUrl: config.APP_URL, subject, body }) : outreachEmail({ appUrl: config.APP_URL, name: a.first_name, collegeName: a.college_name });
+        if (a.user_id) await notify(db, [a.user_id], { type: 'outreach', title: mail.subject, message: template === 'custom' ? String(body).slice(0, 250) : `${a.college_name || 'Your college'} asked you to complete the alumni survey.`, link: 'profile' });
         await sendMail({ to: a.email, ...mail }); // throws -> the whole transaction rolls back
       }
       return one(`${contactSelect} WHERE contact_id = $1`, [r.contact_id], db);
