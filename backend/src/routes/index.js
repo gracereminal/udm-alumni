@@ -18,11 +18,12 @@ import internal from './internal.js';
 
 const router = Router();
 
-router.get('/health', async (_req, res) => {
+router.get('/health', async (req, res) => {
   try {
     await pool.query('select 1');
     res.json({ ok: true, db: 'up', time: new Date().toISOString() });
-  } catch {
+  } catch (err) {
+    req.log.error({ err }, 'health check: database unreachable');
     res.status(503).json({ ok: false, db: 'down' });
   }
 });
