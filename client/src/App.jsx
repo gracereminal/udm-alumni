@@ -1,7 +1,6 @@
 import { BrowserRouter } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { ProfileProvider } from './context/ProfileContext';
-import { RecordsProvider } from './context/RecordsContext';
 import { JobsProvider } from './context/JobsContext';
 import { EventsProvider } from './context/EventsContext';
 import { SearchProvider } from './context/SearchContext';
@@ -15,17 +14,15 @@ export default function App() {
       <ToastProvider>
         <AuthProvider>
           <ProfileProvider>
-            <RecordsProvider>
-              <JobsProvider>
-                <EventsProvider>
-                  <SearchProvider>
-                    <ResetFlowProvider>
-                      <AppRoutes />
-                    </ResetFlowProvider>
-                  </SearchProvider>
-                </EventsProvider>
-              </JobsProvider>
-            </RecordsProvider>
+            <JobsProvider>
+              <EventsProvider>
+                <SearchProvider>
+                  <ResetFlowProvider>
+                    <AppRoutes />
+                  </ResetFlowProvider>
+                </SearchProvider>
+              </EventsProvider>
+            </JobsProvider>
           </ProfileProvider>
         </AuthProvider>
       </ToastProvider>

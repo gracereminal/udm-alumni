@@ -1,12 +1,12 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from './AuthContext';
-import { useProfile } from './ProfileContext';
-import { useRecords, recInScope } from './RecordsContext';
-import { CONTACT_TYPES, DATA, PUBLIC_PROFILE } from '../data/alumniDirectory';
+import { CONTACT_TYPES } from '../data/alumniDirectory';
 import { ROLE_BASE } from '../data/navigation';
+import { employmentLabel } from '../data/records';
+import { CATALOG } from '../data/colleges';
 import { initials } from '../lib/format';
-import { progNorm } from '../lib/colleges';
+import { get, qs } from '../lib/api';
 import SearchOverlayView from '../views/SearchOverlayView';
 import AlumniCardView from '../views/AlumniCardView';
 import ContactModalView from '../views/ContactModalView';
@@ -16,12 +16,11 @@ export const useSearch = () => useContext(SearchContext);
 
 /**
  * Global "Search for an Alumni" experience: overlay (Ctrl+K or "/"), alumni profile card and contact sheet.
- * Alumni search opt-in public profiles only; staff search verified records and open the record quick view.
+ * Alumni search the opt-in directory (GET /directory: visible contacts only); staff search verified records in
+ * their scope (GET /alumni) and open the record quick view.
  */
 export function SearchProvider({ children }) {
   const { user, role } = useAuth();
-  const { alumniName } = useProfile();
-  const records = useRecords();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -102,35 +101,43 @@ export function SearchProvider({ children }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, openSearch, closeSearch]);
 
-  // --- the searchable index ---
+  // --- the searchable index: fetched from the API for the typed query ---
   const staff = role !== 'alumni';
-  const index = useMemo(() => {
-    if (!open) return [];
-    if (staff) {
-      return records.rows.filter((r) => r.status === 'verified' && (role !== 'dept' || recInScope(r))).map((r) => {
-        const co = String(r.company || '').replace(/\s*\(self-reported\)$/, '');
-        const company = co === '—' ? '' : co;
-        const college = r.college || '';
-        return {
-          name: r.name, initials: initials(r.name), role: [r.jobTitle || r.employment, company].filter(Boolean).join(' · '), program: r.program, batch: String(r.batch || ''), college, industry: '', skills: [],
-          text: [r.name, r.sid, r.jobTitle, r.employment, company, r.program, r.batch, college].join(' ').toLowerCase(),
-          go: () => { setOpen(false); navigate(`${ROLE_BASE[role]}/records`, { state: { openSid: r.sid } }); },
-        };
-      });
-    }
-    const me = String(alumniName || '').toLowerCase();
-    return DATA.filter((p) => p.name !== 'Alumni Demo User' && p.name.toLowerCase() !== me).map((p) => {
-      const pub = PUBLIC_PROFILE[p.name] || {};
-      const n = progNorm({ degree: p.degree });
-      const college = n.college;
-      return {
-        p, name: p.name, initials: initials(p.name), role: [p.title, p.company].filter(Boolean).join(' · '), program: n.program, batch: String(p.batch || ''), college, industry: pub.industry || '', skills: p.skills || [],
-        text: [p.name, p.title, p.company, n.program, p.batch, college, pub.industry, (p.skills || []).join(' ')].join(' ').toLowerCase(),
-        go: () => openCard(p),
-      };
-    });
+  const [index, setIndex] = useState([]);
+  const collegeOfProgram = (abbr, collegeName) => collegeName || (CATALOG.programs.find((p) => p.abbr === abbr) || {}).collegeName || '';
+  useEffect(() => {
+    if (!open || !user) return undefined;
+    let live = true;
+    const term = query.trim();
+    const t = setTimeout(() => {
+      const req = staff ? get(`/alumni${qs({ status: 'verified', q: term, pageSize: 50, sort: 'name' })}`) : get(`/directory${qs({ q: term, limit: 50 })}`);
+      req.then((res) => {
+        if (!live) return;
+        if (staff) {
+          setIndex(res.rows.map((r) => {
+            const college = r.college || '';
+            const emp = employmentLabel(r.employmentStatus);
+            return {
+              name: r.name, initials: initials(r.name), role: [r.jobTitle || (r.employmentStatus ? emp : ''), r.company].filter(Boolean).join(' · '), program: r.program, batch: String(r.batch || ''), college, industry: '', skills: [],
+              text: [r.name, r.membershipId, r.jobTitle, emp, r.company, r.program, r.batch, college].join(' ').toLowerCase(),
+              go: () => { setOpen(false); navigate(`${ROLE_BASE[role]}/records`, { state: { openId: r.id } }); },
+            };
+          }));
+        } else {
+          setIndex(res.rows.filter((p) => Number(p.id) !== Number(user.alumniId)).map((p) => {
+            const college = collegeOfProgram(p.degree, '');
+            return {
+              p, name: p.name, initials: initials(p.name), role: [p.title, p.company].filter(Boolean).join(' · '), program: p.degree, batch: String(p.batch || ''), college, industry: p.profile.industry || '', skills: p.allSkills || [],
+              text: [p.name, p.title, p.company, p.degree, p.batch, college, p.profile.industry, (p.allSkills || []).join(' ')].join(' ').toLowerCase(),
+              go: () => openCard(p),
+            };
+          }));
+        }
+      }).catch(() => { if (live) setIndex([]); });
+    }, term ? 250 : 0);
+    return () => { live = false; clearTimeout(t); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, staff, role, records.rows, alumniName]);
+  }, [open, query, staff, role, user]);
 
   const q = query.trim().toLowerCase();
   const FK = staff
@@ -262,7 +269,7 @@ export function SearchProvider({ children }) {
 
   // --- alumni profile card + contact sheet (alumni role only) ---
   const a = card || {};
-  const pub = PUBLIC_PROFILE[a.name] || {};
+  const pub = a.profile || {};
   const contacts = CONTACT_TYPES.filter((t) => (pub.contacts || {})[t.key]).map((t) => {
     const val = pub.contacts[t.key];
     return { label: t.label, value: val, glyph: t.glyph, bg: t.bg, color: t.color, href: t.href(val), target: t.key === 'email' ? '_self' : '_blank' };
@@ -278,8 +285,8 @@ export function SearchProvider({ children }) {
     cardRole: [a.title, a.company].filter(Boolean).join(' · '),
     cardHasRole: !!(a.title || a.company),
     cardProgram: [a.degree, a.batch ? `Batch ${a.batch}` : ''].filter(Boolean).join(' · '),
-    cardSkills: (a.skills || []).map((s) => ({ s, go: () => returnToSearch({ query: s }) })),
-    cardHasSkills: !!(a.skills || []).length,
+    cardSkills: (a.allSkills || a.skills || []).map((s) => ({ s, go: () => returnToSearch({ query: s }) })),
+    cardHasSkills: !!(a.allSkills || a.skills || []).length,
     cardCareer: career, cardHasCareer: career.length > 0,
     cardJourney: journey, cardHasJourney: journey.length > 0 || !!rel, cardHasRelevance: !!rel,
     cardRelLabel: rel === 'yes' ? 'Related to degree' : 'Not related to degree', cardRelGlyph: rel === 'yes' ? '✓' : '–',

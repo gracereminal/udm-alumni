@@ -1,4 +1,4 @@
-// File storage. STORAGE_DRIVER=local (development) | s3 (any S3-compatible bucket, e.g. Cloudflare R2).
+// File storage. STORAGE_DRIVER=local (development) | s3 (any S3-compatible bucket, e.g. Neon Object Storage, Cloudflare R2).
 // Keys: public/... (photos, job/event images, served through the API) and private/... (proof documents,
 // reachable only through short-lived signed URLs issued after a scope check).
 import crypto from 'node:crypto';

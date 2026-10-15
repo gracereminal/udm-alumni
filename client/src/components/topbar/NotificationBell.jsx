@@ -1,26 +1,32 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { notifDefs, TONES } from '../../data/notifications';
+import { notifLook, timeAgo, TONES } from '../../data/notifications';
 import { screenPath } from '../../data/navigation';
 import { hv } from '../../lib/stateStyle';
+import { get, post } from '../../lib/api';
 
-const STORE = 'udm.notif.read.v1';
+const POLL_MS = 45000;
 
-/** Bell with the unread badge and the notifications dropdown (per role). */
+/**
+ * Bell with the unread badge and the notifications dropdown. Rows are NOTIFICATION records written by the
+ * server when another role acts; read state is stored on the server, so it follows the user across devices.
+ */
 export default function NotificationBell() {
-  const { role } = useAuth();
+  const { role, user } = useAuth();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
-  const [read, setRead] = useState(() => {
-    try { return JSON.parse(localStorage.getItem(STORE)) || {}; } catch { return {}; }
-  });
-  const defs = notifDefs(role);
-  const unread = defs.filter((n) => !read[n.id]).length;
+  const [defs, setDefs] = useState([]);
+  const [unread, setUnread] = useState(0);
 
+  const load = useCallback(() => get('/notifications?limit=30').then((r) => { setDefs(r.rows); setUnread(r.unread); }).catch(() => {}), []);
   useEffect(() => {
-    try { localStorage.setItem(STORE, JSON.stringify(read)); } catch { /* ignore */ }
-  }, [read]);
+    if (!user) return undefined;
+    load();
+    const t = setInterval(() => { if (document.visibilityState === 'visible') load(); }, POLL_MS);
+    return () => clearInterval(t);
+  }, [user, load]);
+  useEffect(() => { if (open) load(); }, [open, load]);
   useEffect(() => {
     if (!open) return undefined;
     const onKey = (e) => { if (e.key === 'Escape') setOpen(false); };
@@ -28,8 +34,20 @@ export default function NotificationBell() {
     return () => document.removeEventListener('keydown', onKey);
   }, [open]);
 
-  const markAll = () => setRead((r) => { const n = { ...r }; defs.forEach((d) => { n[d.id] = true; }); return n; });
-  const pick = (n) => { setRead((r) => ({ ...r, [n.id]: true })); setOpen(false); navigate(screenPath(role, n.to)); };
+  const markAll = () => {
+    setDefs((d) => d.map((n) => ({ ...n, read: true })));
+    setUnread(0);
+    post('/notifications/read-all').catch(load);
+  };
+  const pick = (n) => {
+    if (!n.read) {
+      setDefs((d) => d.map((x) => (x.id === n.id ? { ...x, read: true } : x)));
+      setUnread((u) => Math.max(0, u - 1));
+      post(`/notifications/${n.id}/read`).catch(load);
+    }
+    setOpen(false);
+    navigate(screenPath(role, n.to));
+  };
 
   return (
     <div style={{ position: 'relative', flex: 'none' }}>
@@ -62,9 +80,11 @@ export default function NotificationBell() {
               ) : null}
             </div>
             <div style={{ maxHeight: 380, overflowY: 'auto' }}>
+              {defs.length === 0 ? <div style={{ padding: '22px 16px', fontSize: 12.5, color: '#64748B', textAlign: 'center' }}>You’re all caught up.</div> : null}
               {defs.map((n) => {
-                const isRead = !!read[n.id];
-                const [ib, ic] = TONES[n.tone];
+                const isRead = n.read;
+                const look = notifLook(n.type);
+                const [ib, ic] = TONES[look.tone];
                 return (
                   <div
                     key={n.id} role="button" tabIndex={0} onClick={() => pick(n)} onKeyDown={(e) => { if (e.key === 'Enter') pick(n); }}
@@ -72,12 +92,12 @@ export default function NotificationBell() {
                     {...hv({ background: '#F1F4F3' })}
                   >
                     <div style={{ width: 32, height: 32, borderRadius: 10, flex: 'none', background: ib, color: ic, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ width: 15, height: 15 }}><path d={n.icon} /></svg>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ width: 15, height: 15 }}><path d={look.icon} /></svg>
                     </div>
                     <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 3 }}>
                       <div style={{ fontSize: 13, fontWeight: isRead ? 500 : 700, color: '#0B1220', lineHeight: 1.35 }}>{n.title}</div>
                       <div style={{ fontSize: 12, color: '#64748B', lineHeight: 1.45, textWrap: 'pretty' }}>{n.body}</div>
-                      <div style={{ fontSize: 11, color: '#94A3B8', fontWeight: 600 }}>{n.time}</div>
+                      <div style={{ fontSize: 11, color: '#94A3B8', fontWeight: 600 }}>{timeAgo(n.createdAt)}</div>
                     </div>
                     <div style={{ width: 8, height: 8, borderRadius: '50%', flex: 'none', marginTop: 5, background: isRead ? 'transparent' : '#0F8A5F' }} />
                   </div>

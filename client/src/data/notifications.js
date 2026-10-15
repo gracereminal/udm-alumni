@@ -1,3 +1,4 @@
+// Notification icons and tones by NOTIFICATION.type. The notifications themselves come from the API.
 const I = {
   job: 'M3 7h18v13H3zM8 7V4h8v3',
   cal: 'M4 5h16v16H4zM4 10h16M9 3v4M15 3v4',
@@ -5,31 +6,26 @@ const I = {
   user: 'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21a8 8 0 0 1 16 0',
   chart: 'M4 20V10M10 20V4M16 20v-7M22 20H2',
   check: 'M20 6L9 17l-5-5',
+  mail: 'M4 6h16v12H4zM4 7l8 6 8-6',
 };
 
 export const TONES = { green: ['#E6F0EB', '#0F3D2E'], gold: ['#FBF0D8', '#8A6D1F'] };
 
-/** Notification feed per role. `to` is a screen id resolved by screenPath(role, id). */
-export function notifDefs(role) {
-  if (role === 'admin') {
-    return [
-      { id: 'a1', icon: I.user, tone: 'green', title: '14 new alumni registrations', body: 'Awaiting verification against the registrar’s graduate list.', time: '10 min ago', to: 'records' },
-      { id: 'a2', icon: I.chart, tone: 'gold', title: 'Alumni survey passed 60% response rate', body: 'Class of 2024 is now at 61.8%. Report data has been refreshed.', time: '2 hours ago', to: 'reports' },
-      { id: 'a3', icon: I.job, tone: 'green', title: 'Job posting submitted for review', body: 'Brightline Tech submitted “Junior Backend Developer”.', time: 'Yesterday', to: 'jobs' },
-      { id: 'a4', icon: I.cal, tone: 'gold', title: 'Homecoming RSVPs reached 400', body: '412 alumni have RSVP’d to the Grand Alumni Homecoming.', time: 'Sep 26', to: 'events' },
-    ];
-  }
-  if (role === 'dept') {
-    return [
-      { id: 'd1', icon: I.user, tone: 'green', title: '14 new alumni registrations', body: 'Awaiting verification against the registrar’s graduate list.', time: '10 min ago', to: 'records' },
-      { id: 'd2', icon: I.chart, tone: 'gold', title: 'Alumni survey passed 60% response rate', body: 'Class of 2024 is now at 61.8%. Report data has been refreshed.', time: '2 hours ago', to: 'reports' },
-      { id: 'd3', icon: I.job, tone: 'green', title: 'Batch 2024 coverage below target', body: 'Send survey reminders to alumni who haven’t responded.', time: 'Yesterday', to: 'outreach' },
-    ];
-  }
-  return [
-    { id: 'u1', icon: I.job, tone: 'green', title: 'New job match: Cloud Support Engineer', body: 'Northpoint Cloud is hiring IT graduates. Applications close Oct 10.', time: '25 min ago', to: 'jobs' },
-    { id: 'u2', icon: I.cal, tone: 'gold', title: 'Alumni Job Fair is this Sunday', body: 'Oct 4, 9:00 AM at the UDM Quadrangle — 18 partner employers.', time: '3 hours ago', to: 'events' },
-    { id: 'u3', icon: I.user, tone: 'green', title: 'Keep your employment details current', body: 'Update your profile so the alumni survey reflects your latest role.', time: 'Yesterday', to: 'profile' },
-    { id: 'u4', icon: I.check, tone: 'gold', title: 'Alumni survey response received', body: 'Thank you — your 2026 survey has been recorded.', time: 'Sep 24', to: 'dashboard' },
-  ];
+const BY_TYPE = {
+  registration: [I.user, 'green'], record_status: [I.check, 'gold'], survey: [I.check, 'gold'], milestone: [I.chart, 'gold'], coverage_alert: [I.chart, 'gold'],
+  job_submitted: [I.job, 'green'], job_decision: [I.job, 'green'], job_match: [I.job, 'green'], event: [I.cal, 'gold'], rsvp: [I.cal, 'gold'], outreach: [I.mail, 'green'],
+};
+export const notifLook = (type) => { const [icon, tone] = BY_TYPE[type] || [I.doc, 'green']; return { icon, tone }; };
+
+/** "10 min ago", "2 hours ago", "Yesterday", "Sep 26" — rendered from created_at. */
+export function timeAgo(iso, now = Date.now()) {
+  const t = new Date(iso).getTime();
+  if (Number.isNaN(t)) return '';
+  const m = Math.max(0, Math.round((now - t) / 60000));
+  if (m < 1) return 'Just now';
+  if (m < 60) return `${m} min ago`;
+  const h = Math.round(m / 60);
+  if (h < 24) return `${h} hour${h === 1 ? '' : 's'} ago`;
+  if (h < 48) return 'Yesterday';
+  return new Date(t).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'Asia/Manila' });
 }

@@ -1,176 +1,169 @@
-// College (department) dashboard view-model — scoped to the College of Computing Studies (ported from the prototype).
-import { COLLEGES } from '../data/colleges';
-import { courseCode } from './format';
-
-export const DEPT_COLLEGE = 'College of Computing Studies';
-
-export const DEPT_COURSE_DATA = {
-  'Bachelor of Science in Information Technology': {
-    total: 640, done: 476, st: [362, 48, 22, 30, 46], aligned: 78.6, prev: 87.1, batch: [86, 83, 79, 72, 66, 58],
-    out: [['i1', 'Andrea Villanueva', '2024', 's', 'Aug 28, 2026'], ['i2', 'Mark Joseph Lim', '2023', 'n', 'Never'], ['i3', 'Kevin Soriano', '2022', 'n', 'Jul 15, 2026'], ['i4', 'Rhea Castillo', '2024', 's', 'Sep 10, 2026'], ['i5', 'John Paul Reyes', '2023', 's', 'Sep 18, 2026']], outTotal: 64,
-  },
-  'Bachelor of Science in Computer Science': {
-    total: 280, done: 201, st: [148, 20, 9, 19, 18], aligned: 84.1, prev: 88.3, batch: [88, 85, 80, 76, 69, 61],
-    out: [['c1', 'Patricia Gomez', '2024', 's', 'Sep 02, 2026'], ['c2', 'Carlo Mendoza', '2023', 'n', 'Never'], ['c3', 'Bea Navarro', '2024', 's', 'Aug 30, 2026'], ['c4', 'Luis Fernandez', '2022', 'n', 'Jun 21, 2026']], outTotal: 26,
-  },
-};
+// College (department) dashboard view-model, scoped by the API to the signed-in user's college
+// (USER_ACCOUNT.college_id). Shapes GET /stats/* responses into the props CollegeDashboardView renders.
+import { CATALOG, collegeById, programById } from '../data/colleges';
+import { qs } from './api';
 
 const fx = (n) => (Number.isFinite(n) ? n : 0).toFixed(1);
+const N = (n) => Math.round(n || 0).toLocaleString('en-US');
+const pct = (n, d) => (d ? (n / d) * 100 : 0);
+const thisYear = () => new Date().getFullYear();
+const YRS = () => [0, 1, 2, 3, 4, 5].map((i) => thisYear() - 5 + i);
 
-function batchVals(D, A, batchSel, setBatch, bsel0) {
-  const YRS = ['2019', '2020', '2021', '2022', '2023', '2024'];
-  const W = [0.15, 0.16, 0.17, 0.17, 0.17, 0.18];
-  const UF = [0.6, 0.7, 0.8, 1, 1.3, 1.8];
-  const JOBS = {
-    BSIT: [['Software Engineer', 0.17], ['Network Support Engineer', 0.13], ['IT Support Specialist', 0.12], ['Web Developer', 0.1], ['Systems Administrator', 0.08], ['Technical Support Representative', 0.07], ['QA / Software Tester', 0.06], ['Database Administrator', 0.05], ['Cybersecurity Analyst', 0.04], ['Cloud Engineer', 0.03]],
-    BSCS: [['Software Engineer', 0.24], ['Web Developer', 0.12], ['QA / Software Tester', 0.1], ['Data Analyst', 0.08], ['Mobile App Developer', 0.07], ['IT Support Specialist', 0.06], ['Systems Analyst', 0.05], ['Machine Learning Engineer', 0.04], ['Network Support Engineer', 0.03], ['Cloud Engineer', 0.03]],
-  };
-  const pc = (dd, i) => {
-    const T = dd.st.reduce((a, b) => a + b, 0);
-    const tb = i === 5 ? dd.total - W.slice(0, 5).reduce((a, w) => a + Math.round(dd.total * w), 0) : Math.round(dd.total * W[i]);
-    const tr = Math.round((tb * dd.batch[i]) / 100);
-    const un = Math.round(((tr * dd.st[4]) / T) * UF[i]);
-    const fs = Math.round((tr * dd.st[3]) / T);
-    const em = tr - un - fs;
-    return { tb, tr, un, em, al: Math.round((em * dd.aligned) / 100) };
-  };
-  const byB = YRS.map((y, i) => D.reduce((a, dd) => { const r = pc(dd, i); return { t: a.t + r.tb, tr: a.tr + r.tr, un: a.un + r.un, em: a.em + r.em, al: a.al + r.al }; }, { t: 0, tr: 0, un: 0, em: 0, al: 0 }));
-  const bi = YRS.indexOf(bsel0);
-  const bsel = bi < 0 ? 'all' : YRS[bi];
-  const cur = bi < 0 ? { t: A.total, tr: A.traced, un: A.unemployed, em: A.employed, al: Math.round((A.employed * A.aligned) / 100) } : byB[bi];
-  const na = cur.em - cur.al;
-  const lab = cur.em + cur.un;
-  const tile = (k, label, b) => {
-    const on = bsel === k;
-    return { key: k, label, total: b.t.toLocaleString(), traced: b.tr.toLocaleString(), onClick: () => setBatch(k), bg: on ? '#0F3D2E' : '#fff', border: on ? '#0F3D2E' : '#E2E5EA', color: on ? '#fff' : '#0B1220', sub: on ? 'rgba(255,255,255,.75)' : '#64748B' };
-  };
-  const out = (label, v, base, color, bg, desc, pctColor) => ({ label, value: v.toLocaleString(), pct: `${fx((v / base) * 100)}%`, w: `${fx((v / base) * 100)}%`, color, bg, desc, pctColor });
-  const emB = (dd) => (bi < 0 ? dd.st[0] + dd.st[1] + dd.st[2] : pc(dd, bi).em);
-  const m = {};
-  D.forEach((dd) => { const e = emB(dd); (JOBS[dd.code] || JOBS.BSIT).forEach(([t, w]) => { m[t] = (m[t] || 0) + Math.round(e * w); }); });
-  const jobs = Object.entries(m).sort((x, y) => y[1] - x[1]).slice(0, 10);
-  const top = jobs.length ? jobs[0][1] : 1;
-  const bl = bsel === 'all' ? 'All batches' : `Batch ${bsel}`;
+export function deptRequests(st) {
+  const programId = st.course !== 'all' ? st.course : undefined;
+  const batch = st.batch !== 'all' ? st.batch : undefined;
+  const now = [0, 1, 2, 3].map((i) => thisYear() - 3 + i);
   return {
-    deptBatchSelVal: bsel,
-    deptBatchTiles: [tile('all', 'All batches', { t: A.total, tr: A.traced }), ...YRS.map((y, i) => tile(y, `Batch ${y}`, byB[i]))],
-    deptBatchNote: `${bl} · ${A.code} · change the batch in the filter bar above`,
-    _cur: cur, _bi: bi, _yr: bsel, _b24miss: byB[5].t - byB[5].tr,
-    deptOutcome: [
-      out('Unemployed', cur.un, lab, '#D9620B', '#FFF8F1', 'Still seeking work · % of labor force', '#B4500A'),
-      out('Aligned', cur.al, cur.em || 1, '#12A36F', '#fff', 'Job related to their course · % of employed', '#0F6B4F'),
-      out('Not aligned', na, cur.em || 1, '#E0A915', '#FFFCF3', 'Job not related to their course · % of employed', '#8A6D1F'),
-    ],
-    deptJobs: jobs.map(([t, n], i) => ({ rank: String(i + 1), title: t, count: String(n), pct: `${fx((n / (cur.em || 1)) * 100)}%`, w: `${fx((n / top) * 100)}%`, rankBg: i < 3 ? '#0F3D2E' : '#F1F4F2', rankColor: i < 3 ? '#fff' : '#334155' })),
-    deptJobsNote: `${bl} · ${A.code} · by job title reported in the survey · % of ${cur.em.toLocaleString()} employed`,
+    summary: `/stats/summary${qs({ programId, batch })}`,
+    now: `/stats/summary${qs({ programId, batches: now })}`,
+    prev: `/stats/summary${qs({ programId, batches: now.map((y) => y - 1) })}`,
+    byProgram: `/stats/by-program${qs({ group: 'program' })}`,
+    byBatch: `/stats/by-batch${qs({ programId })}`,
+    sectors: `/stats/sectors${qs({ programId, batch })}`,
+    benchmark: '/stats/benchmark',
+    outreach: `/stats/unresponsive${qs({ programId, batch, limit: 5 })}`,
   };
 }
 
+const zero = { total: 0, traced: 0, employed: 0, wageEmployed: 0, selfEmployed: 0, furtherStudies: 0, notEmployed: 0, laborForce: 0, aligned: 0, firstGen: 0, employmentRate: null, alignedRate: null, firstGenRate: null, coverage: null };
+export const emptyDeptData = () => ({
+  summary: zero, now: zero, prev: zero, byProgram: { rows: [] }, byBatch: [], sectors: { topJobTitles: [] }, benchmark: {}, outreach: { rows: [], total: 0, byReason: {} },
+});
+
+const REASON = { seeking: ['Seeking work', '#8A6D1F', '#FBF0D8'], no_response: ['No survey response', '#334E68', '#EEF2F7'], new: ['New registration', '#0F6B4F', '#E1F3EA'] };
+
 /**
- * @param st { course, batch, contacted }
- * @param nr the live registrant's record (or null)
- * @param fn { setCourse, setBatch, toggleContact, setHover, hoverId, tipH }
- * Returns { vals, slices } where slices drive the donut tooltip.
+ * @param st   { course, batch } (program id / batch year, or 'all')
+ * @param data responses keyed like deptRequests()
+ * @param fn   { user, setCourse, setBatch, contact, contacting, setHover, hoverId, tipH }
  */
-export function buildCollegeDash(st, nr, fn) {
-  const { setCourse, setBatch, toggleContact, setHover, hoverId, tipH } = fn;
+export function buildCollegeDash(st, data, fn) {
+  const { user, setCourse, setBatch, contact, contacting, setHover, hoverId, tipH } = fn;
+  const target = CATALOG.targets;
+  const college = collegeById(user?.collegeId) || { name: user?.college || 'Your college', code: user?.collegeCode || '', programs: [] };
+  const programs = college.programs || [];
+  const sel = programById(st.course) ? Number(st.course) : 'all';
+  const prog = sel !== 'all' ? programById(sel) : null;
+  const code = prog ? prog.abbr : college.code;
+  const S = data.summary;
   const wire = (id, o, noArrow) => ({
     ...o, onEnter: () => setHover(id), onLeave: () => setHover((h) => (h === id ? null : h)),
     arrowOp: hoverId === id && !noArrow ? 1 : 0, arrowX: hoverId === id ? 'translateX(0)' : 'translateX(-4px)',
   });
-  const done = st.contacted || {};
-  const seek = ['Seeking work', '#8A6D1F', '#FBF0D8'];
-  const nores = ['No survey response', '#334E68', '#EEF2F7'];
-  const courses = (COLLEGES[DEPT_COLLEGE] || []).filter((c) => DEPT_COURSE_DATA[c]);
-  const sel = courses.includes(st.course) ? st.course : 'all';
-  const picked = sel === 'all' ? courses : [sel];
-  const D = picked.map((c) => ({ ...DEPT_COURSE_DATA[c], code: courseCode(c), full: c }));
-  const sum = (f) => D.reduce((a, d) => a + f(d), 0);
-  const total = sum((d) => d.total);
-  const stc = [0, 1, 2, 3, 4].map((i) => sum((d) => d.st[i]));
-  const traced = stc.reduce((a, b) => a + b, 0);
-  const employed = stc[0] + stc[1] + stc[2];
-  const emp = (employed / (traced - stc[3])) * 100;
-  const prev = sum((d) => d.prev * d.total) / total;
-  const aligned = sum((d) => d.aligned * (d.st[0] + d.st[1] + d.st[2])) / employed;
-  const batch = [0, 1, 2, 3, 4, 5].map((i) => Math.round(sum((d) => d.batch[i] * d.total) / total));
-  const code = sel === 'all' ? 'CCS' : courseCode(sel);
-  const label = sel === 'all' ? DEPT_COLLEGE : code;
-  const labels = ['Employed full-time', 'Employed part-time', 'Self-employed', 'Further studies', 'Still seeking work'];
-  const colors = ['#0F3D2E', '#7CC4A0', '#F0C428', '#2F7FC1', '#D9620B'];
+
+  // Status donut: the traced graduates by current employment.
+  const labels = ['Employed', 'Self-employed', 'Further studies', 'Still seeking work'];
+  const colors = ['#0F3D2E', '#F0C428', '#2F7FC1', '#D9620B'];
+  const stc = [S.wageEmployed, S.selfEmployed, S.furtherStudies, S.notEmployed];
+  const traced = S.traced || 0;
   let acc = 0;
   const segs = [];
   const slices = [];
   stc.forEach((n, i) => {
-    const p = (n / traced) * 100; const a = acc; const b = acc + p; acc = b; const g = Math.max(a, b - 0.5);
+    const p = pct(n, traced); const a = acc; const b = acc + p; acc = b; const g = Math.max(a, b - 0.5);
     segs.push(`${colors[i]} ${a.toFixed(2)}% ${g.toFixed(2)}%`, `#fff ${g.toFixed(2)}% ${b.toFixed(2)}%`);
     slices.push({ end: b, title: labels[i], value: `${n} graduates · ${fx(p)}%` });
   });
+
+  // Coverage by batch and the batch tiles.
+  const byBatch = new Map((data.byBatch || []).map((r) => [r.key, r]));
+  const years = YRS();
+  const bRow = (y) => byBatch.get(y) || { total: 0, traced: 0, coverage: null };
+  const bsel = years.includes(Number(st.batch)) ? Number(st.batch) : 'all';
+  const tile = (k, label, t, tr) => {
+    const on = String(bsel) === String(k);
+    return { key: String(k), label, total: N(t), traced: N(tr), onClick: () => setBatch(String(k)), bg: on ? '#0F3D2E' : '#fff', border: on ? '#0F3D2E' : '#E2E5EA', color: on ? '#fff' : '#0B1220', sub: on ? 'rgba(255,255,255,.75)' : '#64748B' };
+  };
+  const allTotal = (data.byBatch || []).reduce((a, r) => a + r.total, 0);
+  const allTraced = (data.byBatch || []).reduce((a, r) => a + r.traced, 0);
+  const lab = S.employed + S.notEmployed;
+  const notAligned = S.employed - S.aligned;
+  const out = (label, v, base, color, bg, desc, pctColor) => ({ label, value: N(v), pct: `${fx(pct(v, base))}%`, w: `${fx(pct(v, base))}%`, color, bg, desc, pctColor });
+  const jobs = (data.sectors.topJobTitles || []).slice(0, 10);
+  const topJob = jobs.length ? jobs[0].n : 1;
+  const bl = bsel === 'all' ? 'All batches' : `Batch ${bsel}`;
+
+  // Hero: employment rate, with the change against the previous batch window.
+  const empRate = S.employmentRate ?? 0;
+  const d = data.now.employmentRate != null && data.prev.employmentRate != null ? data.now.employmentRate - data.prev.employmentRate : null;
+  const uni = data.benchmark || {};
+  const weakest = years.map((y) => ({ y, ...bRow(y) })).filter((r) => r.total > 0).sort((a, b) => (a.coverage ?? 0) - (b.coverage ?? 0))[0];
   const tone = { b: ['#2F7FC1', '#1F5F94', '#F2F7FC', '#DCE8F4'], y: ['#F0C428', '#8A6D1F', '#FDF9EE', '#F5E9CE'], g: ['#12A36F', '#0F6B4F', '#F0FAF4', '#D8EFE1'] };
-  const nrIn = !!(nr && nr.college === DEPT_COLLEGE && (sel === 'all' || nr.course === sel));
-  const bv = batchVals(D, { total: total + (nrIn ? 1 : 0), traced, employed, unemployed: stc[4], aligned, code, sel }, st.batch, setBatch, st.batch);
-  const hEmp = bv._bi < 0 ? emp : (bv._cur.em / ((bv._cur.em + bv._cur.un) || 1)) * 100;
-  const cs = sel !== 'all' && code === 'BSCS';
-  const insights = [
-    [`Batch 2024 coverage is ${batch[5]}%, below the 65% target.`, `Send survey reminders to the ${bv._b24miss} ${code} alumni who haven’t responded.`, 'y'],
-    [`${stc[4]} graduates are still seeking work.`, 'Share matching job board posts with them and invite them to the next career fair.', 'b'],
-    cs ? ['Line up software internships.', 'Partner with 2–3 local dev and QA firms so 2026 BSCS students graduate with work experience.', 'g']
-      : ['Run a certification drive.', 'CCNA or AWS was asked for in 7 of 10 IT postings — schedule a review course before graduation.', 'g'],
-  ];
-  let outRows = sel === 'all'
-    ? [0, 1, 2].flatMap((i) => D.map((d) => d.out[i] && [d.out[i], d.code])).filter(Boolean).slice(0, 5)
-    : D[0].out.map((r) => [r, D[0].code]);
-  if (nrIn) outRows = [[['__new', `${nr.name} · NEW`, String(nr.batch), 'n', `Registered ${nr.updated}`], nr.program], ...outRows].slice(0, 5);
-  const outTotal = sum((d) => d.outTotal) + (nrIn ? 1 : 0);
-  const nrCount = (c) => ((nr && nr.college === DEPT_COLLEGE && (c === 'all' || nr.course === c)) ? 1 : 0);
+  const insights = [];
+  if (weakest) insights.push([`Batch ${weakest.y} coverage is ${fx(weakest.coverage ?? 0)}%${(weakest.coverage ?? 0) < target.coverage ? `, below the ${target.coverage}% target` : ''}.`, `Send survey reminders to the ${N(weakest.total - weakest.traced)} ${code} alumni who haven’t responded.`, (weakest.coverage ?? 0) < target.coverage ? 'y' : 'g']);
+  if (S.notEmployed) insights.push([`${N(S.notEmployed)} graduates are still seeking work.`, 'Share matching job board posts with them and invite them to the next career fair.', 'b']);
+  if (S.alignedRate != null) insights.push([`${fx(S.alignedRate)}% work in jobs related to their course.`, uni.alignedRate != null ? `The university average is ${fx(uni.alignedRate)}%.` : 'Degree alignment is self-reported in the survey.', S.alignedRate >= (uni.alignedRate ?? 0) ? 'g' : 'y']);
+  if (!insights.length) insights.push(['No survey responses yet.', 'Insights appear once alumni in this college answer the survey.', 'y']);
+
+  const progTotals = new Map((data.byProgram.rows || []).map((r) => [String(r.key), r.total]));
+  const allCount = (data.byProgram.rows || []).reduce((a, r) => a + r.total, 0);
   const tab = (key, lbl, count, full) => ({
-    label: lbl, full, count: count.toLocaleString(), onClick: () => setCourse(key),
-    bg: sel === key ? '#0F3D2E' : 'transparent', color: sel === key ? '#fff' : '#334155', countColor: sel === key ? 'rgba(255,255,255,.7)' : '#64748B', shadow: sel === key ? '0 1px 2px rgba(16,24,40,.15)' : 'none',
+    label: lbl, full, count: N(count), onClick: () => setCourse(String(key)),
+    bg: String(sel) === String(key) ? '#0F3D2E' : 'transparent', color: String(sel) === String(key) ? '#fff' : '#334155',
+    countColor: String(sel) === String(key) ? 'rgba(255,255,255,.7)' : '#64748B', shadow: String(sel) === String(key) ? '0 1px 2px rgba(16,24,40,.15)' : 'none',
   });
-  const all = courses.reduce((a, c) => a + DEPT_COURSE_DATA[c].total, 0);
-  const d = emp - prev;
+  const oRows = data.outreach.rows || [];
+  const recent = (iso) => iso && Date.now() - new Date(iso).getTime() < CATALOG_OUTREACH_DAYS * 864e5;
+
   const vals = {
-    deptCourseTabs: [tab('all', 'All courses', all + nrCount('all'), DEPT_COLLEGE), ...courses.map((c) => tab(c, courseCode(c), DEPT_COURSE_DATA[c].total + nrCount(c), c))],
-    deptCourseNote: sel === 'all' ? `All ${courses.length} CCS courses · synced with alumni registration` : sel,
-    deptScopeLabel: label,
-    deptTitle: `${sel === 'all' ? DEPT_COLLEGE : sel}: Graduate Outcomes`,
-    deptViewLabel: 'Survey cycle 2026',
+    deptCourseTabs: [tab('all', 'All courses', allCount, college.name), ...programs.map((p) => tab(p.id, p.abbr, progTotals.get(String(p.id)) || 0, p.name))],
+    deptCourseNote: sel === 'all' ? `All ${programs.length} ${college.code} courses · synced with alumni registration` : prog.name,
+    deptScopeLabel: prog ? prog.abbr : college.name,
+    deptTitle: `${prog ? prog.name : college.name}: Graduate Outcomes`,
+    deptViewLabel: CATALOG.cycle ? `Survey cycle ${CATALOG.cycle.label}` : 'Survey cycle',
     deptThisLabel: sel === 'all' ? 'This college' : 'This course',
-    deptCourseSelVal: sel,
-    deptCourseOpts: [{ key: 'all', label: 'All CCS courses' }, ...courses.map((c) => ({ key: c, label: courseCode(c) }))],
-    deptEmp: fx(hEmp), deptEmpW: `${fx(hEmp)}%`, deptEmpDelta: bv._bi < 0 ? `${d >= 0 ? '↑ ' : '↓ '}${fx(Math.abs(d))} pts vs 2025` : `Batch ${bv._yr}`,
-    deptHeroEmployed: bv._cur.em.toLocaleString(),
+    deptCourseSelVal: String(sel),
+    deptCourseOpts: [{ key: 'all', label: `All ${college.code} courses` }, ...programs.map((p) => ({ key: String(p.id), label: p.abbr }))],
+    deptEmp: fx(empRate), deptEmpW: `${fx(empRate)}%`,
+    deptEmpDelta: bsel !== 'all' ? `Batch ${bsel}` : d == null ? 'Latest survey cycle' : `${d >= 0 ? '↑ ' : '↓ '}${fx(Math.abs(d))} pts vs the previous batches`,
+    deptHeroEmployed: N(S.employed),
     deptReachNote: 'Share of each batch reached by the survey',
-    deptCoverageAvg: `${sel === 'all' ? 'College' : 'Course'} coverage average: ${fx(batch.reduce((a, b) => a + b, 0) / 6)}%`,
-    deptNote: `N = ${traced} verified responses`, deptTraced: String(traced),
-    deptEmployedAll: `Employed (all types): ${fx((employed / traced) * 100)}%`,
-    deptOutreachNote: `${outTotal} ${code} alumni seeking work or without a survey response`,
-    deptOutShown: String(outRows.length), deptOutTotal: String(outTotal),
+    deptCoverageAvg: `${sel === 'all' ? 'College' : 'Course'} coverage: ${fx(pct(allTraced, allTotal))}% (target ${target.coverage}%)`,
+    deptNote: `N = ${N(traced)} survey responses`, deptTraced: N(traced),
+    deptEmployedAll: `Employed (all types): ${fx(pct(S.employed, traced))}%`,
+    deptOutreachNote: `${N(data.outreach.total)} ${code} alumni seeking work, without a survey response, or newly registered`,
+    deptOutShown: String(oRows.length), deptOutTotal: N(data.outreach.total),
     deptHero: wire('d-emp', {}),
     deptSide: [
-      wire('d-firstgen', { label: 'First-generation graduates', value: String(Math.round(traced * 0.367)), unit: 'respondents', hasBar: false, isText: true, context: `${fx(36.7)}% of traced graduates answered “Yes”` }),
-      wire('d-traced', { label: 'Graduates traced', value: bv._cur.tr.toLocaleString(), unit: `/ ${bv._cur.t.toLocaleString()} total`, hasBar: true, isText: false, pct: `${fx((bv._cur.tr / bv._cur.t) * 100)}%`, context: `${fx((bv._cur.tr / bv._cur.t) * 100)}% of records reached` }),
+      wire('d-firstgen', { label: 'First-generation graduates', value: N(S.firstGen), unit: 'respondents', hasBar: false, isText: true, context: `${fx(S.firstGenRate ?? 0)}% of traced graduates answered “Yes”` }),
+      wire('d-traced', { label: 'Graduates traced', value: N(S.traced), unit: `/ ${N(S.total)} total`, hasBar: true, isText: false, pct: `${fx(S.coverage ?? 0)}%`, context: `${fx(S.coverage ?? 0)}% of records reached` }),
     ],
-    ...bv,
-    deptBatch: ['2019', '2020', '2021', '2022', '2023', '2024'].map((lb, i) => {
-      const v = batch[i];
-      return { label: lb, pct: `${v}%`, pctColor: v >= 65 ? '#0B1220' : '#8A6D1F', color: v >= 65 ? '#0F3D2E' : '#E0A915', ...tipH(`Batch ${lb}`, `${v}% traced · ${v >= 65 ? 'meets' : 'below'} 65% target`) };
+    deptBatchSelVal: String(bsel),
+    deptBatchTiles: [tile('all', 'All batches', allTotal, allTraced), ...years.map((y) => tile(y, `Batch ${y}`, bRow(y).total, bRow(y).traced))],
+    deptBatchNote: `${bl} · ${code} · change the batch in the filter bar above`,
+    deptOutcome: [
+      out('Unemployed', S.notEmployed, lab, '#D9620B', '#FFF8F1', 'Still seeking work · % of labor force', '#B4500A'),
+      out('Aligned', S.aligned, S.employed, '#12A36F', '#fff', 'Job related to their course · % of employed', '#0F6B4F'),
+      out('Not aligned', notAligned, S.employed, '#E0A915', '#FFFCF3', 'Job not related to their course · % of employed', '#8A6D1F'),
+    ],
+    deptJobs: jobs.map((j, i) => ({ rank: String(i + 1), title: j.key, count: String(j.n), pct: `${fx(pct(j.n, S.employed))}%`, w: `${fx(pct(j.n, topJob))}%`, rankBg: i < 3 ? '#0F3D2E' : '#F1F4F2', rankColor: i < 3 ? '#fff' : '#334155' })),
+    deptJobsNote: `${bl} · ${code} · by job title reported in the survey · % of ${N(S.employed)} employed`,
+    deptBatch: years.map((y) => {
+      const v = Math.round(bRow(y).coverage ?? 0);
+      const ok = v >= target.coverage;
+      return { label: String(y), pct: `${v}%`, pctColor: ok ? '#0B1220' : '#8A6D1F', color: ok ? '#0F3D2E' : '#E0A915', ...tipH(`Batch ${y}`, `${v}% traced · ${ok ? 'meets' : 'below'} ${target.coverage}% target`) };
     }),
-    deptStatus: stc.map((n, i) => ({ label: labels[i], count: String(n), pct: `${fx((n / traced) * 100)}%`, pctColor: i === 4 ? '#B4500A' : '#0B1220', color: colors[i] })),
-    deptDonut: `conic-gradient(${segs.join(', ')})`,
-    deptCompare: [['Employability', emp, 78.4], ['Degree-aligned jobs', aligned, 71.2]].map(([lb, c, u]) => ({
-      label: lb, col: `${fx(c)}%`, uni: `${fx(u)}%`, cw: `${fx(c)}%`, uw: `${fx(u)}%`, diff: `${c >= u ? '+' : '−'}${fx(Math.abs(c - u))} pts`,
-      ...tipH(lb, `${sel === 'all' ? 'College ' : `${code} `}${fx(c)}% · University ${fx(u)}%`),
+    deptStatus: stc.map((n, i) => ({ label: labels[i], count: String(n), pct: `${fx(pct(n, traced))}%`, pctColor: i === 3 ? '#B4500A' : '#0B1220', color: colors[i] })),
+    deptDonut: traced ? `conic-gradient(${segs.join(', ')})` : 'conic-gradient(#E7E9ED 0% 100%)',
+    deptCompare: [['Employability', S.employmentRate, uni.employmentRate], ['Degree-aligned jobs', S.alignedRate, uni.alignedRate]].map(([lb, c, u]) => ({
+      label: lb, col: `${fx(c ?? 0)}%`, uni: `${fx(u ?? 0)}%`, cw: `${fx(c ?? 0)}%`, uw: `${fx(u ?? 0)}%`, diff: `${(c ?? 0) >= (u ?? 0) ? '+' : '−'}${fx(Math.abs((c ?? 0) - (u ?? 0)))} pts`,
+      ...tipH(lb, `${sel === 'all' ? 'College ' : `${code} `}${fx(c ?? 0)}% · University ${fx(u ?? 0)}%`),
     })),
     deptInsights: insights.map(([lead, text, t]) => ({ lead, text, color: tone[t][0], leadColor: tone[t][1], bg: tone[t][2], border: tone[t][3] })),
-    deptOutreach: outRows.map(([[id, name, b, s, last], program]) => {
-      const S = s === 's' ? seek : s === 'n' ? ['New registration', '#0F6B4F', '#E1F3EA'] : nores;
+    deptOutreach: oRows.map((r) => {
+      const S2 = REASON[r.reason] || REASON.no_response;
+      const done = recent(r.last_contacted_at);
+      const busy = contacting === r.alumni_id;
       return {
-        name, batch: b, program, status: S[0], statusColor: S[1], statusBg: S[2], last: done[id] ? 'Today' : last,
-        btnLabel: done[id] ? 'Contacted ✓' : 'Contact', btnColor: done[id] ? '#475569' : '#0F3D2E', btnBg: done[id] ? '#F4F6F8' : '#fff', btnBorder: done[id] ? '#E2E5EA' : '#B9CFC6',
-        onContact: () => toggleContact(id, name),
+        name: r.name, batch: String(r.batch), program: r.program, status: S2[0], statusColor: S2[1], statusBg: S2[2],
+        last: r.last_contacted_at ? new Date(r.last_contacted_at).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) : r.reason === 'new' ? `Registered ${new Date(r.created_at).toLocaleDateString('en-US', { month: 'short', day: '2-digit' })}` : 'Never',
+        btnLabel: busy ? 'Sending…' : done ? 'Contacted ✓' : 'Contact', btnColor: done ? '#475569' : '#0F3D2E', btnBg: done ? '#F4F6F8' : '#fff', btnBorder: done ? '#E2E5EA' : '#B9CFC6',
+        onContact: () => { if (!done && !busy) contact(r); },
       };
     }),
   };
   return { vals, slices };
 }
+
+// One outreach email per alumnus per 7 days (APP_SETTING.outreach_interval_days); the API enforces it.
+const CATALOG_OUTREACH_DAYS = 7;

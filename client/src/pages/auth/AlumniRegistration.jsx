@@ -6,15 +6,19 @@ import { useAuth } from '../../context/AuthContext';
 import { regStepDefs, regPasswordStep, visibleQs } from '../../data/formDefs';
 import { buildField } from '../../lib/fields';
 import { validateRegStep } from '../../lib/validation';
+import { useToast } from '../../context/ToastContext';
+import { PRIVACY_KEY } from './PrivacyConsent';
 
 /** Multi-step alumni registration: Personal Information → Contact → Educational Background → Account Password. */
 export default function AlumniRegistration() {
   const navigate = useNavigate();
   const profile = useProfile();
-  const { signInAsAlumni } = useAuth();
-  const { a, setA, toggleA, persist, alumniName } = profile;
+  const { register } = useAuth();
+  const { toast } = useToast();
+  const { a, setA, toggleA } = profile;
   const [step, setStep] = useState(1);
   const [errors, setErrors] = useState({});
+  const [busy, setBusy] = useState(false);
 
   // Password values stay in component state only — never written to the persisted profile.
   const [pw, setPw] = useState({ reg_pw: '', reg_pw2: '' });
@@ -49,12 +53,30 @@ export default function AlumniRegistration() {
     setStep(target);
   };
 
-  const next = () => {
+  const next = async () => {
     if (!validate(step - 1)) return;
     if (step < steps.length) { setStep(step + 1); return; }
-    persist({ registered: true, regAt: new Date().toISOString() });
-    signInAsAlumni(alumniName);
-    navigate('/register/success', { replace: true });
+    if (busy) return;
+    let consent = null;
+    try { consent = JSON.parse(sessionStorage.getItem(PRIVACY_KEY) || 'null'); } catch { consent = null; }
+    setBusy(true);
+    try {
+      // The password is sent once over HTTPS; the API stores only its hash.
+      await register({ ...a, ...pw, privacy_consent: !!consent, marketing_opt_in: !!(consent && consent.comms) });
+      await profile.completeRegistration();
+      try { sessionStorage.removeItem(PRIVACY_KEY); } catch { /* ignore */ }
+      navigate('/register/success', { replace: true });
+    } catch (err) {
+      setBusy(false);
+      if (err.fields && err.fields.privacy_consent) { navigate('/register/consent'); return; }
+      if (err.fields) {
+        // Show the server's field errors on the first step that has one.
+        const at = steps.findIndex((st) => st.questions.some((q) => err.fields[q.id]));
+        if (at > -1) setStep(at + 1);
+        setErrors(err.fields);
+      }
+      toast(err.message, false);
+    }
   };
 
   const v = {
@@ -74,7 +96,7 @@ export default function AlumniRegistration() {
     regStepDesc: current.desc,
     regStepCounter: `STEP ${step} OF ${steps.length}`,
     regFields: visibleQs(current, a).map((q) => buildField(q, all, handlers, errors)),
-    regNextLabel: step < steps.length ? 'Continue →' : 'Submit Registration →',
+    regNextLabel: step < steps.length ? 'Continue →' : busy ? 'Submitting…' : 'Submit Registration →',
     regNext: next,
     regBack: () => { setErrors({}); if (step > 1) setStep(step - 1); else navigate('/register/consent'); },
     goSignin: (e) => { if (e && e.preventDefault) e.preventDefault(); navigate('/signin'); },

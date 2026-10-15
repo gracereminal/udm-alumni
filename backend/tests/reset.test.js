@@ -132,6 +132,21 @@ describe('Google mailer driver', () => {
     Object.assign(config, { GOOGLE_IMPERSONATE_USER: prev.u, GOOGLE_SERVICE_ACCOUNT_JSON: prev.j });
   });
 
+  it('sends as "me" through an OAuth refresh token (personal Gmail, mocked Google client)', async () => {
+    const keys = ['GOOGLE_OAUTH_CLIENT_ID', 'GOOGLE_OAUTH_CLIENT_SECRET', 'GOOGLE_OAUTH_REFRESH_TOKEN'];
+    const prev = Object.fromEntries(keys.map((k) => [k, config[k]]));
+    Object.assign(config, { GOOGLE_OAUTH_CLIENT_ID: 'cid', GOOGLE_OAUTH_CLIENT_SECRET: 'secret', GOOGLE_OAUTH_REFRESH_TOKEN: '1//refresh' });
+    const oauthFactory = vi.fn(() => ({ getAccessToken: async () => ({ token: 'ya29.oauth' }) }));
+    const fetchImpl = vi.fn(async () => ({ ok: true, json: async () => ({ id: 'gmail-2' }) }));
+    setTransport(googleTransport({ fetchImpl, oauthFactory }));
+    await sendMail({ to: 'grad@gmail.com', subject: 'Hello', text: 'Body' });
+    expect(oauthFactory).toHaveBeenCalledWith({ clientId: 'cid', clientSecret: 'secret', refreshToken: '1//refresh' });
+    const [url, init] = fetchImpl.mock.calls[0];
+    expect(url).toBe('https://gmail.googleapis.com/gmail/v1/users/me/messages/send');
+    expect(init.headers.authorization).toBe('Bearer ya29.oauth');
+    Object.assign(config, prev);
+  });
+
   it('throws when Gmail rejects the message', async () => {
     config.GOOGLE_SERVICE_ACCOUNT_JSON = '{}';
     setTransport(googleTransport({ jwtFactory: () => ({ getAccessToken: async () => ({ token: 't' }) }), fetchImpl: async () => ({ ok: false, status: 403, text: async () => 'forbidden' }) }));
@@ -141,6 +156,15 @@ describe('Google mailer driver', () => {
 });
 
 describe('production config guards', () => {
+  it('accepts either OAuth or service-account credentials for the google mailer', async () => {
+    const { parseConfig } = await import('../src/config/index.js');
+    const base = { DATABASE_URL: 'postgres://x/y', MAIL_DRIVER: 'google' };
+    expect(() => parseConfig(base)).toThrow(/MAIL_DRIVER=google needs/);
+    expect(() => parseConfig({ ...base, GOOGLE_OAUTH_CLIENT_ID: 'c', GOOGLE_OAUTH_CLIENT_SECRET: 's' })).toThrow(/MAIL_DRIVER=google needs/);
+    expect(parseConfig({ ...base, GOOGLE_OAUTH_CLIENT_ID: 'c', GOOGLE_OAUTH_CLIENT_SECRET: 's', GOOGLE_OAUTH_REFRESH_TOKEN: 'r' }).MAIL_DRIVER).toBe('google');
+    expect(parseConfig({ ...base, GOOGLE_SERVICE_ACCOUNT_JSON: '{}', GOOGLE_IMPERSONATE_USER: 'a@b.c' }).MAIL_DRIVER).toBe('google');
+  });
+
   it('refuses the console mailer, local storage and a missing cron secret in production', async () => {
     const { parseConfig } = await import('../src/config/index.js');
     expect(() => parseConfig({ NODE_ENV: 'production', DATABASE_URL: 'postgres://x/y', MAIL_DRIVER: 'console' })).toThrow(/MAIL_DRIVER=console is not allowed/);
@@ -149,11 +173,29 @@ describe('production config guards', () => {
     expect(parseConfig({ NODE_ENV: 'production', DATABASE_URL: 'postgres://x/y?sslmode=require', MAIL_DRIVER: 'smtp', SMTP_URL: 'smtp://x', STORAGE_DRIVER: 's3', S3_BUCKET: 'b', S3_ACCESS_KEY_ID: 'a', S3_SECRET_ACCESS_KEY: 's', CRON_SECRET: 'x'.repeat(30) }).isProd).toBe(true);
   });
 
+  it('reads Neon-style AWS_* storage variables when the S3_* ones are unset', async () => {
+    const { parseConfig } = await import('../src/config/index.js');
+    const c = parseConfig({ DATABASE_URL: 'postgres://x/y', STORAGE_DRIVER: 's3', S3_BUCKET: 'uploads', AWS_ENDPOINT_URL_S3: 'https://e', AWS_REGION: 'ap-southeast-1', AWS_ACCESS_KEY_ID: 'a', AWS_SECRET_ACCESS_KEY: 's' });
+    expect(c).toMatchObject({ S3_ENDPOINT: 'https://e', S3_REGION: 'ap-southeast-1', S3_ACCESS_KEY_ID: 'a', S3_SECRET_ACCESS_KEY: 's' });
+    expect(parseConfig({ DATABASE_URL: 'postgres://x/y', S3_REGION: 'auto', AWS_REGION: 'ap-southeast-1' }).S3_REGION).toBe('auto');
+  });
+
   it('refuses to seed demo data in production', async () => {
     const { seedDemo } = await import('../seed/demo.js');
     const prev = process.env.NODE_ENV;
     process.env.NODE_ENV = 'production';
     await expect(seedDemo({ query: async () => ({ rows: [{ n: 0 }] }) })).rejects.toThrow(/production/);
     process.env.NODE_ENV = prev;
+  });
+
+  it('only lets demo data target a local (or explicitly allowed, non-ssl) database', async () => {
+    const { assertDemoSeedAllowed } = await import('../seed/demo.js');
+    const local = 'postgres://u:p@localhost:5433/udm';
+    expect(() => assertDemoSeedAllowed({ NODE_ENV: 'production', DATABASE_URL: local })).toThrow(/production/);
+    expect(() => assertDemoSeedAllowed({ NODE_ENV: 'development', DATABASE_URL: 'postgres://u:p@db.example.com/udm' })).toThrow(/non-local database host "db.example.com"/);
+    expect(() => assertDemoSeedAllowed({ NODE_ENV: 'development', DATABASE_URL: 'postgres://u:p@db.example.com/udm?sslmode=require', ALLOW_DEMO_SEED: 'true' })).toThrow(/sslmode/);
+    expect(() => assertDemoSeedAllowed({ NODE_ENV: 'development', DATABASE_URL: '' })).toThrow(/unknown/);
+    expect(() => assertDemoSeedAllowed({ NODE_ENV: 'development', DATABASE_URL: local })).not.toThrow();
+    expect(() => assertDemoSeedAllowed({ NODE_ENV: 'development', DATABASE_URL: 'postgres://u:p@staging-db/udm', ALLOW_DEMO_SEED: 'true' })).not.toThrow();
   });
 });

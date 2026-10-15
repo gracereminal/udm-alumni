@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PortalPage, { card } from '../../layouts/PortalPage';
 import FormField from '../../components/FormField';
@@ -36,6 +36,10 @@ export default function AlumniProfile() {
   const [errors, setErrors] = useState({});
   const [dirty, setDirty] = useState(false);
   const [leave, setLeave] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  // The profile arrives from GET /me after the first render; adopt it until the user starts editing.
+  useEffect(() => { if (profile.loaded && !dirty) setDraft(profile.a); }, [profile.loaded, profile.a, dirty]);
 
   const clear = useCallback(
     (id) => {
@@ -90,10 +94,20 @@ export default function AlumniProfile() {
       }, 30);
       return;
     }
-    profile.persist({ a: draft, profileSavedAt: new Date().toISOString() });
-    setDirty(false);
-    toast('Profile saved — your record in Alumni Records was updated.');
-    navigate('/alumni/dashboard');
+    if (saving) return;
+    setSaving(true);
+    profile.saveProfile(draft).then(() => {
+      setDirty(false);
+      toast('Profile saved — your record in Alumni Records was updated.');
+      navigate('/alumni/dashboard');
+    }).catch((err) => {
+      if (err.fields) setErrors(err.fields);
+      toast(err.message || 'Your profile could not be saved. Please try again.', false);
+      setTimeout(() => {
+        const el = document.querySelector('[aria-invalid="true"]');
+        if (el) el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      }, 30);
+    }).finally(() => setSaving(false));
   };
   const cancel = () => (dirty ? setLeave(true) : navigate('/alumni/dashboard'));
 
@@ -131,7 +145,7 @@ export default function AlumniProfile() {
           cursor: 'pointer',
         }}
       >
-        Save Changes
+        {saving ? 'Saving…' : 'Save Changes'}
       </button>
     </>
   );
@@ -210,7 +224,7 @@ export default function AlumniProfile() {
             onClick={save}
             style={{ ...modalBtn(true), background: '#004D40', padding: '14px 26px', borderRadius: 12, fontSize: 14.5 }}
           >
-            Save Changes
+            {saving ? 'Saving…' : 'Save Changes'}
           </button>
         </div>
       </div>

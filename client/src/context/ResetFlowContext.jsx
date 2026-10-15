@@ -2,9 +2,11 @@ import { createContext, useContext, useMemo, useState } from 'react';
 
 const ResetFlowContext = createContext(null);
 
-const INITIAL = { step: 1, email: '', sentAt: 0, linkUsed: false, viaLink: false };
+// step: 1 identifier · 2 code · 3 new password · 4 done · 5 link expired.
+// token: the emailed reset token (link path) or the reset session returned by verify-code (code path).
+const INITIAL = { step: 1, email: '', viaLink: false, token: '', linkEmail: '' };
 
-/** Password-reset flow state shared by the Forgot Password page and the demo mail inbox. */
+/** Password-reset flow state shared by the Forgot Password page and the /reset-password link route. */
 export function ResetFlowProvider({ children }) {
   const [flow, setFlow] = useState(INITIAL);
   const value = useMemo(
