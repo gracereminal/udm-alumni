@@ -147,7 +147,7 @@ const RECORD_SELECT = `
          a.verification_status, a.archived_at, a.merged_into_id, a.flag_note, a.record_source, a.created_at, a.updated_at,
          a.program_id, a.course_other, COALESCE(p.college_id, a.declared_college_id) AS college_id,
          p.abbr AS program_abbr, p.name AS program_name, c.name AS college_name, c.code AS college_code,
-         u.email, a.mobile_no, a.present_address, a.user_id,
+         COALESCE(u.email, a.contact_email) AS email, a.mobile_no, a.present_address, a.user_id,
          e.employment_status, e.employer_name, e.job_title,
          EXISTS (SELECT 1 FROM survey_response r JOIN v_active_cycle vc ON vc.cycle_id = r.cycle_id WHERE r.alumni_id = a.alumni_id AND r.status = 'submitted') AS traced
     FROM alumnus a
@@ -250,60 +250,129 @@ export async function mapProgram(db, alumniId, programId, actor, scopeCollegeId 
   await audit(db, { actorId: actor.user_id, entityType: 'alumnus', entityId: alumniId, action: 'map_program', details: { programId }, ip: actor.ip });
 }
 
-/** Staff-created record (Records "Add alumnus", import). No sign-in account. */
+
+// --- Staff-created / edited records (Records form, import) ---------------------------------------
+const PARTICLES = new Set(['de', 'del', 'dela', 'delos', 'de la', 'de los', 'san', 'sta.', 'santa', 'sto.', 'santo', 'dos', 'das', 'van', 'von', 'la', 'los']);
+/** "Juan Dela Cruz" -> { first: 'Juan', last: 'Dela Cruz' }; keeps surname particles with the last name. */
+export function splitName(full) {
+  const w = String(full || '').trim().split(/\s+/).filter(Boolean);
+  if (w.length < 2) return { first: w[0] || '', last: '' };
+  let i = w.length - 1;
+  while (i > 1 && PARTICLES.has(w[i - 1].toLowerCase())) i -= 1;
+  return { first: w.slice(0, i).join(' '), last: w.slice(i).join(' ') };
+}
+
+const SOURCES = ['self_registration', 'survey', 'alumni_update', 'admin_encoded', 'import'];
+const EMP_STATUSES = ['employed', 'self_employed', 'further_studies', 'not_employed'];
+const STUDENT_NO = /^\d{4}-\d{5}-UDM$/i;
+const thisYear = () => new Date().getFullYear();
+
+function staffFieldErrors(input, creating) {
+  const e = {};
+  const names = 'name' in input ? splitName(input.name) : null;
+  if (names && (blank(names.first) || blank(names.last))) e.name = 'Enter the alumnus’s first and last name.';
+  if (creating && !names) {
+    if (blank(input.last_name)) e.last_name = 'Enter the last name.';
+    if (blank(input.first_name)) e.first_name = 'Enter the first name.';
+  }
+  if (creating || 'year_graduated' in input) {
+    const yr = Number(input.year_graduated);
+    if (!Number.isInteger(yr) || yr < 1950 || yr > thisYear()) e.year_graduated = 'Enter a valid graduation year.';
+  }
+  if (!blank(input.mobile) && !normalizeMobile(input.mobile)) e.mobile = 'Enter a valid mobile number (e.g. 09XX XXX XXXX).';
+  if (!blank(input.student_no) && !STUDENT_NO.test(String(input.student_no).trim())) e.student_no = 'Use the format YYYY-NNNNN-UDM.';
+  if (!blank(input.email) && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(input.email).trim())) e.email = 'Enter a valid email address.';
+  if (input.employment != null && input.employment !== '' && !EMP_STATUSES.includes(input.employment)) e.employment = 'Select an employment status.';
+  if (input.source != null && !SOURCES.includes(input.source)) e.source = 'Select a source.';
+  return { e, names };
+}
+
+/** Staff-encoded employment: updates the current EMPLOYMENT_RECORD (or adds one). It counts in the stats only once the alumnus is traced. */
+async function writeStaffEmployment(db, alumniId, status, company) {
+  if (!status) return;
+  const cur = await one('SELECT employment_id FROM employment_record WHERE alumni_id = $1 AND is_current FOR UPDATE', [alumniId], db);
+  const employer = status === 'not_employed' ? null : t(company);
+  if (cur) {
+    await db.query('UPDATE employment_record SET employment_status = $2, employer_name = $3, is_self_employed = $4, reported_at = now() WHERE employment_id = $1',
+      [cur.employment_id, status, employer, status === 'self_employed']);
+  } else {
+    await db.query('INSERT INTO employment_record (alumni_id, employment_status, employer_name, is_self_employed) VALUES ($1, $2, $3, $4)', [alumniId, status, employer, status === 'self_employed']);
+  }
+}
+
+/** The status chips on the form map onto the review actions (with their history and notifications). */
+async function applyFormStatus(db, alumniId, status, note, actor) {
+  if (!status) return;
+  const r = await one('SELECT verification_status, archived_at FROM alumnus WHERE alumni_id = $1', [alumniId], db);
+  if (status === recordStatus(r)) return;
+  if (status === 'archived') { await changeStatus(db, alumniId, 'archive', note || 'Archived from the record form', actor); return; }
+  if (r.archived_at) await changeStatus(db, alumniId, 'restore', null, actor);
+  if (status === 'verified' && r.verification_status !== 'verified') await changeStatus(db, alumniId, 'verify', null, actor);
+  else if (status === 'flagged' && r.verification_status !== 'flagged') await changeStatus(db, alumniId, 'flag', note || 'Flagged by the Alumni Office for follow-up.', actor);
+  else if (status === 'pending' && r.verification_status !== 'pending') await changeStatus(db, alumniId, 'unflag', null, actor);
+}
+
+/** Staff-created record (Records "Add alumni record", import). No sign-in account. */
 export async function createRecord(db, input, actor, source = 'admin_encoded') {
-  const errors = {};
-  if (blank(input.last_name)) errors.last_name = 'Enter the last name.';
-  if (blank(input.first_name)) errors.first_name = 'Enter the first name.';
-  const yr = Number(input.year_graduated);
-  if (!Number.isInteger(yr) || yr < 1950 || yr > new Date().getFullYear()) errors.year_graduated = 'Enter a valid graduation year.';
-  if (!blank(input.mobile) && !normalizeMobile(input.mobile)) errors.mobile = 'Enter a valid mobile number (e.g. 09XX XXX XXXX).';
-  if (!blank(input.student_no) && !/^\d{4}-\d{5}-UDM$/i.test(String(input.student_no).trim())) errors.student_no = 'Use the format YYYY-NNNNN-UDM.';
+  const { e: errors, names } = staffFieldErrors(input, true);
   if (Object.keys(errors).length) throw badRequest('Some fields need attention.', errors);
   const prog = await resolveProgram(db, input.college, input.course, input.course_other);
   if (actor.scopeCollegeId != null && Number(prog.collegeId) !== Number(actor.scopeCollegeId)) throw badRequest('You can only add alumni to your own college.', { college: 'You can only add alumni to your own college.' });
+  const yr = Number(input.year_graduated);
   const membershipId = await nextMembershipId(db, yr);
   const { alumni_id: alumniId } = await one(
     `INSERT INTO alumnus (membership_id, student_no, program_id, course_other, declared_college_id, year_graduated, last_name, first_name, middle_name,
-                          mobile_no, present_address, record_source, flag_note)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING alumni_id`,
-    [membershipId, t(input.student_no)?.toUpperCase() || null, prog.programId, prog.courseOther, prog.declaredCollegeId, yr, t(input.last_name), t(input.first_name),
-      t(input.middle_name), normalizeMobile(input.mobile), t(input.address), source, t(input.note)], db,
+                          mobile_no, present_address, contact_email, record_source, flag_note)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) RETURNING alumni_id`,
+    [membershipId, t(input.student_no)?.toUpperCase() || null, prog.programId, prog.courseOther, prog.declaredCollegeId, yr,
+      names ? names.last : t(input.last_name), names ? names.first : t(input.first_name), t(input.middle_name), normalizeMobile(input.mobile), t(input.address),
+      t(input.email), input.source || source, t(input.note)], db,
   );
-  await recordReview(db, { alumniId, reviewerId: actor.user_id, action: 'create', toStatus: 'pending', reason: source === 'import' ? 'Imported' : 'Encoded by staff' });
+  await recordReview(db, { alumniId, reviewerId: actor.user_id, action: 'create', toStatus: 'pending', reason: source === 'import' ? 'Imported from the registrar list' : 'Encoded by staff' });
   await audit(db, { actorId: actor.user_id, entityType: 'alumnus', entityId: alumniId, action: source === 'import' ? 'import' : 'create', ip: actor.ip });
+  await writeStaffEmployment(db, alumniId, input.employment, input.company);
+  await applyFormStatus(db, alumniId, input.status, t(input.note), actor);
   return { alumniId, membershipId };
 }
 
-/** Staff edit of a record (Records drawer). Partial; only the listed fields. */
+/** Staff edit of a record (Records form, reassign). Partial: only the fields sent are changed. */
 export async function staffUpdate(db, alumniId, input, actor) {
   const before = await getRecord(db, alumniId);
+  const { e: errors, names } = staffFieldErrors(input, false);
   const sets = [];
   const params = [alumniId];
   const set = (col, v) => { params.push(v); sets.push(`${col} = $${params.length}`); };
-  const errors = {};
-  if ('last_name' in input) { if (blank(input.last_name)) errors.last_name = 'Enter the last name.'; else set('last_name', t(input.last_name)); }
-  if ('first_name' in input) { if (blank(input.first_name)) errors.first_name = 'Enter the first name.'; else set('first_name', t(input.first_name)); }
+  if (names && !errors.name) { set('first_name', names.first); set('last_name', names.last); }
+  if ('first_name' in input && !names) { if (blank(input.first_name)) errors.first_name = 'Enter the first name.'; else set('first_name', t(input.first_name)); }
+  if ('last_name' in input && !names) { if (blank(input.last_name)) errors.last_name = 'Enter the last name.'; else set('last_name', t(input.last_name)); }
   if ('middle_name' in input) set('middle_name', t(input.middle_name));
-  if ('student_no' in input) {
-    if (!blank(input.student_no) && !/^\d{4}-\d{5}-UDM$/i.test(String(input.student_no).trim())) errors.student_no = 'Use the format YYYY-NNNNN-UDM.';
-    else set('student_no', t(input.student_no)?.toUpperCase() || null);
-  }
-  if ('year_graduated' in input) {
-    const yr = Number(input.year_graduated);
-    if (!Number.isInteger(yr) || yr < 1950 || yr > new Date().getFullYear()) errors.year_graduated = 'Enter a valid graduation year.'; else set('year_graduated', yr);
-  }
-  if ('mobile' in input) { if (!blank(input.mobile) && !normalizeMobile(input.mobile)) errors.mobile = 'Enter a valid mobile number.'; else set('mobile_no', normalizeMobile(input.mobile)); }
+  if ('student_no' in input && !errors.student_no) set('student_no', t(input.student_no)?.toUpperCase() || null);
+  if ('year_graduated' in input && !errors.year_graduated) set('year_graduated', Number(input.year_graduated));
+  if ('mobile' in input && !errors.mobile) set('mobile_no', normalizeMobile(input.mobile));
   if ('address' in input) set('present_address', t(input.address));
   if ('note' in input) set('flag_note', t(input.note));
+  if (input.source) set('record_source', input.source);
+  if ('email' in input && !errors.email) {
+    // The sign-in email belongs to the alumnus (they change it in their profile); staff edit only the contact email.
+    if (before.user_id) {
+      if (!blank(input.email) && String(input.email).trim().toLowerCase() !== String(before.email).toLowerCase()) errors.email = 'This alumnus signs in with their own email; they can change it in their profile.';
+    } else set('contact_email', t(input.email));
+  }
   if ('college' in input || 'course' in input || 'course_other' in input) {
     const prog = await resolveProgram(db, input.college ?? before.college_name, input.course, input.course_other);
     if (actor.scopeCollegeId != null && Number(prog.collegeId) !== Number(actor.scopeCollegeId)) errors.college = 'You can only assign programs from your own college.';
     else { set('program_id', prog.programId); set('course_other', prog.courseOther); set('declared_college_id', prog.declaredCollegeId); }
   }
   if (Object.keys(errors).length) throw badRequest('Some fields need attention.', errors);
-  if (!sets.length) return;
-  await db.query(`UPDATE alumnus SET ${sets.join(', ')}, updated_at = now() WHERE alumni_id = $1`, params);
-  await recordReview(db, { alumniId, reviewerId: actor.user_id, action: 'edit', changes: { fields: Object.keys(input) } });
-  await audit(db, { actorId: actor.user_id, entityType: 'alumnus', entityId: alumniId, action: 'staff_edit', details: { fields: Object.keys(input) }, ip: actor.ip });
+  const fields = Object.keys(input).filter((k) => k !== 'reason');
+  if (sets.length) await db.query(`UPDATE alumnus SET ${sets.join(', ')}, updated_at = now() WHERE alumni_id = $1`, params);
+  if ('employment' in input || 'company' in input) {
+    await writeStaffEmployment(db, alumniId, input.employment || before.employment_status, 'company' in input ? input.company : before.employer_name);
+    await db.query('UPDATE alumnus SET updated_at = now() WHERE alumni_id = $1', [alumniId]);
+  }
+  const changes = { fields };
+  if ('course' in input || 'year_graduated' in input) changes.from = `${before.program_abbr || 'Unmapped'} · ${before.batch}`;
+  await recordReview(db, { alumniId, reviewerId: actor.user_id, action: 'edit', changes, reason: t(input.reason) });
+  await audit(db, { actorId: actor.user_id, entityType: 'alumnus', entityId: alumniId, action: 'staff_edit', details: { fields }, ip: actor.ip });
+  await applyFormStatus(db, alumniId, input.status, t(input.note), actor);
 }

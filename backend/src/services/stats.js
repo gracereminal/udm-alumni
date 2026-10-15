@@ -149,7 +149,23 @@ export async function counters(user, filters = {}, db = pool) {
             COALESCE(sum(verified),0)::int AS verified, COALESCE(sum(archived),0)::int AS archived
        FROM v_records_counters ${w.sql}`, w.params, db,
   );
-  return { ...r, active: r.pending + r.flagged + r.verified, all: r.pending + r.flagged + r.verified + r.archived };
+  // Context for the counter cards, over the same scoped population.
+  const sc = scopeFor(user);
+  const w2 = [];
+  const p2 = [];
+  if (sc.collegeId != null) { p2.push(sc.collegeId); w2.push(`COALESCE(p.college_id, a.declared_college_id) = $${p2.length}`); }
+  const scoped = `FROM alumnus a LEFT JOIN program p ON p.program_id = a.program_id WHERE a.merged_into_id IS NULL ${w2.length ? `AND ${w2.join(' AND ')}` : ''}`;
+  const extra = await one(
+    `SELECT (SELECT min(a.created_at) ${scoped} AND a.archived_at IS NULL AND a.verification_status = 'pending') AS oldest_pending_at,
+            (SELECT max(a.updated_at) ${scoped}) AS last_updated_at,
+            (SELECT count(*)::int FROM record_review rr WHERE rr.action = 'verify' AND rr.created_at > now() - interval '7 days'
+                AND rr.alumni_id IN (SELECT a.alumni_id ${scoped})) AS verified_7d,
+            (SELECT COALESCE(array_agg(DISTINCT a.year_graduated ORDER BY a.year_graduated DESC), '{}') ${scoped}) AS batches`, p2, db,
+  );
+  return {
+    ...r, active: r.pending + r.flagged + r.verified, all: r.pending + r.flagged + r.verified + r.archived,
+    oldestPendingAt: extra.oldest_pending_at, lastUpdatedAt: extra.last_updated_at, verifiedLast7d: extra.verified_7d, batches: extra.batches,
+  };
 }
 
 /** Outreach list (v_unresponsive) with the "N of M" counters from the same query. */

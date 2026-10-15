@@ -1647,7 +1647,7 @@ export default function RecordsView(v) {
                                 </div>
                                 {p.ok ? (
                                   <>
-                                    <div style={{ fontSize: '11.5px', fontWeight: '700', color: '#0F6B4F', flex: 'none' }}>View</div>
+                                    <a href={p.url} target="_blank" rel="noopener noreferrer" style={{ fontSize: '11.5px', fontWeight: '700', color: '#0F6B4F', flex: 'none', textDecoration: 'none' }}>View</a>
                                   </>
                                 ) : null}
                               </div>

@@ -7,9 +7,11 @@ const MAX = 2 * 1024 * 1024;
 
 /** Avatar card: upload / change / remove photo, name, program and batch. */
 export default function ProfilePhotoCard({ course, batch, note = 'Saving updates your record in Alumni Records.' }) {
-  const { alumniName, avatar, avatarName, setAvatar, setAvatarName } = useProfile();
+  const { alumniName, avatar, uploadAvatar, removeAvatar } = useProfile();
   const fileRef = useRef(null);
   const [error, setError] = useState('');
+  const [avatarName, setAvatarName] = useState(null);
+  const [busy, setBusy] = useState(false);
 
   const pick = () => { if (fileRef.current) fileRef.current.click(); };
   const onFile = (e) => {
@@ -18,11 +20,15 @@ export default function ProfilePhotoCard({ course, batch, note = 'Saving updates
     if (!/^image\/(jpeg|png|webp)$/.test(file.type)) { setError('Choose a JPG or PNG image.'); e.target.value = ''; return; }
     if (file.size > MAX) { setError('That photo is larger than 2 MB. Choose a smaller one.'); e.target.value = ''; return; }
     setError('');
-    const reader = new FileReader();
-    reader.onload = () => { setAvatar(reader.result); setAvatarName(file.name); };
-    reader.readAsDataURL(file);
+    setBusy(true);
+    // The server checks the real file type and size again and stores it; the record keeps only the file key.
+    uploadAvatar(file).then(() => setAvatarName(file.name)).catch((err) => setError(err.message)).finally(() => { setBusy(false); e.target.value = ''; });
   };
-  const remove = () => { setAvatar(null); setAvatarName(null); setError(''); if (fileRef.current) fileRef.current.value = ''; };
+  const remove = () => {
+    setBusy(true);
+    removeAvatar().then(() => { setAvatarName(null); setError(''); }).catch((err) => setError(err.message)).finally(() => setBusy(false));
+    if (fileRef.current) fileRef.current.value = '';
+  };
 
   return (
     <div style={{ ...card, padding: 24, textAlign: 'center' }}>
@@ -51,7 +57,7 @@ export default function ProfilePhotoCard({ course, batch, note = 'Saving updates
       <input type="file" accept="image/png,image/jpeg,image/webp" ref={fileRef} onChange={onFile} style={{ display: 'none' }} />
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 18 }}>
         <button type="button" onClick={pick} style={{ background: '#0F3D2E', color: '#fff', border: 'none', borderRadius: 12, padding: 12, fontFamily: 'inherit', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
-          {avatar ? 'Change Photo' : 'Upload Photo'}
+          {busy ? 'Uploading…' : avatar ? 'Change Photo' : 'Upload Photo'}
         </button>
         {avatar ? (
           <button type="button" onClick={remove} style={{ background: '#fff', border: '1px solid #E2E5EA', color: '#B3213C', borderRadius: 12, padding: 11, fontFamily: 'inherit', fontWeight: 700, fontSize: 12.5, cursor: 'pointer' }}>
@@ -61,7 +67,7 @@ export default function ProfilePhotoCard({ course, batch, note = 'Saving updates
       </div>
       {error ? <div role="alert" style={{ fontSize: 12, color: '#B3261E', marginTop: 10 }}>{error}</div> : null}
       <div style={{ fontSize: 11.5, color: '#94A3B8', marginTop: 12, lineHeight: 1.5 }}>
-        {avatarName || 'No photo uploaded yet.'}
+        {avatarName || (avatar ? 'Photo on file.' : 'No photo uploaded yet.')}
         <br />
         Square JPG or PNG, up to 2 MB.
       </div>

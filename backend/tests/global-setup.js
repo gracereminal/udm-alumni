@@ -48,6 +48,7 @@ export default async function setup({ provide }) {
 
   process.env.DATABASE_URL = db.url;
   process.env.NODE_ENV = 'test';
+  process.env.ALLOW_DEMO_SEED = 'true'; // throwaway database; an external CI host is not "localhost"
   const { seedLookups } = await import('../seed/lookups.js');
   const { seedDemo } = await import('../seed/demo.js');
   const { pool } = await import('../src/db/index.js');

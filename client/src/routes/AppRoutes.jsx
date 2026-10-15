@@ -1,27 +1,30 @@
+import { lazy } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import AppShell from '../layouts/AppShell';
 import { PublicOnly, RequireConsent, RequireRegistered, RequireRole } from './guards';
 import { useAuth } from '../context/AuthContext';
-import { ROLE_HOME } from '../data/demoAccounts';
+import { ROLE_HOME } from '../data/navigation';
 import SignIn from '../pages/auth/SignIn';
-import ForgotPassword from '../pages/auth/ForgotPassword';
-import ResetInbox from '../pages/auth/ResetInbox';
+import ForgotPassword, { ResetPasswordLink } from '../pages/auth/ForgotPassword';
 import PrivacyConsent from '../pages/auth/PrivacyConsent';
-import AlumniRegistration from '../pages/auth/AlumniRegistration';
-import RegistrationSuccess from '../pages/auth/RegistrationSuccess';
-import AlumniDashboard from '../pages/alumni/AlumniDashboard';
-import AlumniProfile from '../pages/alumni/AlumniProfile';
-import AlumniJobs from '../pages/alumni/AlumniJobs';
-import AlumniEvents from '../pages/alumni/AlumniEvents';
-import AdminDashboard from '../pages/admin/AdminDashboard';
-import AlumniRecords from '../pages/admin/AlumniRecords';
-import Reports from '../pages/admin/Reports';
-import AdminJobs from '../pages/admin/AdminJobs';
-import AdminEvents from '../pages/admin/AdminEvents';
-import CollegeDashboard from '../pages/college/CollegeDashboard';
+
+// Registration and signed-in pages load on demand (AppShell's Suspense) so sign-in ships a small first bundle.
+const AlumniRegistration = lazy(() => import('../pages/auth/AlumniRegistration'));
+const RegistrationSuccess = lazy(() => import('../pages/auth/RegistrationSuccess'));
+const AlumniDashboard = lazy(() => import('../pages/alumni/AlumniDashboard'));
+const AlumniProfile = lazy(() => import('../pages/alumni/AlumniProfile'));
+const AlumniJobs = lazy(() => import('../pages/alumni/AlumniJobs'));
+const AlumniEvents = lazy(() => import('../pages/alumni/AlumniEvents'));
+const AdminDashboard = lazy(() => import('../pages/admin/AdminDashboard'));
+const AlumniRecords = lazy(() => import('../pages/admin/AlumniRecords'));
+const Reports = lazy(() => import('../pages/admin/Reports'));
+const AdminJobs = lazy(() => import('../pages/admin/AdminJobs'));
+const AdminEvents = lazy(() => import('../pages/admin/AdminEvents'));
+const CollegeDashboard = lazy(() => import('../pages/college/CollegeDashboard'));
 
 function Home() {
-  const { user } = useAuth();
+  const { user, ready } = useAuth();
+  if (!ready) return null;
   return <Navigate to={user ? ROLE_HOME[user.role] : '/signin'} replace />;
 }
 
@@ -33,8 +36,9 @@ export default function AppRoutes() {
         <Route element={<PublicOnly />}>
           <Route path="/signin" element={<SignIn />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/forgot-password/inbox" element={<ResetInbox />} />
         </Route>
+        {/* The emailed reset link works whether or not someone is signed in. */}
+        <Route path="/reset-password" element={<ResetPasswordLink />} />
         <Route path="/register" element={<Navigate to="/register/consent" replace />} />
         <Route path="/register/consent" element={<PrivacyConsent />} />
         <Route element={<RequireConsent />}>

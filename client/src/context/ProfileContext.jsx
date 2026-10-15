@@ -1,87 +1,91 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { useAuth } from './AuthContext';
+import { del, get, patch, put, upload } from '../lib/api';
+import { regStepDefs, surveySectionDefs } from '../data/formDefs';
 
+// Only the unsent registration draft stays in the browser (never the password). Everything else lives in the API.
 const STORE = 'udm.tracer.draft.v1';
 const ProfileContext = createContext(null);
 
-const read = () => {
-  try {
-    const raw = localStorage.getItem(STORE);
-    return raw ? JSON.parse(raw) : null;
-  } catch {
-    return null;
-  }
+const readDraft = () => {
+  try { const raw = localStorage.getItem(STORE); return (raw && JSON.parse(raw).a) || {}; } catch { return {}; }
+};
+const writeDraft = (a) => {
+  try { if (a && Object.keys(a).length) localStorage.setItem(STORE, JSON.stringify({ a })); else localStorage.removeItem(STORE); } catch { /* storage unavailable */ }
 };
 
+const PROFILE_IDS = [...new Set(regStepDefs({}).flatMap((s) => s.questions.map((q) => q.id)))];
+const SURVEY_IDS = surveySectionDefs().flatMap((s) => s.questions.map((q) => q.id));
+const pick = (a, ids) => Object.fromEntries(ids.filter((k) => k in a).map((k) => [k, a[k]]));
+
 /**
- * The alumnus' own registration + profile + survey answers (shared by Registration, Edit Profile,
- * Alumni Survey, the Alumni Dashboard and the Admin / College record views).
+ * The alumnus' own registration + profile + survey answers (Registration, Edit Profile, the Alumni Dashboard),
+ * read from GET /me — the same ALUMNUS row that Records, the Directory and the stats use.
  */
 export function ProfileProvider({ children }) {
-  const saved = useMemo(read, []);
-  const [a, setAnswers] = useState(saved?.a || {});
-  const [meta, setMeta] = useState({
-    surveySection: saved?.surveySection || 0,
-    surveySubmitted: !!saved?.surveySubmitted,
-    registered: !!saved?.registered,
-    regAt: saved?.regAt || null,
-    profileSavedAt: saved?.profileSavedAt || null,
-    savedAt: saved?.savedAt || null,
-    restored: !!saved,
-  });
-  const [avatar, setAvatar] = useState(() => {
-    try { return localStorage.getItem(`${STORE}.avatar`); } catch { return null; }
-  });
-  const [avatarName, setAvatarName] = useState(() => {
-    try { return localStorage.getItem(`${STORE}.avatarName`); } catch { return null; }
-  });
+  const { user, role } = useAuth();
+  const [me, setMe] = useState(null);
+  const [draft, setDraft] = useState(readDraft);
+  const [registered, setRegistered] = useState(false);
+
+  const reload = useCallback(async () => {
+    const data = await get('/me');
+    setMe(data);
+    return data;
+  }, []);
 
   useEffect(() => {
-    try {
-      if (avatar) { localStorage.setItem(`${STORE}.avatar`, avatar); localStorage.setItem(`${STORE}.avatarName`, avatarName || ''); }
-      else { localStorage.removeItem(`${STORE}.avatar`); localStorage.removeItem(`${STORE}.avatarName`); }
-    } catch { /* image too large for storage — keep it in memory only */ }
-  }, [avatar, avatarName]);
+    if (role === 'alumni' && user) reload().catch(() => setMe(null));
+    else setMe(null);
+  }, [role, user, reload]);
 
-  const write = useCallback((nextA, nextMeta) => {
-    const savedAt = new Date().toISOString();
-    try {
-      localStorage.setItem(STORE, JSON.stringify({
-        a: nextA, surveySection: nextMeta.surveySection, surveySubmitted: nextMeta.surveySubmitted,
-        registered: nextMeta.registered, regAt: nextMeta.regAt, profileSavedAt: nextMeta.profileSavedAt, savedAt,
-      }));
-    } catch { /* storage unavailable */ }
-    return savedAt;
-  }, []);
+  // Registration draft editing (signed out).
+  const updateDraft = useCallback((fn) => setDraft((d) => { const n = fn(d); writeDraft(n); return n; }), []);
+  const setA = useCallback((id, v) => updateDraft((d) => ({ ...d, [id]: v })), [updateDraft]);
+  const setMany = useCallback((obj) => updateDraft((d) => ({ ...d, ...obj })), [updateDraft]);
+  const toggleA = useCallback((id, v) => updateDraft((d) => {
+    const cur = d[id] || [];
+    return { ...d, [id]: cur.indexOf(v) > -1 ? cur.filter((x) => x !== v) : cur.concat(v) };
+  }), [updateDraft]);
+  const resetRegistration = useCallback(() => { writeDraft({}); setDraft({}); }, []);
+  /** After POST /auth/register: the draft is sent, so it is cleared; the success screen may show. */
+  const completeRegistration = useCallback(async () => {
+    setRegistered(true);
+    writeDraft({});
+    setDraft({});
+    await reload().catch(() => {});
+  }, [reload]);
 
-  /** Persist answers and/or meta (surveySection, surveySubmitted, registered, regAt, profileSavedAt). */
-  const persist = useCallback((patch = {}) => {
-    const { a: patchA, ...patchMeta } = patch;
-    const nextA = patchA || a;
-    const nextMeta = { ...meta, ...patchMeta };
-    nextMeta.savedAt = write(nextA, nextMeta);
-    if (patchA) setAnswers(nextA);
-    setMeta(nextMeta);
-  }, [a, meta, write]);
+  /**
+   * Edit Profile save: profile fields -> PATCH /me; survey answers -> PUT /me/survey (submitted once
+   * "Have you ever been employed?" is answered, so the alumnus counts as traced). Throws ApiError with field errors.
+   */
+  const saveProfile = useCallback(async (answers) => {
+    await patch('/me', pick(answers, PROFILE_IDS));
+    const survey = pick(answers, SURVEY_IDS);
+    if (Object.values(survey).some((v) => (Array.isArray(v) ? v.length : v != null && v !== '')) || me?.survey?.submitted) {
+      await put('/me/survey', { answers: survey, submit: !!survey.ever_employed });
+    }
+    return reload();
+  }, [me, reload]);
 
-  const setA = useCallback((id, v) => persist({ a: { ...a, [id]: v } }), [a, persist]);
-  const setMany = useCallback((obj) => persist({ a: { ...a, ...obj } }), [a, persist]);
-  const toggleA = useCallback((id, v) => {
-    const cur = a[id] || [];
-    persist({ a: { ...a, [id]: cur.indexOf(v) > -1 ? cur.filter((x) => x !== v) : cur.concat(v) } });
-  }, [a, persist]);
+  const uploadAvatar = useCallback(async (file) => { await upload('/me/photo', 'photo', file); return reload(); }, [reload]);
+  const removeAvatar = useCallback(async () => { await del('/me/photo'); return reload(); }, [reload]);
 
-  const alumniName = useMemo(() => [a.first_name, a.last_name].filter(Boolean).join(' ') || 'Maria Dela Cruz', [a]);
-
-  const resetRegistration = useCallback(() => {
-    setAnswers({});
-    setMeta({ surveySection: 0, surveySubmitted: false, registered: false, regAt: null, profileSavedAt: null, savedAt: null, restored: false });
-    try { localStorage.removeItem(STORE); } catch { /* ignore */ }
-  }, []);
+  const a = useMemo(() => (me ? me.a : draft), [me, draft]);
+  const alumniName = useMemo(() => [a.first_name, a.last_name].filter(Boolean).join(' ') || user?.name || 'Alumnus', [a, user]);
 
   const value = useMemo(() => ({
-    a, ...meta, alumniName, avatar, avatarName, setAvatar, setAvatarName,
-    persist, setA, setMany, toggleA, resetRegistration,
-  }), [a, meta, alumniName, avatar, avatarName, persist, setA, setMany, toggleA, resetRegistration]);
+    me, a, loaded: !!me, alumniName, registered,
+    surveySubmitted: !!me?.survey?.submitted,
+    survey: me?.survey || null,
+    record: me?.record || null,
+    privacy: me?.privacy || null,
+    regAt: me?.record?.registeredAt || null,
+    profileSavedAt: me?.record?.profileSavedAt || null,
+    avatar: me?.record?.photoUrl || null,
+    setA, setMany, toggleA, resetRegistration, completeRegistration, saveProfile, uploadAvatar, removeAvatar, reload,
+  }), [me, a, alumniName, registered, setA, setMany, toggleA, resetRegistration, completeRegistration, saveProfile, uploadAvatar, removeAvatar, reload]);
   return <ProfileContext.Provider value={value}>{children}</ProfileContext.Provider>;
 }
 

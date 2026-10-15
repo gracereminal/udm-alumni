@@ -23,7 +23,7 @@ export default function ForgotPasswordView(v) {
     email, emailErr, emailBorder, setEmail, emailKey, send, masked,
     code, setCode, codeKey, codeMsg, codeMsgColor, verify, verifyBg, verifyColor, verifyCursor, resend, changeEmail,
     pw, pw2, pwType, pwToggle, togglePw, setPw, setPw2, pwKey, rules, save, saveBg, saveColor, saveCursor,
-    finish, backSignin, viaLink, linkEmail, goInbox, requestNew,
+    finish, backSignin, viaLink, linkEmail, requestNew, pwErr,
   } = v;
   const btnHover = hv({ background: '#0B3D2E' });
   return (
@@ -145,7 +145,7 @@ export default function ForgotPasswordView(v) {
             <>
               <div data-m="f-title" style={{ ...titleStyle, marginBottom: '14px' }}>Check your <span style={italic}>email</span></div>
               <div data-m="f-desc" style={{ ...descStyle, marginBottom: '28px' }}>
-                We sent a 6-digit code to <strong style={{ color: '#0A1F18' }}>{masked}</strong>. It expires in 10 minutes.
+                We sent a 6-digit code to <strong style={{ color: '#0A1F18' }}>{masked}</strong>. It expires in 30 minutes.
               </div>
               <div style={labelStyle}>Verification code</div>
               <input
@@ -153,14 +153,6 @@ export default function ForgotPasswordView(v) {
                 style={inputStyle('#9CA3AF', { fontFamily: "'JetBrains Mono',ui-monospace,monospace", fontSize: '22px', letterSpacing: '.6em', textAlign: 'center' })} {...fv(FOCUS)}
               />
               <div style={msgStyle(codeMsgColor)}>{codeMsg}</div>
-              <div tabIndex={0} onKeyDown={onActivate(goInbox)}
-                role="button" onClick={goInbox} {...hv({ background: '#E3F1EA' })}
-                style={{ display: 'flex', alignItems: 'center', gap: '10px', border: '1px dashed #9FC3B2', background: '#F2F8F5', borderRadius: '10px', padding: '10px 12px', marginBottom: '14px', cursor: 'pointer' }}
-              >
-                <div style={{ flex: 'none', fontSize: '10px', fontWeight: '800', letterSpacing: '.1em', textTransform: 'uppercase', color: '#0B5A40', background: '#fff', border: '1px solid #CFE3D9', borderRadius: '5px', padding: '3px 6px' }}>Demo</div>
-                <div style={{ flex: 1, minWidth: 0, fontSize: '12.5px', color: '#0A1F18' }}>Open the sample inbox to view the reset email</div>
-                <div style={{ flex: 'none', fontSize: '13px', fontWeight: '700', color: '#0B5A40' }}>→</div>
-              </div>
               <div tabIndex={0} onKeyDown={onActivate(verify)} data-m="f-btn" role="button" onClick={verify} style={btnStyle(verifyBg, verifyColor, verifyCursor, { marginBottom: '18px' })}>Verify Code</div>
               <div style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: '6px 16px', fontSize: '13px', color: 'rgba(0,0,0,.6)', marginBottom: '22px' }}>
                 <div>Didn&apos;t get it? <button type="button" className="link-btn" onClick={resend} style={{ fontWeight: '700', textDecoration: 'none' }}>Resend code</button></div>
@@ -194,6 +186,7 @@ export default function ForgotPasswordView(v) {
                   </div>
                 ))}
               </div>
+              {pwErr ? <div role="alert" style={msgStyle('#B3261E')}>{pwErr}</div> : null}
               <div tabIndex={0} onKeyDown={onActivate(save)} data-m="f-btn" role="button" onClick={save} style={btnStyle(saveBg, saveColor, saveCursor, { marginBottom: '22px' })}>Update Password</div>
             </>
           ) : null}

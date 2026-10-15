@@ -4,22 +4,15 @@ import Modal, { modalBtn } from '../../components/Modal';
 import useConfirmToast from '../../hooks/useConfirmToast';
 import { useEvents } from '../../context/EventsContext';
 import {
-  EVENT_HOSTS, EV_STATUS_META, NOTICE_KINDS, evCount, evFromForm, evStatusKey, evToForm, evTs, evValidate, photoCss,
+  EVENT_HOSTS, EV_STATUS_META, NOTICE_KINDS, evCount, evStatusKey, evToForm, evTs, evValidate, photoCss,
 } from '../../data/events';
 import { readImage } from '../../lib/files';
 
 const RED = '#D92D20';
 const OK = '#E2E5EA';
 const fe = (msg) => ({ has: !!msg, msg: msg || '', invalid: msg ? 'true' : 'false', border: msg ? RED : OK });
-const PEOPLE = [
-  { name: 'Maria Isabel Santos', meta: 'BSCS 2023 · Software Engineer, Accenture', reply: 'Going' },
-  { name: 'Rafael De La Cruz', meta: 'BSIT 2021 · IT Officer, City of Manila', reply: 'Going' },
-  { name: 'Patricia Anne Lim', meta: 'BSBA-BE 2020 · Analyst, BDO Unibank', reply: 'Going' },
-  { name: 'Joshua Emmanuel Reyes', meta: 'BSBA-MM 2019 · Branch Supervisor, Metrobank', reply: 'Maybe' },
-  { name: 'Kimberly Anne Torres', meta: 'BSEd-Eng 2022 · Teacher I, Manila High School', reply: 'Going' },
-  { name: 'Angelo Miguel Bautista', meta: 'BSCpE 2018 · Site Engineer, DMCI', reply: 'Declined' },
-];
-const REPLY = { Going: ['#0F3D2E', '#E6F0EB'], Maybe: ['#8A6A16', '#FBF3DF'], Declined: ['#9F1239', '#FCE9EE'] };
+const REPLY = { Going: ['#0F3D2E', '#E6F0EB'], Cancelled: ['#9F1239', '#FCE9EE'] };
+const regMeta = (r) => [r.program, r.batch].filter(Boolean).join(' ') + (r.answers && Object.keys(r.answers).length ? ` · ${Object.values(r.answers).join(' · ')}` : '');
 const shortDate = (e) => {
   const s = String(e.iso || '').slice(0, 10);
   let d = null;
@@ -52,6 +45,18 @@ export default function AdminEvents() {
   const eventFormRef = useRef(null);
   const ntFormRef = useRef(null);
   const fdPhotoRef = useRef(null);
+  const [regs, setRegs] = useState(null);
+
+  // Registrations of the event open in the manage panel, from EVENT_REGISTRATION.
+  const { registrations } = ev;
+  const manageCount = manage ? evCount(events.find((x) => x.id === manage) || {}) : 0;
+  useEffect(() => {
+    setRegs(null);
+    if (!manage) return undefined;
+    let live = true;
+    registrations(manage).then((r) => { if (live) setRegs(r); }, () => { if (live) setRegs({ rows: [], active: 0, failed: true }); });
+    return () => { live = false; };
+  }, [manage, manageCount, registrations]);
 
   const all = events;
   const bucket = (e) => { const k = evStatusKey(e, rsvps); return k === 'past' ? 'past' : k === 'cancelled' ? 'cancelled' : 'upcoming'; };
@@ -87,10 +92,12 @@ export default function AdminEvents() {
   };
   const evCreate = () => openForm({ mode: 'create', title: '', dateISO: '', timeStart: '09:00', timeEnd: '12:00', venue: '', organizer: EVENT_HOSTS[0], body: '', photo: null, photoName: '' });
   const evEdit = (e) => openForm({ ...evToForm(e), mode: 'edit', photo: e.photo || null, photoName: '' });
-  const evDup = (e) => openForm({ ...evToForm(e), mode: 'create', id: null, title: `${e.title} (copy)`, dateISO: '', photo: e.photo || null, photoName: '' });
+  const evDup = (e) => openForm({ ...evToForm(e), mode: 'create', id: null, title: `${e.title} (copy)`, dateISO: '', photo: e.photo || null, photoName: '', coverFrom: e.photo ? e.id : null });
   const setStatus = (e, k) => {
     setMenu(null);
-    const run = (msg) => { ev.patchEvent(e.id, { statusKey: k }); ct.toast(msg); };
+    const run = (msg) => (k === 'cancelled' ? ev.cancelEvent(e.id) : ev.patchEvent(e.id, { status: k })).then(
+      () => ct.toast(msg), (err) => ct.toast(err.message || 'Couldn’t update the event. Please try again.', false),
+    );
     if (k === 'closed') run('Registration closed.');
     else if (k === 'open') run('Registration reopened.');
     else if (k === 'cancelled') ct.askConfirm({ title: 'Cancel this event?', body: 'Registration closes and registered alumni are notified. Its Dashboard announcement will show the event as cancelled.', detail: e.title, cancelLabel: 'Keep event', okLabel: 'Cancel event', danger: true, onOk: () => run('Event cancelled. Its announcement now shows it as cancelled.') });
@@ -102,14 +109,14 @@ export default function AdminEvents() {
     ct.askConfirm({
       title: 'Delete this event?', body: `This permanently removes the event${n ? ` and its ${n.toLocaleString()} responses` : ''}. Its Dashboard announcement is removed too. This can’t be undone.`, detail: e.title,
       cancelLabel: 'Keep event', okLabel: 'Delete event', busyLabel: 'Deleting…', danger: true, async: true,
-      onOk: () => ct.runAsync(() => { ev.deleteEvent(e.id); if (manage === e.id) setManage(null); ct.toast('Event deleted. Its announcement was removed.'); }, 'Couldn’t delete the event. Please try again.'),
+      onOk: () => ct.runAsync(async () => { await ev.deleteEvent(e.id); if (manage === e.id) setManage(null); ct.toast('Event deleted. Its announcement was removed.'); }, 'Couldn’t delete the event. Please try again.'),
     });
   };
   const annHide = (e) => ct.askConfirm({
     title: 'Remove from the Dashboard?', body: 'The event stays published — alumni can still find it on the Events page.', detail: e.title, cancelLabel: 'Cancel', okLabel: 'Remove announcement', danger: true,
-    onOk: () => { ev.patchEvent(e.id, { annHidden: true }); ct.toast('Announcement removed. The event is still published.'); },
+    onOk: () => ev.patchEvent(e.id, { annHidden: true }).then(() => ct.toast('Announcement removed. The event is still published.'), (err) => ct.toast(err.message, false)),
   });
-  const annShow = (e) => { ev.patchEvent(e.id, { annHidden: false }); ct.toast('Announcement is back on the Dashboard.'); };
+  const annShow = (e) => ev.patchEvent(e.id, { annHidden: false }).then(() => ct.toast('Announcement is back on the Dashboard.'), (err) => ct.toast(err.message, false));
 
   const menuFor = (e) => {
     const k = evStatusKey(e, rsvps);
@@ -153,15 +160,11 @@ export default function AdminEvents() {
       return;
     }
     setBusyEv(true); setFormErr('');
-    setTimeout(() => {
-      setBusyEv(false);
-      const base = { ...evFromForm(c), photo: c.photo || null };
-      if (c.mode === 'create') {
-        ev.createEvent({ id: `posted-${Date.now()}`, pub: Date.now(), kind: 'EVENT', kindColor: '#0F3D2E', kindBg: '#E6F0EB', fee: 'Free for registered alumni', attendees: 'No registrations yet', status: 'JUST POSTED', statusKey: 'open', regCount: 0, agenda: [], ...base });
-        setForm(null); setTab('upcoming'); setQ('');
-        ct.toast('Event published. Its announcement is now on the Dashboard.');
-      } else { ev.patchEvent(c.id, base); setForm(null); ct.toast('Changes saved. The linked announcement was updated.'); }
-    }, 900);
+    const fields = { title: c.title.trim(), organizer: c.organizer, dateISO: c.dateISO, timeStart: c.timeStart, timeEnd: c.timeEnd || '', venue: c.venue.trim(), body: String(c.body).trim(), photo: c.photo, coverFrom: c.coverFrom };
+    const done = c.mode === 'create'
+      ? ev.createEvent(fields).then(() => { setForm(null); setTab('upcoming'); setQ(''); ct.toast('Event published. Its announcement is now on the Dashboard.'); })
+      : ev.patchEvent(c.id, fields).then(() => { setForm(null); ct.toast('Changes saved. The linked announcement was updated.'); });
+    done.catch((err) => setFormErr(err.message || 'Couldn’t save the event. Please try again.')).finally(() => setBusyEv(false));
   };
   const fdClose = () => {
     if (busyEv) return;
@@ -186,8 +189,8 @@ export default function AdminEvents() {
     const k = evStatusKey(me, rsvps);
     const b = bucket(me);
     const n = evCount(me, rsvps);
-    const going = n ? Math.max(n - 24, Math.round(n * 0.86)) : 0;
-    const maybe = n ? Math.round(n * 0.09) : 0;
+    const regRows = (regs && regs.rows) || [];
+    const cancelledN = regRows.filter((r) => r.cancelledAt).length;
     const shown = b !== 'past' && !me.annHidden;
     const cx = k === 'cancelled';
     const mine = !!rsvps[me.id];
@@ -201,18 +204,28 @@ export default function AdminEvents() {
       mdOn: true, mdClose: () => setManage(null), mdTitle: me.title, mdWhen: shortDate(me) + (me.time ? ` · ${me.time}` : ''), mdVenue: me.venue || '—', mdHost: me.organizer || EVENT_HOSTS[0],
       mdPhotoCss: photoCss(me), mdSt: EV_STATUS_META[k],
       mdCanEdit: b === 'upcoming', mdEdit: () => evEdit(me), mdToggleLabel: k === 'closed' ? 'Reopen registration' : 'Close registration', mdToggle: () => setStatus(me, k === 'closed' ? 'open' : 'closed'),
-      mdCount: n.toLocaleString() + (n === 1 ? ' response' : ' responses'), mdHasPeople: n > 0, mdNoPeople: n === 0, mdExport: () => exportRegistrations(me, n),
+      mdCount: n.toLocaleString() + (n === 1 ? ' response' : ' responses'), mdHasPeople: regRows.length > 0, mdNoPeople: regRows.length === 0, mdExport: () => exportRegistrations(me, regRows),
       mdHasCap: !!me.capacity, mdCap: me.capacity ? `${n.toLocaleString()} of ${me.capacity.toLocaleString()} spots filled` : '', mdCapPct: me.capacity ? `${Math.min(100, Math.round((n / me.capacity) * 100))}%` : '0%',
-      mdStats: [{ label: 'Going', value: going.toLocaleString(), color: '#0F3D2E' }, { label: 'Maybe', value: maybe.toLocaleString(), color: '#8A6A16' }, { label: 'Declined', value: Math.max(0, n - going - maybe).toLocaleString(), color: '#9F1239' }],
-      mdPeople: PEOPLE.slice(0, Math.min(n, 6)).map((p) => ({ name: p.name, meta: p.meta, reply: p.reply, fg: REPLY[p.reply][0], bg: REPLY[p.reply][1], initials: p.name.split(' ').map((w) => w[0]).slice(0, 2).join('') })),
-      mdHasMore: n > 6, mdMore: `Showing 6 of ${n.toLocaleString()} · newest first`,
+      mdStats: [
+        { label: 'Going', value: n.toLocaleString(), color: '#0F3D2E' },
+        { label: 'Cancelled', value: regs ? cancelledN.toLocaleString() : '…', color: '#9F1239' },
+        { label: 'Spots left', value: me.capacity ? Math.max(0, me.capacity - n).toLocaleString() : '—', color: '#8A6A16' },
+      ],
+      mdPeople: regRows.slice(0, 6).map((r) => {
+        const reply = r.cancelledAt ? 'Cancelled' : 'Going';
+        return { name: r.name, meta: regMeta(r), reply, fg: REPLY[reply][0], bg: REPLY[reply][1], initials: r.name.split(' ').map((w) => w[0]).slice(0, 2).join('') };
+      }),
+      mdHasMore: regRows.length > 6, mdMore: `Showing 6 of ${regRows.length.toLocaleString()} · active first, newest first`,
       mdAnnShown: shown, mdAnnOff: !shown, mdAnn: ann, mdAnnRemove: () => annHide(me),
       mdAnnSub: b === 'cancelled' ? 'Alumni see this event as cancelled.' : 'Updates automatically when you edit the event.',
       mdAnnNote: b === 'past' ? 'Past events are no longer announced on the Dashboard.' : 'Not shown on the Dashboard.', mdCanRestore: b !== 'past' && !!me.annHidden, mdAnnRestore: () => annShow(me),
     };
   }
-  const exportRegistrations = (e, n) => {
-    const rows = [['Name', 'Profile', 'Reply'], ...PEOPLE.slice(0, Math.min(n, PEOPLE.length)).map((p) => [p.name, p.meta, p.reply])];
+  const exportRegistrations = (e, list) => {
+    const keys = [...new Set(list.flatMap((r) => Object.keys(r.answers || {})))];
+    const labels = keys.map((k) => ((e.regFields || []).find((f) => f.key === k) || {}).label || k);
+    const rows = [['Name', 'Program', 'Batch', 'Status', 'Registered at', ...labels],
+      ...list.map((r) => [r.name, r.program, r.batch || '', r.cancelledAt ? 'Cancelled' : 'Going', new Date(r.registeredAt).toLocaleString('en-PH', { timeZone: 'Asia/Manila' }), ...keys.map((k) => (r.answers || {})[k] || '')])];
     const csv = rows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\r\n');
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8' }));
@@ -234,16 +247,15 @@ export default function AdminEvents() {
     const title = String(nd.title || '').trim();
     if (!title) { setNtTried(true); setNtErr(''); focusNt(); return; }
     if (editing && !ntDirty) { setNd({}); setNtTried(false); setNtOpenFlag(false); return; }
+    const body = String(nd.body || '').trim();
+    if (!body) { setNtErr('Enter the announcement text.'); return; }
     setBusyNt(true); setNtErr('');
-    setTimeout(() => {
-      setBusyNt(false);
-      const k = nd.kind || 'Notice';
-      const body = String(nd.body || '').trim();
-      const nl = editing ? notices.map((x) => (x.id === nd.editId ? { ...x, kind: k, title, body } : x))
-        : [{ id: `n-${Date.now()}`, pub: Date.now(), month: 'Oct', day: '05', kind: k, source: 'UDM Alumni Relations Office', title, body }, ...notices];
-      ev.setNotices(nl); setNd({}); setNtTried(false); setNtOpenFlag(false);
-      ct.toast(editing ? 'Announcement updated.' : 'Announcement posted to the Dashboard.');
-    }, 800);
+    ev.saveNotice({ id: nd.editId, kind: nd.kind || 'Notice', title, body, ...(editing ? {} : { source: 'UDM Alumni Relations Office' }) })
+      .then(() => {
+        setNd({}); setNtTried(false); setNtOpenFlag(false);
+        ct.toast(editing ? 'Announcement updated.' : 'Announcement posted to the Dashboard.');
+      }, (err) => setNtErr(err.message || 'Couldn’t save the announcement. Please try again.'))
+      .finally(() => setBusyNt(false));
   };
   const ntEdit = (n) => {
     if (nd.editId === n.id) return;
@@ -253,7 +265,7 @@ export default function AdminEvents() {
   };
   const ntRemove = (n) => ct.askConfirm({
     title: 'Remove this announcement?', body: 'Alumni will no longer see it on the Dashboard.', detail: n.title, cancelLabel: 'Cancel', okLabel: 'Remove announcement', busyLabel: 'Removing…', danger: true, async: true,
-    onOk: () => ct.runAsync(() => { ev.setNotices(notices.filter((x) => x.id !== n.id)); if (nd.editId === n.id) setNd({}); ct.toast('Announcement removed.'); }, 'Couldn’t remove the announcement. Please try again.'),
+    onOk: () => ct.runAsync(async () => { await ev.removeNotice(n.id); if (nd.editId === n.id) setNd({}); ct.toast('Announcement removed.'); }, 'Couldn’t remove the announcement. Please try again.'),
   });
   const annList = notices.map((n) => ({
     linked: false, standalone: true, kind: n.kind.toUpperCase(), kindColor: NOTICE_KINDS[n.kind][0], kindBg: NOTICE_KINDS[n.kind][1], title: n.title, meta: `${n.month} ${n.day} · ${n.source}`, decor: 'none',

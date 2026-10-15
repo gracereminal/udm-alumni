@@ -33,6 +33,9 @@ export const NAV = {
   ],
 };
 
+/** Landing page per role after sign-in. */
+export const ROLE_HOME = { alumni: '/alumni/dashboard', dept: '/college/dashboard', admin: '/admin/dashboard' };
+
 export const ROLE_LABEL = { alumni: 'Alumni', dept: 'College Dean', admin: 'Administrator' };
 export const ROLE_BASE = { alumni: '/alumni', dept: '/college', admin: '/admin' };
 

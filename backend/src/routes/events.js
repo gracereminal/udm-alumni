@@ -11,7 +11,7 @@ import { id, manilaToday } from '../lib/validation.js';
 import { EVENT_CATEGORY, NOTICE_KIND, code, label } from '../lib/vocab.js';
 import { audit, fromReq } from '../services/audit.js';
 import { adminIds, allAlumniIds, eventRegistrantIds, notify } from '../services/notifications.js';
-import { publicUrl, saveUpload } from '../services/storage.js';
+import { publicUrl, removeObject, saveUpload } from '../services/storage.js';
 
 const router = Router();
 // Mounted at the API root, so auth is scoped to this router's own paths.
@@ -101,16 +101,17 @@ async function writeChildren(db, eventId, b) {
 
 const whenText = (b) => `${b.dateISO}${b.timeStart ? ` ${b.timeStart}` : ''} · ${b.venue}`;
 
-router.post('/events', requireRole('admin'), validate({ body: eventBody }), async (req, res, next) => {
+// `coverFrom`: reuse another event's cover file (the composer's "Duplicate"); it is shared, as with /duplicate.
+router.post('/events', requireRole('admin'), validate({ body: eventBody.extend({ coverFrom: id.optional() }) }), async (req, res, next) => {
   try {
     const b = req.valid.body;
     checkTimes(b, true);
     const out = await tx(async (db) => {
       const r = await one(
-        `INSERT INTO event (created_by, title, category, organizer, starts_at, ends_at, venue, fee_text, capacity, highlights, teaser, body, published_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING event_id`,
+        `INSERT INTO event (created_by, title, category, organizer, starts_at, ends_at, venue, fee_text, capacity, highlights, teaser, body, published_at, cover_photo_url)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, (SELECT cover_photo_url FROM event WHERE event_id = $14 AND deleted_at IS NULL)) RETURNING event_id`,
         [req.user.user_id, b.title, code(EVENT_CATEGORY, b.kind), b.organizer || null, ts(b.dateISO, b.timeStart), b.timeEnd ? ts(b.dateISO, b.timeEnd) : null,
-          b.venue, b.fee || null, b.capacity ?? null, JSON.stringify(b.highlights || []), b.body.slice(0, 150), b.body, b.publish ? new Date() : null], db,
+          b.venue, b.fee || null, b.capacity ?? null, JSON.stringify(b.highlights || []), b.body.slice(0, 150), b.body, b.publish ? new Date() : null, b.coverFrom ?? null], db,
       );
       await writeChildren(db, r.event_id, b);
       await audit(db, fromReq(req, { entityType: 'event', entityId: r.event_id, action: 'create' }));
@@ -169,14 +170,38 @@ router.patch('/events/:id', requireRole('admin'), validate({ params: z.object({ 
   } catch (err) { next(err); }
 });
 
+// Sets (key) or clears (null) the cover and returns the old key when no other event still uses it:
+// /duplicate copies cover_photo_url, so a file can be shared and is removed only with its last reference.
+async function setCover(db, eventId, key) {
+  const prev = await one('SELECT cover_photo_url FROM event WHERE event_id = $1 AND deleted_at IS NULL FOR UPDATE', [eventId], db);
+  if (!prev) throw notFound();
+  await db.query('UPDATE event SET cover_photo_url = $2, updated_at = now() WHERE event_id = $1', [eventId, key]);
+  const old = prev.cover_photo_url;
+  if (!old || old === key) return null;
+  const shared = await one('SELECT 1 AS x FROM event WHERE cover_photo_url = $1 LIMIT 1', [old], db);
+  return shared ? null : old;
+}
+
 router.post('/events/:id/photo', requireRole('admin'), validate({ params: z.object({ id }) }), upload.single('photo'), async (req, res, next) => {
   try {
     const f = await saveUpload(req.file?.buffer, 'image');
-    const out = await tx(async (db) => {
-      const r = await db.query('UPDATE event SET cover_photo_url = $2, updated_at = now() WHERE event_id = $1 AND deleted_at IS NULL', [req.valid.params.id, f.key]);
-      if (!r.rowCount) throw notFound();
-      return getEvent(db, req.valid.params.id, req);
+    const { out, old } = await tx(async (db) => {
+      const old = await setCover(db, req.valid.params.id, f.key);
+      return { out: await getEvent(db, req.valid.params.id, req), old };
     });
+    if (old) await removeObject(old);
+    res.json(eventOut(out));
+  } catch (err) { next(err); }
+});
+
+router.delete('/events/:id/photo', requireRole('admin'), validate({ params: z.object({ id }) }), async (req, res, next) => {
+  try {
+    const { out, old } = await tx(async (db) => {
+      const old = await setCover(db, req.valid.params.id, null);
+      await audit(db, fromReq(req, { entityType: 'event', entityId: req.valid.params.id, action: 'photo_remove' }));
+      return { out: await getEvent(db, req.valid.params.id, req), old };
+    });
+    if (old) await removeObject(old);
     res.json(eventOut(out));
   } catch (err) { next(err); }
 });

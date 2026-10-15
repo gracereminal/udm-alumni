@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import CollegeDashboardView from '../../views/CollegeDashboardView';
 import useChartTip from '../../hooks/useChartTip';
-import { useRecords } from '../../context/RecordsContext';
+import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
-import { buildCollegeDash } from '../../lib/collegeDash';
+import { buildCollegeDash, deptRequests, emptyDeptData } from '../../lib/collegeDash';
+import { get, post } from '../../lib/api';
 
 const PAGES = {
   dashboard: { title: 'College Dashboard', kpis: true, insights: true, outreach: true },
@@ -12,31 +13,51 @@ const PAGES = {
 };
 
 /**
- * College / Department dashboard, scoped to the dean's own college (College of Computing Studies).
- * `section` selects the page: the full dashboard or Outreach.
+ * College / Department dashboard, scoped by the API to the signed-in user's college.
+ * `section` selects the page: the full dashboard or Outreach. "Contact" sends a real email (POST /outreach).
  */
 export default function CollegeDashboard({ section = 'dashboard' }) {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { toast } = useToast();
-  const { regRecord } = useRecords();
   const { tipH, donutMove, vals: tipVals } = useChartTip();
   const [course, setCourse] = useState('all');
   const [batch, setBatch] = useState('all');
-  const [contacted, setContacted] = useState({});
   const [hover, setHover] = useState(null);
+  const [data, setData] = useState(emptyDeptData);
+  const [contacting, setContacting] = useState(null);
+  const [reloadKey, setReloadKey] = useState(0);
   const page = PAGES[section] || PAGES.dashboard;
 
-  const { vals, slices } = buildCollegeDash({ course, batch, contacted }, regRecord, {
+  const reqKey = JSON.stringify(deptRequests({ course, batch }));
+  useEffect(() => {
+    let live = true;
+    const r = JSON.parse(reqKey);
+    const keys = Object.keys(r);
+    Promise.all(keys.map((k) => get(r[k])))
+      .then((res) => { if (live) setData(Object.fromEntries(keys.map((k, i) => [k, res[i]]))); })
+      .catch((err) => { if (live) toast(err.message, false); });
+    return () => { live = false; };
+  }, [reqKey, reloadKey, toast]);
+
+  // The toast shows only after the API confirms the email was sent; a failed send records nothing.
+  const contact = useCallback(async (row) => {
+    setContacting(row.alumni_id);
+    try {
+      await post('/outreach', { alumniId: row.alumni_id, method: 'email', template: 'survey_followup' });
+      toast(`Outreach email sent to ${row.name}.`);
+      setReloadKey((k) => k + 1);
+    } catch (err) {
+      toast(err.message, false);
+    } finally {
+      setContacting(null);
+    }
+  }, [toast]);
+
+  const { vals, slices } = buildCollegeDash({ course, batch }, data, {
+    user, contact, contacting, setHover, hoverId: hover, tipH,
     setCourse: (c) => { setCourse(c); setHover(null); },
     setBatch,
-    setHover,
-    hoverId: hover,
-    tipH,
-    toggleContact: (id, name) => setContacted((s) => {
-      const on = !s[id];
-      toast(on ? `Outreach email sent to ${name}.` : `Contact mark removed for ${name}.`);
-      return { ...s, [id]: on };
-    }),
   });
   const v = {
     ...vals,
