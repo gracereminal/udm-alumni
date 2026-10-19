@@ -25,7 +25,9 @@ COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer
 WORKDIR /app
 COPY backend/ ./
 COPY --from=vendor /app/vendor ./vendor
-RUN composer dump-autoload --optimize --no-dev --no-interaction \
+# Build-time artisan runs without the real config (it comes from the host at runtime), so skip the production check.
+RUN export APP_ENV=build \
+    && composer dump-autoload --optimize --no-dev --no-interaction \
     && php artisan package:discover --ansi
 
 # The built client: assets go into public/ (served as plain files), index.html is served by SpaController.
