@@ -57,6 +57,9 @@ return [
     // Shared secret for POST /api/v1/internal/jobs/:name (24+ characters in production).
     'cron_secret' => env('CRON_SECRET'),
 
+    // The built client's index.html, served for non-API paths on a single-host deploy (SpaController).
+    'spa_index' => env('SPA_INDEX_PATH', base_path('../client/dist/index.html')),
+
     // Lets the DemoSeeder run against a non-local (staging) database.
     'allow_demo_seed' => (bool) env('ALLOW_DEMO_SEED', false),
 

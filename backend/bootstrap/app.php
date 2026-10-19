@@ -1,6 +1,7 @@
 <?php
 
 use App\Exceptions\ApiException;
+use App\Http\Controllers\SpaController;
 use App\Http\Middleware\RequestId;
 use App\Http\Middleware\RequireRole;
 use App\Http\Middleware\RequireXhr;
@@ -14,6 +15,7 @@ use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
@@ -22,6 +24,8 @@ return Application::configure(basePath: dirname(__DIR__))
         api: __DIR__.'/../routes/api.php',
         apiPrefix: 'api/v1',
         commands: __DIR__.'/../routes/console.php',
+        // Single-host deploy: the React app answers every other path (no web middleware: it is a static file).
+        then: fn () => Route::fallback(SpaController::class),
     )
     ->withMiddleware(function (Middleware $middleware): void {
         // The API is reached through the Vercel rewrite, so the client IP comes from the proxy headers.
