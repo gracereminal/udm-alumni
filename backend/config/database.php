@@ -47,6 +47,9 @@ return [
             'search_path' => 'public',
             'sslmode' => env('DB_SSLMODE', 'prefer'),
             'timezone' => 'UTC',
+            // Neon's pooler (PgBouncer) breaks PDO's server-side prepared statements: the DEALLOCATE fails silently and
+            // aborts the open transaction (SQLSTATE 25P02). Emulated prepares send plain queries instead.
+            'options' => [PDO::ATTR_EMULATE_PREPARES => true],
         ],
 
         'pgsql_direct' => [
