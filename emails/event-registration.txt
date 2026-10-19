@@ -1,0 +1,23 @@
+You’re registered for {{ event_title }}
+
+Hi {{ first_name }},
+
+Thank you for registering. Your spot is confirmed. Present the entry pass below at the registration desk.
+
+Date:  {{ event_date }}
+Time:  {{ event_time }}
+Venue: {{ event_venue }}
+Fee:   {{ event_fee }}
+<!--if:answers-->
+Your details: {{ answers }}
+<!--endif:answers-->
+
+Your entry pass code: {{ pass_code }}
+
+View the event in the portal: {{ event_url }}
+
+Can’t make it? Open the event in the portal and cancel your registration to free up your spot.
+
+--
+UDM Alumni Relations Office · Universidad de Manila, Cecilia Muñoz-Palma St., Ermita, Manila
+This is an automated message. Please do not reply.
