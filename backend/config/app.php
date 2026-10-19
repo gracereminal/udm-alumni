@@ -63,6 +63,10 @@ return [
     // Lets the DemoSeeder run against a non-local (staging) database.
     'allow_demo_seed' => (bool) env('ALLOW_DEMO_SEED', false),
 
+    // The built-in admin that app:ensure-admin creates on container start if it is missing.
+    'admin_email' => env('ADMIN_EMAIL', 'admin@udmalumni.edu'),
+    'admin_password' => env('ADMIN_PASSWORD'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Timezone
