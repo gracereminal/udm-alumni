@@ -4,7 +4,10 @@ import { useAuth } from '../context/AuthContext';
 import { EMPLOYMENT_LABEL, NO_SURVEY, REC_STATUS_STYLE as STY, SOURCE_LABEL, employmentCode, employmentLabel } from '../data/records';
 import { CATALOG, programById } from '../data/colleges';
 import { fmtShortDate, num } from '../lib/format';
-import { get, patch, post, qs } from '../lib/api';
+import { get, page as getPage, patch, post } from '../lib/api';
+import { mailtoUrl, openExternal } from '../lib/contact';
+
+const portalUrl = () => `${window.location.origin}/signin`;
 
 const DOCS = [
   ['coe', 'Certificate of employment', 'Signed by HR, issued within 6 months'],
@@ -30,16 +33,21 @@ function toRow(r) {
     employment: employmentLabel(r.employmentStatus), employmentCode: r.employmentStatus || '', company: r.company || '—', jobTitle: r.jobTitle || '',
     email: r.email || '', mobile: r.mobile || '', address: r.address || '', source: SOURCE_LABEL[r.source] || r.source, sourceCode: r.source,
     updated: fmtShortDate(r.updatedAt), updatedAt: r.updatedAt, status: r.status, note: r.note || '', hasAccount: r.hasAccount, unmapped: r.unmapped, isSelf: false,
+    // A self-registration whose sign-in an Admin hasn't approved yet (verifying the record approves it).
+    accountPending: r.accountStatus === 'pending',
   };
 }
 
 /** One review-history entry -> { when, who, what }. */
 function historyLine(h) {
+  const d = h.diff || {};
   let what = REVIEW_TEXT[h.action] || h.action;
-  if (h.action === 'merge' && h.changes) what = h.changes.mergedInto ? 'Merged into another record (duplicate)' : 'Absorbed a duplicate record';
-  if (h.action === 'edit' && h.changes && h.changes.from) what = `Reassigned from ${h.changes.from}`;
-  if (h.reason) what += ` — ${h.reason}`;
-  return { when: dateTime(h.created_at), who: h.who, what };
+  if (h.action === 'merge') what = d.merged_into ? 'Merged into another record (duplicate)' : 'Absorbed a duplicate record';
+  if (h.action === 'verify' && d.account === 'approved') what = 'Account approved and record verified';
+  // Composed emails and proof requests are logged as edits whose note says what happened.
+  if (h.action === 'edit' && (d.kind === 'email' || d.kind === 'request_proof')) return { when: dateTime(h.createdAt), who: h.who, what: h.note || what };
+  if (h.note) what += ` — ${h.note}`;
+  return { when: dateTime(h.createdAt), who: h.who, what };
 }
 
 /**
@@ -80,7 +88,7 @@ export default function useRecordsPage(role) {
   const [hi, setHi] = useState(null);
   const [toastMsg, setToastMsg] = useState(null);
   const [undoIds, setUndoIds] = useState(null);
-  const [list, setList] = useState({ rows: [], total: 0 });
+  const [list, setList] = useState({ rows: [], total: 0 }); // the current page, as rows
   const [counters, setCounters] = useState(null);
   const [activity, setActivity] = useState([]);
   const [reloadKey, setReloadKey] = useState(0);
@@ -109,13 +117,13 @@ export default function useRecordsPage(role) {
   useEffect(() => {
     let live = true;
     const params = {
-      status: tab, q: debounced, programId: program, batch, employment: emp, page: pageN, pageSize, ...SORT[sortK],
+      status: tab, q: debounced, program_id: program, batch, employment: emp, page: pageN, per_page: pageSize, ...SORT[sortK],
     };
-    get(`/alumni${qs(params)}`).then((r) => {
+    getPage('/alumni', params).then((r) => {
       if (!live) return;
-      const rows = r.rows.map(toRow);
+      const rows = r.data.map(toRow);
       rows.forEach((x) => { seen.current[x.id] = x; });
-      setList({ rows, total: r.total });
+      setList({ rows, total: r.meta.total });
     }).catch((err) => { if (live) fail(err); });
     return () => { live = false; };
   }, [tab, debounced, program, batch, emp, sortK, pageSize, pageN, reloadKey, fail]);
@@ -124,7 +132,7 @@ export default function useRecordsPage(role) {
   useEffect(() => {
     let live = true;
     Promise.all([get('/stats/counters'), get('/alumni/activity?limit=5')])
-      .then(([c, a]) => { if (live) { setCounters(c); setActivity(a); } })
+      .then(([c, a]) => { if (live) { setCounters(c); setActivity(a.data || []); } })
       .catch(() => {});
     return () => { live = false; };
   }, [reloadKey]);
@@ -134,7 +142,7 @@ export default function useRecordsPage(role) {
     if (!drawer) { setDetail(null); setProofs([]); return undefined; }
     let live = true;
     Promise.all([get(`/alumni/${drawer}`), get(`/alumni/${drawer}/proofs`)])
-      .then(([d, p]) => { if (live) { setDetail(d); setProofs(p); } })
+      .then(([d, p]) => { if (live) { setDetail(d); setProofs(p.data || []); } })
       .catch((err) => { if (live) { fail(err); setDrawer(null); } });
     return () => { live = false; };
   }, [drawer, reloadKey, fail]);
@@ -186,8 +194,8 @@ export default function useRecordsPage(role) {
       reason: '', docs: {}, due: 14, note: '', programId: '', batch: r.batch, dupId: null,
       subject: r.status === 'verified' ? 'UDM Alumni Tracer — annual employment update' : 'UDM Alumni Tracer — please complete your submission',
       body: r.status === 'verified'
-        ? `Hi ${first},\n\nThank you for keeping your UDM alumni record current. It has been a while since your last update — could you take two minutes to confirm your current employment details?\n\nUse the link below to review your record.\n\n— UDM Alumni Relations Office`
-        : `Hi ${first},\n\nWe are reviewing your Alumni Tracer submission and need a few details before we can verify it.${r.note ? `\n\nOpen item: ${r.note}` : ''}\n\nUse the link below to update your record.\n\n— UDM Alumni Relations Office`,
+        ? `Hi ${first},\n\nThank you for keeping your UDM alumni record current. It has been a while since your last update — could you take two minutes to confirm your current employment details?\n\nSign in to the UDM Alumni portal to review your record: ${portalUrl()}\n\n— UDM Alumni Relations Office`
+        : `Hi ${first},\n\nWe are reviewing your Alumni Tracer submission and need a few details before we can verify it.${r.note ? `\n\nOpen item: ${r.note}` : ''}\n\nSign in to the UDM Alumni portal to update your record: ${portalUrl()}\n\n— UDM Alumni Relations Office`,
     };
     const prog = CATALOG.programs.find((p) => p.name === r.course && Number(p.collegeId) === Number(r.collegeId));
     f.programId = prog ? String(prog.id) : '';
@@ -200,7 +208,7 @@ export default function useRecordsPage(role) {
     if (kind === 'history') get(`/alumni/${id}`).then(setActDetail).catch(fail);
     if (kind === 'dup') {
       const last = r.name.split(' ').slice(-1)[0];
-      get(`/alumni${qs({ q: last, status: 'all', pageSize: 8 })}`).then((x) => setCands(x.rows.map(toRow).filter((c) => c.id !== id).slice(0, 4))).catch(() => {});
+      getPage('/alumni', { q: last, status: 'all', per_page: 8 }).then((x) => setCands(x.data.map(toRow).filter((c) => c.id !== id).slice(0, 4))).catch(() => {});
     }
   };
 
@@ -226,8 +234,8 @@ export default function useRecordsPage(role) {
     const danger = (k === 'archive' && !isArchived) || k === 'dup';
     const T = {
       history: ['Edit history', 'Every change to this record, newest first. Entries cannot be edited or removed.'],
-      email: [r.status === 'verified' ? 'Send follow-up email' : 'Send email / follow-up link', 'Sent from no-reply@udmalumni.edu with a link to the alumnus’s record. One email per alumnus every 7 days.'],
-      proof: ['Request document proof', 'The alumnus is notified and asked to upload the files. The record stays unverified until proof is reviewed.'],
+      email: [r.status === 'verified' ? 'Send follow-up email' : 'Send email / follow-up link', 'Opens in your email app with a link to the alumni portal.'],
+      proof: ['Request document proof', 'Opens your email app with the document list, and asks the alumnus in the portal to upload the files. The record stays unverified until proof is reviewed.'],
       reassign: ['Reassign program / batch', 'Corrects where this record is counted in employability reports.'],
       archive: isArchived ? ['Restore from archive', 'Returns the record to active tracking and report counts.'] : ['Archive record', 'Archived records are excluded from reports but kept on file.'],
       dup: isFlagged ? ['Confirm as duplicate', 'This record will be merged into the one you pick.'] : ['Mark as duplicate / flag', 'Moves the record to Flagged until a reviewer resolves it.'],
@@ -237,12 +245,19 @@ export default function useRecordsPage(role) {
       setActBusy(true);
       try {
         if (k === 'email') {
-          await post('/outreach', { alumniId: r.id, method: 'email', template: 'custom', subject: f.subject.trim(), body: f.body.trim() });
-          done(`Email sent to ${r.email}`);
+          // No mail server in the portal: the staff member's mail app opens with the message; the record's history says "Email composed".
+          openExternal(mailtoUrl(r.email, f.subject.trim(), f.body.trim()));
+          await post(`/alumni/${r.id}/emails`, { subject: f.subject.trim() });
+          done(`Your email app opened with the message to ${r.email}`);
         } else if (k === 'proof') {
           const names = DOCS.filter((d) => f.docs[d[0]]).map((d) => d[1]);
-          const out = await post(`/alumni/${r.id}/request-proof`, { docs: names, dueDays: f.due, note: (f.note || '').trim() || undefined });
-          done(out.emailed ? `Document request sent to ${r.name}` : `Request noted — ${r.name} has no email on file, they will see it when they sign in`);
+          await post(`/alumni/${r.id}/request-proof`, { docs: names, due_days: f.due, note: (f.note || '').trim() || undefined });
+          if (r.email) {
+            const first = r.name.split(' ')[0];
+            openExternal(mailtoUrl(r.email, 'UDM Alumni Tracer — supporting documents needed',
+              `Hi ${first},\n\nTo verify your Alumni Tracer record, please send us the following within ${f.due} days:\n\n${names.map((x) => `• ${x}`).join('\n')}${(f.note || '').trim() ? `\n\n${f.note.trim()}` : ''}\n\nYou can reply to this email with the files attached, or sign in to the UDM Alumni portal to upload them: ${portalUrl()}\n\n— UDM Alumni Relations Office`));
+          }
+          done(r.email ? `Document request opened in your email app for ${r.name}` : `Request noted — ${r.name} has no email on file, they will see it when they sign in`);
         } else if (k === 'reassign') {
           const p = programById(f.programId);
           await patch(`/alumni/${r.id}`, { college: p.collegeName, course: p.name, year_graduated: f.batch, reason: f.reason.trim() });
@@ -252,7 +267,7 @@ export default function useRecordsPage(role) {
           done(r.name + (isArchived ? ' restored' : ' archived'));
         } else if (k === 'dup') {
           const d = cands.find((x) => x.id === f.dupId);
-          if (isFlagged) { await post(`/alumni/${r.id}/merge`, { intoId: d.id }); setDrawer(null); done(`Merged into ${d.name}`); }
+          if (isFlagged) { await post(`/alumni/${r.id}/merge`, { into_id: d.id }); setDrawer(null); done(`Merged into ${d.name}`); }
           else { await post(`/alumni/${r.id}/status`, { action: 'flag', reason: `Possible duplicate of ${d.sid} (${d.name}) — ${f.reason.trim()}` }); done(`${r.name} moved to Flagged`); }
         }
         setAct(null);
@@ -297,13 +312,16 @@ export default function useRecordsPage(role) {
     const setF = (p) => { setRecF((s) => ({ ...s, ...p })); setFormErrs({}); };
     const code = employmentCode(f.employment);
     const needsCo = code === 'employed' || code === 'self_employed' || code === 'further_studies';
+    const editing = !!(form && form.id);
+    const origStatus = editing ? (rowOf(form.id) || {}).status : null;
     const errs = {
       Name: formErrs.name || formErrs.first_name || formErrs.last_name || ((f.name || '').trim().split(/\s+/).length < 2 ? 'Enter the alumnus’s first and last name' : ''),
       Email: formErrs.email || (f.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email.trim()) ? 'Enter a valid email address' : ''),
       Company: needsCo && !(f.company || '').trim() ? (code === 'further_studies' ? 'Enter the school or institution' : 'Enter the employer or business name') : '',
+      // Moving to Flagged needs to say what's wrong; moving to Archived needs a reason for the audit trail.
+      Note: formErrs.note || (f.status !== origStatus && !(f.note || '').trim() ? ({ flagged: 'Say what needs follow-up before this can be verified', archived: 'Enter the reason for archiving' }[f.status] || '') : ''),
     };
-    const ok = !errs.Name && !errs.Email && !errs.Company && !!f.programId;
-    const editing = !!(form && form.id);
+    const ok = !errs.Name && !errs.Email && !errs.Company && !errs.Note && !!f.programId;
     const save = async () => {
       if (!ok) { setFormTried(true); return; }
       const p = programById(f.programId);
@@ -317,7 +335,8 @@ export default function useRecordsPage(role) {
         setForm(null);
         if (!editing) { setTab((t) => (t === out.status ? t : 'all')); setQuery(''); setProgram('all'); setSortK('updated'); resetPage(); }
         flash(out.id);
-        done(editing ? `Saved changes to ${out.name}` : `${out.name} added · ${out.membershipId}`);
+        const approved = editing && origStatus !== 'verified' && out.status === 'verified' && rowOf(form.id)?.accountPending;
+        done(approved ? `${out.name}’s account approved — they can now sign in` : editing ? `Saved changes to ${out.name}` : `${out.name} added · ${out.membershipId}`);
       } catch (err) {
         if (err.fields) { setFormErrs(err.fields); setFormTried(true); }
         fail(err);
@@ -354,11 +373,21 @@ export default function useRecordsPage(role) {
       recFBatch: String(f.batch), recFSetBatch: (e) => setF({ batch: Number(e.target.value) }), recFBatchOpts: Array.from({ length: thisYear - 1998 }, (_, i) => thisYear - i).map((b) => ({ value: String(b), label: `Batch ${b}` })),
       recFEmp: f.employment, recFSetEmp: (e) => setF({ employment: e.target.value }), recFEmpOpts: [NO_SURVEY, ...Object.values(EMPLOYMENT_LABEL)].map((x) => ({ value: x, label: x })),
       recFSource: f.source, recFSetSource: (e) => setF({ source: e.target.value }), recFSourceOpts: ['admin_encoded', 'survey', 'alumni_update', 'import'].map((x) => ({ value: x, label: SOURCE_LABEL[x] })),
+      // A verified record can't go back to Pending; an archived one can only be restored to Verified.
       recFStatusChips: ['pending', 'verified', 'flagged', 'archived'].map((k) => {
         const on = f.status === k;
-        return { label: STY[k].label, checked: on ? 'true' : 'false', bg: on ? STY[k].bg : '#fff', color: on ? STY[k].color : '#475569', border: on ? STY[k].color : '#E2E5EA', dot: STY[k].color, onClick: () => setF({ status: k }) };
+        const off = (k === 'pending' && origStatus === 'verified') || (origStatus === 'archived' && (k === 'pending' || k === 'flagged'));
+        const why = origStatus === 'archived' ? 'Archived records can only be restored to Verified' : 'Already verified — can’t be set back to Pending';
+        return {
+          label: STY[k].label, checked: on ? 'true' : 'false', disabled: off ? 'true' : 'false', title: off ? why : undefined, cursor: off ? 'not-allowed' : 'pointer',
+          bg: on ? STY[k].bg : off ? '#F4F5F7' : '#fff', color: on ? STY[k].color : off ? '#94A3B8' : '#475569', border: on ? STY[k].color : '#E2E5EA', dot: STY[k].color,
+          onClick: () => { if (!off) setF({ status: k }); },
+        };
       }),
-      recFNote: f.note || '', recFSetNote: (e) => setF({ note: e.target.value }),
+      recFNote: f.note || '', recFSetNote: (e) => setF({ note: e.target.value }), recFNoteBorder: border('Note'),
+      recFHasErrNote: formTried && !!errs.Note, recFErrNote: errs.Note,
+      recFNoteLabel: f.status === origStatus ? 'Admin note' : { flagged: 'Admin note · required', archived: 'Reason for archiving · required' }[f.status] || 'Admin note',
+      recFNotePh: { flagged: 'What needs follow-up, e.g. two submissions under one Membership ID', archived: 'e.g. No response after three follow-ups' }[f.status] || 'Optional — shown under the row, e.g. what still needs to be submitted',
       // Records are archived, not deleted: archived records leave every count but stay on file (and can be restored).
       recDelOn: delRows.length > 0,
       recDelTitle: delRows.length === 1 ? 'Archive this record?' : `Archive ${delRows.length} records?`,
@@ -384,7 +413,9 @@ export default function useRecordsPage(role) {
       recBulkFlag: () => bulk('flag', `${n}${noun} flagged for follow-up`, 'Flagged for follow-up from Alumni Records.'),
       recBulkExport: () => { exportCsv(selIds.map(rowOf).filter(Boolean)); setSel({}); toast(`Exported ${n}${noun} to CSV`); },
       recBulkDelete: () => setDel([...selIds]),
-      recDrawerCanApprove: !!(dr && dr.status !== 'verified' && dr.status !== 'archived'),
+      // A pending account can only be approved by an Admin, not from the College portal.
+      recDrawerCanApprove: !!(dr && dr.status !== 'verified' && dr.status !== 'archived' && !(dept && dr.accountPending)),
+      recDrawerApproveLabel: dr && dr.accountPending ? 'Approve account & verify' : 'Approve & mark verified',
       recDrawerEdit: () => dr && formOpen(dr.id),
       recDrawerDelete: () => dr && setDel([dr.id]),
     };
@@ -511,16 +542,18 @@ export default function useRecordsPage(role) {
     ] : [],
     recDrawerHasFlag: !!(dr && dr.note), recDrawerFlag: dr ? dr.note : '',
     recDrawerProof: proofs.length
-      ? proofs.map((p) => ({ name: p.fileName, meta: `Uploaded ${fmtShortDate(p.uploadedAt)} · ${Math.max(1, Math.round(p.size / 1024))} KB${p.employer ? ` · ${p.employer}` : ''}`, ok: true, url: p.url }))
+      ? proofs.map((p) => (p.uploadedAt
+        ? { name: `Proof document ${p.mime === 'application/pdf' ? '(PDF)' : '(image)'}`, meta: `Uploaded ${fmtShortDate(p.uploadedAt)} · ${Math.max(1, Math.round((p.size || 0) / 1024))} KB`, ok: !!p.url, url: p.url }
+        : { name: 'Requested — not uploaded yet', meta: `Requested ${fmtShortDate(p.requestedAt)}`, ok: false }))
       : [{ name: 'No proof uploaded yet', meta: 'Use “Request document proof” to ask the alumnus for files', ok: false }],
     recDrawerNote: adminNote, recDrawerSetNote: (e) => setAdminNote(e.target.value), recDrawerClose: () => setDrawer(null),
-    recDrawerApprove: () => { if (dr) statusAction(dr.id, 'verify', null, `${dr.name} verified`); },
+    recDrawerApprove: () => { if (dr) statusAction(dr.id, 'verify', null, dr.accountPending ? `${dr.name}’s account approved — they can now sign in` : `${dr.name} verified`); },
     recDrawerFlagAction: () => { if (dr) statusAction(dr.id, 'flag', adminNote.trim() || 'More information requested from alumnus by the Alumni Office.', `${dr.name} flagged for follow-up`); },
     recHasSel: !dept && selIds.length > 0,
     recCanEdit: !dept,
     recGridCols: dept ? 'minmax(0,1.8fr) minmax(0,1fr) minmax(0,1.5fr) minmax(0,.8fr) minmax(0,.8fr) 60px' : '34px minmax(0,1.8fr) minmax(0,1fr) minmax(0,1.5fr) minmax(0,.8fr) minmax(0,.8fr) 152px',
     recIsQueue: true,
-    recDrawerStatusNote: dr ? ({ pending: 'Self-reported · awaiting Alumni Office verification', flagged: 'Flagged · needs follow-up before verification', verified: 'Verified by the Alumni Office · listed in Global Alumni Search', archived: 'Archived · excluded from search and reports' })[dr.status] || '' : '',
+    recDrawerStatusNote: dr && dr.accountPending ? (dept ? 'New registration · account awaiting Admin approval' : 'New registration · account pending — approve so the alumnus can sign in') : dr ? ({ pending: 'Self-reported · awaiting Alumni Office verification', flagged: 'Flagged · needs follow-up before verification', verified: 'Verified by the Alumni Office · listed in Global Alumni Search', archived: 'Archived · excluded from search and reports' })[dr.status] || '' : '',
     recBatchBorder: selIds.length ? '#0F3D2E' : '#E2E5EA', recBatchBg: selIds.length ? '#0F3D2E' : '#F4F5F7', recBatchColor: selIds.length ? '#fff' : '#A7B0BC',
     recBatchOpacity: selIds.length ? 1 : 0.7, recBatchCursor: selIds.length ? 'pointer' : 'not-allowed', recBatchClick: selIds.length ? () => setSel({}) : () => {},
     recBatchNote: selIds.length ? `${selIds.length}${selIds.length === 1 ? ' record selected — batch actions available' : ' records selected — batch actions available'}` : 'Select one or more records to enable batch actions',

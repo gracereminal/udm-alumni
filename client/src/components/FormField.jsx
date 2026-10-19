@@ -75,8 +75,19 @@ export default function FormField({ f, variant = 'register' }) {
   return (
     <div data-m="fcell" style={{ minWidth: '0', gridColumn: f.span }}>
       <label htmlFor={f.isChoice || f.isDate ? undefined : id} style={{ display: 'block', color: '#0A0A0A', ...t.label }}>{f.label}</label>
+      {f.sameAs ? (
+        <label style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', fontSize: '12.5px', fontWeight: '600', color: '#334155', marginBottom: '8px', cursor: 'pointer' }}>
+          <input type="checkbox" checked={f.sameAs.checked} onChange={f.sameAs.onToggle} style={{ width: '16px', height: '16px', margin: 0, accentColor: '#0F3D2E', cursor: 'pointer' }} />
+          {f.sameAs.label}
+        </label>
+      ) : null}
       {f.isText ? (
-        <input id={id} type={f.inputType} value={f.value} onChange={f.onInput} placeholder={f.placeholder} disabled={f.disabled} aria-invalid={!!f.error} style={f.disabled ? { ...control, opacity: 0.55, cursor: 'not-allowed' } : control} {...focus} />
+        <input
+          id={id} type={f.inputType} value={f.value} onChange={f.onInput} placeholder={f.placeholder} disabled={f.disabled} autoCapitalize={f.autoCapitalize} aria-invalid={!!f.error}
+          style={f.disabled ? { ...control, opacity: 0.55, cursor: 'not-allowed' } : control}
+          {...focus}
+          onBlur={(e) => { focus.onBlur?.(e); f.onBlur?.(e); }}
+        />
       ) : null}
       {f.isDate ? <>{f.dateEl}</> : null}
       {f.isTextarea ? (

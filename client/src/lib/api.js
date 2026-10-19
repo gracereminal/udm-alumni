@@ -61,6 +61,21 @@ export function qs(params) {
   return s ? `?${s}` : '';
 }
 
+/** One page of a list endpoint: `{ data, meta: { page, per_page, total } }`. */
+export const page = (path, params) => get(`${path}${qs(params)}`);
+
+/** Every row of a list endpoint, reading page after page (per_page is capped at 100 by the API). */
+export async function list(path, params = {}) {
+  const rows = [];
+  for (let p = 1; ; p += 1) {
+    const r = await page(path, { ...params, page: p, per_page: 100 });
+    const data = Array.isArray(r) ? r : (r && r.data) || [];
+    rows.push(...data);
+    const total = r && r.meta ? r.meta.total : rows.length;
+    if (!data.length || rows.length >= total) return rows;
+  }
+}
+
 /** data: URL (from lib/files readImage) -> Blob, for uploading a photo picked in a form. */
 export function dataUrlToBlob(url) {
   const [head, b64] = String(url).split(',');
@@ -72,7 +87,13 @@ export function dataUrlToBlob(url) {
 }
 
 /** localStorage keys from the frontend-only prototype. They are removed once, so stale demo state never shows up. */
-const LEGACY_KEYS = ['udm.auth.v1', 'udm.records.v1', 'udm.jobs.v1', 'udm.events.v1', 'udm.notif.read.v1', 'udm.tracer.draft.v1.avatar', 'udm.tracer.draft.v1.avatarName'];
+const LEGACY_KEYS = [
+  'udm.auth.v1', 'udm.accounts.v1', 'udm.demoPasswords.v1', 'udm.records.v1', 'udm.jobs.v1', 'udm.events.v1', 'udm.notif.read.v1',
+  'udm.profiles.v1', 'udm.tracer.questions.v1', 'udm.tracer.draft.v1', 'udm.tracer.draft.v1.avatar', 'udm.tracer.draft.v1.avatarName',
+];
 export function purgeLegacyStorage() {
-  try { LEGACY_KEYS.forEach((k) => localStorage.removeItem(k)); } catch { /* storage unavailable */ }
+  try {
+    LEGACY_KEYS.forEach((k) => localStorage.removeItem(k));
+    Object.keys(localStorage).filter((k) => k.startsWith('udm.avatar.v1')).forEach((k) => localStorage.removeItem(k));
+  } catch { /* storage unavailable */ }
 }

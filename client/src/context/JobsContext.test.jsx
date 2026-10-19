@@ -1,7 +1,7 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { AuthProvider } from './AuthContext';
 import { JobsProvider, empType, useJobs } from './JobsContext';
-import { mockApi, session } from '../test/mockApi';
+import { listOf, mockApi, session } from '../test/mockApi';
 
 const job = (id, extra = {}) => ({
   id, title: `Job ${id}`, company: 'Acme', location: 'Manila', type: 'Full-time', source: 'admin', status: 'active', tags: [],
@@ -23,11 +23,10 @@ describe('empType', () => {
 
 describe('Jobs — alumni', () => {
   const alumniRoutes = (state) => [
-    ['GET', /^\/jobs$/, () => state.board],
-    ['GET', /^\/jobs\?view=mine$/, () => state.mine],
+    ['GET', '/jobs', (req) => listOf(req.query.view === 'mine' ? state.mine : state.board)],
     ['POST', /^\/jobs\/1\/save$/, () => { state.board[0].saved = true; return state.board[0]; }],
     ['DELETE', /^\/jobs\/1\/save$/, () => { state.board[0].saved = false; return state.board[0]; }],
-    ['POST', /^\/jobs\/1\/apply$/, () => { state.board[0].applied = '2026-10-15T00:00:00Z'; return state.board[0]; }],
+    ['POST', /^\/jobs\/1\/apply$/, (req) => { state.board[0].applied = { via: req.body.via, at: '2026-10-15T00:00:00Z' }; return state.board[0]; }],
     ['DELETE', /^\/jobs\/1\/apply$/, () => { state.board[0].applied = null; return state.board[0]; }],
     ['POST', '/jobs', (req) => { const j = job(99, { ...req.body, source: 'alumni', status: 'pending', approvalStatus: 'pending' }); state.mine.push(j); return j; }],
   ];
@@ -37,7 +36,7 @@ describe('Jobs — alumni', () => {
     const { api, jobs } = setup('alumni', alumniRoutes(state));
     await waitFor(() => expect(jobs().jobs).toHaveLength(2));
     expect(jobs().activeJobs.map((j) => j.id)).toEqual([1]);
-    expect(api.find('GET', '/jobs').map((c) => c.search).sort()).toEqual(['', '?view=mine']);
+    expect(api.find('GET', '/jobs').map((c) => c.query.view || '').sort()).toEqual(['', 'mine']);
     expect(jobs().jobs[0]).toMatchObject({ badge: 'Posted by Admin', salary: 'Salary undisclosed' });
   });
 
@@ -54,10 +53,12 @@ describe('Jobs — alumni', () => {
 
   it('applies to a job and withdraws the application', async () => {
     const state = { board: [job(1)], mine: [] };
-    const { jobs } = setup('alumni', alumniRoutes(state));
+    const { api, jobs } = setup('alumni', alumniRoutes(state));
     await waitFor(() => expect(jobs().jobs).toHaveLength(1));
-    await act(() => jobs().toggleApply(1));
-    expect(jobs().applied).toEqual({ 1: '2026-10-15T00:00:00Z' });
+    // The apply dialog's channel label is recorded as the API's applied_via code.
+    await act(() => jobs().toggleApply(1, 'Messenger'));
+    expect(api.last('POST', '/jobs/1/apply').body).toEqual({ via: 'messenger' });
+    expect(jobs().applied).toEqual({ 1: { status: 'Application sent via Messenger', at: '2026-10-15T00:00:00Z', via: 'Messenger' } });
     await act(() => jobs().toggleApply(1));
     expect(jobs().applied).toEqual({});
   });
@@ -79,8 +80,7 @@ describe('Jobs — admin', () => {
   it('approves and rejects alumni submissions from the queue', async () => {
     const state = { all: [job(1)], queue: [job(5, { source: 'alumni', by: 'Ana Cruz', batch: 'Batch 2022' }), job(6, { source: 'alumni' })] };
     const { api, jobs } = setup('admin', [
-      ['GET', /^\/jobs\?view=all$/, () => state.all],
-      ['GET', /^\/jobs\?view=queue$/, () => state.queue],
+      ['GET', '/jobs', (req) => listOf(req.query.view === 'queue' ? state.queue : state.all)],
       ['POST', /^\/jobs\/5\/approve$/, () => { state.all.push(state.queue.shift()); return {}; }],
       ['POST', /^\/jobs\/6\/reject$/, {}],
     ]);
@@ -98,8 +98,7 @@ describe('Jobs — admin', () => {
 
   it('deactivates and deletes a posting', async () => {
     const { api, jobs } = setup('admin', [
-      ['GET', /^\/jobs\?view=all$/, [job(1), job(2)]],
-      ['GET', /^\/jobs\?view=queue$/, []],
+      ['GET', '/jobs', (req) => listOf(req.query.view === 'queue' ? [] : [job(1), job(2)])],
       ['POST', /^\/jobs\/1\/deactivate$/, job(1, { status: 'inactive' })],
       ['DELETE', /^\/jobs\/2$/, { status: 204, body: undefined }],
     ]);

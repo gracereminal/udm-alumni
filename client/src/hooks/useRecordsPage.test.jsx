@@ -2,7 +2,7 @@ import { act, renderHook, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { AuthProvider } from '../context/AuthContext';
 import useRecordsPage from './useRecordsPage';
-import { loadTestCatalog, mockApi, session } from '../test/mockApi';
+import { listOf, loadTestCatalog, mockApi, session } from '../test/mockApi';
 
 const ROW = {
   id: 7, membershipId: '2022-00007', name: 'Ana Cruz', program: 'BSIT', course: 'BS Information Technology', college: 'College of Computer Studies', collegeId: 1,
@@ -10,13 +10,14 @@ const ROW = {
 };
 const COUNTERS = { pending: 1, flagged: 0, verified: 3, archived: 0, all: 4, batches: [2024, 2022] };
 
-function setup(role) {
+function setup(role, routes = [], rows = [ROW]) {
   loadTestCatalog();
   const api = mockApi([
     session(role),
-    ['GET', '/alumni', { rows: [ROW], total: 1 }],
+    ...routes,
+    ['GET', '/alumni', listOf(rows)],
     ['GET', '/stats/counters', COUNTERS],
-    ['GET', '/alumni/activity', []],
+    ['GET', '/alumni/activity', listOf([])],
   ]);
   const wrapper = ({ children }) => <MemoryRouter><AuthProvider>{children}</AuthProvider></MemoryRouter>;
   const hook = renderHook(() => useRecordsPage(role), { wrapper });
@@ -29,7 +30,7 @@ describe('Alumni Records filters', () => {
   it('loads the pending tab, newest first, 10 per page', async () => {
     const { api, vals } = setup('admin');
     await waitFor(() => expect(vals().recRowsView).toHaveLength(1));
-    expect(lastList(api)).toEqual({ status: 'pending', page: '1', pageSize: '10', sort: 'updated_at' });
+    expect(lastList(api)).toEqual({ status: 'pending', page: '1', per_page: '10', sort: 'updated_at' });
     expect(vals().recRowsView[0]).toMatchObject({ name: 'Ana Cruz', employment: 'Employed', source: 'Self-registration', statusLabel: 'Pending', progBatch: 'BSIT · Batch 2022' });
     expect(vals().recTabs.map((t) => `${t.label} ${t.count}`)).toEqual(['Pending review 1', 'Flagged 0', 'Verified 3', 'Archived 0', 'All records 4']);
     expect(vals().recBatchOpts.map((o) => o.value)).toEqual(['all', '2024', '2022']);
@@ -43,7 +44,7 @@ describe('Alumni Records filters', () => {
     act(() => vals().recSetEmpSel(ev('self_employed')));
     act(() => vals().recSetSort(ev('name')));
     await waitFor(() => expect(lastList(api)).toEqual({
-      status: 'pending', programId: '10', batch: '2022', employment: 'self_employed', page: '1', pageSize: '10', sort: 'name', dir: 'asc',
+      status: 'pending', program_id: '10', batch: '2022', employment: 'self_employed', page: '1', per_page: '10', sort: 'name', dir: 'asc',
     }));
     expect(vals().recResultLabel).toBe('1 record match your filters');
   });
@@ -71,17 +72,17 @@ describe('Alumni Records filters', () => {
     act(() => vals().recTabs[2].onClick());
     await waitFor(() => expect(lastList(api)).toMatchObject({ status: 'verified', page: '1' }));
     act(() => vals().recSetPageSize(ev('25')));
-    await waitFor(() => expect(lastList(api)).toMatchObject({ status: 'verified', pageSize: '25', page: '1' }));
+    await waitFor(() => expect(lastList(api)).toMatchObject({ status: 'verified', per_page: '25', page: '1' }));
   });
 
   it('Reset filters clears every filter and shows all records', async () => {
     const { api, vals } = setup('admin');
     await waitFor(() => expect(api.find('GET', '/alumni')).toHaveLength(1));
     act(() => { vals().recSetProgSel(ev('10')); vals().recSetBatchSel(ev('2022')); vals().recSetEmpSel(ev('employed')); });
-    await waitFor(() => expect(lastList(api).programId).toBe('10'));
+    await waitFor(() => expect(lastList(api).program_id).toBe('10'));
     act(() => vals().recResetFilters());
     // 'all' is left out of the query string; the API treats a missing status as every record.
-    await waitFor(() => expect(lastList(api)).toEqual({ page: '1', pageSize: '10', sort: 'updated_at' }));
+    await waitFor(() => expect(lastList(api)).toEqual({ page: '1', per_page: '10', sort: 'updated_at' }));
     expect(vals().recResultLabel).toBe('1 record in this view');
   });
 
@@ -101,6 +102,58 @@ describe('Alumni Records filters', () => {
     await waitFor(() => expect(vals().recProgOpts).toHaveLength(3));
     expect(vals().recProgOpts.map((o) => o.label)).toEqual(['All CCS programs', 'BSIT — BS Information Technology', 'BSCS — BS Computer Science']);
     // Scoping is enforced by the API; the client never asks for another college.
-    expect(api.calls.some((c) => c.query.collegeId)).toBe(false);
+    expect(api.calls.some((c) => c.query.college_id)).toBe(false);
+  });
+});
+
+describe('Alumni Records actions', () => {
+  // A self-registration whose sign-in account is still waiting for an Admin.
+  const PENDING = { ...ROW, id: 8, membershipId: 'AM-2026-N0001', name: 'Paolo Mendoza', accountStatus: 'pending' };
+  const detail = (r) => ['GET', new RegExp(`^/alumni/${r.id}$`), { ...r, history: [] }];
+  const proofs = (r) => ['GET', new RegExp(`^/alumni/${r.id}/proofs$`), listOf([])];
+
+  it('verifying a pending registration approves the account (Admin only)', async () => {
+    const { api, vals } = setup('admin', [detail(PENDING), proofs(PENDING), ['POST', '/alumni/8/status', { ...PENDING, status: 'verified', accountStatus: 'active' }]], [PENDING]);
+    await waitFor(() => expect(vals().recRowsView).toHaveLength(1));
+    act(() => vals().recRowsView[0].onView());
+    await waitFor(() => expect(vals().recDrawerApproveLabel).toBe('Approve account & verify'));
+    expect(vals().recDrawerCanApprove).toBe(true);
+    expect(vals().recDrawerStatusNote).toMatch(/account pending/);
+    await act(() => vals().recDrawerApprove());
+    expect(api.last('POST', '/alumni/8/status').body).toEqual({ action: 'verify', reason: null });
+    await waitFor(() => expect(vals().repToast).toBe('Paolo Mendoza’s account approved — they can now sign in'));
+  });
+
+  it('college users cannot approve a pending account', async () => {
+    const { vals } = setup('dept', [detail(PENDING), proofs(PENDING)], [PENDING]);
+    await waitFor(() => expect(vals().recRowsView).toHaveLength(1));
+    act(() => vals().recRowsView[0].onView());
+    await waitFor(() => expect(vals().recDrawerStatusNote).toBe('New registration · account awaiting Admin approval'));
+    expect(vals().recDrawerCanApprove).toBe(false);
+  });
+
+  it('email opens the staff member’s mail app and is recorded as composed (nothing is sent)', async () => {
+    const opened = [];
+    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function record() { opened.push(this.href); });
+    const { api, vals } = setup('admin', [['POST', '/alumni/7/emails', { ok: true }]]);
+    await waitFor(() => expect(vals().recRowsView).toHaveLength(1));
+    act(() => vals().recRowsView[0].menuItems.find((m) => m.k === 'email').onClick());
+    await waitFor(() => expect(vals().recActIsEmail).toBe(true));
+    expect(vals().recActBody).toContain('/signin');
+    await act(() => vals().recActSubmit());
+    expect(opened[0]).toMatch(/^mailto:ana@example\.com\?subject=/);
+    expect(api.last('POST', '/alumni/7/emails').body).toEqual({ subject: 'UDM Alumni Tracer — please complete your submission' });
+    expect(api.find('POST', '/outreach')).toHaveLength(0);
+    click.mockRestore();
+  });
+
+  it('flagging or archiving from the edit form needs a note', async () => {
+    const { vals } = setup('admin');
+    await waitFor(() => expect(vals().recRowsView).toHaveLength(1));
+    act(() => vals().recRowsView[0].onEdit());
+    act(() => vals().recFStatusChips.find((c) => c.label === 'Flagged').onClick());
+    await act(() => vals().recFormSubmit());
+    expect(vals().recFHasErrNote).toBe(true);
+    expect(vals().recFNoteLabel).toBe('Admin note · required');
   });
 });

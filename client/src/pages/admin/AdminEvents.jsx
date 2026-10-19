@@ -54,18 +54,18 @@ export default function AdminEvents() {
     setRegs(null);
     if (!manage) return undefined;
     let live = true;
-    registrations(manage).then((r) => { if (live) setRegs(r); }, () => { if (live) setRegs({ rows: [], active: 0, failed: true }); });
+    registrations(manage).then((r) => { if (live) setRegs(r); }, () => { if (live) setRegs({ data: [], active: 0, failed: true }); });
     return () => { live = false; };
   }, [manage, manageCount, registrations]);
 
   const all = events;
-  const bucket = (e) => { const k = evStatusKey(e, rsvps); return k === 'past' ? 'past' : k === 'cancelled' ? 'cancelled' : 'upcoming'; };
+  const bucket = (e) => { const k = evStatusKey(e); return k === 'past' ? 'past' : k === 'cancelled' ? 'cancelled' : 'upcoming'; };
   const counts = { upcoming: 0, past: 0, cancelled: 0 };
   all.forEach((e) => { counts[bucket(e)]++; });
   const qq = q.trim().toLowerCase();
   const list = all.filter((e) => bucket(e) === tab)
     .filter((e) => !qq || `${e.title || ''} ${e.venue || ''} ${e.organizer || ''}`.toLowerCase().indexOf(qq) >= 0)
-    .filter((e) => tab !== 'upcoming' || sf === 'all' || evStatusKey(e, rsvps) === sf)
+    .filter((e) => tab !== 'upcoming' || sf === 'all' || evStatusKey(e) === sf)
     .sort((x, y) => (tab === 'upcoming' ? evTs(x) - evTs(y) : evTs(y) - evTs(x)));
 
   // ---- dirty guard ----
@@ -105,7 +105,7 @@ export default function AdminEvents() {
   };
   const evDelete = (e) => {
     setMenu(null);
-    const n = evCount(e, rsvps);
+    const n = evCount(e);
     ct.askConfirm({
       title: 'Delete this event?', body: `This permanently removes the event${n ? ` and its ${n.toLocaleString()} responses` : ''}. Its Dashboard announcement is removed too. This can’t be undone.`, detail: e.title,
       cancelLabel: 'Keep event', okLabel: 'Delete event', busyLabel: 'Deleting…', danger: true, async: true,
@@ -119,7 +119,7 @@ export default function AdminEvents() {
   const annShow = (e) => ev.patchEvent(e.id, { annHidden: false }).then(() => ct.toast('Announcement is back on the Dashboard.'), (err) => ct.toast(err.message, false));
 
   const menuFor = (e) => {
-    const k = evStatusKey(e, rsvps);
+    const k = evStatusKey(e);
     const up = bucket(e) === 'upcoming';
     const it = [];
     if (up) it.push({ label: 'Edit', onClick: () => evEdit(e) });
@@ -133,8 +133,8 @@ export default function AdminEvents() {
     return it.map((x) => ({ label: x.label, onClick: x.onClick, sep: !!x.sep, color: x.danger ? '#B42318' : '#0B1220' }));
   };
   const evRows = list.map((e, i) => {
-    const m = EV_STATUS_META[evStatusKey(e, rsvps)];
-    const n = evCount(e, rsvps);
+    const m = EV_STATUS_META[evStatusKey(e)];
+    const n = evCount(e);
     const open = menu === e.id;
     return {
       title: e.title, date: shortDate(e), time: e.time || '—', venue: e.venue || '—', photoCss: photoCss(e), dim: bucket(e) === 'upcoming' ? 1 : 0.75,
@@ -186,10 +186,10 @@ export default function AdminEvents() {
   const me = manage ? all.find((x) => x.id === manage) : null;
   let md = { mdOn: false, mdStats: [], mdPeople: [], mdSt: {}, mdAnn: {} };
   if (me) {
-    const k = evStatusKey(me, rsvps);
+    const k = evStatusKey(me);
     const b = bucket(me);
     const n = evCount(me, rsvps);
-    const regRows = (regs && regs.rows) || [];
+    const regRows = (regs && regs.data) || [];
     const cancelledN = regRows.filter((r) => r.cancelledAt).length;
     const shown = b !== 'past' && !me.annHidden;
     const cx = k === 'cancelled';
@@ -325,7 +325,7 @@ export default function AdminEvents() {
         {upcomingLive.length === 0 ? 'No upcoming events.' : upcomingLive.map((e) => (
           <div key={e.id} style={{ padding: '10px 0', borderBottom: '1px solid #EEF0F3' }}>
             <div style={{ fontWeight: 700, color: '#0B1220' }}>{e.title}</div>
-            <div style={{ fontSize: 12.5, color: '#64748B' }}>{e.date} · {e.venue} · {EV_STATUS_META[evStatusKey(e, rsvps)].label}</div>
+            <div style={{ fontSize: 12.5, color: '#64748B' }}>{e.date} · {e.venue} · {EV_STATUS_META[evStatusKey(e)].label}</div>
           </div>
         ))}
       </Modal>

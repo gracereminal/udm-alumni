@@ -30,6 +30,6 @@ export function RequireConsent() {
 
 /** The success screen is only shown to someone who has just registered. */
 export function RequireRegistered() {
-  const { registered } = useProfile();
-  return registered ? <Outlet /> : <Navigate to="/register/consent" replace />;
+  const { lastRegistration } = useProfile();
+  return lastRegistration ? <Outlet /> : <Navigate to="/register/consent" replace />;
 }

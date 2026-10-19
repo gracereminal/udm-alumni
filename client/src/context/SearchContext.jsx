@@ -6,7 +6,8 @@ import { ROLE_BASE } from '../data/navigation';
 import { employmentLabel } from '../data/records';
 import { CATALOG } from '../data/colleges';
 import { initials } from '../lib/format';
-import { get, qs } from '../lib/api';
+import useNarrow from '../hooks/useNarrow';
+import { page } from '../lib/api';
 import SearchOverlayView from '../views/SearchOverlayView';
 import AlumniCardView from '../views/AlumniCardView';
 import ContactModalView from '../views/ContactModalView';
@@ -34,7 +35,7 @@ export function SearchProvider({ children }) {
   const [loading, setLoading] = useState(false);
   const [card, setCard] = useState(null);
   const [contactOpen, setContactOpen] = useState(false);
-  const [narrow, setNarrow] = useState(() => window.innerWidth <= 760);
+  const narrow = useNarrow();
 
   const inputRef = useRef(null);
   const listRef = useRef(null);
@@ -43,12 +44,6 @@ export function SearchProvider({ children }) {
   const pulseT = useRef(null);
   const resultsRef = useRef([]);
   const scrollTop = useRef(0);
-
-  useEffect(() => {
-    const onResize = () => setNarrow(window.innerWidth <= 760);
-    window.addEventListener('resize', onResize);
-    return () => window.removeEventListener('resize', onResize);
-  }, []);
 
   const focusSoon = (ref) => setTimeout(() => { const el = ref.current; if (el) el.focus({ preventScroll: true }); }, 40);
   const pulse = useCallback(() => {
@@ -110,11 +105,11 @@ export function SearchProvider({ children }) {
     let live = true;
     const term = query.trim();
     const t = setTimeout(() => {
-      const req = staff ? get(`/alumni${qs({ status: 'verified', q: term, pageSize: 50, sort: 'name' })}`) : get(`/directory${qs({ q: term, limit: 50 })}`);
+      const req = staff ? page('/alumni', { status: 'verified', q: term, per_page: 50, sort: 'name' }) : page('/directory', { q: term, per_page: 50 });
       req.then((res) => {
         if (!live) return;
         if (staff) {
-          setIndex(res.rows.map((r) => {
+          setIndex(res.data.map((r) => {
             const college = r.college || '';
             const emp = employmentLabel(r.employmentStatus);
             return {
@@ -124,7 +119,7 @@ export function SearchProvider({ children }) {
             };
           }));
         } else {
-          setIndex(res.rows.filter((p) => Number(p.id) !== Number(user.alumniId)).map((p) => {
+          setIndex(res.data.filter((p) => Number(p.id) !== Number(user.alumniId)).map((p) => {
             const college = collegeOfProgram(p.degree, '');
             return {
               p, name: p.name, initials: initials(p.name), role: [p.title, p.company].filter(Boolean).join(' · '), program: p.degree, batch: String(p.batch || ''), college, industry: p.profile.industry || '', skills: p.allSkills || [],

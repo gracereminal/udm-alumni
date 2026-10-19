@@ -1,5 +1,6 @@
 import Modal from '../Modal';
 import { jobKey } from '../../data/jobs';
+import { applyUrl, messengerLabel, messengerUrl } from '../../lib/contact';
 
 const chip = { fontSize: 11.5, fontWeight: 600, color: '#64748B', background: '#F1F5F9', padding: '4px 10px', borderRadius: 8 };
 
@@ -7,9 +8,11 @@ const chip = { fontSize: 11.5, fontWeight: 600, color: '#64748B', background: '#
 export default function JobDetailsModal({ job, saved, application, onClose, onSave, onApply }) {
   if (!job) return null;
   const key = jobKey(job);
+  const applyHref = applyUrl(job.applyVia, `Application — ${job.title} (UDM alumnus)`);
   const rows = [
     ['Company', job.company], ['Location & setup', job.location], ['Employment type', job.type], ['Salary', `${job.salary}${job.salaryNote ? ` · ${job.salaryNote}` : ''}`],
     ['Posted', job.posted], ['Apply by', job.deadline || 'Open until filled'], ['Apply via', job.applyVia || 'UDM Alumni Relations Office'],
+    ...(messengerUrl(job.messenger) ? [['Messenger', messengerLabel(job.messenger)]] : []),
   ];
   return (
     <Modal
@@ -34,7 +37,13 @@ export default function JobDetailsModal({ job, saved, application, onClose, onSa
         {rows.map(([k, v]) => (
           <div key={k} style={{ minWidth: 0 }}>
             <div style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: 0.5, textTransform: 'uppercase', color: '#94A3B8', marginBottom: 3 }}>{k}</div>
-            <div style={{ fontSize: 13.5, color: '#0B1220', fontWeight: 600, wordBreak: 'break-word' }}>{v}</div>
+            <div style={{ fontSize: 13.5, color: '#0B1220', fontWeight: 600, wordBreak: 'break-word' }}>
+              {k === 'Messenger'
+                ? <a href={messengerUrl(job.messenger)} target="_blank" rel="noopener noreferrer" style={{ color: '#0F6B4F' }}>{v} ↗</a>
+                : k === 'Apply via' && applyHref
+                ? <a href={applyHref} target={/^mailto:/.test(applyHref) ? undefined : '_blank'} rel="noopener noreferrer" style={{ color: '#0F6B4F' }}>{v} ↗</a>
+                : v}
+            </div>
           </div>
         ))}
       </div>

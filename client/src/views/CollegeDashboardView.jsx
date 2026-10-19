@@ -11,9 +11,11 @@ export default function CollegeDashboardView(v) {
     chartsRef,
     deptBatch,
     deptBatchNote,
-    deptBatchSelVal,
-    deptBatchTiles,
     deptCompare,
+    deptFromOpts,
+    deptFromVal,
+    deptToOpts,
+    deptToVal,
     deptCourseOpts,
     deptCourseSelVal,
     deptDonut,
@@ -45,8 +47,9 @@ export default function CollegeDashboardView(v) {
     goRecords,
     goReports,
     hideTip,
-    onDeptBatchChange,
     onDeptCourseChange,
+    onDeptFromChange,
+    onDeptToChange,
     onDeptStatusMove,
     rowHover,
     tipShow,
@@ -189,8 +192,9 @@ export default function CollegeDashboardView(v) {
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
                 <div style={{ position: 'relative' }}>
                   <select
-                    value={deptBatchSelVal}
-                    onChange={onDeptBatchChange}
+                    aria-label="Batch from"
+                    value={deptFromVal}
+                    onChange={onDeptFromChange}
                     style={{
                       appearance: 'none',
                       WebkitAppearance: 'none',
@@ -206,9 +210,49 @@ export default function CollegeDashboardView(v) {
                       boxShadow: '0 1px 2px rgba(16,24,40,.04)',
                     }}
                   >
-                    {(deptBatchTiles || []).map((t, _i) => (
+                    {(deptFromOpts || []).map((o, _i) => (
                       <React.Fragment key={_i}>
-                        <option value={t.key}>Batch: {t.label}</option>
+                        <option value={o.value}>{o.label}</option>
+                      </React.Fragment>
+                    ))}
+                  </select>
+                  <span
+                    style={{
+                      position: 'absolute',
+                      right: '12px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      fontSize: '9px',
+                      color: '#64748B',
+                      pointerEvents: 'none',
+                    }}
+                  >
+                    ▾
+                  </span>
+                </div>
+                <div style={{ position: 'relative' }}>
+                  <select
+                    aria-label="Batch to"
+                    value={deptToVal}
+                    onChange={onDeptToChange}
+                    style={{
+                      appearance: 'none',
+                      WebkitAppearance: 'none',
+                      background: '#fff',
+                      border: '1px solid #E2E5EA',
+                      borderRadius: '12px',
+                      padding: '11px 32px 11px 13px',
+                      fontFamily: 'Inter,system-ui,sans-serif',
+                      fontSize: '13px',
+                      fontWeight: '600',
+                      color: '#0F172A',
+                      cursor: 'pointer',
+                      boxShadow: '0 1px 2px rgba(16,24,40,.04)',
+                    }}
+                  >
+                    {(deptToOpts || []).map((o, _i) => (
+                      <React.Fragment key={_i}>
+                        <option value={o.value}>{o.label}</option>
                       </React.Fragment>
                     ))}
                   </select>

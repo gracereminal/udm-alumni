@@ -52,6 +52,33 @@ export function evToForm(e) {
   String(e.time || '').replace(/(\d{1,2}):(\d{2})\s*([AP])\.?M/gi, (_, h, mi, ap) => { tm.push(`${evPad((+h % 12) + (ap.toUpperCase() === 'P' ? 12 : 0))}:${mi}`); return _; });
   return { id: e.id, title: e.title || '', dateISO: iso, timeStart: e.timeStart || tm[0] || '', timeEnd: e.timeEnd || tm[1] || '', venue: e.venue || '', organizer: e.organizer || EVENT_HOSTS[0], body: (e.body || []).join('\n\n'), status: e.statusKey || 'open' };
 }
+/**
+ * Google Calendar "create event" link, prefilled with the event (opened in a new tab by Add to Calendar).
+ * Times are Manila local time; the second time counts as the end only for a range ("4:00 PM – 10:00 PM"),
+ * otherwise the event lasts 2 hours. No start time → an all-day event.
+ */
+export function googleCalendarUrl(e, portalUrl) {
+  const f = evToForm(e);
+  if (!f.dateISO) return null;
+  const day = f.dateISO.replace(/-/g, '');
+  const isRange = /\d\s*[AP]\.?M\s*[–-]\s*\d/i.test(String(e.time || ''));
+  let dates;
+  if (!f.timeStart) {
+    const next = new Date(`${f.dateISO}T00:00:00Z`);
+    next.setUTCDate(next.getUTCDate() + 1);
+    dates = `${day}/${next.toISOString().slice(0, 10).replace(/-/g, '')}`;
+  } else {
+    const start = new Date(`${f.dateISO}T${f.timeStart}:00Z`); // UTC only as a clock; ctz below sets the zone
+    const end = isRange && f.timeEnd ? new Date(`${f.dateISO}T${f.timeEnd}:00Z`) : new Date(start.getTime() + 2 * 3600e3);
+    const stamp = (d) => d.toISOString().slice(0, 19).replace(/[-:]/g, '');
+    dates = `${stamp(start)}/${stamp(end)}`;
+  }
+  const details = [e.teaser || (e.body || [])[0] || '', e.time ? `Time: ${e.time}` : '', e.fee ? `Fee: ${e.fee}` : '', portalUrl ? `Details: ${portalUrl}` : '']
+    .filter(Boolean).join('\n\n');
+  const q = new URLSearchParams({ action: 'TEMPLATE', text: e.title || 'UDM Alumni event', dates, ctz: 'Asia/Manila', details, location: e.venue || '' });
+  return `https://calendar.google.com/calendar/render?${q.toString()}`;
+}
+
 export function evValidate(f, checkPast) {
   const r = {};
   if (!String(f.title || '').trim()) r.title = 'Enter an event title.';

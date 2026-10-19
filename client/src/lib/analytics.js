@@ -1,6 +1,28 @@
 // Reports: template metadata and the client-side export builders (CSV / Excel / PDF print).
 // The report data itself — KPIs, bars, table rows, findings — comes from GET /reports/:type (SQL views).
 
+const thisYear = new Date().getFullYear();
+/** Graduating batches covered by the reports, newest first (registration accepts 1999 to the current year). */
+export const BATCH_YEARS = (() => { const ys = []; for (let y = thisYear; y >= 1999; y--) ys.push(y); return ys; })();
+/** Default report window, the same as the API's: the last five graduating batches. */
+export const DEFAULT_BATCH_RANGE = { from: thisYear, to: thisYear - 4 };
+
+/**
+ * Resolve a report batch range. `from` and `to` are years in either order (e.g. 2026 → 2022);
+ * a missing or unknown year falls back to the default window. Returns the years (ascending),
+ * a display label and the file-name suffix.
+ */
+export function resolveBatch(from, to) {
+  const ok = (y) => BATCH_YEARS.includes(+y);
+  const f = ok(from) ? +from : DEFAULT_BATCH_RANGE.from;
+  const t = ok(to) ? +to : ok(from) ? +from : DEFAULT_BATCH_RANGE.to;
+  const lo = Math.min(f, t); const hi = Math.max(f, t);
+  const years = [];
+  for (let y = lo; y <= hi; y++) years.push(y);
+  const one = lo === hi;
+  return { from: f, to: t, years, label: one ? `Batch ${lo}` : `Batches ${lo}–${hi}`, file: one ? String(lo) : `${lo}-${hi}` };
+}
+
 export const REPORT_TYPES = [
   { id: 'ched', name: 'UDM Alumni Survey — Form A', desc: 'Mandated institutional submission covering employment status, relevance of degree and months before first job, for the last five graduating batches.', cadence: 'Annual', due: 'Due Nov 30' },
   { id: 'employability', name: 'Employability by Program', desc: 'Per-program employment rate against the university target, with batch-on-batch movement.', cadence: 'Quarterly' },
