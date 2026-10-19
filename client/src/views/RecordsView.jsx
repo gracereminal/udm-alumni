@@ -104,6 +104,8 @@ export default function RecordsView(v) {
     recDotsHover,
     recDrawerApprove,
     recDrawerCanApprove,
+    recDrawerApproveLabel,
+    recDrawerProof,
     recDrawerClose,
     recDrawerDelete,
     recDrawerEdit,
@@ -115,7 +117,6 @@ export default function RecordsView(v) {
     recDrawerName,
     recDrawerNote,
     recDrawerOpen,
-    recDrawerProof,
     recDrawerSetNote,
     recDrawerSid,
     recDrawerStatusBg,
@@ -146,6 +147,11 @@ export default function RecordsView(v) {
     recFName,
     recFNameBorder,
     recFNote,
+    recFNoteBorder,
+    recFHasErrNote,
+    recFErrNote,
+    recFNoteLabel,
+    recFNotePh,
     recFProgOpts,
     recFProgram,
     recFSetBatch,
@@ -1716,7 +1722,7 @@ export default function RecordsView(v) {
                               cursor: 'pointer',
                             }}
                           >
-                            Approve & mark verified
+                            {recDrawerApproveLabel}
                           </div>
                         </>
                       ) : null}
@@ -2071,7 +2077,9 @@ export default function RecordsView(v) {
                                 onClick={c.onClick}
                                 role="radio"
                                 aria-checked={c.checked}
-                                tabIndex={0}
+                                aria-disabled={c.disabled}
+                                title={c.title}
+                                tabIndex={c.disabled === 'true' ? -1 : 0}
                                 style={{
                                   display: 'flex',
                                   alignItems: 'center',
@@ -2083,7 +2091,7 @@ export default function RecordsView(v) {
                                   color: c.color,
                                   fontSize: '12.5px',
                                   fontWeight: '600',
-                                  cursor: 'pointer',
+                                  cursor: c.cursor,
                                 }}
                               >
                                 <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: c.dot }} />
@@ -2093,15 +2101,15 @@ export default function RecordsView(v) {
                           ))}
                         </div>
                         <div>
-                          <div style={{ fontSize: '12px', fontWeight: '600', color: '#334155', marginBottom: '6px' }}>Admin note</div>
+                          <div style={{ fontSize: '12px', fontWeight: '600', color: '#334155', marginBottom: '6px' }}>{recFNoteLabel}</div>
                           <textarea
                             value={recFNote}
                             onChange={recFSetNote}
-                            placeholder="Optional — shown under the row, e.g. what still needs to be submitted"
+                            placeholder={recFNotePh}
                             style={{
                               width: '100%',
                               boxSizing: 'border-box',
-                              border: '1px solid #E2E5EA',
+                              border: `1px solid ${recFNoteBorder}`,
                               borderRadius: '10px',
                               padding: '10px 12px',
                               fontFamily: 'inherit',
@@ -2114,6 +2122,11 @@ export default function RecordsView(v) {
                               lineHeight: '1.5',
                             }}
                           />
+                          {recFHasErrNote ? (
+                            <>
+                              <div style={{ fontSize: '11.5px', color: '#B3213C', marginTop: '5px' }}>{recFErrNote}</div>
+                            </>
+                          ) : null}
                         </div>
                       </div>
                     </div>

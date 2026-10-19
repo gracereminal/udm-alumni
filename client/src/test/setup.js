@@ -1,7 +1,10 @@
 import '@testing-library/jest-dom/vitest';
 import * as matchers from 'vitest-axe/matchers';
-import { cleanup } from '@testing-library/react';
+import { cleanup, configure } from '@testing-library/react';
 import { afterEach, expect, vi } from 'vitest';
+
+// Route pages are lazy (code-split), so findBy* / waitFor wait for the chunk and the mocked API, not just a re-render.
+configure({ asyncUtilTimeout: 5000 });
 
 // Node 22+ ships its own localStorage global (undefined unless --localstorage-file is set), which hides jsdom's.
 // Give the tests an in-memory Storage when that happens.
@@ -22,6 +25,14 @@ function memoryStorage() {
   Object.defineProperty(globalThis, name, { configurable: true, get: () => store });
   if (typeof window !== 'undefined' && window !== globalThis) Object.defineProperty(window, name, { configurable: true, get: () => store });
 });
+
+// Node 22+ ships its own `localStorage` / `sessionStorage` globals (unusable without --localstorage-file), which hide jsdom's.
+/* global jsdom */
+if (typeof jsdom !== 'undefined') {
+  ['localStorage', 'sessionStorage'].forEach((k) => {
+    Object.defineProperty(globalThis, k, { value: jsdom.window[k], configurable: true, writable: true });
+  });
+}
 
 expect.extend(matchers);
 afterEach(() => {

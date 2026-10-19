@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { useAuth } from './AuthContext';
-import { dataUrlToBlob, del, get, patch, post, upload } from '../lib/api';
+import { dataUrlToBlob, del, list, patch, post, upload } from '../lib/api';
 
 const JobsContext = createContext(null);
 
@@ -21,14 +21,24 @@ export const empType = (t) => {
   return /intern/.test(s) ? 'Internship' : /part/.test(s) ? 'Part-time' : /contract/.test(s) ? 'Contract' : /freelanc/.test(s) ? 'Freelance' : 'Full-time';
 };
 
+/** How an application was sent: the apply dialog's channel label <-> `saved_job.applied_via`. */
+const VIA_CODE = { Email: 'email', 'careers page': 'website', Messenger: 'messenger' };
+const VIA_LABEL = { email: 'Email', website: 'careers page', messenger: 'Messenger' };
+/** API `applied` { via, at } -> what the job card and details modal show. */
+const toApplication = (ap) => {
+  if (!ap) return null;
+  const via = VIA_LABEL[ap.via] || '';
+  return { status: via ? `Application sent via ${via}` : 'Application submitted', at: ap.at, via };
+};
+
 /** API job -> the shape the job board, the details modal and the admin list render. */
 function toJob(j) {
   return {
     id: j.id, title: j.title, company: j.company, location: j.location || 'Location TBA', type: j.type, badge: j.badge || (j.source === 'admin' ? 'Posted by Admin' : 'Alumni Referral'),
     badgeKind: /urgent/i.test(j.badge || '') ? 'urgent' : 'alumni', salary: j.salary || 'Salary undisclosed', salaryNote: j.salaryNote || '', posted: ago(j.publishedAt || j.createdAt, 'Posted'),
     publishedAt: j.publishedAt || j.createdAt, tags: j.tags || [], note: j.note || (j.source === 'alumni' && j.by ? `Referred by ${j.by}${j.batch ? ` · ${j.batch}` : ''}` : ''),
-    desc: j.desc || '', deadline: fmtDate(j.deadline), deadlineIso: j.deadline, applyVia: j.applyVia || '', status: j.status, photo: j.photo, source: j.source,
-    by: j.by, batch: j.batch, email: j.email || '', when: ago(j.createdAt, 'Submitted'), approvalStatus: j.approvalStatus, saved: j.saved, applied: j.applied, mine: j.mine,
+    desc: j.desc || '', deadline: fmtDate(j.deadline), deadlineIso: j.deadline, applyVia: j.applyVia || '', messenger: j.messenger || '', status: j.status, photo: j.photo, source: j.source,
+    by: j.by, batch: j.batch, email: j.email || '', when: ago(j.createdAt, 'Submitted'), approvalStatus: j.approvalStatus, saved: j.saved, applied: toApplication(j.applied), mine: j.mine,
   };
 }
 
@@ -45,20 +55,20 @@ export function JobsProvider({ children }) {
   const reload = useCallback(async () => {
     if (!user || (role !== 'admin' && role !== 'alumni')) { setJobs([]); setQueue([]); setMine([]); return; }
     if (role === 'admin') {
-      const [all, q] = await Promise.all([get('/jobs?view=all'), get('/jobs?view=queue')]);
+      const [all, q] = await Promise.all([list('/jobs', { view: 'all' }), list('/jobs', { view: 'queue' })]);
       setJobs(all.map(toJob)); setQueue(q.map(toJob));
     } else {
-      const [board, own] = await Promise.all([get('/jobs'), get('/jobs?view=mine')]);
+      const [board, own] = await Promise.all([list('/jobs'), list('/jobs', { view: 'mine' })]);
       setJobs(board.map(toJob)); setMine(own.map(toJob));
     }
   }, [user, role]);
   useEffect(() => { reload().catch(() => {}); }, [reload]);
 
-  const replace = (j) => setJobs((list) => list.map((x) => (x.id === j.id ? toJob(j) : x)));
+  const replace = (j) => setJobs((all) => all.map((x) => (x.id === j.id ? toJob(j) : x)));
   const attachPhoto = async (id, photo) => (photo && String(photo).startsWith('data:') ? upload(`/jobs/${id}/photo`, 'photo', dataUrlToBlob(photo), 'company.jpg') : null);
   const body = (job) => ({
     title: job.title, company: job.company, location: job.location, type: empType(job.type), salary: job.salary, salaryNote: job.salaryNote,
-    tags: job.tags, desc: job.desc, applyVia: job.applyVia, deadline: job.deadline, badge: job.badge, note: job.note,
+    tags: job.tags, desc: job.desc, applyVia: job.applyVia || '', messenger: job.messenger || '', deadline: job.deadline, badge: job.badge, note: job.note,
   });
 
   /** Admin posting: live at once. */
@@ -89,10 +99,10 @@ export function JobsProvider({ children }) {
     const cur = jobs.find((x) => x.id === id);
     replace(cur && cur.saved ? await del(`/jobs/${id}/save`) : await post(`/jobs/${id}/save`));
   }, [jobs]);
-  /** Apply (status "Application submitted") or withdraw. */
-  const toggleApply = useCallback(async (id) => {
+  /** Apply (records the platform it was sent through: "Messenger", "Email" or "careers page") or withdraw. */
+  const toggleApply = useCallback(async (id, via) => {
     const cur = jobs.find((x) => x.id === id);
-    replace(cur && cur.applied ? await del(`/jobs/${id}/apply`) : await post(`/jobs/${id}/apply`));
+    replace(cur && cur.applied ? await del(`/jobs/${id}/apply`) : await post(`/jobs/${id}/apply`, { via: VIA_CODE[via] || via }));
   }, [jobs]);
 
   const value = useMemo(() => {

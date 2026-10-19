@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { REPORT_TYPES, exportReport, runsLabel } from '../lib/analytics';
+import { REPORT_TYPES, BATCH_YEARS, DEFAULT_BATCH_RANGE, exportReport, resolveBatch, runsLabel } from '../lib/analytics';
 import { CATALOG, collegeById, programById } from '../data/colleges';
 import { nowLabel } from '../lib/format';
 import { useAuth } from '../context/AuthContext';
@@ -21,9 +21,18 @@ const when = (iso) => `${new Date(iso).toLocaleString('en-US', { month: 'short',
 export default function useReportsPage(role) {
   const dept = role === 'dept';
   const { user } = useAuth();
-  const [college, setCollege] = useState('all');
-  const [course, setCourse] = useState('all');
+  // Filters handed over by a dashboard's Export report button (college, course, batch range) seed the scope.
   const { state: navState } = useLocation();
+  const [college, setCollege] = useState(navState?.college || 'all');
+  const [course, setCourse] = useState(navState?.course || 'all');
+  // Batch range: a dashboard hands over its from/to range, or a single batch ('all' = every year).
+  const [range, setRange] = useState(() => {
+    if (BATCH_YEARS.includes(+navState?.from) && BATCH_YEARS.includes(+navState?.to)) return { from: +navState.from, to: +navState.to };
+    const b = navState?.batch;
+    if (b === 'all') return { from: BATCH_YEARS[0], to: BATCH_YEARS[BATCH_YEARS.length - 1] };
+    if (BATCH_YEARS.includes(+b)) return { from: +b, to: +b };
+    return DEFAULT_BATCH_RANGE;
+  });
   const [type, setType] = useState(REPORT_TYPES.some((t) => t.id === navState?.repType) ? navState.repType : 'ched');
   const [format, setFormat] = useState('PDF');
   const [secs, setSecs] = useState({ kpi: true, chart: true, table: true, findings: true });
@@ -31,7 +40,7 @@ export default function useReportsPage(role) {
   const [toastMsg, setToastMsg] = useState(null);
   const [all, setAll] = useState({});
   const [types, setTypes] = useState([]);
-  const [hist, setHist] = useState({ rows: [], total: 0 });
+  const [hist, setHist] = useState({ data: [], meta: { total: 0 } });
   const [reloadKey, setReloadKey] = useState(0);
   const previewRef = useRef(null);
   const toastT = useRef(null);
@@ -40,14 +49,18 @@ export default function useReportsPage(role) {
   const col = colId ? collegeById(colId) : null;
   const prog = programById(course);
   const progId = prog && col && Number(prog.collegeId) === Number(col.id) ? prog.id : null;
-  const scopeKey = `${colId || 'all'}|${progId || 'all'}`;
+  const by = resolveBatch(range.from, range.to);
+  // The API takes the window as low / high years, whichever order the selects are in.
+  const lo = by.years[0];
+  const hi = by.years[by.years.length - 1];
+  const scopeKey = `${colId || 'all'}|${progId || 'all'}|${lo}|${hi}`;
 
   const flash = useCallback((t) => { setToastMsg(t); clearTimeout(toastT.current); toastT.current = setTimeout(() => setToastMsg(null), 4500); }, []);
 
   useEffect(() => {
     let live = true;
-    const [c, p] = scopeKey.split('|');
-    const params = qs({ collegeId: dept ? undefined : c, programId: p });
+    const [c, p, from, to] = scopeKey.split('|');
+    const params = qs({ college_id: dept ? undefined : c, program_id: p, batch_from: from, batch_to: to });
     Promise.all(REPORT_TYPES.map((t) => get(`/reports/${t.id}${params}`)))
       .then((res) => { if (live) setAll(Object.fromEntries(REPORT_TYPES.map((t, i) => [t.id, res[i]]))); })
       .catch((err) => { if (live) flash(err.message); });
@@ -56,8 +69,8 @@ export default function useReportsPage(role) {
 
   useEffect(() => {
     let live = true;
-    Promise.all([get('/reports/types'), get('/reports/exports?limit=4')])
-      .then(([t, h]) => { if (live) { setTypes(t); setHist(h); } })
+    Promise.all([get('/reports/types'), get('/reports/exports?per_page=4')])
+      .then(([t, h]) => { if (live) { setTypes(t.data || []); setHist(h); } })
       .catch(() => {});
     return () => { live = false; };
   }, [reloadKey]);
@@ -65,6 +78,7 @@ export default function useReportsPage(role) {
   const fmt = ['PDF', 'Excel', 'CSV'].includes(format) ? format : 'PDF';
   const current = REPORT_TYPES.find((t) => t.id === type) || REPORT_TYPES[0];
   const d = all[current.id] || EMPTY;
+  const dense = d.bars.length > 10;
   const onCount = SECS.filter((s) => secs[s.id]).length;
   const max = Math.max(1, ...d.bars.map((b) => b[1]), d.target || 0);
   const scale = 85 / max;
@@ -81,7 +95,7 @@ export default function useReportsPage(role) {
     try { out = exportReport(t, dd, f, secs, nowLabel()); } catch { out = null; }
     if (out) {
       try {
-        await post('/reports/exports', { type: t.id, format: f, collegeId: dept ? undefined : colId || undefined, programId: progId || undefined, sections: SECS.filter((s) => secs[s.id]).map((s) => s.id), fileSize: out.size ?? undefined });
+        await post('/reports/exports', { type: t.id, format: f, college_id: dept ? undefined : colId || undefined, program_id: progId || undefined, batch_from: lo, batch_to: hi });
         setReloadKey((k) => k + 1);
       } catch (err) { flash(err.message); }
     }
@@ -100,6 +114,13 @@ export default function useReportsPage(role) {
     repCourseVal: progId ? String(progId) : 'all',
     repCourseOpts: [{ value: 'all', label: col ? `All courses (${courses.length})` : 'All courses' }, ...courses.map((c) => ({ value: String(c.id), label: c.name }))],
     repOnCourse: (e) => setCourse(e.target.value),
+    repFromVal: String(by.from),
+    repFromOpts: BATCH_YEARS.map((y) => ({ value: String(y), label: `From ${y}` })),
+    repOnFrom: (e) => setRange((r) => ({ ...r, from: +e.target.value })),
+    repToVal: String(by.to),
+    repToOpts: BATCH_YEARS.map((y) => ({ value: String(y), label: `To ${y}` })),
+    repOnTo: (e) => setRange((r) => ({ ...r, to: +e.target.value })),
+    repYearsLabel: by.label,
     repCourseDisabled: !col,
     repCourseOpacity: col ? 1 : 0.55,
     repTemplateCount: `${REPORT_TYPES.length} templates`,
@@ -135,7 +156,8 @@ export default function useReportsPage(role) {
     repHasTarget: d.target != null,
     repTargetPct: d.target != null ? `${(d.target * scale).toFixed(1)}%` : '0%',
     repTargetLabel: d.target != null ? `Target ${d.target}${d.unit}` : '',
-    repBars: d.bars.map((b) => ({ label: b[0], display: `${b[1].toFixed(1)}${d.unit}`, pct: `${(b[1] * scale).toFixed(1)}%`, color: d.target != null && b[1] < d.target ? '#A9C3B8' : '#0F3D2E' })),
+    repBarGap: dense ? '4px' : '12px',
+    repBars: d.bars.map((b) => ({ label: dense && /^\d{4}$/.test(b[0]) ? `’${b[0].slice(2)}` : b[0], tip: `${b[0]} · ${b[1].toFixed(1)}${d.unit}`, display: dense ? '' : `${b[1].toFixed(1)}${d.unit}`, pct: `${(b[1] * scale).toFixed(1)}%`, color: d.target != null && b[1] < d.target ? '#A9C3B8' : '#0F3D2E' })),
     repTableTitle: d.tableTitle,
     repTableGrid: d.grid,
     repTableHead: d.cols.map((c, i) => ({ v: c, align: i ? 'right' : 'left' })),
@@ -144,7 +166,7 @@ export default function useReportsPage(role) {
       return { cells: r.map((v, i) => ({ v, align: i ? 'right' : 'left', weight: !i || total ? 700 : 500, color: v === 'Below target' || String(v).startsWith('−') ? '#B3213C' : v === 'Above target' ? '#0F6B4F' : (!i ? '#0B1220' : '#334155') })) };
     }),
     repFindings: d.findings.map((text) => ({ text })),
-    repHistory: hist.rows.map((h) => {
+    repHistory: (hist.data || []).map((h) => {
       const status = STATUS_LABEL[h.status] || 'Ready';
       return {
         type: h.type, name: h.name, scope: h.scopeLabel || '', by: h.by, date: when(h.createdAt), fmt: h.fmt, size: sizeLabel(h.fileSize), status,
@@ -157,7 +179,7 @@ export default function useReportsPage(role) {
         onDownload: () => doExport(h.type, h.fmt),
       };
     }),
-    repHistoryFoot: `Showing ${hist.rows.length} most recent of ${hist.total} exports · every entry logs the generating account and request time`,
+    repHistoryFoot: `Showing ${(hist.data || []).length} most recent of ${hist.meta ? hist.meta.total : 0} exports · every entry logs the generating account and request time`,
     repViewArchive: () => flash('Older exports are kept in the export log and released on request from the Alumni Office.'),
     repToast: toastMsg || '',
     repToastClose: () => setToastMsg(null),

@@ -11,21 +11,24 @@ import { onActivate } from '../lib/a11y';
 export default function AdminDashboardView(v) {
   const {
     activeLabor,
-    admBatchOpts,
-    admBatchVal,
+    admFromOpts,
+    admFromVal,
     admCollegeOpts,
     admCollegeVal,
     admCourseDisabled,
     admCourseOpacity,
     admCourseOpts,
     admCourseVal,
-    admOnBatch,
+    admOnFrom,
+    admOnTo,
     admOnCollege,
     admOnCourse,
     admOnStatus,
     admScopeLabel,
     admStatusOpts,
     admStatusVal,
+    admToOpts,
+    admToVal,
     adminAwaiting,
     adminShowFrom,
     adminShowTo,
@@ -166,12 +169,26 @@ export default function AdminDashboardView(v) {
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
                 <select
-                  value={admBatchVal}
-                  onChange={admOnBatch}
-                  style={selectStyle('13px', '260px')}
+                  aria-label="Batch from"
+                  value={admFromVal}
+                  onChange={admOnFrom}
+                  style={selectStyle('13px', '140px')}
                   {...selectFx}
                 >
-                  {(admBatchOpts || []).map((o, _i) => (
+                  {(admFromOpts || []).map((o, _i) => (
+                    <React.Fragment key={_i}>
+                      <option value={o.value}>{o.label}</option>
+                    </React.Fragment>
+                  ))}
+                </select>
+                <select
+                  aria-label="Batch to"
+                  value={admToVal}
+                  onChange={admOnTo}
+                  style={selectStyle('13px', '140px')}
+                  {...selectFx}
+                >
+                  {(admToOpts || []).map((o, _i) => (
                     <React.Fragment key={_i}>
                       <option value={o.value}>{o.label}</option>
                     </React.Fragment>

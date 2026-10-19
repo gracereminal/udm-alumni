@@ -3,7 +3,15 @@ import { useNavigate } from 'react-router-dom';
 import SignInView from '../../views/SignInView';
 import Modal, { modalBtn } from '../../components/Modal';
 import { useAuth } from '../../context/AuthContext';
+import { DEMO_ACCOUNTS, DEMO_PASSWORD, SHOW_DEMO } from '../../data/demoAccounts';
 import { ROLE_HOME } from '../../data/navigation';
+
+const DEMOS = [
+  ['alumni', 'Alumni'],
+  ['admin', 'Admin'],
+  ['dept', 'Dept'],
+  ['pending', 'Pending'],
+];
 
 const INFO = {
   privacy: {
@@ -27,11 +35,12 @@ export default function SignIn() {
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [selectedDemo, setSelectedDemo] = useState(null);
+  const [demoOpen, setDemoOpen] = useState(false);
   const [err, setErr] = useState({ error: '', field: '' });
   const [info, setInfo] = useState(null);
 
   const [busy, setBusy] = useState(false);
-
   const submit = async (e) => {
     if (e && e.preventDefault) e.preventDefault();
     if (busy) return;
@@ -48,7 +57,7 @@ export default function SignIn() {
     showPassword,
     error: err.error,
     errorField: err.field,
-    onIdentifier: (e) => { setIdentifier(e.target.value); setErr({ error: '', field: '' }); },
+    onIdentifier: (e) => { setIdentifier(e.target.value); setSelectedDemo(null); setErr({ error: '', field: '' }); },
     onPassword: (e) => { setPassword(e.target.value); setErr({ error: '', field: '' }); },
     togglePassword: () => setShowPassword((s) => !s),
     passwordToggleLabel: showPassword ? 'HIDE' : 'SHOW',
@@ -56,7 +65,28 @@ export default function SignIn() {
     goRegister: (e) => { e.preventDefault(); navigate('/register/consent'); },
     openForgot: (e) => { e.preventDefault(); navigate('/forgot-password'); },
     openInfo: (k) => setInfo(k),
+    toggleDemo: () => setDemoOpen((o) => !o),
+    demoToggleLabel: demoOpen ? 'Hide ↑' : 'Show demo accounts →',
+    demoRows: demoOpen ? '1fr' : '0fr',
+    demoOpacity: demoOpen ? 1 : 0,
+    demoPendingEmail: DEMO_ACCOUNTS.pending.email,
+    // The API only says whether this account is still pending when it signs in, so the label shows the seeded state.
+    demoPendingLabel: 'Registered Alumni · Pending',
+    showDemo: SHOW_DEMO,
+    pickDemo: (key) => () => {
+      setSelectedDemo(key);
+      setIdentifier(DEMO_ACCOUNTS[key].email);
+      setPassword(DEMO_PASSWORD);
+      setErr({ error: '', field: '' });
+    },
   };
+  DEMOS.forEach(([k, K]) => {
+    const on = selectedDemo === k;
+    v[`demo${K}Bg`] = on ? 'rgba(217,180,90,.1)' : 'rgba(0,0,0,.2)';
+    v[`demo${K}Border`] = on ? 'rgba(217,180,90,.5)' : 'rgba(255,255,255,.06)';
+    v[`demo${K}Action`] = on ? 'Applied ✓' : 'Apply →';
+    v[`demo${K}ActionColor`] = on ? '#D9B45A' : 'rgba(214,234,225,.7)';
+  });
 
   return (
     <>

@@ -25,3 +25,16 @@ export function nowLabel() {
     return 'Just now';
   }
 }
+
+/** Uppercase the first letter of every word, leaving the rest as typed ("123 rizal st." -> "123 Rizal St."). Length never changes. */
+export const capitalizeWords = (s) => String(s || '').replace(/(^|[\s,.\-/(#])(\p{Ll})/gu, (_, p, c) => p + c.toUpperCase());
+
+/** Address cleanup on blur: collapse spaces, one space after commas, no stray leading/trailing commas, capitalized words. */
+export const tidyAddress = (s) =>
+  capitalizeWords(
+    String(s || '')
+      .replace(/\s+/g, ' ')
+      .replace(/\s*,\s*/g, ', ')
+      .replace(/(,\s*)+/g, ', ')
+      .replace(/^[\s,]+|[\s,]+$/g, ''),
+  );

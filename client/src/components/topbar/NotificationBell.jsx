@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import useNarrow from '../../hooks/useNarrow';
 import { notifLook, timeAgo, TONES } from '../../data/notifications';
 import { screenPath } from '../../data/navigation';
 import { hv } from '../../lib/stateStyle';
@@ -9,17 +10,24 @@ import { get, post } from '../../lib/api';
 const POLL_MS = 45000;
 
 /**
- * Bell with the unread badge and the notifications dropdown. Rows are NOTIFICATION records written by the
- * server when another role acts; read state is stored on the server, so it follows the user across devices.
+ * Bell with the unread badge and the notifications dropdown. Rows are `notification` records the server writes when
+ * another role acts (registrations, approvals, job and event changes…); read state is stored on the server, so it
+ * follows the user across devices and tabs.
  */
 export default function NotificationBell() {
-  const { role, user } = useAuth();
+  const { user, role } = useAuth();
   const navigate = useNavigate();
+  const mobile = useNarrow();
+  const bellRef = useRef(null);
   const [open, setOpen] = useState(false);
-  const [defs, setDefs] = useState([]);
+  const [sheet, setSheet] = useState(null);
+  const [rows, setRows] = useState([]);
   const [unread, setUnread] = useState(0);
 
-  const load = useCallback(() => get('/notifications?limit=30').then((r) => { setDefs(r.rows); setUnread(r.unread); }).catch(() => {}), []);
+  const load = useCallback(() => get('/notifications?per_page=30').then((r) => {
+    setRows((r.data || []).map((n) => ({ ...n, ...notifLook(n.type), time: timeAgo(n.createdAt) })));
+    setUnread(r.meta ? r.meta.unread || 0 : 0);
+  }).catch(() => {}), []);
   useEffect(() => {
     if (!user) return undefined;
     load();
@@ -34,14 +42,30 @@ export default function NotificationBell() {
     return () => document.removeEventListener('keydown', onKey);
   }, [open]);
 
+  // Phone layout: the 370px dropdown would hang off the left edge, so pin a full-width sheet under the bell.
+  // Inside the phone frame `position: fixed` resolves against the frame (it has a transform), not the window.
+  useLayoutEffect(() => {
+    if (!open || !mobile) { setSheet(null); return undefined; }
+    const place = () => {
+      const bell = bellRef.current;
+      if (!bell) return;
+      const box = bell.closest('[data-m=phone]')?.getBoundingClientRect() || { top: 0, height: window.innerHeight };
+      const top = bell.getBoundingClientRect().bottom - box.top + 10;
+      setSheet({ top, maxList: Math.max(160, box.height - top - 24 - 58) });
+    };
+    place();
+    window.addEventListener('resize', place);
+    return () => window.removeEventListener('resize', place);
+  }, [open, mobile]);
+
   const markAll = () => {
-    setDefs((d) => d.map((n) => ({ ...n, read: true })));
+    setRows((d) => d.map((n) => ({ ...n, read: true })));
     setUnread(0);
     post('/notifications/read-all').catch(load);
   };
   const pick = (n) => {
     if (!n.read) {
-      setDefs((d) => d.map((x) => (x.id === n.id ? { ...x, read: true } : x)));
+      setRows((d) => d.map((x) => (x.id === n.id ? { ...x, read: true } : x)));
       setUnread((u) => Math.max(0, u - 1));
       post(`/notifications/${n.id}/read`).catch(load);
     }
@@ -52,7 +76,7 @@ export default function NotificationBell() {
   return (
     <div style={{ position: 'relative', flex: 'none' }}>
       <div
-        role="button" tabIndex={0} aria-label="Notifications" aria-expanded={open} title="Notifications"
+        ref={bellRef} role="button" tabIndex={0} aria-label="Notifications" aria-expanded={open} title="Notifications"
         onClick={() => setOpen((o) => !o)}
         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setOpen((o) => !o); } }}
         style={{ width: 40, height: 40, borderRadius: '50%', background: '#fff', border: '1px solid #E7E9ED', boxSizing: 'border-box', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748B', cursor: 'pointer', position: 'relative', transition: 'background .15s' }}
@@ -69,7 +93,7 @@ export default function NotificationBell() {
       {open ? (
         <>
           <div role="presentation" onClick={() => setOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 60 }} />
-          <div style={{ position: 'absolute', right: 0, top: 50, width: 370, maxWidth: 'calc(100vw - 32px)', zIndex: 61, background: '#fff', border: '1px solid #E7E9ED', borderRadius: 14, boxShadow: '0 12px 32px rgba(16,24,40,.14)', overflow: 'hidden', fontFamily: 'Inter,system-ui,sans-serif' }}>
+          <div style={{ ...(sheet ? { position: 'fixed', left: 10, right: 10, top: sheet.top } : { position: 'absolute', right: 0, top: 50, width: 370, maxWidth: 'calc(100vw - 32px)' }), zIndex: 61, background: '#fff', border: '1px solid #E7E9ED', borderRadius: 14, boxShadow: '0 12px 32px rgba(16,24,40,.14)', overflow: 'hidden', fontFamily: 'Inter,system-ui,sans-serif' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderBottom: '1px solid #EEF0F3' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <div style={{ fontFamily: 'Inter,sans-serif', fontWeight: 600, fontSize: 14, color: '#0B1220' }}>Notifications</div>
@@ -79,12 +103,11 @@ export default function NotificationBell() {
                 <div role="button" tabIndex={0} onClick={markAll} onKeyDown={(e) => { if (e.key === 'Enter') markAll(); }} style={{ fontSize: 12, fontWeight: 600, color: '#004D40', cursor: 'pointer' }} {...hv({ color: '#B8860B' })}>Mark all as read</div>
               ) : null}
             </div>
-            <div style={{ maxHeight: 380, overflowY: 'auto' }}>
-              {defs.length === 0 ? <div style={{ padding: '22px 16px', fontSize: 12.5, color: '#64748B', textAlign: 'center' }}>You’re all caught up.</div> : null}
-              {defs.map((n) => {
-                const isRead = n.read;
-                const look = notifLook(n.type);
-                const [ib, ic] = TONES[look.tone];
+            <div style={{ maxHeight: sheet ? Math.min(380, sheet.maxList) : 380, overflowY: 'auto', overscrollBehavior: 'contain' }}>
+              {rows.length === 0 ? <div style={{ padding: '22px 16px', fontSize: 12.5, color: '#64748B', textAlign: 'center' }}>You’re all caught up.</div> : null}
+              {rows.map((n) => {
+                const isRead = !!n.read;
+                const [ib, ic] = TONES[n.tone];
                 return (
                   <div
                     key={n.id} role="button" tabIndex={0} onClick={() => pick(n)} onKeyDown={(e) => { if (e.key === 'Enter') pick(n); }}
@@ -92,12 +115,12 @@ export default function NotificationBell() {
                     {...hv({ background: '#F1F4F3' })}
                   >
                     <div style={{ width: 32, height: 32, borderRadius: 10, flex: 'none', background: ib, color: ic, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ width: 15, height: 15 }}><path d={look.icon} /></svg>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ width: 15, height: 15 }}><path d={n.icon} /></svg>
                     </div>
                     <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 3 }}>
                       <div style={{ fontSize: 13, fontWeight: isRead ? 500 : 700, color: '#0B1220', lineHeight: 1.35 }}>{n.title}</div>
                       <div style={{ fontSize: 12, color: '#64748B', lineHeight: 1.45, textWrap: 'pretty' }}>{n.body}</div>
-                      <div style={{ fontSize: 11, color: '#94A3B8', fontWeight: 600 }}>{timeAgo(n.createdAt)}</div>
+                      <div style={{ fontSize: 11, color: '#94A3B8', fontWeight: 600 }}>{n.time}</div>
                     </div>
                     <div style={{ width: 8, height: 8, borderRadius: '50%', flex: 'none', marginTop: 5, background: isRead ? 'transparent' : '#0F8A5F' }} />
                   </div>

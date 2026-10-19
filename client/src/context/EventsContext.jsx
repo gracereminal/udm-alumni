@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { useAuth } from './AuthContext';
-import { dataUrlToBlob, del, get, patch, post, upload } from '../lib/api';
+import { dataUrlToBlob, del, get, list, patch, post, upload } from '../lib/api';
 import { EVENT_KIND_STYLE, EV_MONTHS_SHORT, EV_STATUS_META, NOTICE_KINDS, evCount, evFmtTime, evPad, evStatusKey, photoCss } from '../data/events';
 
 const EventsContext = createContext(null);
@@ -30,12 +30,12 @@ export function EventsProvider({ children }) {
   const { user, role } = useAuth();
   const [events, setEvents] = useState([]);
   const [notices, setNotices] = useState([]);
-  // "Add to Calendar" is a client-side .ics download; this only remembers it for the session.
+  // "Add to Calendar" opens a Google Calendar link (data/events.js googleCalendarUrl); this only remembers it for the session.
   const [calendar, setCalendar] = useState({});
 
   const reload = useCallback(async () => {
     if (!user || (role !== 'admin' && role !== 'alumni')) { setEvents([]); setNotices([]); return; }
-    const [evs, ns] = await Promise.all([get('/events'), get('/announcements')]);
+    const [evs, ns] = await Promise.all([list('/events'), list('/announcements')]);
     setEvents(evs.map(toEvent)); setNotices(ns.map(toNotice));
   }, [user, role]);
   useEffect(() => { reload().catch(() => {}); }, [reload]);
@@ -72,8 +72,9 @@ export function EventsProvider({ children }) {
   }, []);
   const removeNotice = useCallback(async (id) => { await del(`/announcements/${id}`); setNotices((l) => l.filter((x) => x.id !== id)); }, []);
 
-  /** The alumnus' own registrations: event id -> registration answers. */
+  /** The alumnus' own registrations: event id -> registration answers, and when each was made (dates the confirmation email). */
   const rsvps = useMemo(() => Object.fromEntries(events.filter((e) => e.registered).map((e) => [e.id, e.myAnswers || {}])), [events]);
+  const rsvpAt = useMemo(() => Object.fromEntries(events.filter((e) => e.registered).map((e) => [e.id, Date.parse(e.myRegisteredAt) || null])), [events]);
 
   /** Feed shown on the Alumni Dashboard: upcoming events + standalone notices, newest first. */
   const announcementItems = useCallback(() => {
@@ -104,9 +105,9 @@ export function EventsProvider({ children }) {
   }, [events, notices]);
 
   const value = useMemo(() => ({
-    events, rsvps, calendar, notices, reload, registrations,
+    events, rsvps, rsvpAt, calendar, notices, reload, registrations,
     createEvent, patchEvent, cancelEvent, deleteEvent, register, cancelRegistration, toggleCalendar, saveNotice, removeNotice, announcementItems,
-  }), [events, rsvps, calendar, notices, reload, registrations, createEvent, patchEvent, cancelEvent, deleteEvent, register, cancelRegistration, toggleCalendar, saveNotice, removeNotice, announcementItems]);
+  }), [events, rsvps, rsvpAt, calendar, notices, reload, registrations, createEvent, patchEvent, cancelEvent, deleteEvent, register, cancelRegistration, toggleCalendar, saveNotice, removeNotice, announcementItems]);
   return <EventsContext.Provider value={value}>{children}</EventsContext.Provider>;
 }
 

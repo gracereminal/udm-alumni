@@ -6,13 +6,13 @@ import { ProfileProvider } from '../../context/ProfileContext';
 import { ToastProvider } from '../../context/ToastContext';
 import AlumniRegistration from './AlumniRegistration';
 import { PRIVACY_KEY } from './PrivacyConsent';
-import { USERS, loadTestCatalog, mockApi, session } from '../../test/mockApi';
+import { loadTestCatalog, mockApi, session } from '../../test/mockApi';
 
-const DRAFT_KEY = 'udm.tracer.draft.v1';
+const DRAFT_KEY = 'udm.registration.draft.v1';
 const VALID = {
-  last_name: 'Cruz', first_name: 'Ana', dob: '1999-05-01', present_address: '1 Main St', permanent_address: '1 Main St',
+  last_name: 'Cruz', first_name: 'Ana', dob: '1999-05-01', present_address: '1520 Dalupan St., Sampaloc, Manila', permanent_address: '1520 Dalupan St., Sampaloc, Manila',
   gender: 'Female', marital_status: 'Single', indigenous: 'No', pwd: 'No',
-  mobile: '09171234567', email: 'ana@example.com',
+  mobile: '09171234567', email: 'ana@example.com', facebook: 'ana.cruz',
   college: 'College of Computer Studies', course: 'BS Information Technology', year_graduated: '2022',
 };
 
@@ -82,8 +82,9 @@ describe('Alumni registration', () => {
     expect(screen.getByText('Enter your email address.')).toBeInTheDocument();
   });
 
-  it('checks the password rules, then registers and opens the success screen', async () => {
-    const api = mockApi([session(null), ['POST', '/auth/register', { user: USERS.alumni }], ['GET', '/me', { a: VALID }]]);
+  it('checks the password rules, then registers a pending account and opens the success screen', async () => {
+    // Registration creates a PENDING account and does not sign in.
+    const api = mockApi([session(null), ['POST', '/auth/register', { status: 201, body: { ok: true, status: 'pending', membershipId: 'AM-2022-N0001', message: 'Registration received.' } }]]);
     renderRegistration(VALID);
     await next(); await next(); await next();
     expect(screen.getByText('STEP 4 OF 4')).toBeInTheDocument();
@@ -107,6 +108,8 @@ describe('Alumni registration', () => {
     // The draft and the consent are cleared once the account exists; the password is never stored.
     expect(localStorage.getItem(DRAFT_KEY)).toBeNull();
     expect(sessionStorage.getItem(PRIVACY_KEY)).toBeNull();
+    // Not signed in: nothing asks for the alumnus' own record.
+    expect(api.find('GET', '/me')).toHaveLength(0);
   });
 
   it('never writes the password into the saved draft', async () => {

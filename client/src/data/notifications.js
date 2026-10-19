@@ -12,7 +12,7 @@ const I = {
 export const TONES = { green: ['#E6F0EB', '#0F3D2E'], gold: ['#FBF0D8', '#8A6D1F'] };
 
 const BY_TYPE = {
-  registration: [I.user, 'green'], record_status: [I.check, 'gold'], survey: [I.check, 'gold'], milestone: [I.chart, 'gold'], coverage_alert: [I.chart, 'gold'],
+  registration: [I.user, 'green'], account_approved: [I.check, 'green'], record_status: [I.check, 'gold'], survey: [I.check, 'gold'], milestone: [I.chart, 'gold'], coverage_alert: [I.chart, 'gold'],
   job_submitted: [I.job, 'green'], job_decision: [I.job, 'green'], job_match: [I.job, 'green'], event: [I.cal, 'gold'], rsvp: [I.cal, 'gold'], outreach: [I.mail, 'green'],
 };
 export const notifLook = (type) => { const [icon, tone] = BY_TYPE[type] || [I.doc, 'green']; return { icon, tone }; };

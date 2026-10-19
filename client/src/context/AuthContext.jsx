@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { get, post, UNAUTHORIZED_EVENT } from '../lib/api';
 
 const AuthContext = createContext(null);
@@ -8,21 +8,29 @@ const AuthContext = createContext(null);
  * session check on load has finished, so guards don't redirect a signed-in user to Sign In by mistake.
  */
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
+  const [user, setUserState] = useState(null);
   const [ready, setReady] = useState(false);
+  // Bumped by every sign-in / sign-out, so a session check that answers later can't undo it.
+  const version = useRef(0);
+  const setUser = useCallback((u) => { version.current += 1; setUserState(u); }, []);
 
   useEffect(() => {
     let live = true;
+    const at = version.current;
+    const apply = (u) => { if (live && version.current === at) setUserState(u); };
     get('/auth/session')
-      .then((r) => { if (live) setUser(r.user); })
-      .catch(() => { if (live) setUser(null); })
+      .then((r) => apply(r.user))
+      .catch(() => apply(null))
       .finally(() => { if (live) setReady(true); });
     const onUnauthorized = () => setUser(null);
     window.addEventListener(UNAUTHORIZED_EVENT, onUnauthorized);
     return () => { live = false; window.removeEventListener(UNAUTHORIZED_EVENT, onUnauthorized); };
-  }, []);
+  }, [setUser]);
 
-  /** Email or Alumni ID (membership ID / student number) + password. */
+  /**
+   * Email or Alumni ID (membership ID / student number) + password. A self-registered account that an Admin hasn't
+   * approved yet gets `pending: true`; the API says so only after the password matches.
+   */
   const signIn = useCallback(async (identifier, password) => {
     const id = String(identifier || '').trim();
     if (!id) return { ok: false, field: 'identifier', error: 'Enter your email or Alumni ID.' };
@@ -32,28 +40,31 @@ export function AuthProvider({ children }) {
       setUser(r.user);
       return { ok: true, user: r.user };
     } catch (err) {
+      if (err.code === 'account_pending') return { ok: false, field: 'identifier', pending: true, error: err.message };
       return { ok: false, field: err.status === 401 ? 'password' : '', error: err.message };
     }
-  }, []);
+  }, [setUser]);
 
-  /** Registration creates the account and signs the new alumnus in. Throws ApiError (with field errors). */
-  const register = useCallback(async (form) => {
-    const r = await post('/auth/register', form);
-    setUser(r.user);
-    return r;
-  }, []);
+  /**
+   * Self-registration creates a PENDING account and does not sign in: it can't sign in until an Admin approves it.
+   * Throws ApiError (409 `email_taken`, or 422 with field errors).
+   */
+  const registerAlumni = useCallback((form) => post('/auth/register', form), []);
 
   const refresh = useCallback(async () => {
     try { const r = await get('/auth/session'); setUser(r.user); return r.user; } catch { setUser(null); return null; }
-  }, []);
+  }, [setUser]);
 
   // Clears the user first so the caller can navigate to Sign In right away; the server revokes the session.
   const signOut = useCallback(async () => {
     setUser(null);
     try { await post('/auth/logout'); } catch { /* the session is gone either way */ }
-  }, []);
+  }, [setUser]);
 
-  const value = useMemo(() => ({ user, role: user ? user.role : null, ready, signIn, register, refresh, signOut }), [user, ready, signIn, register, refresh, signOut]);
+  const value = useMemo(
+    () => ({ user, role: user ? user.role : null, ready, signIn, registerAlumni, refresh, signOut }),
+    [user, ready, signIn, registerAlumni, refresh, signOut],
+  );
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 

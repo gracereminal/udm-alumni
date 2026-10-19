@@ -1,250 +1,99 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import PortalPage, { card } from '../../layouts/PortalPage';
-import FormField from '../../components/FormField';
-import Modal, { modalBtn } from '../../components/Modal';
-import ProfilePhotoCard from '../../components/alumni/ProfilePhotoCard';
+import NavSidebar from '../../components/NavSidebar';
+import Icon from '../../components/Icon';
+import { card } from '../../layouts/PortalPage';
 import { useProfile } from '../../context/ProfileContext';
-import { useToast } from '../../context/ToastContext';
-import { regStepDefs, surveySectionDefs, visibleQs, isAnswered } from '../../data/formDefs';
-import { buildField } from '../../lib/fields';
-import { validateProfile } from '../../lib/validation';
+import { visibleQs, isAnswered } from '../../data/formDefs';
+import { ICONS } from '../../data/navigation';
+import { initials } from '../../lib/format';
+import { profileGroups, profileProgress } from '../../lib/profileProgress';
+import { useQuestionConfig } from '../../lib/questionStore';
 
-const TAGS = ['SECTION II', 'SECTION II', 'SECTION III'];
+const BG = 'radial-gradient(900px 520px at 0% 0%,#E3F1EA 0%,rgba(227,241,234,0) 70%),#F3F6F4';
+const pill = { fontSize: 11.5, fontWeight: 600, padding: '5px 11px', borderRadius: 999, background: 'rgba(255,255,255,.12)', color: '#fff' };
 
-/** Personal, contact, education and employment fields shown on the Profile page. */
-function profileGroups(a) {
-  const steps = regStepDefs(a).map((s, i) => ({ title: s.title, sub: s.sub, tag: TAGS[i] || 'PROFILE', questions: s.questions }));
-  const defs = surveySectionDefs();
-  const emp = defs.find((s) => s.id === 'employment');
-  const details = defs.find((s) => s.id === 'details');
-  steps.push({
-    title: 'Employment & Career',
-    sub: 'Current job, employer and how you got there',
-    tag: 'SECTIONS IV–V',
-    questions: [...emp.questions, ...(a.ever_employed === 'Yes' ? details.questions : [])],
-  });
-  return steps;
-}
+const display = (a, q) => {
+  if (!isAnswered(a, q.id)) return '—';
+  if (q.type === 'password') return '••••••••';
+  const v = a[q.id];
+  return Array.isArray(v) ? v.join(', ') : String(v);
+};
 
-/** Alumni Profile: personal, educational and career information with explicit Save / Cancel. */
+/** Alumni Profile: read-only summary of the alumnus' record, with an Edit action into Edit Profile. */
 export default function AlumniProfile() {
   const navigate = useNavigate();
-  const profile = useProfile();
-  const { toast } = useToast();
-  const [draft, setDraft] = useState(profile.a);
-  const [errors, setErrors] = useState({});
-  const [dirty, setDirty] = useState(false);
-  const [leave, setLeave] = useState(false);
-  const [saving, setSaving] = useState(false);
+  useQuestionConfig(); // re-render when an Admin edits the questions
+  const { a, alumniName, avatar, savedAt } = useProfile();
 
-  // The profile arrives from GET /me after the first render; adopt it until the user starts editing.
-  useEffect(() => { if (profile.loaded && !dirty) setDraft(profile.a); }, [profile.loaded, profile.a, dirty]);
-
-  const clear = useCallback(
-    (id) => {
-      if (errors[id])
-        setErrors((s) => {
-          const n = { ...s };
-          delete n[id];
-          return n;
-        });
-    },
-    [errors],
-  );
-  const handlers = useMemo(
-    () => ({
-      setA: (id, v) => {
-        clear(id);
-        setDirty(true);
-        setDraft((d) => ({ ...d, [id]: v, ...(id === 'college' ? { course: '', ...(v !== 'Others' ? { course_other: '' } : {}) } : {}) }));
-      },
-      toggleA: (id, v) => {
-        clear(id);
-        setDirty(true);
-        setDraft((d) => {
-          const cur = d[id] || [];
-          return { ...d, [id]: cur.indexOf(v) > -1 ? cur.filter((x) => x !== v) : cur.concat(v) };
-        });
-      },
+  const { total, done } = profileProgress(a);
+  const groups = profileGroups(a).map((g) => ({
+    title: g.title,
+    rows: visibleQs(g, a).map((q) => {
+      const answered = isAnswered(a, q.id);
+      return { id: q.id, label: q.label, value: display(a, q), color: answered ? '#0B1220' : '#94A3B8' };
     }),
-    [clear],
-  );
+  }));
 
-  const groups = profileGroups(draft);
-  let total = 0;
-  let done = 0;
-  const groupStats = groups.map((g) => {
-    const qs = visibleQs(g, draft);
-    const d = qs.filter((q) => isAnswered(draft, q.id)).length;
-    total += qs.length;
-    done += d;
-    return { title: g.title, done: d, total: qs.length };
-  });
-  const pct = total ? Math.round((done / total) * 100) : 0;
-
-  const save = () => {
-    const e = validateProfile(draft);
-    setErrors(e);
-    if (Object.keys(e).length) {
-      toast('Please fix the highlighted fields before saving.', false);
-      setTimeout(() => {
-        const el = document.querySelector('[aria-invalid="true"]');
-        if (el) el.scrollIntoView({ block: 'center', behavior: 'smooth' });
-      }, 30);
-      return;
-    }
-    if (saving) return;
-    setSaving(true);
-    profile.saveProfile(draft).then(() => {
-      setDirty(false);
-      toast('Profile saved — your record in Alumni Records was updated.');
-      navigate('/alumni/dashboard');
-    }).catch((err) => {
-      if (err.fields) setErrors(err.fields);
-      toast(err.message || 'Your profile could not be saved. Please try again.', false);
-      setTimeout(() => {
-        const el = document.querySelector('[aria-invalid="true"]');
-        if (el) el.scrollIntoView({ block: 'center', behavior: 'smooth' });
-      }, 30);
-    }).finally(() => setSaving(false));
-  };
-  const cancel = () => (dirty ? setLeave(true) : navigate('/alumni/dashboard'));
-
-  const actions = (
-    <>
-      <button
-        type="button"
-        onClick={cancel}
-        style={{
-          border: '1px solid #E2E5EA',
-          background: '#fff',
-          color: '#0B1220',
-          fontFamily: 'inherit',
-          fontWeight: 700,
-          fontSize: 12.5,
-          padding: '9px 14px',
-          borderRadius: 10,
-          cursor: 'pointer',
-        }}
-      >
-        Cancel
-      </button>
-      <button
-        type="button"
-        onClick={save}
-        style={{
-          border: 'none',
-          background: '#0F3D2E',
-          color: '#fff',
-          fontFamily: 'inherit',
-          fontWeight: 700,
-          fontSize: 12.5,
-          padding: '10px 16px',
-          borderRadius: 10,
-          cursor: 'pointer',
-        }}
-      >
-        {saving ? 'Saving…' : 'Save Changes'}
-      </button>
-    </>
-  );
+  const course = a.course || a.course_other || 'Course not set';
+  const batch = a.year_graduated ? `Class of ${String(a.year_graduated).slice(0, 4)}` : 'Batch year not set';
+  const savedLabel = savedAt
+    ? `Last updated · ${new Date(savedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
+    : null;
 
   return (
-    <PortalPage
-      label="Edit Profile"
-      title="Edit Profile"
-      caption={dirty ? 'You have unsaved changes' : 'Keep your details current — they sync to Alumni Records'}
-      actions={actions}
-      tools={false}
-      contentStyle={{ display: 'flex', flexWrap: 'wrap', gap: 14, alignItems: 'flex-start' }}
-    >
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 14, minWidth: 0, flex: '1 1 280px', maxWidth: 340 }}>
-        <ProfilePhotoCard course={draft.course || draft.course_other} batch={draft.year_graduated} />
-        <div style={{ ...card, padding: '20px 24px' }}>
-          <div style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: 0.6, textTransform: 'uppercase', color: 'rgba(0,0,0,.45)' }}>
-            Profile completion
-          </div>
-          <div style={{ fontFamily: 'Inter,sans-serif', fontWeight: 700, fontSize: 24, color: '#0A0A0A', margin: '4px 0 10px' }}>{pct}%</div>
-          <div style={{ height: 6, borderRadius: 999, background: 'rgba(0,0,0,.08)', overflow: 'hidden', marginBottom: 12 }}>
-            <div style={{ height: '100%', background: '#004D40', width: `${pct}%`, transition: 'width .3s' }} />
-          </div>
-          <div style={{ fontSize: 12.5, color: 'rgba(0,0,0,.55)', fontWeight: 600, marginBottom: 12 }}>
-            {done} of {total} profile fields filled
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {groupStats.map((g) => (
-              <div key={g.title} style={{ display: 'flex', justifyContent: 'space-between', gap: 8, fontSize: 12.5, color: '#334155' }}>
-                <span>{g.title}</span>
-                <span style={{ fontWeight: 700, color: g.done === g.total ? '#0F8A5F' : '#8A6D1F' }}>
-                  {g.done}/{g.total}
-                </span>
+    <div data-screen-label="Alumni Profile" style={{ display: 'flex', minHeight: '100vh', background: BG, fontFamily: 'Inter,system-ui,sans-serif' }}>
+      <NavSidebar style={{ flex: 'none' }} />
+      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+        <div style={{ padding: '12px 12px 28px', display: 'flex', flexDirection: 'column', gap: 14, width: '100%', boxSizing: 'border-box' }}>
+          <div style={{ position: 'relative', overflow: 'hidden', borderRadius: 22, background: 'linear-gradient(165deg,#00251F,#004D40)', color: '#fff', padding: '26px 28px', boxShadow: '0 14px 34px -14px rgba(0,37,31,.35)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 22, flexWrap: 'wrap' }}>
+              {avatar ? (
+                <div role="img" aria-label="Profile photo" style={{ flex: 'none', width: 96, height: 96, borderRadius: '50%', border: '3px solid #F0C428', boxSizing: 'border-box', background: `url("${avatar}") center/cover no-repeat` }} />
+              ) : (
+                <div style={{ flex: 'none', width: 96, height: 96, borderRadius: '50%', background: 'rgba(255,255,255,.1)', border: '2px dashed rgba(240,196,40,.7)', boxSizing: 'border-box', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 30, color: '#F0C428' }}>
+                  {initials(alumniName) || 'AL'}
+                </div>
+              )}
+              <div style={{ minWidth: 0, flex: '1 1 220px' }}>
+                <h1 style={{ margin: '0 0 6px', fontSize: 11, fontWeight: 700, letterSpacing: 1.4, textTransform: 'uppercase', color: '#F0C428' }}>Alumni Profile</h1>
+                <div style={{ fontWeight: 800, fontSize: 28, letterSpacing: -0.6, lineHeight: 1.15, overflowWrap: 'anywhere' }}>{alumniName}</div>
+                <div style={{ fontSize: 14, color: '#EAF3F1', marginTop: 6, lineHeight: 1.5 }}>
+                  {course} · {batch}
+                </div>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 14 }}>
+                  <div style={pill}>
+                    {done} of {total} profile fields filled
+                  </div>
+                  {savedLabel && <div style={pill}>{savedLabel}</div>}
+                </div>
               </div>
-            ))}
-          </div>
-        </div>
-      </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 14, minWidth: 0, flex: '4 1 420px' }}>
-        {groups.map((g) => (
-          <div key={g.title} data-m="sv-card" style={{ ...card, padding: '24px 28px' }}>
-            <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 16, marginBottom: 4 }}>
-              <div data-m="sv-title" style={{ fontFamily: 'Inter,sans-serif', fontWeight: 700, fontSize: 21, color: '#0A0A0A' }}>
-                {g.title}
-              </div>
-              <div
-                style={{
-                  fontSize: 11,
-                  fontWeight: 700,
-                  color: '#004D40',
-                  background: '#E7F0EE',
-                  padding: '5px 11px',
-                  borderRadius: 8,
-                  letterSpacing: 0.4,
-                  flex: 'none',
-                }}
+              <button
+                type="button"
+                onClick={() => navigate('/alumni/profile/edit')}
+                style={{ flex: 'none', display: 'inline-flex', alignItems: 'center', gap: 7, whiteSpace: 'nowrap', background: '#F0C428', color: '#00251F', fontFamily: 'inherit', fontWeight: 700, fontSize: 13, padding: '11px 18px', borderRadius: 12, border: 'none', cursor: 'pointer' }}
               >
-                {g.tag}
-              </div>
-            </div>
-            <div style={{ fontSize: 13.5, color: 'rgba(0,0,0,.55)', marginBottom: 14 }}>{g.sub}</div>
-            <div data-m="fgrid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 22 }}>
-              {visibleQs(g, draft).map((q) => {
-                const f = buildField(q, draft, handlers, errors);
-                return <FormField key={q.id} f={{ ...f, span: f.span === 'span 1' ? 'auto' : '1 / -1' }} variant="survey" />;
-              })}
+                <Icon d={ICONS.pencil} size={16} />
+                Edit
+              </button>
             </div>
           </div>
-        ))}
-        <div data-m="actions" style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
-          <button type="button" onClick={cancel} style={{ ...modalBtn(false), padding: '14px 22px', borderRadius: 12 }}>
-            Cancel
-          </button>
-          <button
-            type="button"
-            onClick={save}
-            style={{ ...modalBtn(true), background: '#004D40', padding: '14px 26px', borderRadius: 12, fontSize: 14.5 }}
-          >
-            {saving ? 'Saving…' : 'Save Changes'}
-          </button>
+          {groups.map((g) => (
+            <section key={g.title} style={{ ...card, padding: '22px 24px' }}>
+              <h2 style={{ margin: 0, fontSize: 15, fontWeight: 700, letterSpacing: 0.6, textTransform: 'uppercase', color: '#0F3D2E', paddingBottom: 12, borderBottom: '1px solid #EEF1F4' }}>
+                {g.title}
+              </h2>
+              <dl style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(min(240px,100%),1fr))', gap: '18px 28px', margin: '16px 0 0' }}>
+                {g.rows.map((r) => (
+                  <div key={r.id} style={{ minWidth: 0 }}>
+                    <dt style={{ fontSize: 11, fontWeight: 600, color: '#94A3B8', marginBottom: 4, letterSpacing: 0.2 }}>{r.label}</dt>
+                    <dd style={{ margin: 0, fontSize: 14, fontWeight: 600, color: r.color, overflowWrap: 'anywhere' }}>{r.value}</dd>
+                  </div>
+                ))}
+              </dl>
+            </section>
+          ))}
         </div>
       </div>
-      <Modal
-        open={leave}
-        onClose={() => setLeave(false)}
-        title="Discard your changes?"
-        footer={
-          <>
-            <button type="button" style={modalBtn(false)} onClick={() => setLeave(false)}>
-              Keep editing
-            </button>
-            <button type="button" style={modalBtn(true)} onClick={() => navigate('/alumni/dashboard')}>
-              Discard
-            </button>
-          </>
-        }
-      >
-        You have unsaved changes to your profile. Leaving now will discard them.
-      </Modal>
-    </PortalPage>
+    </div>
   );
 }
