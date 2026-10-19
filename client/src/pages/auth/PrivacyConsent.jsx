@@ -5,12 +5,12 @@ import PrivacyConsentView from '../../views/PrivacyConsentView';
 export const PRIVACY_KEY = 'udm.privacy.consented';
 
 const SECTIONS = [
-  { n: 1, title: 'Who we are', body: 'The Universidad de Manila, through its UDM Alumni Relations Office, is the personal information controller for UDM Alumni.' },
-  { n: 2, title: 'What we collect', body: 'Personal information (name, birthdate, sex, civil status, address, email, mobile number), educational background (student number, college, program, year graduated), and employment and career details you provide in the Alumni Survey.' },
-  { n: 3, title: 'Why we collect it', body: 'To conduct the graduate outcomes study, monitor employability and program outcomes, comply with CHED and accreditation reporting, and connect you with alumni events and job opportunities.' },
-  { n: 4, title: 'Who can see it', body: 'Only authorized UDM personnel. Reports shared with CHED, accrediting bodies, or partners contain aggregated, anonymized data only. We never sell your information.' },
-  { n: 5, title: 'Storage & retention', body: 'Your data is stored on secured university systems with access controls and is kept while your alumni record is active or as required by law, then securely disposed of.' },
-  { n: 6, title: 'Your rights', body: 'You may access, correct, object to processing, request erasure, or withdraw your consent at any time through My Profile or by contacting the UDM Alumni Relations Office. You may also file a complaint with the National Privacy Commission.' },
+  { n: 1, title: 'Who we are', body: 'The UDM Alumni Relations Office is the personal information controller for UDM Alumni.' },
+  { n: 2, title: 'What we collect', body: 'Your personal details, educational background, and career information from the Alumni Survey. With consent, also sensitive data: Indigenous People (IP) membership and PWD status. Answering these is voluntary.' },
+  { n: 3, title: 'Why we collect it', body: 'To run the graduate outcomes study, meet CHED and accreditation reporting, and connect you with events and jobs. IP and PWD data supports inclusion programs and accommodations.' },
+  { n: 4, title: 'Who can see it', body: 'Authorized UDM personnel only. IP and PWD data is limited to the Alumni Relations Office. Shared reports are aggregated and anonymized. We never sell your data.' },
+  { n: 5, title: 'Storage & retention', body: 'Kept on secured university systems while your record is active or as required by law, then securely disposed of.' },
+  { n: 6, title: 'Your rights', body: 'Access, correct, object, erase, or withdraw consent anytime via My Profile or our office. You may also complain to the National Privacy Commission.' },
 ];
 
 const CONSENTS = [
@@ -33,6 +33,7 @@ export default function PrivacyConsent() {
       const on = !!pc[it.k];
       return {
         label: it.label,
+        checked: on,
         tag: it.req ? 'Required' : 'Optional',
         tagColor: it.req ? '#B3261E' : 'rgba(0,0,0,.4)',
         bg: on ? '#004D40' : '#fff',
@@ -59,7 +60,7 @@ export default function PrivacyConsent() {
     },
     reviewPolicy: () => {
       setDeclined(false);
-      requestAnimationFrame(() => document.getElementById('privacy-notice')?.scrollTo({ top: 0 }));
+      requestAnimationFrame(() => document.querySelector('[data-screen-label="Data Privacy Notice"]')?.scrollTo({ top: 0 }));
     },
     goSignin: () => navigate('/signin'),
   };

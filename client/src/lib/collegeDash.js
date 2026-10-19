@@ -9,36 +9,64 @@ const pct = (n, d) => (d ? (n / d) * 100 : 0);
 const thisYear = () => new Date().getFullYear();
 const YRS = () => [0, 1, 2, 3, 4, 5].map((i) => thisYear() - 5 + i);
 
+/**
+ * The batch range picked in the filter bar (`from` / `to` in either order, within the last six batches).
+ * A range covering all six counts as every batch, so no batch filter is sent.
+ */
+export function deptRange(st) {
+  const years = YRS();
+  const f = years.includes(Number(st.from)) ? Number(st.from) : years[years.length - 1];
+  const t = years.includes(Number(st.to)) ? Number(st.to) : years[0];
+  const lo = Math.min(f, t);
+  const hi = Math.max(f, t);
+  const all = lo === years[0] && hi === years[years.length - 1];
+  return { from: f, to: t, lo, hi, all, label: all ? 'All batches' : lo === hi ? `Batch ${lo}` : `Batches ${lo}–${hi}` };
+}
+
 export function deptRequests(st) {
-  const programId = st.course !== 'all' ? st.course : undefined;
-  const batch = st.batch !== 'all' ? st.batch : undefined;
+  const program_id = st.course !== 'all' ? st.course : undefined;
+  const r = deptRange(st);
+  const range = r.all ? {} : { batch_from: r.lo, batch_to: r.hi };
   const now = [0, 1, 2, 3].map((i) => thisYear() - 3 + i);
   return {
-    summary: `/stats/summary${qs({ programId, batch })}`,
-    now: `/stats/summary${qs({ programId, batches: now })}`,
-    prev: `/stats/summary${qs({ programId, batches: now.map((y) => y - 1) })}`,
+    summary: `/stats/summary${qs({ program_id, ...range })}`,
+    now: `/stats/summary${qs({ program_id, batches: now })}`,
+    prev: `/stats/summary${qs({ program_id, batches: now.map((y) => y - 1) })}`,
     byProgram: `/stats/by-program${qs({ group: 'program' })}`,
-    byBatch: `/stats/by-batch${qs({ programId })}`,
-    sectors: `/stats/sectors${qs({ programId, batch })}`,
+    byBatch: `/stats/by-batch${qs({ program_id })}`,
+    sectors: `/stats/sectors${qs({ program_id, ...range })}`,
     benchmark: '/stats/benchmark',
-    outreach: `/stats/unresponsive${qs({ programId, batch, limit: 5 })}`,
+    outreach: `/stats/unresponsive${qs({ program_id, ...range, per_page: 5 })}`,
   };
 }
 
 const zero = { total: 0, traced: 0, employed: 0, wageEmployed: 0, selfEmployed: 0, furtherStudies: 0, notEmployed: 0, laborForce: 0, aligned: 0, firstGen: 0, employmentRate: null, alignedRate: null, firstGenRate: null, coverage: null };
 export const emptyDeptData = () => ({
-  summary: zero, now: zero, prev: zero, byProgram: { rows: [] }, byBatch: [], sectors: { topJobTitles: [] }, benchmark: {}, outreach: { rows: [], total: 0, byReason: {} },
+  summary: zero, now: zero, prev: zero, byProgram: { data: [] }, byBatch: { data: [] }, sectors: { topJobTitles: [] }, benchmark: {}, outreach: { data: [], meta: { total: 0, byReason: {} } },
 });
 
 const REASON = { seeking: ['Seeking work', '#8A6D1F', '#FBF0D8'], no_response: ['No survey response', '#334E68', '#EEF2F7'], new: ['New registration', '#0F6B4F', '#E1F3EA'] };
 
+/** `outreach_contact.method` <-> the contact dialog's channel label. */
+export const OUTREACH_METHOD = { Email: 'email', Messenger: 'messenger' };
+const METHOD_LABEL = { email: 'Email', messenger: 'Messenger', facebook: 'Facebook', phone: 'Phone', linkedin: 'LinkedIn' };
+
+/** "Today · Messenger" for an outreach mark ({ at, via }). */
+export function contactedLabel(mark) {
+  if (!mark) return '';
+  const at = mark.at ? new Date(mark.at) : null;
+  const when = at && at.toDateString() !== new Date().toDateString()
+    ? at.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) : 'Today';
+  return mark.via ? `${when} · ${mark.via}` : when;
+}
+
 /**
- * @param st   { course, batch } (program id / batch year, or 'all')
+ * @param st   { course, from, to } (program id or 'all'; batch years)
  * @param data responses keyed like deptRequests()
- * @param fn   { user, setCourse, setBatch, contact, contacting, setHover, hoverId, tipH }
+ * @param fn   { user, setCourse, openContact, setHover, hoverId, tipH }
  */
 export function buildCollegeDash(st, data, fn) {
-  const { user, setCourse, setBatch, contact, contacting, setHover, hoverId, tipH } = fn;
+  const { user, setCourse, openContact, setHover, hoverId, tipH } = fn;
   const target = CATALOG.targets;
   const college = collegeById(user?.collegeId) || { name: user?.college || 'Your college', code: user?.collegeCode || '', programs: [] };
   const programs = college.programs || [];
@@ -65,23 +93,20 @@ export function buildCollegeDash(st, data, fn) {
     slices.push({ end: b, title: labels[i], value: `${n} graduates · ${fx(p)}%` });
   });
 
-  // Coverage by batch and the batch tiles.
-  const byBatch = new Map((data.byBatch || []).map((r) => [r.key, r]));
+  // Coverage by batch, with the batches outside the selected range muted.
+  const batchRows = (data.byBatch && data.byBatch.data) || [];
+  const byBatch = new Map(batchRows.map((r) => [r.key, r]));
   const years = YRS();
   const bRow = (y) => byBatch.get(y) || { total: 0, traced: 0, coverage: null };
-  const bsel = years.includes(Number(st.batch)) ? Number(st.batch) : 'all';
-  const tile = (k, label, t, tr) => {
-    const on = String(bsel) === String(k);
-    return { key: String(k), label, total: N(t), traced: N(tr), onClick: () => setBatch(String(k)), bg: on ? '#0F3D2E' : '#fff', border: on ? '#0F3D2E' : '#E2E5EA', color: on ? '#fff' : '#0B1220', sub: on ? 'rgba(255,255,255,.75)' : '#64748B' };
-  };
-  const allTotal = (data.byBatch || []).reduce((a, r) => a + r.total, 0);
-  const allTraced = (data.byBatch || []).reduce((a, r) => a + r.traced, 0);
+  const rg = deptRange(st);
+  const allTotal = batchRows.reduce((a, r) => a + r.total, 0);
+  const allTraced = batchRows.reduce((a, r) => a + r.traced, 0);
   const lab = S.employed + S.notEmployed;
   const notAligned = S.employed - S.aligned;
   const out = (label, v, base, color, bg, desc, pctColor) => ({ label, value: N(v), pct: `${fx(pct(v, base))}%`, w: `${fx(pct(v, base))}%`, color, bg, desc, pctColor });
   const jobs = (data.sectors.topJobTitles || []).slice(0, 10);
   const topJob = jobs.length ? jobs[0].n : 1;
-  const bl = bsel === 'all' ? 'All batches' : `Batch ${bsel}`;
+  const bl = rg.label;
 
   // Hero: employment rate, with the change against the previous batch window.
   const empRate = S.employmentRate ?? 0;
@@ -95,15 +120,15 @@ export function buildCollegeDash(st, data, fn) {
   if (S.alignedRate != null) insights.push([`${fx(S.alignedRate)}% work in jobs related to their course.`, uni.alignedRate != null ? `The university average is ${fx(uni.alignedRate)}%.` : 'Degree alignment is self-reported in the survey.', S.alignedRate >= (uni.alignedRate ?? 0) ? 'g' : 'y']);
   if (!insights.length) insights.push(['No survey responses yet.', 'Insights appear once alumni in this college answer the survey.', 'y']);
 
-  const progTotals = new Map((data.byProgram.rows || []).map((r) => [String(r.key), r.total]));
-  const allCount = (data.byProgram.rows || []).reduce((a, r) => a + r.total, 0);
+  const progTotals = new Map((data.byProgram.data || []).map((r) => [String(r.key), r.total]));
+  const allCount = (data.byProgram.data || []).reduce((a, r) => a + r.total, 0);
   const tab = (key, lbl, count, full) => ({
     label: lbl, full, count: N(count), onClick: () => setCourse(String(key)),
     bg: String(sel) === String(key) ? '#0F3D2E' : 'transparent', color: String(sel) === String(key) ? '#fff' : '#334155',
     countColor: String(sel) === String(key) ? 'rgba(255,255,255,.7)' : '#64748B', shadow: String(sel) === String(key) ? '0 1px 2px rgba(16,24,40,.15)' : 'none',
   });
-  const oRows = data.outreach.rows || [];
-  const recent = (iso) => iso && Date.now() - new Date(iso).getTime() < CATALOG_OUTREACH_DAYS * 864e5;
+  const oRows = data.outreach.data || [];
+  const oTotal = data.outreach.meta ? data.outreach.meta.total : 0;
 
   const vals = {
     deptCourseTabs: [tab('all', 'All courses', allCount, college.name), ...programs.map((p) => tab(p.id, p.abbr, progTotals.get(String(p.id)) || 0, p.name))],
@@ -115,22 +140,23 @@ export function buildCollegeDash(st, data, fn) {
     deptCourseSelVal: String(sel),
     deptCourseOpts: [{ key: 'all', label: `All ${college.code} courses` }, ...programs.map((p) => ({ key: String(p.id), label: p.abbr }))],
     deptEmp: fx(empRate), deptEmpW: `${fx(empRate)}%`,
-    deptEmpDelta: bsel !== 'all' ? `Batch ${bsel}` : d == null ? 'Latest survey cycle' : `${d >= 0 ? '↑ ' : '↓ '}${fx(Math.abs(d))} pts vs the previous batches`,
+    deptEmpDelta: !rg.all ? rg.label : d == null ? 'Latest survey cycle' : `${d >= 0 ? '↑ ' : '↓ '}${fx(Math.abs(d))} pts vs the previous batches`,
     deptHeroEmployed: N(S.employed),
     deptReachNote: 'Share of each batch reached by the survey',
     deptCoverageAvg: `${sel === 'all' ? 'College' : 'Course'} coverage: ${fx(pct(allTraced, allTotal))}% (target ${target.coverage}%)`,
     deptNote: `N = ${N(traced)} survey responses`, deptTraced: N(traced),
     deptEmployedAll: `Employed (all types): ${fx(pct(S.employed, traced))}%`,
-    deptOutreachNote: `${N(data.outreach.total)} ${code} alumni seeking work, without a survey response, or newly registered`,
-    deptOutShown: String(oRows.length), deptOutTotal: N(data.outreach.total),
+    deptOutreachNote: `${N(oTotal)} ${code} alumni seeking work, without a survey response, or newly registered`,
+    deptOutShown: String(oRows.length), deptOutTotal: N(oTotal),
     deptHero: wire('d-emp', {}),
     deptSide: [
       wire('d-firstgen', { label: 'First-generation graduates', value: N(S.firstGen), unit: 'respondents', hasBar: false, isText: true, context: `${fx(S.firstGenRate ?? 0)}% of traced graduates answered “Yes”` }),
       wire('d-traced', { label: 'Graduates traced', value: N(S.traced), unit: `/ ${N(S.total)} total`, hasBar: true, isText: false, pct: `${fx(S.coverage ?? 0)}%`, context: `${fx(S.coverage ?? 0)}% of records reached` }),
     ],
-    deptBatchSelVal: String(bsel),
-    deptBatchTiles: [tile('all', 'All batches', allTotal, allTraced), ...years.map((y) => tile(y, `Batch ${y}`, bRow(y).total, bRow(y).traced))],
-    deptBatchNote: `${bl} · ${code} · change the batch in the filter bar above`,
+    deptFromVal: String(rg.from), deptToVal: String(rg.to),
+    deptFromOpts: [...years].reverse().map((y) => ({ value: String(y), label: `From ${y}` })),
+    deptToOpts: [...years].reverse().map((y) => ({ value: String(y), label: `To ${y}` })),
+    deptBatchNote: `${bl} · ${code} · change the batch range in the filter bar above`,
     deptOutcome: [
       out('Unemployed', S.notEmployed, lab, '#D9620B', '#FFF8F1', 'Still seeking work · % of labor force', '#B4500A'),
       out('Aligned', S.aligned, S.employed, '#12A36F', '#fff', 'Job related to their course · % of employed', '#0F6B4F'),
@@ -141,7 +167,8 @@ export function buildCollegeDash(st, data, fn) {
     deptBatch: years.map((y) => {
       const v = Math.round(bRow(y).coverage ?? 0);
       const ok = v >= target.coverage;
-      return { label: String(y), pct: `${v}%`, pctColor: ok ? '#0B1220' : '#8A6D1F', color: ok ? '#0F3D2E' : '#E0A915', ...tipH(`Batch ${y}`, `${v}% traced · ${ok ? 'meets' : 'below'} ${target.coverage}% target`) };
+      const muted = !rg.all && (y < rg.lo || y > rg.hi);
+      return { label: String(y), pct: `${v}%`, pctColor: muted ? '#94A3B8' : ok ? '#0B1220' : '#8A6D1F', color: muted ? '#D5DED9' : ok ? '#0F3D2E' : '#E0A915', ...tipH(`Batch ${y}`, `${v}% traced · ${ok ? 'meets' : 'below'} ${target.coverage}% target`) };
     }),
     deptStatus: stc.map((n, i) => ({ label: labels[i], count: String(n), pct: `${fx(pct(n, traced))}%`, pctColor: i === 3 ? '#B4500A' : '#0B1220', color: colors[i] })),
     deptDonut: traced ? `conic-gradient(${segs.join(', ')})` : 'conic-gradient(#E7E9ED 0% 100%)',
@@ -150,20 +177,18 @@ export function buildCollegeDash(st, data, fn) {
       ...tipH(lb, `${sel === 'all' ? 'College ' : `${code} `}${fx(c ?? 0)}% · University ${fx(u ?? 0)}%`),
     })),
     deptInsights: insights.map(([lead, text, t]) => ({ lead, text, color: tone[t][0], leadColor: tone[t][1], bg: tone[t][2], border: tone[t][3] })),
+    // "Contact" opens the offline contact dialog (Messenger / email outside the portal); the API only records the attempt.
     deptOutreach: oRows.map((r) => {
       const S2 = REASON[r.reason] || REASON.no_response;
-      const done = recent(r.last_contacted_at);
-      const busy = contacting === r.alumni_id;
+      const mark = r.lastContactedAt ? { id: r.lastContactId, at: r.lastContactedAt, via: METHOD_LABEL[r.lastContactedVia] || '' } : null;
       return {
         name: r.name, batch: String(r.batch), program: r.program, status: S2[0], statusColor: S2[1], statusBg: S2[2],
-        last: r.last_contacted_at ? new Date(r.last_contacted_at).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) : r.reason === 'new' ? `Registered ${new Date(r.created_at).toLocaleDateString('en-US', { month: 'short', day: '2-digit' })}` : 'Never',
-        btnLabel: busy ? 'Sending…' : done ? 'Contacted ✓' : 'Contact', btnColor: done ? '#475569' : '#0F3D2E', btnBg: done ? '#F4F6F8' : '#fff', btnBorder: done ? '#E2E5EA' : '#B9CFC6',
-        onContact: () => { if (!done && !busy) contact(r); },
+        last: mark ? contactedLabel(mark) : r.reason === 'new' ? `Registered ${new Date(r.registeredAt).toLocaleDateString('en-US', { month: 'short', day: '2-digit' })}` : 'Never',
+        btnLabel: mark ? 'Contacted ✓' : 'Contact', btnColor: mark ? '#475569' : '#0F3D2E', btnBg: mark ? '#F4F6F8' : '#fff', btnBorder: mark ? '#E2E5EA' : '#B9CFC6',
+        onContact: () => openContact({ id: r.id, name: r.name, status: S2[0], contacts: { facebook: r.facebook, email: r.email }, contacted: mark }),
       };
     }),
   };
   return { vals, slices };
 }
 
-// One outreach email per alumnus per 7 days (APP_SETTING.outreach_interval_days); the API enforces it.
-const CATALOG_OUTREACH_DAYS = 7;

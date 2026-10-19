@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useProfile } from '../context/ProfileContext';
 import { NAV, ROLE_LABEL } from '../data/navigation';
 import { hv } from '../lib/stateStyle';
+import Icon from './Icon';
 
 const initialsOf = (n) =>
   String(n || '')
@@ -14,15 +15,12 @@ const initialsOf = (n) =>
     .map((w) => w[0].toUpperCase())
     .join('');
 
-function Icon({ d, size = 19, children }) {
-  return (
-    <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" style={{ flex: 'none' }} aria-hidden="true">
-      {d ? <path d={d} /> : children}
-    </svg>
-  );
-}
+// Phone bottom tab bar (NavSidebar.dc.html `nav-tabs`).
+const TAB = { flex: 1, minWidth: 0, minHeight: 54, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3, padding: 0, cursor: 'pointer' };
+const TAB_PILL = { width: 54, height: 30, borderRadius: 15, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background .15s' };
+const TAB_LABEL = { fontSize: 11, lineHeight: 1.1, maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', padding: '0 2px' };
 
-/** Role-aware sidebar (per NavSidebar.dc.html): collapsible rail, gold active bar, user card with sign out. */
+/** Role-aware sidebar (per NavSidebar.dc.html): collapsible rail, gold active bar, user card with sign out; on phones, a bottom tab bar with a More sheet. */
 export default function NavSidebar({ style }) {
   const { user, role, signOut } = useAuth();
   const { alumniName, avatar } = useProfile();
@@ -87,6 +85,19 @@ export default function NavSidebar({ style }) {
     );
   };
 
+  const tabItem = (it) => {
+    const on = isActive(it);
+    const short = it.label.length > 10 ? it.label.split(' ')[0] : it.label;
+    return (
+      <NavLink key={it.id} to={it.to} title={it.label} aria-label={it.label} aria-current={on ? 'page' : undefined} onClick={() => setMenuOpen(false)} style={{ ...TAB, textDecoration: 'none', color: on ? '#004D40' : '#64748B' }}>
+        <span style={{ ...TAB_PILL, background: on ? '#DDEFE7' : 'transparent' }}>
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={it.icon} /></svg>
+        </span>
+        <span style={{ ...TAB_LABEL, fontWeight: on ? 700 : 600 }}>{short}</span>
+      </NavLink>
+    );
+  };
+
   return (
     <aside
       data-m="nav"
@@ -112,8 +123,32 @@ export default function NavSidebar({ style }) {
           <Icon d={menuOpen ? 'M6 6l12 12M18 6L6 18' : 'M4 7h16M4 12h16M4 17h16'} size={20} />
         </button>
       </div>
+      {/* phone layout: bottom tab bar (first four items + More) */}
+      <nav data-m="nav-tabs" aria-label="Main navigation" style={{ display: 'none', pointerEvents: 'auto', background: '#fff', borderTop: '1px solid #E3E8E5', padding: '6px 6px 8px', boxSizing: 'border-box', width: '100%', alignItems: 'stretch', justifyContent: 'space-around', boxShadow: '0 -8px 24px -12px rgba(0,30,20,.2)', fontFamily: 'Inter,system-ui,sans-serif' }}>
+        {items.slice(0, 4).map(tabItem)}
+        <button
+          type="button" aria-expanded={menuOpen} aria-label="More" onClick={() => setMenuOpen((o) => !o)}
+          style={{ ...TAB, border: 0, background: 'transparent', fontFamily: 'inherit', color: menuOpen ? '#004D40' : '#64748B' }}
+        >
+          <span style={{ ...TAB_PILL, background: menuOpen ? '#DDEFE7' : 'transparent' }}>
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" aria-hidden="true"><path d="M5 12h.01M12 12h.01M19 12h.01" /></svg>
+          </span>
+          <span style={{ ...TAB_LABEL, fontWeight: 600 }}>More</span>
+        </button>
+      </nav>
+      {menuOpen ? <div data-m="nav-scrim" role="presentation" onClick={() => setMenuOpen(false)} style={{ display: 'none' }} /> : null}
       {menuOpen ? (
         <div data-m="nav-menu" style={{ display: 'none', flexDirection: 'column', gap: 2, width: '100%', padding: '12px 0 4px', marginTop: 10, borderTop: '1px solid rgba(234,243,241,.12)' }}>
+          <div data-m="sheet-head" style={{ display: 'none', flexDirection: 'column', alignItems: 'center', gap: 12, padding: '2px 0 10px' }}>
+            <div style={{ width: 40, height: 5, borderRadius: 3, background: 'rgba(234,243,241,.3)' }} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '0 4px', boxSizing: 'border-box' }}>
+              {logo(36)}
+              <div>
+                <div style={{ fontWeight: 700, fontSize: 15 }}>UDM Alumni</div>
+                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase', color: '#F0C428' }}>{roleLabel}</div>
+              </div>
+            </div>
+          </div>
           {items.map(mobileRow)}
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 12px 4px', marginTop: 6, borderTop: '1px solid rgba(234,243,241,.12)' }}>
             <div style={{ flex: 1, minWidth: 0, fontSize: 13.5, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{name}</div>

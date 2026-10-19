@@ -181,7 +181,7 @@ export default function AlumniDashboardView(v) {
                   <div style={{ fontFamily: 'Inter,sans-serif', fontWeight: '700', fontSize: '30px', letterSpacing: '-.7px', color: '#0B1220' }}>
                     Welcome, {alumniName}
                   </div>
-                  <div style={{ fontSize: '13px', color: '#64748B', marginTop: '5px' }}>BS Information Technology · 2022-01234-UDM</div>
+                  <div style={{ fontSize: '13px', color: '#64748B', marginTop: '5px' }}>BS Information Technology · 24-01-234</div>
                 </div>
               </div>
               <div style={{ display: 'flex', gap: '10px', flex: 'none' }}>

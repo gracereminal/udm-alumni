@@ -13,6 +13,7 @@ export default function ReportsView(v) {
     exportHover,
     filterHover,
     goRecords,
+    repBarGap,
     repBars,
     repChartNote,
     repChartTitle,
@@ -33,8 +34,14 @@ export default function ReportsView(v) {
     repHistoryFoot,
     repKpis,
     repNoSections,
+    repFromOpts,
+    repFromVal,
     repOnCollege,
     repOnCourse,
+    repOnFrom,
+    repOnTo,
+    repToOpts,
+    repToVal,
     repOutputMeta,
     repPreviewRef,
     repRecords,
@@ -54,6 +61,7 @@ export default function ReportsView(v) {
     repTemplates,
     repTitle,
     repViewArchive,
+    repYearsLabel,
     repToday,
     rowHover,
   } = v;
@@ -168,7 +176,7 @@ export default function ReportsView(v) {
                       letterSpacing: '.6px',
                     }}
                   >
-                    SURVEY COVERAGE: BATCHES 2022–2026
+                    SURVEY COVERAGE: {String(repYearsLabel || '').toUpperCase()}
                   </div>
                   <div
                     style={{
@@ -206,6 +214,32 @@ export default function ReportsView(v) {
                   {...selectFx}
                 >
                   {(repCourseOpts || []).map((o, _i) => (
+                    <React.Fragment key={_i}>
+                      <option value={o.value}>{o.label}</option>
+                    </React.Fragment>
+                  ))}
+                </select>
+                <select
+                  aria-label="Batch from"
+                  value={repFromVal}
+                  onChange={repOnFrom}
+                  style={selectStyle('12.5px', '140px')}
+                  {...selectFx}
+                >
+                  {(repFromOpts || []).map((o, _i) => (
+                    <React.Fragment key={_i}>
+                      <option value={o.value}>{o.label}</option>
+                    </React.Fragment>
+                  ))}
+                </select>
+                <select
+                  aria-label="Batch to"
+                  value={repToVal}
+                  onChange={repOnTo}
+                  style={selectStyle('12.5px', '140px')}
+                  {...selectFx}
+                >
+                  {(repToOpts || []).map((o, _i) => (
                     <React.Fragment key={_i}>
                       <option value={o.value}>{o.label}</option>
                     </React.Fragment>
@@ -518,7 +552,7 @@ export default function ReportsView(v) {
                       </div>
                       <div style={{ textAlign: 'right', fontSize: '11px', color: '#64748B', lineHeight: '1.6' }}>
                         <div>{repScopeLabel}</div>
-                        <div>Batches 2022–2026 · {repRecords} verified records</div>
+                        <div>{repYearsLabel} · {repRecords} verified records</div>
                         <div>Preview · {repToday}</div>
                       </div>
                     </div>
@@ -587,7 +621,7 @@ export default function ReportsView(v) {
                               height: '200px',
                               display: 'flex',
                               alignItems: 'flex-end',
-                              gap: '12px',
+                              gap: repBarGap,
                               padding: '0 4px',
                               borderBottom: '1px solid #CFD6D3',
                             }}
@@ -625,6 +659,7 @@ export default function ReportsView(v) {
                             {(repBars || []).map((b, _i) => (
                               <React.Fragment key={_i}>
                                 <div
+                                  title={b.tip}
                                   style={{
                                     flex: '1',
                                     minWidth: '0',
@@ -642,11 +677,11 @@ export default function ReportsView(v) {
                               </React.Fragment>
                             ))}
                           </div>
-                          <div style={{ display: 'flex', gap: '12px', padding: '8px 4px 0' }}>
+                          <div style={{ display: 'flex', gap: repBarGap, padding: '8px 4px 0' }}>
                             {(repBars || []).map((b, _i) => (
                               <React.Fragment key={_i}>
                                 <div
-                                  title={b.label}
+                                  title={b.tip}
                                   style={{
                                     flex: '1',
                                     minWidth: '0',

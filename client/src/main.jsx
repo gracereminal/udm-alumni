@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import App from './App';
 import { loadCatalog } from './data/colleges';
 import { purgeLegacyStorage } from './lib/api';
+import { loadQuestionConfig } from './lib/questionStore';
 import './styles/global.css';
 
 const root = createRoot(document.getElementById('root'));
@@ -26,8 +27,9 @@ function Startup({ error, onRetry }) {
 async function start() {
   root.render(<Startup />);
   try {
-    // The college / program catalog is needed synchronously by the forms, so it loads before the app renders.
-    await loadCatalog();
+    // The college / program catalog and the Admin's tracer question edits are read synchronously by the forms,
+    // so they load before the app renders.
+    await Promise.all([loadCatalog(), loadQuestionConfig()]);
   } catch (err) {
     root.render(<Startup error={err.message} onRetry={start} />);
     return;

@@ -1,4 +1,5 @@
 import { hv } from '../lib/stateStyle';
+import { onActivate } from '../lib/a11y';
 
 const inputReset = {
   width: '100%',
@@ -15,6 +16,28 @@ const footLink = { border: 'none', background: 'transparent', padding: 0, font: 
 /* View layer for the "SignIn" screen — converted from "Alumni Tracer Mockups.dc.html". */
 export default function SignInView(v) {
   const {
+    demoAdminAction,
+    demoAdminActionColor,
+    demoAdminBg,
+    demoAdminBorder,
+    demoAlumniAction,
+    demoAlumniActionColor,
+    demoAlumniBg,
+    demoAlumniBorder,
+    demoDeptAction,
+    demoDeptActionColor,
+    demoDeptBg,
+    demoDeptBorder,
+    demoOpacity,
+    demoPendingAction,
+    demoPendingActionColor,
+    demoPendingBg,
+    demoPendingBorder,
+    demoPendingEmail,
+    demoPendingLabel,
+    demoRows,
+    demoToggleLabel,
+    showDemo,
     identifier,
     onIdentifier,
     password,
@@ -26,7 +49,9 @@ export default function SignInView(v) {
     openInfo,
     goRegister,
     passwordToggleLabel,
+    pickDemo,
     signIn,
+    toggleDemo,
     togglePassword,
   } = v;
   return (
@@ -154,6 +179,285 @@ export default function SignInView(v) {
             >
               Track your career journey, reconnect with classmates, and discover opportunities from your alma mater&apos;s growing network.
             </div>
+            {showDemo ? (
+            <div
+              data-m="si-demo"
+              style={{
+                width: '100%',
+                maxWidth: '420px',
+                boxSizing: 'border-box',
+                background: 'rgba(255,255,255,.025)',
+                border: '1px solid rgba(255,255,255,.09)',
+                borderRadius: '10px',
+                overflow: 'hidden',
+              }}
+            >
+              <div role="button" tabIndex={0} onKeyDown={onActivate(toggleDemo)}
+                onClick={toggleDemo}
+                style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '9px 12px', cursor: 'pointer', transition: 'background .15s' }}
+                {...hv({ background: 'rgba(255,255,255,.04)' })}
+              >
+                <div style={{ width: '5px', height: '5px', flex: 'none', borderRadius: '50%', background: 'rgba(217,180,90,.7)' }} />
+                <div
+                  style={{
+                    flex: 'none',
+                    fontSize: '10.75px',
+                    fontWeight: '700',
+                    letterSpacing: '.1em',
+                    textTransform: 'uppercase',
+                    color: 'rgba(217,180,90,.85)',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  Demo Access
+                </div>
+                <div
+                  style={{
+                    flex: '1',
+                    minWidth: '0',
+                    fontSize: '11.25px',
+                    color: 'rgba(214,234,225,.5)',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                  }}
+                >
+                  Prototype accounts
+                </div>
+                <div style={{ flex: 'none', fontSize: '11.25px', fontWeight: '600', color: 'rgba(214,234,225,.75)', whiteSpace: 'nowrap' }}>
+                  {demoToggleLabel}
+                </div>
+              </div>
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateRows: demoRows,
+                  opacity: demoOpacity,
+                  transition: 'grid-template-rows .28s ease,opacity .22s ease',
+                }}
+              >
+                <div style={{ minHeight: '0', overflow: 'hidden' }}>
+                  <div style={{ borderTop: '1px solid rgba(255,255,255,.07)', padding: '6px', display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                    <div style={{ fontSize: '10.75px', color: 'rgba(214,234,225,.45)', padding: '2px 6px 4px' }}>
+                      Prototype testing only — selecting one fills the sign-in form.
+                    </div>
+                    <div role="button" tabIndex={0} onKeyDown={onActivate(pickDemo('alumni'))}
+                      data-m="si-demo-row"
+                      onClick={pickDemo('alumni')}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '9px',
+                        background: demoAlumniBg,
+                        border: `1px solid ${demoAlumniBorder}`,
+                        borderRadius: '7px',
+                        padding: '6px 8px',
+                        cursor: 'pointer',
+                        transition: 'background .15s',
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: '20px',
+                          height: '20px',
+                          flex: 'none',
+                          borderRadius: '5px',
+                          background: 'rgba(143,217,182,.14)',
+                          color: '#8FD9B6',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontWeight: '800',
+                          fontSize: '10.25px',
+                        }}
+                      >
+                        A
+                      </div>
+                      <div style={{ flex: 'none', fontSize: '12.25px', fontWeight: '600', color: 'rgba(255,255,255,.88)', whiteSpace: 'nowrap' }}>
+                        Alumni Account
+                      </div>
+                      <div
+                        style={{
+                          flex: '1',
+                          minWidth: '0',
+                          fontFamily: "'JetBrains Mono',monospace",
+                          fontSize: '10.25px',
+                          color: 'rgba(214,234,225,.45)',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        maria.delacruz@udmalumni.edu
+                      </div>
+                      <div style={{ flex: 'none', whiteSpace: 'nowrap', fontSize: '10.75px', fontWeight: '600', color: demoAlumniActionColor }}>
+                        {demoAlumniAction}
+                      </div>
+                    </div>
+                    <div role="button" tabIndex={0} onKeyDown={onActivate(pickDemo('admin'))}
+                      data-m="si-demo-row"
+                      onClick={pickDemo('admin')}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '9px',
+                        background: demoAdminBg,
+                        border: `1px solid ${demoAdminBorder}`,
+                        borderRadius: '7px',
+                        padding: '6px 8px',
+                        cursor: 'pointer',
+                        transition: 'background .15s',
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: '20px',
+                          height: '20px',
+                          flex: 'none',
+                          borderRadius: '5px',
+                          background: 'rgba(217,180,90,.16)',
+                          color: '#D9B45A',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontWeight: '800',
+                          fontSize: '10.25px',
+                        }}
+                      >
+                        F
+                      </div>
+                      <div style={{ flex: 'none', fontSize: '12.25px', fontWeight: '600', color: 'rgba(255,255,255,.88)', whiteSpace: 'nowrap' }}>
+                        Admin / Faculty Account
+                      </div>
+                      <div
+                        style={{
+                          flex: '1',
+                          minWidth: '0',
+                          fontFamily: "'JetBrains Mono',monospace",
+                          fontSize: '10.25px',
+                          color: 'rgba(214,234,225,.45)',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        admin@udmalumni.edu
+                      </div>
+                      <div style={{ flex: 'none', whiteSpace: 'nowrap', fontSize: '10.75px', fontWeight: '600', color: demoAdminActionColor }}>
+                        {demoAdminAction}
+                      </div>
+                    </div>
+                    <div role="button" tabIndex={0} onKeyDown={onActivate(pickDemo('dept'))}
+                      data-m="si-demo-row"
+                      onClick={pickDemo('dept')}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '9px',
+                        background: demoDeptBg,
+                        border: `1px solid ${demoDeptBorder}`,
+                        borderRadius: '7px',
+                        padding: '6px 8px',
+                        cursor: 'pointer',
+                        transition: 'background .15s',
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: '20px',
+                          height: '20px',
+                          flex: 'none',
+                          borderRadius: '5px',
+                          background: 'rgba(140,180,240,.16)',
+                          color: '#9CC2F2',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontWeight: '800',
+                          fontSize: '10.25px',
+                        }}
+                      >
+                        C
+                      </div>
+                      <div style={{ flex: 'none', fontSize: '12.25px', fontWeight: '600', color: 'rgba(255,255,255,.88)', whiteSpace: 'nowrap' }}>
+                        College / Department Account
+                      </div>
+                      <div
+                        style={{
+                          flex: '1',
+                          minWidth: '0',
+                          fontFamily: "'JetBrains Mono',monospace",
+                          fontSize: '10.25px',
+                          color: 'rgba(214,234,225,.45)',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        ccs.dean@udmalumni.edu
+                      </div>
+                      <div style={{ flex: 'none', whiteSpace: 'nowrap', fontSize: '10.75px', fontWeight: '600', color: demoDeptActionColor }}>
+                        {demoDeptAction}
+                      </div>
+                    </div>
+                    <div role="button" tabIndex={0} onKeyDown={onActivate(pickDemo('pending'))}
+                      data-m="si-demo-row"
+                      onClick={pickDemo('pending')}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '9px',
+                        background: demoPendingBg,
+                        border: `1px solid ${demoPendingBorder}`,
+                        borderRadius: '7px',
+                        padding: '6px 8px',
+                        cursor: 'pointer',
+                        transition: 'background .15s',
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: '20px',
+                          height: '20px',
+                          flex: 'none',
+                          borderRadius: '5px',
+                          background: 'rgba(240,160,90,.16)',
+                          color: '#F2B27A',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontWeight: '800',
+                          fontSize: '10.25px',
+                        }}
+                      >
+                        P
+                      </div>
+                      <div style={{ flex: 'none', fontSize: '12.25px', fontWeight: '600', color: 'rgba(255,255,255,.88)', whiteSpace: 'nowrap' }}>
+                        {demoPendingLabel}
+                      </div>
+                      <div
+                        style={{
+                          flex: '1',
+                          minWidth: '0',
+                          fontFamily: "'JetBrains Mono',monospace",
+                          fontSize: '10.25px',
+                          color: 'rgba(214,234,225,.45)',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {demoPendingEmail}
+                      </div>
+                      <div style={{ flex: 'none', whiteSpace: 'nowrap', fontSize: '10.75px', fontWeight: '600', color: demoPendingActionColor }}>
+                        {demoPendingAction}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            ) : null}
           </div>
           <div
             data-m="si-foot"

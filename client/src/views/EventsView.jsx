@@ -62,6 +62,7 @@ export default function EventsView(v) {
     regLabel,
     toggleCalendar,
     toggleRsvp,
+    viewRegEmail,
   } = v;
   return (
     <>
@@ -588,7 +589,32 @@ export default function EventsView(v) {
                           </div>
                           <div style={{ flex: '1', minWidth: '0' }}>
                             <div style={{ fontSize: '13.5px', fontWeight: '700', color: '#0B3D2A' }}>{regConfirmText}</div>
-                            <div style={{ fontSize: '12.5px', color: '#3F5F52', marginTop: '2px', textWrap: 'pretty' }}>{regConfirmSub}</div>
+                            <div style={{ fontSize: '12.5px', color: '#3F5F52', marginTop: '2px', textWrap: 'pretty' }}>
+                              {regConfirmSub}
+                              {viewRegEmail ? (
+                                <>
+                                  {' '}
+                                  <button
+                                    type="button"
+                                    onClick={viewRegEmail}
+                                    style={{
+                                      background: 'none',
+                                      border: 'none',
+                                      padding: '0',
+                                      fontFamily: 'inherit',
+                                      fontSize: 'inherit',
+                                      fontWeight: '700',
+                                      color: '#0B5A40',
+                                      cursor: 'pointer',
+                                      textDecoration: 'underline',
+                                      textUnderlineOffset: '2px',
+                                    }}
+                                  >
+                                    View email
+                                  </button>
+                                </>
+                              ) : null}
+                            </div>
                           </div>
                           <button
                             type="button"

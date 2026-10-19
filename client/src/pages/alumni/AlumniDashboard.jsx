@@ -4,13 +4,13 @@ import AlumniDashboardView from '../../views/AlumniDashboardView';
 import { useProfile } from '../../context/ProfileContext';
 import { useJobs } from '../../context/JobsContext';
 import { useEvents } from '../../context/EventsContext';
-import { isAnswered, visibleQs, visibleSections } from '../../data/formDefs';
+import { isAnswered } from '../../data/formDefs';
 import { initials } from '../../lib/format';
 
 /** Alumni Dashboard — profile summary, survey status, announcements & events feed, job matches. */
 export default function AlumniDashboard() {
   const navigate = useNavigate();
-  const { a, surveySubmitted, alumniName, avatar } = useProfile();
+  const { a, surveyComplete, progress, alumniName, avatar } = useProfile();
   const { activeJobs } = useJobs();
   const { announcementItems } = useEvents();
   const [bannerDismissed, setBannerDismissed] = useState(false);
@@ -26,16 +26,12 @@ export default function AlumniDashboard() {
   };
   const f = (label, id, fb) => ({ label, value: av(id, fb), color: set(id) ? ink : muted });
 
-  const sections = visibleSections(a);
-  let total = 0;
-  let done = 0;
-  sections.forEach((sec) => visibleQs(sec, a).forEach((q) => { total++; if (set(q.id)) done++; }));
-  const pct = total ? Math.round((done / total) * 100) : 0;
+  const { total, done, pct } = progress;
   const employed = a.ever_employed === 'Yes';
   const selfEmp = a.job_status === 'Self-employed' || a.org_type === 'Self-owned business';
   const empValue = a.ever_employed == null ? 'Not answered' : employed ? a.job_status || 'Employed' : 'Not yet employed';
   const relevance = a.job_related === 'Yes' ? 'Related to course' : a.job_related === 'No' ? 'Not related to course' : 'Not answered';
-  const complete = surveySubmitted || pct >= 100;
+  const complete = surveyComplete;
   const remaining = Math.max(total - done, 0);
 
   const items = announcementItems();
@@ -95,7 +91,7 @@ export default function AlumniDashboard() {
     goJobs: () => navigate('/alumni/jobs'),
     goEvents: () => navigate('/alumni/events'),
     goProfile: () => navigate('/alumni/profile'),
-    goSurvey: () => navigate('/alumni/profile'),
+    goSurvey: () => navigate('/alumni/profile/edit'),
   };
   void f;
   return <AlumniDashboardView {...v} />;

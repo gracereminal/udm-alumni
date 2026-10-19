@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import EventsView from '../../views/EventsView';
 import { useEvents } from '../../context/EventsContext';
 import { useToast } from '../../context/ToastContext';
-import { EV_STATUS_META, evCat, evCount, evStatusKey, evTs, photoCss } from '../../data/events';
+import { SHOW_DEMO } from '../../data/demoAccounts';
+import { EV_STATUS_META, evCat, evCount, evStatusKey, evTs, googleCalendarUrl, photoCss } from '../../data/events';
 
 const FILTERS = ['All', 'Events', 'Career', 'Community'];
 
@@ -12,25 +13,29 @@ export default function AlumniEvents() {
   const { events, rsvps, calendar, register, cancelRegistration, toggleCalendar } = useEvents();
   const { toast } = useToast();
   const location = useLocation();
-  const [selId, setSelId] = useState(location.state?.eventId || null);
+  const navigate = useNavigate();
+  // ?event= is the link in the registration email; state.eventId comes from in-app links.
+  const linkedId = location.state?.eventId || new URLSearchParams(location.search).get('event');
+  const [selId, setSelId] = useState(linkedId || null);
   const [filter, setFilter] = useState('All');
   const [dlg, setDlg] = useState(null);
   const [busy, setBusy] = useState(false);
 
-  useEffect(() => { if (location.state?.eventId) { setSelId(location.state.eventId); setFilter('All'); } }, [location.state]);
+  useEffect(() => { if (linkedId) { setSelId(linkedId); setFilter('All'); } }, [linkedId]);
 
-  const rows = events.map((e) => ({ e, sk: evStatusKey(e, rsvps), ts: evTs(e) }));
+  const rows = events.map((e) => ({ e, sk: evStatusKey(e), ts: evTs(e) }));
   const up = rows.filter((r) => r.sk !== 'past').sort((a, b) => a.ts - b.ts);
   const past = rows.filter((r) => r.sk === 'past').sort((a, b) => b.ts - a.ts);
   const vis = up.concat(past).filter((r) => filter === 'All' || evCat(r.e) === filter);
   const firstPast = vis.findIndex((r) => r.sk === 'past');
-  const ev = events.find((e) => e.id === selId) || (vis[0] && vis[0].e) || events[0];
+  // The ?event= link gives the id as a string; API ids are numbers.
+  const ev = events.find((e) => selId != null && String(e.id) === String(selId)) || (vis[0] && vis[0].e) || events[0];
 
   if (!ev) {
     return <EventsView {...{ evListEmpty: true, evListCount: '0 events', eventsList: [], evFilters: [], evTitle: 'No events', evBody: [], evAgenda: [], evHighlights: [], regDlgFields: [] }} />;
   }
 
-  const sk = evStatusKey(ev, rsvps);
+  const sk = evStatusKey(ev);
   const sm = EV_STATUS_META[sk];
   const reg = rsvps[ev.id];
   const n = evCount(ev);
@@ -86,7 +91,9 @@ export default function AlumniEvents() {
     regHover: open && !reg ? 'background:#0B3125' : '',
     isRegistered: !!reg,
     regConfirmText: `You’re registered for ${ev.title}.`,
-    regConfirmSub: `${regAns ? `${regAns} · ` : ''}Your registration is saved to your account. Bring your alumni ID to the event.`,
+    regConfirmSub: `${regAns ? `${regAns} · ` : ''}A confirmation and your entry pass were sent to your email.`,
+    // Demo only: the Sample Email inbox previews the confirmation the API emailed.
+    viewRegEmail: SHOW_DEMO ? () => navigate('/alumni/inbox', { state: { select: `rsvp-${ev.id}`, from: '/alumni/events' } }) : null,
     cancelReg: () => cancelRegistration(ev.id).then(() => toast(`Your registration for ${ev.title} was cancelled.`), (err) => toast(err.message || 'Couldn’t cancel. Please try again.', false)),
     toggleRsvp: () => {
       if (!open || reg) return;
@@ -110,25 +117,12 @@ export default function AlumniEvents() {
     calBg: calendar[ev.id] ? '#F1F5F9' : '#fff',
     calColor: '#0B1220',
     calBorder: calendar[ev.id] ? '#94A3B8' : '#E2E5EA',
+    // Opens Google Calendar's prefilled event page in a new tab; the button then stays "✓ Added to Calendar".
     toggleCalendar: () => {
-      if (!calendar[ev.id]) downloadIcs(ev);
-      toggleCalendar(ev.id);
+      const url = googleCalendarUrl(ev, `${window.location.origin}/alumni/events?event=${encodeURIComponent(ev.id)}`);
+      if (url) window.open(url, '_blank', 'noopener,noreferrer');
+      if (!calendar[ev.id]) toggleCalendar(ev.id);
     },
   };
   return <EventsView {...v} />;
-}
-
-/** Download a basic .ics so "Add to Calendar" really adds the event. */
-function downloadIcs(ev) {
-  try {
-    const d = String(ev.iso || '').replace(/-/g, '');
-    if (!d) return;
-    const ics = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//UDM Alumni//EN', 'BEGIN:VEVENT', `UID:${ev.id}@udm-alumni`, `DTSTAMP:${new Date().toISOString().replace(/[-:]/g, '').slice(0, 15)}Z`,
-      `DTSTART;VALUE=DATE:${d}`, `SUMMARY:${ev.title}`, `LOCATION:${ev.venue || ''}`, `DESCRIPTION:${(ev.teaser || '').replace(/\n/g, ' ')}`, 'END:VEVENT', 'END:VCALENDAR'].join('\r\n');
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(new Blob([ics], { type: 'text/calendar' }));
-    a.download = `${ev.id}.ics`;
-    document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(() => URL.revokeObjectURL(a.href), 5000);
-  } catch { /* calendar download is best-effort */ }
 }

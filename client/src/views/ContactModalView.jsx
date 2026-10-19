@@ -5,6 +5,8 @@ import { onBackdrop } from '../lib/a11y';
 /* View layer for the "ContactModal" screen — converted from "Alumni Tracer Mockups.dc.html". */
 export default function ContactModalView(v) {
   const { cardName, closeContact, contactCloseRef, contactCountLabel, contactFirst, contactHas, contactList, contactNone } = v;
+  // Optional (staff outreach): an editable message sent through the chosen channel, a custom footnote / empty state, and an undo action.
+  const { contactMessage, onContactMessage, contactMessageHint, contactFootnote, contactNoneText, contactUndo } = v;
   return (
     <>
       <div role="presentation"
@@ -70,6 +72,22 @@ export default function ContactModalView(v) {
               ✕
             </button>
           </div>
+          {onContactMessage ? (
+            <div style={{ padding: '14px 20px 4px' }}>
+              <label htmlFor="contact-message" style={{ display: 'block', fontSize: '11px', fontWeight: '700', letterSpacing: '.6px', textTransform: 'uppercase', color: '#64748B', marginBottom: '6px' }}>
+                Message
+              </label>
+              <textarea
+                id="contact-message"
+                value={contactMessage}
+                onChange={onContactMessage}
+                rows={5}
+                style={{ width: '100%', boxSizing: 'border-box', resize: 'vertical', border: '1px solid #E2E5EA', borderRadius: '10px', padding: '10px 12px', fontFamily: 'inherit', fontSize: '13px', lineHeight: '1.5', color: '#0B1220', outline: 'none' }}
+                {...fv({ borderColor: '#0F6B4F' })}
+              />
+              {contactMessageHint ? <div style={{ fontSize: '11.5px', color: '#64748B', marginTop: '4px', lineHeight: '1.45' }}>{contactMessageHint}</div> : null}
+            </div>
+          ) : null}
           {contactHas ? (
             <>
               <div style={{ padding: '8px', display: 'flex', flexDirection: 'column', gap: '2px' }}>
@@ -79,6 +97,7 @@ export default function ContactModalView(v) {
                       href={m.href}
                       target={m.target}
                       rel="noopener noreferrer"
+                      onClick={m.onClick}
                       style={{
                         display: 'flex',
                         alignItems: 'center',
@@ -155,7 +174,7 @@ export default function ContactModalView(v) {
                 </div>
                 <div style={{ fontSize: '14.5px', fontWeight: '600', color: '#0B1220', marginBottom: '4px' }}>No contact details shared</div>
                 <div style={{ fontSize: '12.5px', lineHeight: '1.55', color: '#64748B', textWrap: 'pretty' }}>
-                  {contactFirst} hasn’t made any contact method visible yet. For official requests, reach out through the UDM Alumni Relations Office.
+                  {contactNoneText || `${contactFirst} hasn’t made any contact method visible yet. For official requests, reach out through the UDM Alumni Relations Office.`}
                 </div>
               </div>
             </>
@@ -171,7 +190,12 @@ export default function ContactModalView(v) {
               textWrap: 'pretty',
             }}
           >
-            Only methods the alumnus chose to make visible are shown. Phone numbers and addresses are never displayed.
+            {contactUndo ? (
+              <button type="button" className="link-btn" onClick={contactUndo.onClick} style={{ display: 'block', fontWeight: '700', fontSize: '12px', marginBottom: '4px' }}>
+                {contactUndo.label}
+              </button>
+            ) : null}
+            {contactFootnote || 'Only methods the alumnus chose to make visible are shown. Phone numbers and addresses are never displayed.'}
           </div>
         </div>
       </div>

@@ -4,7 +4,7 @@ import { onActivate } from '../lib/a11y';
 
 /* View layer for the "RegSuccess" screen — converted from "Alumni Tracer Mockups.dc.html". */
 export default function RegSuccessView(v) {
-  const { carryOver, goAlumniDash, goSurvey, regFirstName } = v;
+  const { carryOver, goSignin, goHome, regFirstName, regEmail } = v;
   return (
     <>
       <div
@@ -92,7 +92,7 @@ export default function RegSuccessView(v) {
                   marginBottom: '6px',
                 }}
               >
-                Registration Successful
+                Registration Submitted
               </div>
               <div
                 style={{
@@ -105,18 +105,18 @@ export default function RegSuccessView(v) {
                   textWrap: 'pretty',
                 }}
               >
-                You&apos;re registered, {regFirstName}.
+                Thanks, {regFirstName}. Your account is pending approval.
               </div>
               <div style={{ fontSize: '13.5px', lineHeight: '1.55', color: 'rgba(0,0,0,.6)', marginTop: '12px', textWrap: 'pretty' }}>
-                One more step: complete your <strong style={{ color: '#0A0A0A' }}>Alumni Profile</strong> in Edit Profile. Your registration details
-                are already filled in.
+                The <strong style={{ color: '#0A0A0A' }}>UDM Alumni Office</strong> reviews every new registration. You can sign in with{' '}
+                <strong style={{ color: '#0A0A0A' }}>{regEmail}</strong> and your password once an Admin approves your account.
               </div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <div style={{ width: '22px', height: '4px', borderRadius: '2px', background: '#0F8A5F' }} />
               <div style={{ width: '22px', height: '4px', borderRadius: '2px', background: '#0F8A5F' }} />
               <div style={{ width: '22px', height: '4px', borderRadius: '2px', background: 'rgba(0,0,0,.12)' }} />
-              <div style={{ fontSize: '11.5px', fontWeight: '600', color: 'rgba(0,0,0,.5)', marginLeft: '4px' }}>Step 2 of 3 · Survey next</div>
+              <div style={{ fontSize: '11.5px', fontWeight: '600', color: 'rgba(0,0,0,.5)', marginLeft: '4px' }}>Step 2 of 3 · Admin approval next</div>
             </div>
           </div>
           <div
@@ -177,8 +177,8 @@ export default function RegSuccessView(v) {
               </div>
             </div>
             <div style={{ display: 'flex', flexWrap: 'wrap-reverse', gap: '10px', marginTop: 'auto' }}>
-              <div role="button" tabIndex={0} onKeyDown={onActivate(goSurvey)}
-                onClick={goSurvey}
+              <div role="button" tabIndex={0} onKeyDown={onActivate(goSignin)}
+                onClick={goSignin}
                 style={{
                   flex: '1.3 1 200px',
                   textAlign: 'center',
@@ -192,10 +192,10 @@ export default function RegSuccessView(v) {
                 }}
                 {...hv({ background: '#00382E' })}
               >
-                Complete My Profile →
+                Back to Sign In →
               </div>
-              <div role="button" tabIndex={0} onKeyDown={onActivate(goAlumniDash)}
-                onClick={goAlumniDash}
+              <div role="button" tabIndex={0} onKeyDown={onActivate(goHome)}
+                onClick={goHome}
                 style={{
                   flex: '1 1 150px',
                   textAlign: 'center',
@@ -209,10 +209,10 @@ export default function RegSuccessView(v) {
                 }}
                 {...hv({ background: '#F6F7F7' })}
               >
-                Answer later
+                Back to Home
               </div>
               <div style={{ width: '100%', textAlign: 'center', fontSize: '12px', color: 'rgba(0,0,0,.45)', order: '-1' }}>
-                Your profile saves automatically as you go.
+                You can complete your Alumni Profile after your first sign-in.
               </div>
             </div>
           </div>

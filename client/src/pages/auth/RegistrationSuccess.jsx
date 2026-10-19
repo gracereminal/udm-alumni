@@ -2,10 +2,10 @@ import { useNavigate } from 'react-router-dom';
 import RegSuccessView from '../../views/RegSuccessView';
 import { useProfile } from '../../context/ProfileContext';
 
-/** Registration Successful — summary of what was carried over, then on to the Alumni Dashboard / Profile. */
+/** Registration Submitted — summary of what was carried over. The account is pending until an Admin approves it, so this leads back to Sign In. */
 export default function RegistrationSuccess() {
   const navigate = useNavigate();
-  const { a } = useProfile();
+  const a = useProfile().lastRegistration?.a || {};
   const name = [a.first_name, a.middle_name, a.last_name].filter(Boolean).join(' ') || '—';
   const carryOver = [
     { label: 'Name', value: name },
@@ -23,9 +23,10 @@ export default function RegistrationSuccess() {
   return (
     <RegSuccessView
       regFirstName={a.first_name || 'Alumnus'}
+      regEmail={a.email || 'your email'}
       carryOver={carryOver}
-      goSurvey={() => navigate('/alumni/profile')}
-      goAlumniDash={() => navigate('/alumni/dashboard')}
+      goSignin={() => navigate('/signin', { replace: true })}
+      goHome={() => navigate('/', { replace: true })}
     />
   );
 }

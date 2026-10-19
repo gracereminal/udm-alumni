@@ -16,18 +16,33 @@ const N = (n) => Math.round(n || 0).toLocaleString('en-US');
 const P1 = (n) => (n == null ? '—' : Number(n).toFixed(1));
 const pct = (n, d) => (d ? (n / d) * 100 : 0);
 const thisYear = () => new Date().getFullYear();
-export const ADMIN_YEARS = (() => { const AY = []; for (let y = thisYear(); y >= thisYear() - 11; y--) AY.push(y); return AY; })();
+/** Graduating batches the filters offer, newest first (registration accepts 1999 to the current year). */
+export const ADMIN_YEARS = (() => { const AY = []; for (let y = thisYear(); y >= 1999; y--) AY.push(y); return AY; })();
 
-/** Normalized selection + the API filter / grouping it implies. */
+/**
+ * Normalized selection + the API filter / grouping it implies. `from` / `to` are batch years in either order;
+ * `batch` is 'all' when the range spans every batch, the year when it is one batch, otherwise null (use `years`).
+ */
 export function adminScope(sel) {
   const college = collegeById(sel.college) ? Number(sel.college) : 'all';
   const prog = programById(sel.course);
   const course = prog && (college === 'all' || Number(prog.collegeId) === college) ? Number(sel.course) : 'all';
-  const batch = ADMIN_YEARS.includes(Number(sel.batch)) ? Number(sel.batch) : 'all';
+  const AY = ADMIN_YEARS;
+  const from = AY.includes(Number(sel.from)) ? Number(sel.from) : AY[0];
+  const to = AY.includes(Number(sel.to)) ? Number(sel.to) : AY[AY.length - 1];
+  const lo = Math.min(from, to);
+  const hi = Math.max(from, to);
+  const years = AY.filter((y) => y >= lo && y <= hi).reverse();
+  const batch = years.length === AY.length ? 'all' : years.length === 1 ? years[0] : null;
+  const batchLabel = batch === 'all' ? '' : years.length === 1 ? `Batch ${lo}` : `Batches ${lo}–${hi}`;
   const status = ['verified', 'pending', 'flagged'].includes(sel.status) ? sel.status : 'all';
   const level = course !== 'all' ? 'batch' : college !== 'all' ? 'course' : 'college';
-  const now = batch === 'all' ? [0, 1, 2, 3].map((i) => thisYear() - 3 + i) : [batch];
-  return { college, course, batch, status, level, now, prev: now.map((y) => y - 1), group: level === 'college' ? 'college' : level === 'course' ? 'program' : 'batch' };
+  // Year-on-year comparison: the selected batches against the batches a year earlier (the latest four when all).
+  const now = batch === 'all' ? [0, 1, 2, 3].map((i) => thisYear() - 3 + i) : years;
+  return {
+    college, course, from, to, lo, hi, years, batch, batchLabel, status, level, now, prev: now.map((y) => y - 1),
+    group: level === 'college' ? 'college' : level === 'course' ? 'program' : 'batch',
+  };
 }
 
 /** A metric object with every count at zero (shown while the statistics load). */
@@ -36,27 +51,30 @@ export const emptyMetrics = () => ({
   laborForce: 0, employmentRate: null, aligned: 0, alignedRate: null, firstGen: 0, firstGenRate: null, ip: 0, pwd: 0, monthsAvg: null, timeToJob: {}, pending: 0, verified: 0, flagged: 0,
 });
 export const emptyAdminData = () => ({
-  summary: emptyMetrics(), now: emptyMetrics(), prev: emptyMetrics(), unitsNow: { rows: [] }, unitsPrev: { rows: [] }, byBatch: [],
-  inclusion: { traced: 0, ip: 0, pwd: 0, indigenousGroups: [], pwdTypes: [] }, recent: { rows: [], total: 0 },
+  summary: emptyMetrics(), now: emptyMetrics(), prev: emptyMetrics(), unitsNow: { data: [] }, unitsPrev: { data: [] }, byBatch: { data: [] },
+  inclusion: { traced: 0, ip: 0, pwd: 0, indigenousGroups: [], pwdTypes: [] }, recent: { data: [], meta: { total: 0 } },
 });
 
 /** Every request the dashboard needs, as API paths. */
 export function adminRequests(sc) {
-  const base = { collegeId: sc.college, programId: sc.course, status: sc.status };
+  const base = { college_id: sc.college, program_id: sc.course, status: sc.status };
+  const range = sc.batch === 'all' ? {} : { batch_from: sc.lo, batch_to: sc.hi };
+  // Per-batch rows inside one program: the selected batches (latest twelve), or the latest six when all are selected.
+  const batchRows = sc.batch === 'all' ? [0, 1, 2, 3, 4, 5].map((i) => thisYear() - 5 + i) : sc.years.slice(-12);
   return {
-    summary: `/stats/summary${qs({ ...base, batch: sc.batch })}`,
+    summary: `/stats/summary${qs({ ...base, ...range })}`,
     now: `/stats/summary${qs({ ...base, batches: sc.now })}`,
     prev: `/stats/summary${qs({ ...base, batches: sc.prev })}`,
-    unitsNow: `/stats/by-program${qs({ ...base, group: sc.group, batches: sc.level === 'batch' ? (sc.batch === 'all' ? [0, 1, 2, 3, 4, 5].map((i) => thisYear() - 5 + i) : [sc.batch]) : sc.now })}`,
-    unitsPrev: `/stats/by-program${qs({ ...base, group: sc.group, batches: sc.level === 'batch' ? (sc.batch === 'all' ? [0, 1, 2, 3, 4, 5].map((i) => thisYear() - 6 + i) : [sc.batch - 1]) : sc.prev })}`,
+    unitsNow: `/stats/by-program${qs({ ...base, group: sc.group, batches: sc.level === 'batch' ? batchRows : sc.now })}`,
+    unitsPrev: `/stats/by-program${qs({ ...base, group: sc.group, batches: sc.level === 'batch' ? batchRows.map((y) => y - 1) : sc.prev })}`,
     byBatch: `/stats/by-batch${qs(base)}`,
-    inclusion: `/stats/inclusion${qs({ ...base, batch: sc.batch })}`,
-    recent: `/alumni${qs({ ...base, batch: sc.batch, status: sc.status === 'all' ? 'all' : sc.status, sort: 'created_at', pageSize: 5 })}`,
+    inclusion: `/stats/inclusion${qs({ ...base, ...range })}`,
+    recent: `/alumni${qs({ ...base, ...range, status: sc.status, sort: 'created_at', dir: 'desc', per_page: 5 })}`,
   };
 }
 
 /**
- * @param sel   { college, course, batch, status } (raw select values: ids or 'all')
+ * @param sel   { college, course, from, to, status } (raw select values: ids or 'all'; from / to are batch years)
  * @param data  responses keyed like adminRequests()
  * @param tipH  (title, value) => { onTipMove, onTipLeave }
  */
@@ -69,8 +87,8 @@ export function buildAdminDash(sel, data, tipH) {
   const label = prog ? prog.name : col ? col.name : 'all colleges';
 
   // Employability per unit, with the change against the previous batch window.
-  const prevBy = new Map((data.unitsPrev.rows || []).map((r) => [String(r.key), r]));
-  const rows = (data.unitsNow.rows || []).filter((r) => r.traced > 0).map((r) => {
+  const prevBy = new Map((data.unitsPrev.data || []).map((r) => [String(r.key), r]));
+  const rows = (data.unitsNow.data || []).filter((r) => r.traced > 0).map((r) => {
     const p = prevBy.get(String(r.key - (sc.level === 'batch' ? 1 : 0))) || prevBy.get(String(r.key));
     const v = r.employmentRate ?? 0;
     const d = p && p.employmentRate != null ? v - p.employmentRate : null;
@@ -83,7 +101,7 @@ export function buildAdminDash(sel, data, tipH) {
     ...tipH(full, `${v.toFixed(1)}% employed${d == null ? '' : ` · ${d >= 0 ? '+' : '−'}${Math.abs(d).toFixed(1)} pts vs the previous batches`}`),
   }));
 
-  const recent = data.recent.rows || [];
+  const recent = data.recent.data || [];
   const registrations = recent.map((r) => {
     const s = ST[r.status] || ST.pending;
     return {
@@ -106,15 +124,16 @@ export function buildAdminDash(sel, data, tipH) {
       admCourseVal: String(sc.course),
       admCourseOpts: [{ value: 'all', label: col ? `All courses (${courses.length})` : 'All courses' }, ...courses.map((p) => ({ value: String(p.id), label: p.name }))],
       admCourseDisabled: !col, admCourseOpacity: col ? 1 : 0.55,
-      admScopeLabel: label + (sc.batch !== 'all' ? ` · Batch ${sc.batch}` : '') + (sc.status !== 'all' ? ` · ${STATUS_FILTER_LABELS[sc.status].toLowerCase()}` : ''),
-      admBatchVal: String(sc.batch), admBatchOpts: [{ value: 'all', label: 'Batch: All years' }, ...ADMIN_YEARS.map((y) => ({ value: String(y), label: `Batch ${y}` }))],
+      admScopeLabel: label + (sc.batchLabel ? ` · ${sc.batchLabel}` : '') + (sc.status !== 'all' ? ` · ${STATUS_FILTER_LABELS[sc.status].toLowerCase()}` : ''),
+      admFromVal: String(sc.from), admFromOpts: ADMIN_YEARS.map((y) => ({ value: String(y), label: `From ${y}` })),
+      admToVal: String(sc.to), admToOpts: ADMIN_YEARS.map((y) => ({ value: String(y), label: `To ${y}` })),
       admStatusVal: sc.status, admStatusOpts: Object.keys(STATUS_FILTER_LABELS).map((k) => ({ value: k, label: `Status: ${STATUS_FILTER_LABELS[k]}` })),
       adminShowFrom: registrations.length ? 1 : 0, adminShowTo: registrations.length,
       ...dash.vals,
       programRatesTitle: sc.level === 'college' ? 'Employability by college' : sc.level === 'course' ? 'Employability by course' : 'Employability by batch',
-      programRatesSub: sc.level === 'batch' ? `${prog.abbr} · employment rate of traced graduates in the labour force, per batch` : `Employment rate, batches ${sc.now[0]}–${sc.now[sc.now.length - 1]}${col ? ` · ${col.name}` : ''}`,
+      programRatesSub: sc.level === 'batch' ? `${prog.abbr} · employment rate of traced graduates in the labour force, per batch` : `Employment rate, ${sc.now.length === 1 ? `batch ${sc.now[0]}` : `batches ${sc.now[0]}–${sc.now[sc.now.length - 1]}`}${col ? ` · ${col.name}` : ''}`,
       programRates, registrations, registrationsEmpty: !registrations.length,
-      adminTotalEntries: N(data.recent.total),
+      adminTotalEntries: N(data.recent.meta ? data.recent.meta.total : 0),
     },
   };
 }
@@ -123,10 +142,13 @@ function admDash(sc, S, data, rows, tipH, target) {
   const Sn = data.now;
   const Sp = data.prev;
   const delta = (a, b) => (a == null || b == null ? null : a - b);
-  // Coverage by batch: a window of six batches ending at the selected (or latest) batch.
-  const end = sc.batch === 'all' ? thisYear() : Math.min(thisYear(), sc.batch + 2);
-  const byBatch = new Map((data.byBatch || []).map((r) => [r.key, r]));
-  const bars = [0, 1, 2, 3, 4, 5].map((i) => { const y = end - 5 + i; const r = byBatch.get(y); return { y, v: r && r.total ? Math.round(r.coverage) : 0, total: r ? r.total : 0, traced: r ? r.traced : 0 }; });
+  // Coverage by batch: all years / one batch show six batches ending at the latest (or around the selected) batch;
+  // a range shows its own batches, up to the latest twelve.
+  const one = typeof sc.batch === 'number';
+  const end = sc.batch === 'all' ? thisYear() : Math.min(thisYear(), sc.hi + 2);
+  const barYears = sc.batch === 'all' || one ? [0, 1, 2, 3, 4, 5].map((i) => end - 5 + i) : sc.years.slice(-12);
+  const byBatch = new Map(((data.byBatch && data.byBatch.data) || []).map((r) => [r.key, r]));
+  const bars = barYears.map((y) => { const r = byBatch.get(y); return { y, v: r && r.total ? Math.round(r.coverage) : 0, total: r ? r.total : 0, traced: r ? r.traced : 0 }; });
   const goal = Math.ceil((S.total * target.coverage) / 100);
 
   const mix = [
@@ -193,7 +215,7 @@ function admDash(sc, S, data, rows, tipH, target) {
     vals: {
       batchSub: `${N(S.traced)} of ${N(S.total)} alumni records reached`,
       batchBars: bars.map(({ y, v }) => {
-        const muted = sc.batch !== 'all' && y !== sc.batch;
+        const muted = one && y !== sc.batch;
         const ok = v >= target.coverage;
         return {
           label: String(y), pct: `${v}%`, pctColor: muted ? '#94A3B8' : ok ? '#0B1220' : '#8A6D1F', color: muted ? '#D5DED9' : ok ? '#0F3D2E' : '#E0A915',

@@ -1,10 +1,10 @@
 import { validateProfile, validateRegStep } from './validation';
 
 const personal = {
-  last_name: 'Cruz', first_name: 'Ana', dob: '1999-05-01', present_address: '1 Main St', permanent_address: '1 Main St',
+  last_name: 'Cruz', first_name: 'Ana', dob: '1999-05-01', present_address: '1520 Dalupan St., Sampaloc, Manila', permanent_address: '1520 Dalupan St., Sampaloc, Manila',
   gender: 'Female', marital_status: 'Single', indigenous: 'No', pwd: 'No',
 };
-const contact = { mobile: '0917 123 4567', email: 'ana@example.com' };
+const contact = { mobile: '0917 123 4567', email: 'ana@example.com', facebook: 'ana.cruz' };
 const education = { college: 'College of Computer Studies', course: 'BS Information Technology', year_graduated: '2022' };
 const thisYear = new Date().getFullYear();
 
@@ -50,8 +50,10 @@ describe('registration validation', () => {
       expect(validateRegStep(1, { ...contact, email }).email).toBe('Enter a valid email address.');
     });
 
-    it('requires both fields', () => {
-      expect(validateRegStep(1, {})).toEqual({ mobile: 'Enter your mobile number.', email: 'Enter your email address.' });
+    it('requires mobile, email and Facebook / Messenger', () => {
+      expect(validateRegStep(1, {})).toEqual({
+        mobile: 'Enter your mobile number.', email: 'Enter your email address.', facebook: 'Enter your Facebook / Messenger username or profile link.',
+      });
     });
   });
 
@@ -99,7 +101,9 @@ describe('registration validation', () => {
 });
 
 describe('profile validation', () => {
-  const profile = { ...personal, ...contact, ...education };
+  // Edit Profile also checks the survey questions that are required by default.
+  const survey = { first_grad: 'No', udmcat: 'Yes', honors: 'None', prof_exams: 'None', ever_employed: 'No', unemployed_reason: ['Advance or further study'], fb_contribute: 'Mentoring', fb_activity: 'Batch reunions' };
+  const profile = { ...personal, ...contact, ...education, ...survey };
 
   it('combines the personal, contact and education rules', () => {
     expect(validateProfile(profile)).toEqual({});

@@ -1,13 +1,25 @@
 import { useMemo, useRef, useState } from 'react';
 import JobsView from '../../views/JobsView';
 import JobDetailsModal from '../../components/alumni/JobDetailsModal';
+import OfflineContactModal from '../../components/OfflineContactModal';
 import { useJobs } from '../../context/JobsContext';
 import { useProfile } from '../../context/ProfileContext';
 import { useToast } from '../../context/ToastContext';
 import { STRIPE, jobKey } from '../../data/jobs';
 import { readImage } from '../../lib/files';
+import { applyUrl, copyText, isEmail, mailtoUrl, messengerLabel, messengerUrl } from '../../lib/contact';
 
 const PAGE_SIZE = 5;
+
+/** Default application message, filled from the alumnus' profile; editable before sending. */
+function applicationMessage(j, a, name) {
+  const course = a.course || a.course_other || '';
+  const yr = (String(a.year_graduated || '').match(/\d{4}/) || [])[0];
+  const grad = course ? `a ${yr ? `${yr} ` : ''}${course} graduate of Universidad de Manila` : 'a Universidad de Manila alumnus';
+  const reach = [a.email, a.mobile].filter(Boolean).join(' · ');
+  const now = a.employer && a.job_name ? ` I currently work as ${a.job_name} at ${a.employer}.` : '';
+  return `Hi! I’m ${name}, ${grad}. I saw the ${j.title} opening at ${j.company} on the UDM Alumni job board and I’d like to apply.${now} I can send my résumé right away — please let me know the next steps.${reach ? `\n\nYou can reach me at ${reach}.` : ''}\n\nThank you!`;
+}
 const KEYS = ['All', 'Full-time', 'Remote', 'Internship', 'Contract'];
 const matchKind = (j, k) => {
   const t = String(j.type || '').toLowerCase();
@@ -50,6 +62,46 @@ export default function AlumniJobs() {
   const photoRef = useRef(null);
 
   const all = jobsCtx.activeJobs;
+  const [applying, setApplying] = useState(null); // job key whose apply chooser is open
+  const [applyMsg, setApplyMsg] = useState('');
+  const closeApply = () => setApplying(null);
+  const failed = (err) => toast(err.message || 'Something went wrong. Please try again.', false);
+
+  /** Apply opens a chooser to send the application on Facebook Messenger or by email (outside the portal); applying again withdraws. */
+  const apply = (j) => {
+    const key = jobKey(j);
+    if (jobsCtx.applied[key]) { jobsCtx.toggleApply(key).then(() => toast(`Application withdrawn for ${j.title}.`), failed); return; }
+    setDetail(null);
+    setApplyMsg(applicationMessage(j, a, alumniName));
+    setApplying(key);
+  };
+  const applyVals = () => {
+    const j = applying && all.find((x) => jobKey(x) === applying);
+    if (!j) return null;
+    const key = jobKey(j);
+    const subject = `Application — ${j.title} (UDM alumnus)`;
+    const channels = [];
+    if (isEmail(j.applyVia)) {
+      channels.push({ key: 'email', label: 'Email', via: 'Email', value: j.applyVia.trim(), copy: j.applyVia.trim(), href: mailtoUrl(j.applyVia, subject, applyMsg), openLabel: 'Open email' });
+    } else if (applyUrl(j.applyVia)) {
+      channels.push({ key: 'page', label: 'Careers page', via: 'careers page', value: j.applyVia.trim(), copy: j.applyVia.trim(), href: applyUrl(j.applyVia), external: true, openLabel: 'Open page', onOpen: () => copyText(applyMsg) });
+    }
+    const fb = messengerUrl(j.messenger);
+    // Messenger links can't carry a message, so it is copied to paste into the chat.
+    if (fb) channels.push({ key: 'fb', label: 'Facebook Messenger', via: 'Messenger', value: messengerLabel(j.messenger), href: fb, external: true, openLabel: 'Open Messenger', onOpen: () => copyText(applyMsg) });
+    return {
+      title: `Apply for ${j.title}`,
+      lead: `Choose how to send your application to ${j.company}, then mark it as applied here.`,
+      message: applyMsg, onMessage: (e) => setApplyMsg(e.target.value),
+      messageHint: 'Included automatically when you open email. Paste it into Messenger.',
+      channels,
+      noneText: `${j.company} hasn’t listed Messenger or email for this posting. Ask the UDM Alumni Relations Office (udmalumni@udm.edu.ph) to forward your application.`,
+      // The API records which channel the application went through, so there is nothing to mark without one.
+      doneLabel: channels.length ? 'Mark as applied' : null,
+      onClose: closeApply,
+      onConfirm: (via) => jobsCtx.toggleApply(key, via).then(() => { closeApply(); toast(`Application for ${j.title} marked as sent via ${via}.`); }, failed),
+    };
+  };
   const isSaved = (j) => !!jobsCtx.savedJobs[jobKey(j)];
   const modalityOf = (j) => { const l = String(j.location || '').toLowerCase(); return l.includes('remote') ? 'remote' : l.includes('hybrid') ? 'hybrid' : 'on-site'; };
   const cityOf = (j) => String(j.location || '').split('·')[0].trim();
@@ -71,16 +123,18 @@ export default function AlumniJobs() {
   const submit = () => {
     if (!String(draft.title || '').trim()) { setFormError('Enter a job title.'); return; }
     if (!String(draft.company || '').trim()) { setFormError('Enter the company name.'); return; }
-    const course = a.course_other || a.course || '';
-    const yr = (String(a.year_graduated || '').match(/\d{4}/) || [])[0];
+    if (draft.applyVia && !applyUrl(draft.applyVia)) { setFormError('Enter an email address or a website for applications.'); return; }
+    if (draft.messenger && !messengerUrl(draft.messenger)) { setFormError('Enter a Facebook username or profile link for Messenger.'); return; }
+    // The API fills in the poster (name, program and batch) from the signed-in alumnus' record.
     jobsCtx.submitForReview({
-      title: draft.title.trim(), company: draft.company.trim(), location: (draft.location || '').trim() || 'Location TBA', type: (draft.type || '').trim() || 'Full-time',
-      by: alumniName, batch: `${course ? course.replace(/^Bachelor of (Science|Arts) in /, 'BS ') : 'UDM'} ${yr || ''}`.trim(), when: 'Submitted just now', photo,
+      title: draft.title.trim(), company: draft.company.trim(), location: (draft.location || '').trim() || 'Location TBA', type: (draft.type || '').trim() || 'Full-time', photo,
       salary: (draft.salary || '').trim() || 'Salary undisclosed', salaryNote: 'as posted',
-      tags: String(draft.tags || '').split(',').map((t) => t.trim()).filter(Boolean), desc: (draft.desc || '').trim() || 'No description provided.', email: a.email || '',
-    });
-    setFormOpen(false); clearDraft();
-    toast('Thanks! Your job posting was sent to Alumni Affairs for review.');
+      tags: String(draft.tags || '').split(',').map((t) => t.trim()).filter(Boolean), desc: (draft.desc || '').trim() || 'No description provided.', applyVia: (draft.applyVia || '').trim(),
+      messenger: (draft.messenger || '').trim(),
+    }).then(() => {
+      setFormOpen(false); clearDraft();
+      toast('Thanks! Your job posting was sent to Alumni Affairs for review.');
+    }, (err) => setFormError(err.message || 'Your posting could not be sent. Please try again.'));
   };
 
   const onPhoto = async (e) => {
@@ -136,6 +190,8 @@ export default function AlumniJobs() {
       field('location', 'Location & setup', 'e.g. Manila · Hybrid'),
       field('type', 'Employment type', 'e.g. Full-time'),
       field('salary', 'Salary range', 'e.g. ₱35,000 - ₱48,000'),
+      field('applyVia', 'How to apply', 'e.g. careers@company.com or company.com/careers'),
+      field('messenger', 'Facebook / Messenger', 'Page username or profile link'),
     ],
     jobDraftTags: draft.tags || '',
     onJobDraftTags: setField('tags'),
@@ -170,8 +226,8 @@ export default function AlumniJobs() {
         applyBorder: '#0F3D2E',
         appStatus: app ? app.status : '',
         openDetails: () => setDetail(key),
-        toggleApply: () => { jobsCtx.toggleApply(key); toast(app ? `Application withdrawn for ${j.title}.` : `Application submitted for ${j.title} at ${j.company}.`); },
-        toggleSave: () => jobsCtx.toggleSave(key),
+        toggleApply: () => apply(j),
+        toggleSave: () => jobsCtx.toggleSave(key).catch(failed),
       };
     }),
   };
@@ -180,10 +236,11 @@ export default function AlumniJobs() {
   return (
     <>
       <JobsView {...v} />
+      {applying ? <OfflineContactModal key={applying} {...applyVals()} /> : null}
       <JobDetailsModal
         job={detailJob} saved={detailJob ? !!jobsCtx.savedJobs[detail] : false} application={detailJob ? jobsCtx.applied[detail] : null}
-        onClose={() => setDetail(null)} onSave={jobsCtx.toggleSave}
-        onApply={(key) => { jobsCtx.toggleApply(key); toast(jobsCtx.applied[key] ? 'Application withdrawn.' : `Application submitted for ${detailJob.title}.`); }}
+        onClose={() => setDetail(null)} onSave={(k) => jobsCtx.toggleSave(k).catch(failed)}
+        onApply={() => apply(detailJob)}
       />
     </>
   );

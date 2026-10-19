@@ -33,6 +33,9 @@ export function mockApi(routes = []) {
   };
 }
 
+/** A list endpoint's reply: { data, meta: { page, per_page, total } } (one page holding every row). */
+export const listOf = (rows, meta = {}) => ({ data: rows, meta: { page: 1, per_page: 100, total: rows.length, ...meta } });
+
 export const USERS = {
   alumni: { id: 11, role: 'alumni', name: 'Ana Cruz', email: 'ana@example.com' },
   dept: { id: 21, role: 'dept', name: 'CCS Dean', collegeId: 1, college: 'College of Computer Studies', collegeCode: 'CCS' },

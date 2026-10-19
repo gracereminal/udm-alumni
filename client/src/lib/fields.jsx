@@ -1,4 +1,5 @@
 import DatePicker from '../components/DatePicker';
+import { capitalizeWords, tidyAddress } from './format';
 
 /**
  * Builds the view-model for one survey/registration question (text, date, select, textarea, choice chips).
@@ -16,6 +17,33 @@ export function buildField(q, a, { setA, toggleA }, errors = {}) {
   };
   if (q.type === 'date') {
     return Object.assign(base, { isDate: true, dateEl: <DatePicker key={q.id} value={v || ''} invalid={!!error} onChange={(iso) => setA(q.id, iso)} /> });
+  }
+  if (q.type === 'text' && q.format === 'address') {
+    // `sameAs` adds a checkbox that copies another address field and locks this one while ticked.
+    const same = !!(q.sameAs && a[q.sameAs.flag]);
+    return Object.assign(base, {
+      isText: true,
+      inputType: 'text',
+      value: same ? a[q.sameAs.id] || '' : v || '',
+      disabled: same,
+      autoCapitalize: 'words',
+      sameAs: q.sameAs ? { label: q.sameAs.label, checked: same, onToggle: (e) => setA(q.sameAs.flag, e.target.checked) } : null,
+      onInput: (e) => {
+        // Capitalizing never changes the length, so the caret can be put back where the user was typing.
+        const el = e.target;
+        const next = capitalizeWords(el.value);
+        if (next !== el.value) {
+          const pos = el.selectionStart;
+          el.value = next;
+          el.setSelectionRange(pos, pos);
+        }
+        setA(q.id, next);
+      },
+      onBlur: (e) => {
+        const next = tidyAddress(e.target.value);
+        if (next !== (v || '')) setA(q.id, next);
+      },
+    });
   }
   if (q.type === 'text') {
     return Object.assign(base, { isText: true, inputType: 'text', value: v || '', disabled: !!q.disabled, onInput: (e) => setA(q.id, e.target.value) });

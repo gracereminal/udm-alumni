@@ -2,7 +2,7 @@ import { act, renderHook, waitFor } from '@testing-library/react';
 import { AuthProvider } from './AuthContext';
 import { EventsProvider, useEvents } from './EventsContext';
 import { evValidate, manilaToday } from '../data/events';
-import { mockApi, session } from '../test/mockApi';
+import { listOf, mockApi, session } from '../test/mockApi';
 
 const event = (id, extra = {}) => ({
   id, title: `Event ${id}`, kind: 'EVENT', iso: '2026-11-20', timeStart: '09:00', timeEnd: '12:00', venue: 'UDM Gym, Manila',
@@ -38,8 +38,8 @@ describe('event form validation', () => {
 
 describe('Events — alumni', () => {
   const routes = (state) => [
-    ['GET', '/events', () => state.events],
-    ['GET', '/announcements', () => state.notices],
+    ['GET', '/events', () => listOf(state.events)],
+    ['GET', '/announcements', () => listOf(state.notices)],
     ['POST', /^\/events\/1\/rsvp$/, (req) => ({ ...state.events[0], registered: true, myAnswers: req.body.answers, regCount: 11 })],
     ['POST', /^\/events\/1\/cancel$/, () => ({ ...state.events[0], registered: false, regCount: 10 })],
   ];
@@ -97,7 +97,7 @@ describe('Events — alumni', () => {
 describe('Events — admin', () => {
   it('creates an event, keeping a duplicated event’s cover', async () => {
     const { api, evs } = setup('admin', [
-      ['GET', '/events', []], ['GET', '/announcements', []],
+      ['GET', '/events', listOf([])], ['GET', '/announcements', listOf([])],
       ['POST', '/events', (req) => event(9, { title: req.body.title, photo: '/files/cover.jpg' })],
     ]);
     await waitFor(() => expect(api.find('GET', '/events')).toHaveLength(1));
@@ -108,7 +108,7 @@ describe('Events — admin', () => {
   });
 
   it('does not copy the cover when the duplicate has no photo', async () => {
-    const { api, evs } = setup('admin', [['GET', '/events', []], ['GET', '/announcements', []], ['POST', '/events', event(9)]]);
+    const { api, evs } = setup('admin', [['GET', '/events', listOf([])], ['GET', '/announcements', listOf([])], ['POST', '/events', event(9)]]);
     await waitFor(() => expect(api.find('GET', '/events')).toHaveLength(1));
     await act(() => evs().createEvent({ title: 'Copy', dateISO: '2026-12-01', timeStart: '09:00', venue: 'Gym', body: 'x', coverFrom: 3, photo: null }));
     expect(api.last('POST', '/events').body.coverFrom).toBeUndefined();
@@ -116,7 +116,7 @@ describe('Events — admin', () => {
 
   it('removes a cover photo when the edit clears it', async () => {
     const { api, evs } = setup('admin', [
-      ['GET', '/events', [event(1, { photo: '/files/a.jpg' })]], ['GET', '/announcements', []],
+      ['GET', '/events', listOf([event(1, { photo: '/files/a.jpg' })])], ['GET', '/announcements', listOf([])],
       ['PATCH', /^\/events\/1$/, event(1, { title: 'Renamed', photo: '/files/a.jpg' })],
       ['DELETE', /^\/events\/1\/photo$/, event(1, { title: 'Renamed', photo: null })],
     ]);
@@ -129,7 +129,7 @@ describe('Events — admin', () => {
 
   it('changes status, cancels and deletes events', async () => {
     const { api, evs } = setup('admin', [
-      ['GET', '/events', [event(1), event(2)]], ['GET', '/announcements', []],
+      ['GET', '/events', listOf([event(1), event(2)])], ['GET', '/announcements', listOf([])],
       ['PATCH', /^\/events\/1$/, event(1, { statusKey: 'closed' })],
       ['POST', /^\/events\/1\/cancel-event$/, event(1, { statusKey: 'cancelled' })],
       ['DELETE', /^\/events\/2$/, { status: 204, body: undefined }],
@@ -146,7 +146,7 @@ describe('Events — admin', () => {
 
   it('posts, edits and removes announcements', async () => {
     const { api, evs } = setup('admin', [
-      ['GET', '/events', []], ['GET', '/announcements', []],
+      ['GET', '/events', listOf([])], ['GET', '/announcements', listOf([])],
       ['POST', '/announcements', (req) => ({ id: 'a1', ...req.body, pub: '2026-10-15T02:00:00Z' })],
       ['PATCH', /^\/announcements\/a1$/, (req) => ({ id: 'a1', ...req.body, pub: '2026-10-15T02:00:00Z' })],
       ['DELETE', /^\/announcements\/a1$/, { status: 204, body: undefined }],
