@@ -1,0 +1,15 @@
+.git
+.vercel
+.claude
+.env*
+**/node_modules
+client/dist
+client/coverage
+client/stats.html
+backend/.env
+backend/vendor
+backend/storage/logs/*
+backend/storage/framework/cache/*
+backend/storage/framework/views/*
+backend/storage/app/private/*
+backend/bootstrap/cache/*.php
