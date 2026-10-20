@@ -3,6 +3,7 @@
 use App\Exceptions\ApiException;
 use App\Http\Controllers\SpaController;
 use App\Http\Middleware\RequestId;
+use App\Http\Middleware\RequirePasswordChange;
 use App\Http\Middleware\RequireRole;
 use App\Http\Middleware\RequireXhr;
 use App\Http\Middleware\SecurityHeaders;
@@ -32,7 +33,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->trustProxies(at: '*');
         $middleware->prepend(RequestId::class);
         $middleware->append(SecurityHeaders::class);
-        $middleware->api(append: [RequireXhr::class]);
+        $middleware->api(append: [RequireXhr::class, RequirePasswordChange::class]);
         $middleware->alias(['role' => RequireRole::class]);
         // The session cookie is an opaque random id; it is hashed server-side, not encrypted.
         $middleware->encryptCookies(except: ['udm_sid']); // config('auth.session.cookie')
