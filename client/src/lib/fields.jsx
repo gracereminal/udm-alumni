@@ -1,5 +1,17 @@
 import DatePicker from '../components/DatePicker';
-import { capitalizeWords, tidyAddress } from './format';
+import { capitalizeWords, tidyAddress, tidyName } from './format';
+
+/** Capitalizes each word as the user types; the length never changes, so the caret is put back where it was. */
+export function capitalizeInput(e) {
+  const el = e.target;
+  const next = capitalizeWords(el.value);
+  if (next !== el.value && typeof el.setSelectionRange === 'function') {
+    const pos = el.selectionStart;
+    el.value = next;
+    el.setSelectionRange(pos, pos);
+  }
+  return next;
+}
 
 /**
  * Builds the view-model for one survey/registration question (text, date, select, textarea, choice chips).
@@ -28,19 +40,23 @@ export function buildField(q, a, { setA, toggleA }, errors = {}) {
       disabled: same,
       autoCapitalize: 'words',
       sameAs: q.sameAs ? { label: q.sameAs.label, checked: same, onToggle: (e) => setA(q.sameAs.flag, e.target.checked) } : null,
-      onInput: (e) => {
-        // Capitalizing never changes the length, so the caret can be put back where the user was typing.
-        const el = e.target;
-        const next = capitalizeWords(el.value);
-        if (next !== el.value) {
-          const pos = el.selectionStart;
-          el.value = next;
-          el.setSelectionRange(pos, pos);
-        }
-        setA(q.id, next);
-      },
+      onInput: (e) => setA(q.id, capitalizeInput(e)),
       onBlur: (e) => {
         const next = tidyAddress(e.target.value);
+        if (next !== (v || '')) setA(q.id, next);
+      },
+    });
+  }
+  if (q.type === 'text' && q.format === 'name') {
+    return Object.assign(base, {
+      isText: true,
+      inputType: 'text',
+      value: v || '',
+      disabled: !!q.disabled,
+      autoCapitalize: 'words',
+      onInput: (e) => setA(q.id, capitalizeInput(e)),
+      onBlur: (e) => {
+        const next = tidyName(e.target.value);
         if (next !== (v || '')) setA(q.id, next);
       },
     });
