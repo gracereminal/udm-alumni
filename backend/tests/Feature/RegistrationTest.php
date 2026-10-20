@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Controllers\Api\V1\AuthController;
 use App\Support\RegistrationRules;
 use Illuminate\Support\Facades\DB;
 
@@ -17,17 +16,17 @@ function registration(array $overrides = []): array
     ], $overrides);
 }
 
-it('registers a pending account with its alumni record, without signing in', function () {
+it('registers an active account with its alumni record, without signing in', function () {
     $response = $this->postJson('/api/v1/auth/register', registration())
         ->assertCreated()
-        ->assertJson(['ok' => true, 'status' => 'pending', 'membershipId' => 'AM-2025-N0001'])
+        ->assertJson(['ok' => true, 'status' => 'active', 'membershipId' => 'AM-2025-N0001'])
         ->assertCookieMissing('udm_sid');
 
     $user = DB::table('user_account')->where('email', 'lea.garcia@example.com')->first();
     $alumnus = DB::table('alumnus as a')->join('program as p', 'p.program_id', '=', 'a.program_id')
         ->where('a.user_id', $user->user_id)->first(['a.*', 'p.code AS program_code']);
 
-    expect($user->account_status)->toBe('pending')
+    expect($user->account_status)->toBe('active')
         ->and($user->role)->toBe('alumni')
         ->and($user->password_hash)->toStartWith('$argon2id$')
         ->and($alumnus->program_code)->toBe('CCS-BSIT')
@@ -44,9 +43,9 @@ it('registers a pending account with its alumni record, without signing in', fun
         ->and(DB::table('record_review')->where('alumni_id', $alumnus->alumni_id)->value('action'))->toBe('create')
         ->and(DB::table('audit_log')->where(['action' => 'register', 'entity_id' => $alumnus->alumni_id])->exists())->toBeTrue();
 
-    // Pending until an admin approves it.
+    // No admin approval needed: the account signs in right away.
     $this->postJson('/api/v1/auth/login', ['identifier' => 'lea.garcia@example.com', 'password' => 'Register123'])
-        ->assertForbidden()->assertJsonPath('code', 'account_pending')->assertJsonPath('error', AuthController::PENDING);
+        ->assertOk()->assertJsonPath('user.role', 'alumni');
 });
 
 it('numbers pending registrations per class year', function () {
@@ -68,7 +67,7 @@ it('notifies admins and that college only', function () {
     expect($new->pluck('email')->all())->toBe(['admin@udmalumni.edu', 'ccs.dean@udmalumni.edu'])
         ->and(DB::table('notification')->where('user_id', $cetDean)->exists())->toBeFalse()
         ->and($new->pluck('type')->unique()->all())->toBe(['registration'])
-        ->and($new->first()->message)->toBe('Lea Garcia (BSIT 2025) registered and is awaiting approval.')
+        ->and($new->first()->message)->toBe('Lea Garcia (BSIT 2025) registered.')
         ->and($new->first()->link_url)->toBe('records');
 });
 
@@ -133,20 +132,4 @@ it('follows the Admin tracer-question edits for required and hidden fields', fun
         ->assertJsonPath('fields.middle_name', RegistrationRules::REQUIRED);
 
     $this->postJson('/api/v1/auth/register', registration(['facebook' => '', 'middle_name' => 'Reyes']))->assertCreated();
-});
-
-it('activates the account right away when registration does not require approval (production)', function () {
-    config(['app.registration_requires_approval' => false]);
-
-    $this->postJson('/api/v1/auth/register', registration())
-        ->assertCreated()
-        ->assertJson(['ok' => true, 'status' => 'active', 'message' => 'Registration complete. You can now sign in.'])
-        ->assertCookieMissing('udm_sid');
-
-    expect(DB::table('user_account')->where('email', 'lea.garcia@example.com')->value('account_status'))->toBe('active')
-        ->and(DB::table('alumnus')->where('membership_id', 'AM-2025-N0001')->value('verification_status'))->toBe('pending')
-        ->and(DB::table('notification')->where('type', 'registration')->orderByDesc('notification_id')->value('message'))->toBe('Lea Garcia (BSIT 2025) registered.');
-
-    $this->postJson('/api/v1/auth/login', ['identifier' => 'lea.garcia@example.com', 'password' => 'Register123'])
-        ->assertOk()->assertJsonPath('user.role', 'alumni');
 });

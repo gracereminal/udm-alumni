@@ -46,8 +46,7 @@ export function AuthProvider({ children }) {
   }, [setUser]);
 
   /**
-   * Self-registration does not sign in. The response's `status` is 'active' (sign in right away) or 'pending' (an
-   * Admin must approve it first, when the server requires approval).
+   * Self-registration creates an active account but does not sign in: the alumnus signs in next.
    * Throws ApiError (409 `email_taken`, or 422 with field errors).
    */
   const registerAlumni = useCallback((form) => post('/auth/register', form), []);

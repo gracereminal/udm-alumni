@@ -60,10 +60,6 @@ return [
     // The built client's index.html, served for non-API paths on a single-host deploy (SpaController).
     'spa_index' => env('SPA_INDEX_PATH', base_path('../client/dist/index.html')),
 
-    // Whether a self-registered alumni account waits for an admin to approve it before it can sign in. Off in
-    // production (the account is active right away; staff still verify the record), on elsewhere.
-    'registration_requires_approval' => (bool) env('REGISTRATION_REQUIRES_APPROVAL', env('APP_ENV', 'production') !== 'production'),
-
     // Lets the DemoSeeder run against a non-local (staging) database.
     'allow_demo_seed' => (bool) env('ALLOW_DEMO_SEED', false),
 
