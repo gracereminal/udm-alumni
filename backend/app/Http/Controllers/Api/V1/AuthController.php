@@ -41,8 +41,8 @@ class AuthController extends Controller
     }
 
     /**
-     * POST /auth/register: creates a pending account and its alumni record. The alumnus is not signed in; they can
-     * sign in once an admin approves the account.
+     * POST /auth/register: creates the account and its alumni record. The alumnus is not signed in; they sign in
+     * next, right away when the account is active, or once an admin approves it when it is pending.
      */
     public function register(RegisterRequest $request, RegistrationService $registration): JsonResponse
     {
@@ -50,9 +50,11 @@ class AuthController extends Controller
 
         return response()->json([
             'ok' => true,
-            'status' => 'pending',
+            'status' => $r['status'],
             'membershipId' => $r['membershipId'],
-            'message' => 'Registration received. You can sign in once the UDM Alumni Office approves your account.',
+            'message' => $r['status'] === 'pending'
+                ? 'Registration received. You can sign in once the UDM Alumni Office approves your account.'
+                : 'Registration complete. You can now sign in.',
         ], 201);
     }
 
