@@ -28,7 +28,7 @@ return Application::configure(basePath: dirname(__DIR__))
         then: fn () => Route::fallback(SpaController::class),
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        // The API is reached through the Vercel rewrite, so the client IP comes from the proxy headers.
+        // Railway's edge proxy terminates TLS, so the client IP and https scheme come from the proxy headers.
         $middleware->trustProxies(at: '*');
         $middleware->prepend(RequestId::class);
         $middleware->append(SecurityHeaders::class);

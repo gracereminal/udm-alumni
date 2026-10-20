@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </helmet>
-<div data-m="nav" style="width:{{ navW }};min-width:{{ navW }};height:calc(100dvh - var(--sw-h,45px) - 24px);position:sticky;top:calc(var(--sw-h,45px) + 12px);margin:12px 0 12px 12px;border-radius:16px;background:#00332B;box-shadow:0 12px 32px -12px rgba(0,51,43,.45);display:flex;flex-direction:column;padding:18px 12px 14px;box-sizing:border-box;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;font-family:Inter,system-ui,sans-serif;color:#EAF3F1;transition:width .2s,min-width .2s">
+<div data-m="nav" style="width:{{ navW }};min-width:{{ navW }};min-height:calc(100dvh - var(--sw-h,45px) - 24px);height:calc(100% - 24px);align-self:stretch;margin:12px 0 12px 12px;border-radius:16px;background:#00332B;box-shadow:0 12px 32px -12px rgba(0,51,43,.45);display:flex;flex-direction:column;padding:18px 12px 14px;box-sizing:border-box;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;font-family:Inter,system-ui,sans-serif;color:#EAF3F1;transition:width .2s,min-width .2s">
   <div data-m="nav-bar" style="display:none;align-items:center;gap:10px;width:100%">
     <img src="alumni-logo.png" alt="Universidad de Manila" style="width:44px;height:44px;object-fit:contain;flex:none" />
     <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:1px">
@@ -23,8 +23,29 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" style="width:20px;height:20px"><path d="{{ menuIcon }}"></path></svg>
     </div>
   </div>
+  <div data-m="nav-tabs" style="display:none;pointer-events:auto;background:#fff;border-top:1px solid #E3E8E5;padding:6px 6px 8px;box-sizing:border-box;width:100%;align-items:stretch;justify-content:space-around;box-shadow:0 -8px 24px -12px rgba(0,30,20,.2);font-family:Inter,system-ui,sans-serif">
+    <sc-for list="{{ tabItems }}" as="t" hint-placeholder-count="5">
+      <div onClick="{{ t.onClick }}" style="flex:1;min-width:0;min-height:54px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;opacity:{{ t.rowOpacity }};color:{{ t.tabColor }}">
+        <div style="width:54px;height:30px;border-radius:15px;background:{{ t.pill }};display:flex;align-items:center;justify-content:center;transition:background .15s">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px"><path d="{{ t.icon }}"></path></svg>
+        </div>
+        <div style="font-size:11px;line-height:1.1;font-weight:{{ t.tabWeight }};max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 2px">{{ t.short }}</div>
+      </div>
+    </sc-for>
+    <div onClick="{{ toggleMenu }}" style="flex:1;min-width:0;min-height:54px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;color:{{ moreColor }}">
+      <div style="width:54px;height:30px;border-radius:15px;background:{{ morePill }};display:flex;align-items:center;justify-content:center">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" style="width:22px;height:22px"><path d="M5 12h.01M12 12h.01M19 12h.01"></path></svg>
+      </div>
+      <div style="font-size:11px;line-height:1.1;font-weight:600">More</div>
+    </div>
+  </div>
   <sc-if value="{{ menuOpen }}" hint-placeholder-val="{{ false }}">
+    <div data-m="nav-scrim" onClick="{{ toggleMenu }}" style="display:none"></div>
     <div data-m="nav-menu" style="display:none;flex-direction:column;gap:2px;width:100%;padding:12px 0 4px;margin-top:10px;border-top:1px solid rgba(234,243,241,.12)">
+      <div data-m="sheet-head" style="display:none;flex-direction:column;align-items:center;gap:12px;padding:2px 0 10px">
+        <div style="width:40px;height:5px;border-radius:3px;background:rgba(234,243,241,.3)"></div>
+        <div style="display:flex;align-items:center;gap:10px;width:100%;padding:0 4px"><img src="alumni-logo.png" alt="" style="width:36px;height:36px;object-fit:contain;flex:none" /><div><div style="font-weight:700;font-size:15px">UDM Alumni</div><div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#F0C428">{{ roleLabel }}</div></div></div>
+      </div>
       <sc-for list="{{ menuItems }}" as="item" hint-placeholder-count="5">
         <div onClick="{{ item.onClick }}" style="display:flex;align-items:center;gap:12px;min-height:48px;padding:0 12px;border-radius:12px;background:{{ item.bg }};color:{{ item.color }};font-weight:{{ item.fontWeight }};opacity:{{ item.rowOpacity }};cursor:{{ item.cursor }}">
           <svg viewBox="0 0 24 24" fill="none" stroke="{{ item.dotColor }}" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="width:19px;height:19px;flex:none"><path d="{{ item.icon }}"></path></svg>
@@ -40,7 +61,7 @@
 
   <div data-m="nav-full" style="display:flex;flex-direction:{{ headDir }};align-items:center;justify-content:space-between;gap:12px;margin-bottom:26px;padding:0 4px 0 6px">
     <div data-m="nav-head" style="display:flex;align-items:center;gap:11px;min-width:0">
-      <img src="alumni-logo.png" alt="Universidad de Manila" style="width:48px;height:48px;object-fit:contain;flex:none" />
+      <img src="alumni-logo.png" alt="Universidad de Manila" style="width:40px;height:40px;object-fit:contain;flex:none" />
       <sc-if value="{{ expanded }}" hint-placeholder-val="{{ true }}">
         <div data-m="nav-label" style="font-weight:700;font-size:17px;letter-spacing:-.3px;white-space:nowrap">UDM Alumni</div>
       </sc-if>
@@ -96,7 +117,24 @@
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;items&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;Array&lt;{id:string,label:string,onClick:Function,bg:string,color:string,fontWeight:number,rowOpacity:number,dotColor:string,cursor:string}&gt;&quot;},&quot;roleLabel&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Alumni&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;userName&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Maria Dela Cruz&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;onSignOut&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;Function&quot;}}">
 class Component extends DCLogic {
-  state = { open: false, collapsed: false };
+  state = { open: false, collapsed: Component.readCollapsed() };
+  static readCollapsed() {
+    if (typeof window.__udmNavCollapsed === "boolean") return window.__udmNavCollapsed;
+    try { return localStorage.getItem("udm-nav-collapsed") === "1"; } catch (e) { return false; }
+  }
+  componentDidMount() {
+    this._sync = e => { if (e.detail !== this.state.collapsed) this.setState({ collapsed: e.detail }); };
+    window.addEventListener("udm-nav-collapsed", this._sync);
+    const c = Component.readCollapsed();
+    if (c !== this.state.collapsed) this.setState({ collapsed: c });
+  }
+  componentWillUnmount() { window.removeEventListener("udm-nav-collapsed", this._sync); }
+  setCollapsed(c) {
+    window.__udmNavCollapsed = c;
+    try { localStorage.setItem("udm-nav-collapsed", c ? "1" : "0"); } catch (e) {}
+    this.setState({ collapsed: c });
+    window.dispatchEvent(new CustomEvent("udm-nav-collapsed", { detail: c }));
+  }
   renderVals() {
     const name = this.props.userName ?? "Maria Dela Cruz";
     const initials = String(name).trim().split(/\s+/).filter(w => w && !/^(dr|mr|mrs|ms|prof|engr|atty)\.?$/i.test(w)).slice(0, 2).map(w => w[0].toUpperCase()).join("");
@@ -117,11 +155,14 @@ class Component extends DCLogic {
       headDir: col ? "column" : "row",
       itemJustify: col ? "center" : "flex-start",
       collapseTitle: col ? "Expand sidebar" : "Collapse sidebar",
-      toggleCollapse: () => this.setState(s => ({ collapsed: !s.collapsed })),
+      toggleCollapse: () => this.setCollapsed(!this.state.collapsed),
       menuOpen: this.state.open,
       menuIcon: this.state.open ? "M6 6l12 12M18 6L6 18" : "M4 7h16M4 12h16M4 17h16",
       toggleMenu: () => this.setState(s => ({ open: !s.open })),
       currentLabel: cur ? cur.label : (this.props.roleLabel ?? "Alumni"),
+      moreColor: this.state.open ? '#004D40' : '#64748B',
+      morePill: this.state.open ? '#DDEFE7' : 'transparent',
+      tabItems: items.slice(0, 4).map(it => { const on = isOn(it); const w = String(it.label).split(' '); return Object.assign({}, it, { tabColor: on ? '#004D40' : '#64748B', pill: on ? '#DDEFE7' : 'transparent', tabWeight: on ? 700 : 600, short: String(it.label).length > 10 ? w[0] : it.label }); }),
       items: items.map(it => Object.assign({}, it, { bar: isOn(it) ? '#F0C428' : 'transparent' })),
       menuItems: items.map(it => Object.assign({}, it, { onClick: () => { this.setState({ open: false }); it.onClick && it.onClick(); } }))
     };

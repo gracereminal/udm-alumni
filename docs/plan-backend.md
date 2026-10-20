@@ -1,478 +1,467 @@
 # plan-backend.md
 
-Backend and deployment plan for the UDM Alumni Tracer. Last checked against the code and `docs/UDM Alumni ERD.dc.html` on 2026-10-15.
+Backend and deployment plan for the UDM Alumni Tracer. Replanned on 2026-10-18; updated on 2026-10-20 to match the code in `backend/` and the production setup (one Docker image on Railway with Neon PostgreSQL). There is no staging environment: code is checked locally, then deployed to production. The data model is defined in this file ("Data model"); there is no separate ERD document. The step-by-step production runbook is [deploy-notes.md](deploy-notes.md).
 
 ## Context
-The UDM Alumni Tracer is a React/Vite SPA with no backend. All state sits in React context plus `localStorage`, and every statistic is fake or hardcoded: the `3482` literals in `data/records.js` and `lib/adminDash.js`, the hash-based `repStat()` in `lib/analytics.js`, and the hand-typed `DEPT_COURSE_DATA` in `lib/collegeDash.js`. The staff records, public directory, registrations, job queue and RSVP lists contain overlapping people with conflicting IDs.
-
-`docs/UDM Alumni ERD.dc.html` (26 entities, 35 relationships) is the agreed data model. This plan builds the backend on that ERD so that:
+The UDM Alumni Tracer is a React/Vite SPA in `client/` running on a **Laravel REST API** in `backend/`. The API was built in phases 1–5 (`20e171b`) and the client was moved onto it in phase 6 (`3adec99`). In production, one Docker image serves both: Laravel answers `/api/v1/*` and returns the built client for every other path (see "Deployment"). The API is built so that:
 1. Every screen's numbers come from the same tables. No stat is typed, stored or computed in the UI.
 2. Contacts are fields on the same alumni record that Records, Directory, Profile and the Survey all use.
-3. The API, database, file storage and email run in production next to the existing Vercel frontend (see "Deployment").
+3. The client calls one REST contract (see "API"), including the features first built in the prototype: pending approval for self-registered alumni, the Admin Alumni Tracer question manager, Messenger/email contact hand-off for Outreach and job applications, a real reset code and password change, and shared email templates in `/emails` with an event-registration confirmation.
+4. The API, database, file storage and email run in production from university-owned accounts (see "Deployment").
 
-## Current state (as of 2026-10-15)
-- `client/` is a working React 18 + Vite 5 + React Router 6 SPA, deployed to Vercel (project `udm-alumni-demo`) with `npx vercel --prod --yes`. The root `vercel.json` installs and builds `client/`, serves `client/dist` and rewrites all routes to `index.html`. `client/vercel.json` holds a duplicate rewrite that is not used, because the Vercel project root is the repo root. The project is a local git repository (branch `master`, no remote yet). `backend/` holds the Express + Postgres API (phases 1–5, see Phases), and the client talks to it through `client/src/lib/api.js`; nothing is deployed beyond Vercel yet.
-- **Running locally** (see `backend/README.md`): `npm --prefix backend run db:local` (embedded Postgres 16 on `:5433`, keep it running), `npm --prefix backend run migrate up`, `seed:lookups` and `seed:demo` once (local/staging only, never production), then `npm --prefix backend run dev` (API on `:4000`) and `npm --prefix client run dev` (Vite proxies `/api`). Re-run `migrate up` after pulling a new migration: the tests build a fresh DB each run, so they pass even when the dev DB is behind.
-- **Registration works end to end** (checked 2026-10-15): `/register/consent` → … → success calls `POST /auth/register`, which creates the `USER_ACCOUNT`, the `ALUMNUS` (a membership ID such as `AM-2024-30001`, status `pending`, source `self_registration`) and the password hash in one transaction, signs the alumnus in, and notifies admin and that college's users. The new alumnus appears in Records (admin: all; dept: own college), in the admin dashboard's recent registrations and in the bell.
-- The bullets below describe the prototype this plan started from; they are kept because the server rules and field mappings are taken from them.
-- All three roles (alumni, college/department, admin) are implemented against React context + `localStorage`: Records, Reports, Jobs and Events management, outreach, notifications, the search overlay and the contact modal.
-- Registration is Privacy Consent → Personal Information → **Contact & Social Media** → Educational Background → **Account Password** → Success (`data/formDefs.js` `regStepDefs` + `regPasswordStep`). `POST /auth/register` must accept all of these fields (see ERD gap 9). The password step (`reg_pw`, `reg_pw2`) is held in component state only and never persisted today. The API receives it once and stores only the password hash.
-- Registration validation lives in `lib/validation.js` (`validateRegStep`, `validateProfile`). The server must repeat every rule with `zod`:
+The backend is written in **PHP (Laravel)**. This plan is the spec.
+
+## Current state (2026-10-20)
+- **Backend:** Laravel API in `backend/` (PHP 8.4 in the image; Laravel Herd's PHP 8.5 on the Windows dev machine), PostgreSQL 16. `composer test` 170 tests (Pest), `composer lint` (Pint + Larastan) clean.
+- **Client:** React 18 + Vite 5 + React Router 6 in `client/`. `client/src/lib/api.js` calls the same-origin `/api/v1` (override with `VITE_API_URL`) with the session cookie. `client/vite.config.js` proxies `/api` to `http://localhost:4000` (override with `VITE_API_PROXY`) and sets `server.fs.allow: ['..']` so the client can import the `/emails` templates. Client tests (Vitest, 160 tests) run against the `fetch` mock in `src/test/mockApi.js`. Only the unsent registration draft, the privacy consent and UI preferences stay in the browser.
+- **Production:** the root `Dockerfile` builds one image (client + API) that Railway deploys from `main`, with Neon PostgreSQL, both in Singapore. Commits `04073b4` (Docker deploy), `c6cca8d` (no config check during the build), `a159d3c` (Neon pooler fix, built-in admin on start), `b8e50e5` (stricter production config check) and `de3e4e4` (argon2id with rehash at sign-in). The go-live checklist below is still open.
+- **Git:** branch `main`, pushed to `github.com/gracereminal/udm-alumni` (a personal account; it moves to the university before go-live).
+- **Old Vercel site:** `udm-alumni-demo.vercel.app` is still the frontend-only prototype (data in each visitor's `localStorage`). The root `vercel.json` and `client/vercel.json` only build that site; production does not use Vercel. Take it down or redirect it at go-live.
+- **Local development:** `php artisan serve --port=4000` in `backend/` plus `npm run dev` at the root, against a local Postgres 16 on port `5433` (or a Neon dev branch). Details are in `backend/README.md`.
+
+### Rules the server must repeat (from the client)
+- **Registration** is Privacy Consent → Personal Information → Contact & Social Media → Educational Background → Account Password → Success. `POST /auth/register` receives every field of these steps at once. The password is sent once and only its hash is stored.
+- **Validation** (`client/src/lib/validation.js`, repeated on the server in Form Requests and `app/Support/RegistrationRules.php`):
   - `last_name` and `first_name` required.
   - `dob` required and not in the future.
   - `present_address` and `permanent_address` required.
-  - `gender`, `marital_status`, `indigenous` and `pwd` required. `married_name` is required when married, `indigenous_group` when indigenous, and `pwd_type` when PWD.
-  - `mobile` required, as `09XXXXXXXXX` or `639XXXXXXXXXX` (normalize before storing). `email` required and valid.
+  - `gender`, `marital_status`, `indigenous` and `pwd` required. `married_name` is required when married, `indigenous_group` when indigenous, `pwd_type` when PWD.
+  - `mobile` required, as `09XXXXXXXXX` or `639XXXXXXXXX` (normalized to `639…` before storing, `app/Support/Mobile.php`). `email` required and valid.
   - `college` required. `course` **or** `course_other` required.
   - `year_graduated` is a 4-digit year from 1999 to the current year.
-  - The password has 8+ characters, a number and an uppercase letter.
-  - Social handles (`facebook`, `twitter`, `instagram`, `linkedin`) accept a username or a URL with no spaces.
-- There is no separate survey page. `/alumni/survey` redirects to `/alumni/profile`, and the survey lives in `ProfileContext` (draft key `udm.tracer.draft.v1`). The unused `pages/alumni/AlumniSurvey.jsx` was deleted on 2026-10-14.
-- Reports have five types (`REPORT_TYPES` in `lib/analytics.js`): Form A (`ched`), Employability by Program (`employability`), Batch Coverage Audit (`coverage`), Employer & Industry Distribution (`employer`), and Inclusion Profile, IP & PWD (`inclusion`). The 80% (employment) and 60% (coverage) targets are literals in `lib/analytics.js`. The report history (`BASE_HISTORY` in `hooks/useReportsPage.js`) and the "last run" dates in `REPORT_TYPES` are typed.
-- Record IDs in the UI (`sid`, e.g. `AM-2024-00891`) use the `membership_id` format. No record carries a `student_no`.
-- Survey answers are stored under the field ids in `surveySectionDefs()`:
+  - The password has 8+ characters, a number and an uppercase letter (`AccountService::passwordOk()`).
+  - Social handles (`facebook`, `twitter`, `instagram`, `linkedin`) accept a username or a URL with no spaces. The `facebook` value is what Outreach turns into a Messenger link (`messengerUrl()` in `lib/contact.js`, `app/Support/Contact.php` on the server; accepts a username, @handle, facebook.com / fb.com / m.me link or `profile.php?id=`).
+  - Hidden or optional tracer questions lose their blank-field error, and questions the Admin made required gain one (`applyRules` in `lib/validation.js`, driven by `tracer_question`).
+  - Job postings: "How to apply" (`apply_via`) is an email or a web address, and "Facebook / Messenger" (`messenger`) uses the same handle rules.
+- **Survey** lives inside Edit Profile (`/alumni/profile/edit`; `/alumni/survey` redirects there). `completion_pct` uses the client's rule (`lib/profileProgress.js`, `app/Support/ProfileProgress.php`): answered ÷ **Required** visible questions, where program and "Others" count as one question. Answers use the field ids in `surveySectionDefs()`:
   - Education: `first_grad`, `udmcat`, `honors`, `prof_exams`.
   - Employment: `ever_employed`, plus `unemployed_reason` (multi) when the answer is No.
-  - Job details: `job_name`, `job_address`, `employer`, `job_status` (Regular or Permanent / Temporary / Casual / Contractual / Self-employed), `org_type` (Private / Government / Non-profit / NGO / Self-owned business, four options), `business_line`, `occ_class`, `place_of_work` (Local / Abroad), `time_to_job` (a range bucket), `job_related` (Yes/No), `still_working`, `stay_reasons`.
+  - Job details: `job_name`, `job_address`, `employer`, `job_status` (Regular or Permanent / Temporary / Casual / Contractual / Self-employed), `org_type` (Private / Government / Non-profit / Self-owned business), `business_line`, `occ_class`, `place_of_work` (Local / Abroad), `time_to_job` (a range bucket), `job_related`, `still_working`, `stay_reasons`.
   - Self-employment: `se_years`, `se_nature`, `se_reason`, `se_related`, `se_other_job`.
   - Feedback: `fb_contribute`, `fb_activity`.
-
-  `SURVEY_RESPONSE` and `EMPLOYMENT_RECORD` must hold these answers (see ERD gap 12).
-- Employment labels used by Records (`EMP` in `hooks/useRecordsPage.js`) are Employed Full-time, Employed Part-time, Self-Employed / Freelancer, Business Owner, Further studies, and Not yet employed. The admin charts group them as full-time, part-time, self-employed, further studies, and not yet employed. **The survey does not ask full-time vs part-time.** `RecordsContext` derives only Self-Employed / Freelancer (`job_status = Self-employed`), Employed Full-time (any other employed answer) and Not yet employed. Part-time and Business Owner exist only in seed data. The backend needs an explicit rule (see Open questions).
-- The college role is hardcoded to the College of Computing Studies (`DEPT_COLLEGE` in `lib/collegeDash.js`, also used by `hooks/useReportsPage.js`). The backend replaces this with `USER_ACCOUNT.college_id`.
-- Vitest is set up (`client/src/test`, `npm run test`), along with the `lint`, `audit` and `build:analyze` scripts.
-- The demo accounts (password `demoPass123`, `data/demoAccounts.js`) become seed users for **demo and staging only**: alumni `maria.delacruz@udmalumni.edu`, college `ccs.dean@udmalumni.edu` (College of Computing Studies), and admin `admin@udmalumni.edu`.
-- The demo IDs `2024-00567-AT`, `CCS-DEAN-01` and `ADMIN-001` match neither ERD format (`AM-YYYY-NNNNN`, `YYYY-NNNNN-UDM`). The demo alumna's record already uses `AM-2024-00567` in `RecordsContext`, so the seed gives her `membership_id = AM-2024-00567` and `student_no = 2024-00567-UDM`. Sign-in by "Alumni ID" must look up both `student_no` and `membership_id`. Staff accounts have no alumni record and sign in by email only.
+- **Reports** have five types: Form A (`ched`), Employability by Program (`employability`), Batch Coverage Audit (`coverage`), Employer & Industry Distribution (`employer`), Inclusion Profile, IP & PWD (`inclusion`).
+- **Identifiers:** `membership_id` (`AM-YYYY-NNNNN`) and `student_no` (the Alumni ID the client shows and signs in with, `YY-NN-NNN` where `YY` is the last two digits of the class (graduation) year, so Class of 2024 starts with `24`, e.g. `24-17-057`; validated as `^\d{2}-\d{2}-\d{3}$`) are two different unique identifiers. Sign-in by "Alumni ID" looks up both. Staff accounts have no alumni record and sign in by email only.
+- **Demo accounts** (password `demoPass123`, **local only**, from `DemoSeeder`): alumni `maria.delacruz@udmalumni.edu` (Alumni ID `24-05-567`, membership `AM-2024-00567`), college `ccs.dean@udmalumni.edu` (College of Computing Studies), admin `admin@udmalumni.edu`, and a pending self-registration `paolo.mendoza@gmail.com` (`AM-2026-N0001`, account `pending`). The Demo Access panel and the Sample Email inbox show only in dev or with `VITE_DEMO=true` (`client/src/data/demoAccounts.js`); the production image is built without it.
 
 ## Stack
-- **API:** Node.js 20 LTS + Express in `backend/` (ES modules), REST + JSON, validation with `zod`, logging with `pino`.
-- **DB:** PostgreSQL 16, migrations with `node-pg-migrate`, queries with `pg` (so the stat SQL stays visible). ERD types map as follows: `INT PK` → `bigint generated always as identity`, `ENUM` → Postgres enum, `JSON` → `jsonb`, `TINYINT` → `smallint`, `YEAR` → `smallint`, `DATETIME/TIMESTAMP` → `timestamptz`, `CHAR(64)` hashes → `text`.
-- **Auth:** self-hosted in the Express API (no managed auth service: the scope rules, Alumni-ID sign-in, the custom reset flow and the privacy requirements all live in our own Postgres). Email or Alumni ID + password, hashed with `argon2id` (or `bcrypt` cost 12). Sessions are **opaque server-side sessions**, not JWTs: login creates an `AUTH_SESSION` row and sets one httpOnly cookie holding a random 32-byte session id (only its SHA-256 hash is stored). Logout, a password reset or disabling an account revokes the rows, so the effect is immediate. Sessions last 14 days with a sliding idle timeout. This replaces `data/demoAccounts.js`. Password reset uses `PASSWORD_RESET`. See "Authentication and authorization design".
-- **CSRF and brute force:** cookie is `HttpOnly; Secure; SameSite=Lax; Path=/`, bodies are JSON only, and state-changing routes require a custom header (`X-Requested-With`). `express-rate-limit` on `/auth/*`, per-account lockout after repeated failures, and a generic "invalid credentials" message.
-- **Files:** `multer` (memory storage, size and MIME limits) for `photo_url` and `PROOF_DOCUMENT`. A `services/storage.js` driver switches with `STORAGE_DRIVER=local|s3`: local disk in development, S3-compatible object storage in production.
-- **Tests:** Vitest + Supertest on a throwaway seeded database.
-- **Hosting:** the frontend stays on Vercel. The API, Postgres and object storage are hosted separately and reached through a Vercel rewrite, so the browser sees a single origin (see "Deployment").
+- **API:** PHP 8.4 + Laravel (current major) in `backend/`, API-only (no Blade views, no starter kit), REST + JSON under `routes/api.php` with the `api/v1` prefix. Validation with Form Requests and service-level rules. Logging with Monolog (Laravel's default), to `stderr` in production. Dependencies through Composer.
+- **DB:** PostgreSQL 16 through PDO (`pdo_pgsql`). The schema is two plain SQL files, `database/sql/001_schema.sql` (enums, 29 tables, `set_updated_at()`, `app_today()`) and `002_views.sql` (the `v_*` views), each run with `DB::unprepared()` from one migration (`2026_10_19_000001_create_schema.php`, `2026_10_19_000002_create_views.php`), so the schema SQL stays readable. Stat and report queries are raw SQL (`DB::select`) in `app/Services/StatsService.php` and `ReportsService.php`; plain CRUD uses the query builder (only `Alumnus` and `UserAccount` have Eloquent models). IDs are `bigint generated always as identity`, enumerations are Postgres enums, free-form answers are `jsonb`, timestamps are `timestamptz` stored in UTC.
+- **Two DB connections:** `pgsql` (the app, `DB_URL`) and `pgsql_direct` (migrations, `DB_URL_DIRECT`, falls back to `DB_URL` locally). `pgsql` sets `PDO::ATTR_EMULATE_PREPARES`, because Neon's PgBouncer pooler breaks PDO's server-side prepared statements (`SQLSTATE[25P02]`).
+- **Local DB:** PostgreSQL 16 on port `5433`, or a personal Neon dev branch. Tests use a separate `udm_alumni_test` database, reset with `RefreshDatabase`.
+- **Auth:** self-hosted in the API (see "Authentication and authorization"). No Sanctum, Breeze or Fortify.
+- **Files:** Laravel `UploadedFile` with `file|mimes|max` validation. `app/Services/StorageService.php` uses the filesystem disk set by `FILESYSTEM_DISK=local|s3` (`league/flysystem-aws-s3-v3`).
+- **Email:** Laravel Mail with `MAIL_MAILER=log|gmail|smtp`. `gmail` is a custom transport that calls the Gmail REST API with Laravel's HTTP client (see "Email"). Every email's markup, subject and sender come from the shared `/emails` templates (built for Gmail: inline styles and tables only), never from Blade views.
+- **Tests:** Pest (on PHPUnit) feature and unit tests against a seeded test database. Lint and static analysis: Laravel Pint + Larastan (`composer lint`).
+- **Hosting:** one Docker image (root `Dockerfile`) on Railway serves the API and the built client from the same origin; Neon hosts PostgreSQL. Both in Singapore. See "Deployment".
 
-## Authentication and authorization design
-- **Roles:** `alumni`, `dept` (college) and `admin`, stored in `USER_ACCOUNT.role`. A `requireRole(...)` middleware guards each route.
-- **Row scope:** `scopeFor(user)` returns the SQL filter used by every list and stat query: dept → `college_id = user.college_id`; alumni → their own `alumni_id` (and opted-in directory rows only); admin → no filter. The client never sends a scope.
-- **Defense in depth (optional, from phase 2):** Postgres row-level security on `ALUMNUS` and `SURVEY_RESPONSE`, using `SET LOCAL app.user_id / app.college_id` per request, so a missed `WHERE` cannot leak another college's rows.
-- **Audit:** failed logins, sensitive reads and every change write to `AUDIT_LOG`.
-- **Libraries:** `argon2` (or `bcrypt`), `cookie-parser`, `helmet`, `express-rate-limit`, `zod`. No auth framework. Better Auth is the closest alternative, but it would still need custom Alumni-ID sign-in and the custom reset flow.
-- **Tests:** after logout, a password reset or disabling the account, the old cookie gets 401 at once; a dept user cannot read another college; an alumnus cannot read or PATCH another alumnus; rate limit and lockout trigger on repeated failures; cookie flags are present on staging.
+## Data model
+Table names are singular, snake_case. Every table has `created_at`; mutable tables also have `updated_at` (kept by the `set_updated_at()` trigger). The source of truth is `database/sql/001_schema.sql`.
 
-## Sync rules
-1. **One `ALUMNUS` row per person.** Records, directory, contact modal, profile and survey are views of it. Duplicates are resolved by `merged_into_id`, never by keeping parallel lists.
-2. **Stats are only SQL views over the ERD tables** and are served by one `services/stats.js`. The UI never counts. These are deleted:
-   - `repStat`, `FULL_TOTALS`, `CCS_TOTALS`, `DEPT_COURSE_DATA`, `BB`, `SF`, `RAW_REGS`, `JOB_QUEUE`, `DEPT_COLLEGE`, `outRows`, `BASE_HISTORY`
-   - the "last run" strings in `REPORT_TYPES`
-   - the `3482` / `3483` literals in `adminDash.js`
-   - the hardcoded `'Oct 05, 2026'` update date in `useRecordsPage.js`
-3. **One definition per metric** (see the table below).
-4. **Lookups are tables.** `COLLEGE` and `PROGRAM` replace the duplicated college and program mappings: `data/colleges.js`, `lib/colleges.js` (incl. `BY_SID`/`LEGACY`), `courseCode`/`progCode`, `repAbbr` and the sector regexes. Employment status and record status are single enums. They replace the three label spellings and the four copies of status colors.
-5. **Authorization in one place:** the `scopeFor(user)` middleware, used by every list and stat query. A dept user's scope is `USER_ACCOUNT.college_id`. The UI never supplies the scope.
-6. **"Today" is server `now()`** (`Asia/Manila` for display and date cut-offs), replacing `TODAY_ISO` in `data/events.js`.
-7. **Every change to `ALUMNUS` happens in a transaction that writes `RECORD_REVIEW`/`AUDIT_LOG`.** This replaces the `log[sid]` overlay.
-
-## ERD to feature map (existing entities)
-| Domain | Tables | Powers |
+### Identity and access
+| Table | Purpose | Key columns and constraints |
 |---|---|---|
-| Identity & access | `USER_ACCOUNT`, `PASSWORD_RESET`, `NOTIFICATION` | sign-in, forgot password, topbar bell |
-| Academic | `COLLEGE`, `PROGRAM` | every college/program filter and label |
-| Alumni profile | `ALUMNUS`, `SOCIAL_LINK`, `CREDENTIAL`, `ALUMNI_SKILL`, `SKILL` | Records, Profile, Directory, contact modal, alumni card |
-| Tracer & verification | `SURVEY_CYCLE`, `SURVEY_RESPONSE`, `EMPLOYMENT_RECORD`, `PROOF_DOCUMENT`, `RECORD_REVIEW`, `OUTREACH_CONTACT` | survey, coverage, employment stats, verification queue, outreach |
-| Jobs | `JOB_POSTING`, `JOB_SKILL`, `SAVED_JOB` | alumni Jobs, admin Jobs + approval queue |
-| Events | `EVENT`, `EVENT_AGENDA_ITEM`, `EVENT_REG_FIELD`, `EVENT_REGISTRATION`, `ANNOUNCEMENT` | alumni/admin Events, RSVPs |
-| Reporting & audit | `AUDIT_LOG`, `REPORT_EXPORT` | reports history, audit trail |
+| `user_account` | Sign-in for all roles | `email` unique (case-insensitive), `password_hash`, `role` (`alumni`/`dept`/`admin`), `college_id` FK (required when `role = 'dept'`), `display_name`, `account_status` (`pending`/`active`/`disabled`; self-registered alumni start `pending` and cannot sign in until an admin approves them), `must_change_password`, `failed_login_count`, `locked_until`, `last_login_at` |
+| `auth_session` | Server-side sessions | `user_id` FK, `session_hash` unique (SHA-256 of the cookie value), `user_agent`, `ip`, `last_seen_at`, `expires_at`, `revoked_at` |
+| `password_reset` | Reset links and codes | `user_id` FK, `token_hash` unique, `code_hash`, `sent_to`, `attempts`, `expires_at`, `used_at` |
+| `notification` | Per-user bell items | `user_id` FK, `type`, `title`, `message`, `link_url` (a client screen id), `dedupe_key` (unique with `user_id`), `read_at` |
+| `app_setting` | Tunables | `key` PK, `value jsonb`, `updated_by`: coverage target (60), employment target (80), outreach interval (7 days) |
+| `tracer_question` | Admin edits to registration and survey questions (Alumni Tracer page) | `field_id` unique (the client's field id), `section`, `form` (`register`/`profile`/`both`), `label`, `placeholder`, `type`, `options jsonb`, `required`, `shown`, `sort`, `is_custom`, `updated_by`. Only edits and added questions are stored; defaults stay in the client's `data/formDefs.js`. Core fields (names, email, college, program, year, password) cannot be hidden or made optional |
 
-**Identifier note:** the ERD resolves the old ID conflict. `ALUMNUS.membership_id` (`AM-YYYY-NNNNN`) and `ALUMNUS.student_no` (`YYYY-NNNNN-UDM`) are both unique columns, so they are two different identifiers, not two spellings of one. Seed data must use each one consistently.
+### Academic
+| Table | Purpose | Key columns |
+|---|---|---|
+| `college` | Colleges | `code` unique (e.g. `CCS`), `name` |
+| `program` | Degree programs | `college_id` FK, `code` unique, `name`, `degree_level` |
+
+The college of an alumnus always comes from `program.college_id`. There is no `college_id` on `alumnus`, except `declared_college_id` for registrants with an unmapped program. The catalog (11 colleges and their programs) is `database/seeders/data/catalog.php`.
+
+### Alumni profile
+| Table | Purpose | Key columns and constraints |
+|---|---|---|
+| `alumnus` | One row per person | `user_id` FK unique (nullable: imported records have no login), `membership_id` unique, `student_no` unique, `program_id` FK, `course_other` + `declared_college_id` (only while `program_id` is null; check: one of the two is set), `year_graduated`, name fields (`last_name`, `first_name`, `middle_name`, `suffix`, `married_name`), `birth_date`, `sex`, `civil_status`, `present_address`, `permanent_address`, `mobile_no`, `contact_email` (for records without a login), `is_indigenous`, `indigenous_group`, `pwd_type` (null = not PWD), `photo_url`, `industry`, `bio`, `verification_status` (`pending`/`verified`/`flagged`), `record_source`, `flag_note`, `merged_into_id` FK self, `archived_at`, `privacy_consent_at`, `directory_opt_in`, `show_email`, `show_mobile` |
+| `social_link` | Contact channels | `alumni_id` FK, `platform` (`facebook`, `messenger`, `twitter`, `instagram`, `linkedin`, `website`), `url`, `is_visible`; unique `(alumni_id, platform)` |
+| `credential` | Honors, exams, certifications | `alumni_id` FK, `type` (`honor`/`exam`/`certification`), `name`, `year` |
+| `skill`, `alumni_skill` | Skills and job matching | `skill.name` unique; `alumni_skill(alumni_id, skill_id)` PK |
+
+### Tracer and verification
+| Table | Purpose | Key columns and constraints |
+|---|---|---|
+| `survey_cycle` | Tracer survey rounds | `name`, `status` (`draft`/`open`/`closed`), `opens_at`, `closes_at`; partial unique index: one `open` cycle |
+| `survey_response` | One per alumnus per cycle | `alumni_id`, `cycle_id`, `status` (`draft`/`submitted`), `completion_pct` (0–100), `current_section`, `first_gen_grad`, `passed_udmcat`, `answers jsonb` (every answer keyed by field id; the source for re-rendering the form), `submitted_at`; unique `(alumni_id, cycle_id)` |
+| `employment_record` | Employment derived from the survey or staff edits | `alumni_id`, `response_id`, `employment_status` (`employed`/`self_employed`/`further_studies`/`not_employed`), `job_title`, `employer_name`, `org_type`, `line_of_business`, `occupation_class`, `place_of_work`, `job_status`, `job_location`, `time_to_job_bucket`, `months_to_first_job` (bucket midpoint), `course_relevance` (`related`/`not_related`), `is_current`; partial unique index on `alumni_id WHERE is_current` |
+| `proof_document` | Uploaded employment proof | `alumni_id`, `storage_key` (private prefix), `mime`, `size_bytes`, `requested_by`, `requested_at`, `uploaded_at` |
+| `record_review` | History of staff actions on a record | `alumni_id`, `reviewer_id`, `action` (`create`, `edit`, `verify`, `flag`, `unflag`, `archive`, `restore`, `merge`, `map_program`), `note`, `diff jsonb` |
+| `outreach_contact` | Each staff contact attempt | `alumni_id`, `contacted_by`, `method` (`email`, `phone`, `facebook`, `messenger`, `linkedin`), `message`, `note`, `outcome` (`sent`, `reached`, `no_response`, `bounced`), `contacted_at`, `removed_at` (the "Remove contacted mark" action) |
+
+### Jobs
+| Table | Purpose | Key columns |
+|---|---|---|
+| `job_posting` | Admin and alumni postings | `posted_by`, `reviewed_by`, `title`, `company`, `company_photo_url`, `location`, `employment_type`, `salary_range`, `deadline`, `apply_via` (email or careers URL), `messenger` (page handle or link), `submitter_email`, `description`, `source` (`admin`/`alumni`), `approval_status` (`pending`/`approved`/`rejected`), `reject_reason`, `is_active`, `published_at`, `deleted_at` |
+| `job_skill` | Skills a job asks for | `(job_id, skill_id)` PK |
+| `saved_job` | Saves and applications | `(alumni_id, job_id)` PK, `saved_at`, `applied_at`, `applied_via` (`messenger`/`email`/`website`; the alumnus applies through their own app, the portal only records it) |
+
+### Events
+| Table | Purpose | Key columns and constraints |
+|---|---|---|
+| `event` | Events | `title`, `category`, `organizer`, `starts_at`, `ends_at` (> `starts_at`), `venue`, `fee_text`, `capacity` (> 0 or null), `cover_photo_url`, `highlights jsonb`, `teaser`, `body`, `reg_status` (`open`/`closed`/`full`), `published_at`, `cancelled_at`, `ended_at`, `deleted_at` |
+| `event_agenda_item` | Agenda lines | `event_id`, `starts_at`, `title`, `sort` |
+| `event_reg_field` | Extra RSVP questions | `event_id`, `label`, `type`, `required`, `options jsonb`, `sort` |
+| `event_registration` | RSVPs | `event_id`, `alumni_id`, `rsvp` (`going`/`maybe`), `answers jsonb`, `entry_pass` (`UDM-XXXX-NNNNN`, stable per event and recipient; `app/Support/EntryPass.php` matches `entryPassCode()` in `lib/emailTemplates.js`), `created_at` (dates the confirmation email), `cancelled_at`; unique `(event_id, alumni_id)`; count ≤ `event.capacity`, enforced in the RSVP transaction with `SELECT … FOR UPDATE` on the event |
+| `announcement` | Event notices | `event_id` (nullable), `kind` (`notice`/`reminder`/`update`), `title`, `body`, `published_at` |
+
+### Reporting and audit
+| Table | Purpose | Key columns |
+|---|---|---|
+| `audit_log` | Every change, failed login and sensitive read | `actor_id`, `action`, `entity`, `entity_id`, `diff jsonb`, `ip`, `request_id` |
+| `report_export` | Report history | `type`, `format` (`pdf`/`excel`/`csv`), `filters jsonb`, `generated_by`, `status` |
+
+### Views
+- `v_active_cycle`: the single open `survey_cycle`.
+- `v_alumni_current`: the population (`archived_at IS NULL AND merged_into_id IS NULL`), each row joined to its college (`coalesce(program.college_id, declared_college_id)`), its submitted response for the active cycle and its current employment.
+- `v_stats_grain`: college × program × batch × counts. Every aggregate sums this view, so screens agree by construction.
+- `v_records_counters`, `v_unresponsive`, `v_directory`, `v_alumni_dashboard`, `v_event_stats`, `v_job_stats`.
 
 ## Form → column mapping
 | Form / survey field | Column |
 |---|---|
-| `email` | `USER_ACCOUNT.email` |
-| `last_name`, `first_name`, `middle_name`, `suffix`, `married_name` | `ALUMNUS` columns of the same name |
-| `dob`, `gender`, `marital_status` | `ALUMNUS.birth_date`, `sex`, `civil_status` |
-| `indigenous` (+ `indigenous_group`) | `ALUMNUS.is_indigenous` (+ new `indigenous_group`) |
-| `pwd` (+ `pwd_type`) | `ALUMNUS.pwd_type` (null = not PWD) |
-| `present_address`, `permanent_address` | new `ALUMNUS.present_address`, `permanent_address` (replace `address`) |
-| `mobile` | `ALUMNUS.mobile_no` (normalized `639XXXXXXXXX`) |
-| `facebook`, `twitter`, `instagram`, `linkedin` | `SOCIAL_LINK(platform, url)` |
-| `college`, `course` / `course_other`, `year_graduated` | `ALUMNUS.program_id` (or new `course_other` + `declared_college_id`), `year_graduated` |
-| `first_grad`, `udmcat` | `SURVEY_RESPONSE.first_gen_grad`, `passed_udmcat` |
-| `honors`, `prof_exams` | `CREDENTIAL` rows (`type` = honor / exam) |
-| `job_name`, `employer`, `org_type`, `business_line`, `occ_class`, `place_of_work` | `EMPLOYMENT_RECORD.job_title`, `employer_name`, `org_type`, `line_of_business`, `occupation_class`, `place_of_work` |
-| `job_status`, `job_address`, `time_to_job` | new `EMPLOYMENT_RECORD.job_status`, `job_location`, `time_to_job_bucket` (+ derived `months_to_first_job`) |
-| `job_related` / `se_related` | `EMPLOYMENT_RECORD.course_relevance` (`related` / `not_related`) |
-| everything else (`unemployed_reason`, `stay_reasons`, `se_*`, `fb_*`, `still_working`) | new `SURVEY_RESPONSE.answers jsonb`, keyed by field id |
+| `email` | `user_account.email` |
+| `last_name`, `first_name`, `middle_name`, `suffix`, `married_name` | `alumnus` columns of the same name |
+| `dob`, `gender`, `marital_status` | `alumnus.birth_date`, `sex`, `civil_status` |
+| `indigenous` (+ `indigenous_group`) | `alumnus.is_indigenous` (+ `indigenous_group`) |
+| `pwd` (+ `pwd_type`) | `alumnus.pwd_type` (null = not PWD) |
+| `present_address`, `permanent_address` | `alumnus.present_address`, `permanent_address` |
+| `mobile` | `alumnus.mobile_no` (normalized `639XXXXXXXXX`) |
+| `facebook`, `twitter`, `instagram`, `linkedin` | `social_link(platform, url)` |
+| `college`, `course` / `course_other`, `year_graduated` | `alumnus.program_id` (or `course_other` + `declared_college_id`), `year_graduated` |
+| `first_grad`, `udmcat` | `survey_response.first_gen_grad`, `passed_udmcat` |
+| `honors`, `prof_exams` | `credential` rows (`type` = honor / exam) |
+| `job_name`, `employer`, `org_type`, `business_line`, `occ_class`, `place_of_work` | `employment_record.job_title`, `employer_name`, `org_type`, `line_of_business`, `occupation_class`, `place_of_work` |
+| `job_status`, `job_address`, `time_to_job` | `employment_record.job_status`, `job_location`, `time_to_job_bucket` (+ derived `months_to_first_job`) |
+| `job_related` / `se_related` | `employment_record.course_relevance` |
+| everything else (`unemployed_reason`, `stay_reasons`, `se_*`, `fb_*`, `still_working`) | `survey_response.answers` only |
 
-## Contacts: how they work
-- The login and primary email live in `USER_ACCOUNT.email`. `ALUMNUS.mobile_no` and the two address columns hold phone and address. Other channels live in `SOCIAL_LINK(platform, url, is_visible)`: Facebook, Messenger, X/Twitter, Instagram, LinkedIn and website.
-- The directory and contact modal read the `v_directory` view (the modal's `CONTACT_TYPES` are email, Messenger, LinkedIn and website). The view returns only alumni who opted in, only `SOCIAL_LINK` rows with `is_visible`, and email/mobile only when their visibility flag is on.
-- Editing a contact in Profile updates the same rows that Records shows, and writes an audit row. There is one copy.
-- `OUTREACH_CONTACT` records each staff contact attempt. It feeds the "unresponsive/contacted" lists.
+All answers are stored in `answers`; the typed columns used by stats are filled from it on submit, in the same transaction (`app/Support/SurveyMapping.php`, `SurveyService`).
 
-## Notifications (synced across Alumni, College and Admin)
-Today `data/notifications.js` returns a fixed list per role (`notifDefs(role)`). The text and numbers are typed ("14 new alumni registrations", "61.8%", "412 alumni have RSVP'd"), admin and college share the same copies, and read state is kept in `localStorage` (`udm.notif.read.v1`). Nothing reacts to what another role does.
+## Sync rules
+1. **One `alumnus` row per person.** Records, directory, contact modal, profile and survey are views of it. Duplicates are resolved with `merged_into_id`.
+2. **Stats are SQL views** served by one `app/Services/StatsService.php`. The UI never counts.
+3. **One definition per metric** (see "Metric definitions").
+4. **Lookups are tables.** `college` and `program` are the only source of college/program names and codes, served by `GET /lookups`. Employment status and record status are single enums.
+5. **Authorization in one place:** `Scope::for($user)` (`app/Support/Scope.php`) builds the row filter for every list and stat query. The client never sends a scope.
+6. **"Today" is server `now()`**, with `Asia/Manila` for display and date cut-offs (`app_today()` in SQL). The database stores UTC.
+7. **Every change to `alumnus` runs in a transaction** (`DB::transaction()`) that also writes `record_review` and `audit_log`.
 
-With the backend, a notification is a `NOTIFICATION` row created by the same transaction that changes the data, so every role's bell reflects what the other roles did.
+## Authentication and authorization
+- **Credentials:** email or Alumni ID + password, hashed with `argon2id` (`HASH_DRIVER=argon2id`, the default in `config/hashing.php`; production refuses any other driver). Older hashes (e.g. bcrypt) are upgraded at the next successful sign-in (`Hash::needsRehash` in `AuthController`). A generic "invalid credentials" message, per-account lockout after repeated failures, and `throttle:auth` (per IP, `AUTH_RATE_LIMIT` per minute, default 10) on register, login, forgot-password and the reset steps.
+- **Sessions:** opaque server-side sessions, not JWTs, and not Laravel's built-in session (`SESSION_DRIVER=array`; the API routes run without `StartSession`). Login creates an `auth_session` row and sets the `udm_sid` cookie holding a random 32-byte id (only its SHA-256 hash is stored): `HttpOnly; Secure; SameSite=Lax; Path=/`. The cookie is excluded from `EncryptCookies`. A custom `SessionGuard` (`app/Auth/SessionGuard.php`, registered with `Auth::extend('auth_session', …)`) resolves the user from it, so `$request->user()` works everywhere. 14-day lifetime with a 12-hour sliding idle timeout (`SESSION_TTL_DAYS`, `SESSION_IDLE_HOURS`). Logout, a password reset or disabling the account revokes the rows, so the effect is immediate. `GET /auth/session` returns the signed-in user or 401. The cookie is `Secure` everywhere except `APP_ENV=local/testing`, and production refuses to start without it.
+- **Password change:** `POST /auth/change-password` (signed in). Accounts with `must_change_password` (the built-in admin, `app:create-user` accounts) are sent there at first sign-in.
+- **CSRF:** JSON bodies only (plus multipart for uploads), and every state-changing route requires the `X-Requested-With` header the client sends (`RequireXhr` middleware on the api group). Laravel's `VerifyCsrfToken` is not used, because the client sends no XSRF token. `/internal/jobs/*` is exempt (it uses `X-Cron-Secret`).
+- **Roles:** `alumni`, `dept` (college) and `admin`. A `role:admin,dept` middleware (`RequireRole`) guards each route.
+- **Row scope:** dept → `college_id = user.college_id`; alumni → their own `alumni_id` (and opted-in directory rows); admin → no filter.
+- **Optional hardening (not built):** Postgres row-level security on `alumnus` and `survey_response` using `SET LOCAL app.user_id / app.college_id` per request.
+- **Packages:** Laravel's own hashing, rate limiting and validation, plus a small `SecurityHeaders` middleware (the `helmet` equivalent: CSP, `X-Content-Type-Options`, `Referrer-Policy`, `X-Frame-Options`, HSTS in production). No auth package, because Alumni-ID sign-in, the reset flow and the scope rules are all custom.
+
+## Contacts
+- The login email is `user_account.email`. Records without a login use `alumnus.contact_email`; the login email wins when both exist. Phone and addresses are on `alumnus`. Other channels are `social_link` rows.
+- The directory and contact modal read `v_directory`: only opted-in alumni, only visible `social_link` rows, and email/mobile only when `show_email`/`show_mobile` is on.
+- Editing a contact in Profile updates the same rows Records shows, and writes an audit row.
+
+## Notifications
+A notification is a `notification` row created in the same transaction as the change that causes it (`NotificationService`).
 
 | Action (who) | Notifies | Link |
 |---|---|---|
-| Alumnus registers (alumni) | admin; college users of that alumnus's college | Records |
+| Alumnus registers (account `pending`) | admin; dept users of that college | Records |
+| Admin approves a pending account | that alumnus (in-app only; an email needs an `/emails` template first, see Open questions) | Sign In |
 | Staff verifies, flags or archives a record | that alumnus | Profile |
-| Alumnus submits the survey | college users of their college (only on a milestone, such as coverage crossing the target) | Reports |
-| Coverage or response rate crosses a target (system, on survey submit) | admin; college users of that college | Reports |
-| Alumnus posts a job (alumni) | admin | Jobs queue |
+| Coverage or response rate crosses a target (on survey submit) | admin; dept users of that college | Reports |
+| Alumnus posts a job | admin | Jobs queue |
 | Admin approves or rejects the job | the poster | Jobs |
-| Job approved and active | alumni whose program or skills match (`JOB_SKILL`) | Jobs |
-| Event published, changed or cancelled (admin) | all alumni, or those registered for it | Events |
-| Alumnus RSVPs, or an event reaches a capacity milestone | admin | Events |
-| Staff sends an outreach email | the alumnus, as an in-app copy of the email | Profile / survey |
-| Batch coverage falls below target (scheduled job) | college users of that college | Outreach |
+| Job approved and active | alumni whose program or skills match | Jobs |
+| Event published, changed or cancelled | all alumni, or those registered | Events |
+| Alumnus RSVPs, or an event hits a capacity milestone | admin | Events |
+| Alumnus registers for an event | that alumnus (confirmation email with entry pass) | Events |
+| Batch coverage below target (scheduled job) | dept users of that college | Outreach |
 
 Rules:
-1. **Recipients are resolved on the server** from `USER_ACCOUNT.role` and `college_id`, never by the client. A college user only gets notifications about their own college. An alumnus only gets their own.
-2. **Numbers in the text are computed from the views at creation time** (`v_stats_grain`, `v_event_stats`), never typed. Milestone alerts are created once per crossing. Store the milestone in `dedupe_key` so it is not repeated.
-3. **Read state is a column** (`read_at`) on `NOTIFICATION`, so it follows the user across devices. `localStorage` is no longer used.
-4. **Delivery:** `GET /notifications?unread=` with polling every 30–60 seconds (server-sent events can come later), so the bell updates without a refresh. `POST /notifications/:id/read` and `POST /notifications/read-all` replace the local `markAll`.
-5. **Fan-out for broadcasts** writes one row per recipient, in the same transaction as the event change. A scheduled retention job deletes read notifications after 90 days.
-6. **Columns:** the ERD already has `type`, `message`, `link_url` and `is_read`. Add `title` (the UI shows a title and a body), `dedupe_key` (unique with `user_id`), and `read_at`, which replaces `is_read`. `link_url` stores the screen id used by `screenPath`. The `time` shown in the UI is rendered from `created_at`.
-7. **Tests:**
-   - Registering as an alumnus creates one notification for admin and for that college's users, and none for other colleges.
-   - Approving a job notifies only the poster.
-   - Reading in one session shows as read in another.
-   - A milestone does not repeat.
-   - A user cannot read another user's notification.
+1. Recipients are resolved on the server from `role` and `college_id`.
+2. Numbers in the text are computed from the views at creation time. Milestones are created once per crossing, via `dedupe_key`.
+3. Read state is `read_at`, so it follows the user across devices.
+4. Delivery is polling `GET /notifications` every 30–60 s; `POST /notifications/:id/read` and `/read-all` mark read.
+5. Broadcasts write one row per recipient. The `notification-retention` job deletes read notifications after 90 days.
 
 ## Outreach (College dashboard)
-Today the **Contact** button in the Outreach list only flips a local `contacted` flag in `pages/college/CollegeDashboard.jsx` and shows the toast "Outreach email sent to {name}." Nothing is sent. The list is hand-typed in `lib/collegeDash.js` (`outRows`), and "Last contacted" is a string literal.
-
-With the backend:
-- **List:** `GET /stats/unresponsive` (from `v_unresponsive`, scoped to the user's college and the selected course/batch). Rows are alumni who are seeking work, have no survey response, or have just registered. Each row carries `last_contacted_at` from the latest `OUTREACH_CONTACT.contacted_at`. The "N of M" counters come from the same query.
-- **Contact:** `POST /outreach {alumni_id, method, template}` does three things in one request:
-  1. It checks that the alumnus is in the caller's college scope.
-  2. It sends a real email through `services/mailer.js` (the same Google driver as password reset, `MAIL_DRIVER=console|google`) to the alumnus's `USER_ACCOUNT.email`.
-  3. It inserts an `OUTREACH_CONTACT` row (`contacted_by`, `alumni_id`, `method`, `template`, `contacted_at`, `outcome`) and an `AUDIT_LOG` row.
-
-  The toast shows only after the API confirms the send. A failed send shows an error and records nothing.
-- **Email content:** the survey follow-up message, with a link to the alumni sign-in or the survey. The email goes out from the server, so no address is exposed to the client, and staff never see an email address that the alumnus has hidden.
-- **Mark removal:** the current "Contact mark removed" toggle goes away. A contact attempt is a log entry and is not undone. Staff can set an outcome (`reached`, `no_response`, `bounced`) via `PATCH /outreach/:id`.
-- **Limits:** one outreach email per alumnus per 7 days (configurable in `APP_SETTING`), plus a rate limit per staff user, so the button cannot be used to spam.
-- **Other channels:** if the alumnus shows their mobile or a social link in the directory, the modal shows it so staff can make contact by hand. Logging that contact with `method = phone|facebook|...` still goes through `POST /outreach`, without an email.
-- **Tests:**
-  - A dept user cannot contact an alumnus from another college.
-  - A successful call writes exactly one `OUTREACH_CONTACT` and calls the mailer once with the right recipient (mock the Google client).
-  - A failed send writes nothing.
-  - The 7-day limit returns 429.
-  - `last_contacted_at` in the list matches the table.
+The portal sends nothing itself ("contact offline"). Staff reach the alumnus from their own Messenger or mail app, and the API records the attempt (client: `OfflineContactModal`, `lib/contact.js`).
+- **List:** `GET /stats/unresponsive` (from `v_unresponsive`, scoped and filtered by program/batch): alumni seeking work, with no survey response, or newly registered. Each row has `last_contacted_at`, `last_contacted_via`, `last_contact_id` (for removing the mark) and the channels on file (`facebook` → Messenger link, email). A dept user sees only alumni of their own college.
+- **Contact:** the client opens `m.me/<handle>` (the message is copied to paste) or `mailto:` with subject and body, then calls `POST /outreach {alumni_id, method, message}`. The endpoint checks scope and inserts `outreach_contact` + `audit_log`. The row shows "Today · Messenger".
+- **Remove mark:** `DELETE /outreach/:id` sets `removed_at` (the attempt stays in the audit log).
+- **Outcome:** `PATCH /outreach/:id` sets `reached`, `no_response` or `bounced`.
+- **Limits:** `throttle:outreach` (30 per minute per staff account) on `POST /outreach`. The client warns (it doesn't block) when the alumnus was contacted within the `app_setting` interval (default 7 days).
+- Server-sent outreach email is optional later work. See Open questions.
 
 ## Metric definitions (the accuracy contract)
-The population is every `ALUMNUS` with `archived_at IS NULL AND merged_into_id IS NULL`. A single view, `v_alumni_current`, joins each alumnus to:
-- their college, as `coalesce(PROGRAM.college_id, ALUMNUS.declared_college_id)`;
-- their latest **submitted** `SURVEY_RESPONSE` for the active `SURVEY_CYCLE`;
-- their one `EMPLOYMENT_RECORD` with `is_current`.
-
-Every metric below is an aggregate of that view.
+The population is `v_alumni_current`. Every metric is an aggregate of it.
 
 | Metric | Definition |
 |---|---|
 | Total alumni | `count(*)` of the population |
-| Traced / responded | has a `SURVEY_RESPONSE` with `status = 'submitted'` for the cycle |
+| Traced / responded | has a `submitted` response for the active cycle |
 | Coverage % | traced ÷ total |
 | Completeness % | average `completion_pct` of responses |
-| Employed | `ever_employed = Yes` and the current `employment_status` is in the "employed" group (see Open questions for part-time, business owner and further studies) |
+| Employed | current `employment_status` in (`employed`, `self_employed`) (see Open questions) |
 | Employment rate | employed ÷ traced |
-| Degree-aligned % | `course_relevance = 'related'` (from `job_related`, or `se_related` for the self-employed) ÷ employed |
-| Months to first job | distribution of `time_to_job_bucket` among the employed; any average uses the bucket midpoint stored in `months_to_first_job` |
+| Degree-aligned % | `course_relevance = 'related'` ÷ employed |
+| Months to first job | distribution of `time_to_job_bucket` among the employed; averages use `months_to_first_job` |
 | First-generation % | `first_gen_grad` ÷ traced |
 | Distinct employers | `count(distinct lower(trim(employer_name)))` among the employed |
-| Sector mix | grouped by `line_of_business` (industry), `org_type` and `occupation_class` |
-| Inclusion (IP / PWD) | `is_indigenous`, `pwd_type IS NOT NULL` among traced, with the employment rate per group; counts only |
+| Sector mix | grouped by `line_of_business`, `org_type`, `occupation_class` |
+| Inclusion (IP / PWD) | `is_indigenous`, `pwd_type IS NOT NULL` among traced, with the employment rate per group; counts only, never names |
 | Pending verification | `verification_status = 'pending'` |
-| Coverage/employment targets (60 / 80) | `APP_SETTING`, not code |
+| Targets (60 / 80) | `app_setting`, not code |
 
-Views: `v_alumni_current` (base), `v_stats_grain` (college × program × batch × counts; every aggregate sums this view, so the screens agree by construction), `v_records_counters`, `v_unresponsive`, `v_directory`, `v_alumni_dashboard`, `v_event_stats`, `v_job_stats`.
+Alumni with an unmapped program count once in their declared college under "Unmapped program" until staff map them.
 
-## ERD gaps to fix first (changes to the ERD and the schema)
-Found by comparing the UI with the ERD columns:
-1. **Add `APP_SETTING(key PK, value JSON, updated_by, updated_at)`** for the 80% / 60% targets, the outreach limit and other tunables that are hardcoded today.
-2. **Contact visibility:** add `ALUMNUS.directory_opt_in`, `show_email` and `show_mobile` (the UI's opt-in directory and `CONTACT_TYPES` need them). The ERD does not list `SOCIAL_LINK.platform` values. Define them as `facebook`, `messenger`, `twitter`, `instagram`, `linkedin` and `website`.
-3. **Directory profile fields:** industry and bio ("more") have no column. Add `ALUMNUS.industry` and `ALUMNUS.bio`.
-4. **Integrity constraints missing from the ERD:**
-   - `SURVEY_RESPONSE` unique on `(alumni_id, cycle_id)`.
-   - A partial unique index on `EMPLOYMENT_RECORD(alumni_id) WHERE is_current`. This prevents double-counting an employed person.
-   - `EVENT_REGISTRATION` unique on `(event_id, alumni_id)`.
-   - A check `completion_pct BETWEEN 0 AND 100`.
-   - The `EVENT_REGISTRATION` count must stay ≤ `EVENT.capacity`, enforced in the RSVP transaction with `SELECT ... FOR UPDATE` on the event.
-   - `PASSWORD_RESET.token_hash` unique.
-   - Only one `SURVEY_CYCLE` with `status = 'open'` (partial unique index).
-5. **Broadcast notifications:** `NOTIFICATION` is per user, so announcements fan out one row per recipient. Numbers in the text are generated from the views, never typed.
-6. **"Add to calendar"** needs no table (it is generated client-side from the event). This is noted so it isn't mistaken for a gap.
-7. **`ALUMNUS` has no `college_id`.** The college comes from `PROGRAM`, which is the single source and removes the `BY_SID`/`LEGACY` patches. The exception is a registrant who typed `course_other`: they have no `program_id`. For them, add `ALUMNUS.course_other` and `declared_college_id` (FK `COLLEGE`, nullable, only used while `program_id` is null). Staff map them to a `PROGRAM` from Records. Until then they count in their college's totals under "Unmapped program".
-8. **`PASSWORD_RESET` already supports links and codes:** the ERD has `code_hash`, `token_hash`, `sent_to`, `attempts`, `expires_at` and `used_at`. Add only `created_at` and the unique index from gap 4.
-9. **Registration fields partly missing.** The ERD already has `married_name`, `birth_date`, `sex`, `civil_status`, `is_indigenous` and `pwd_type`. Still missing:
-   - `indigenous_group`.
-   - The address split: the form has `present_address` and `permanent_address`, while the ERD has one `address`. Replace it with two columns.
-   - `course_other` / `declared_college_id` (gap 7).
-   - The `twitter` and `instagram` platforms (gap 2).
-10. **`NOTIFICATION`:** add `title`, `dedupe_key` and `read_at`, and drop `is_read` (see Notifications rule 6).
-11. **`OUTREACH_CONTACT`:** the ERD has `contacted_by`, `method`, `note` and `contacted_at`. Add `template` and `outcome` (`sent`, `reached`, `no_response`, `bounced`), and define the `method` values as `email`, `phone`, `facebook`, `messenger` and `linkedin`.
-12. **Survey answers:** the ERD columns cover only part of the survey. Add:
-    - `SURVEY_RESPONSE.answers jsonb`, which holds every answer keyed by its `surveySectionDefs()` id (the source of truth for re-rendering the form).
-    - `EMPLOYMENT_RECORD.job_status` (Regular or Permanent / Temporary / Casual / Contractual / Self-employed), `job_location` and `time_to_job_bucket`.
+## Email
+- **Now:** the Gmail API as `udm.alumni.mailer@gmail.com` via OAuth (Google Cloud project `udm-alumni-mail`, `gmail.send` scope only, refresh token in `GOOGLE_OAUTH_*`). `app/Mail/GmailTransport.php` is a Symfony Mailer transport registered with `Mail::extend('gmail', …)`: it takes the MIME message Laravel builds and posts it to `users.messages.send` with Laravel's HTTP client (an OAuth refresh-token exchange, or a service-account JWT signed with `openssl_sign`; no `google/apiclient` dependency). A new refresh token comes from `php artisan app:google-oauth-token`; `php artisan app:mail-test <address>` sends a test email.
+- **Later:** `no-reply@udmalumni.edu` through a Workspace service account with domain-wide delegation (`GOOGLE_SERVICE_ACCOUNT_JSON`, `GOOGLE_IMPERSONATE_USER`). The transport uses OAuth whenever `GOOGLE_OAUTH_REFRESH_TOKEN` is set, so switching means setting the two variables and removing the refresh token. Needs SPF, DKIM and DMARC on `udmalumni.edu`.
+- **Fallback:** `MAIL_MAILER=smtp`.
+- **Development:** `MAIL_MAILER=log` writes each email (link and code) to `storage/logs`. Production refuses `log` and `array` (see "Production config check").
+- Emails are sent synchronously inside the request (`QUEUE_CONNECTION=sync`, no queue worker), so a failed send can be reported to the caller.
+- **Templates come from `/emails` at the repo root, not Blade.** The client's Sample Email inbox (dev only) renders the same files, so what the demo shows is what Gmail receives: `password-reset` (UDM header, Reset Password button, 6-digit code, "expires in 30 minutes and can only be used once", plain link `{APP_URL}/reset-password?token=…`) and `event-registration` (sent by `POST /events/:id/rsvp`: event details, the RSVP answers, entry pass code `UDM-XXXX-NNNNN`, "View event in portal" → `{APP_URL}/alumni/events?event=…`). The Mailables (`PasswordResetMail`, `EventRegistrationMail`) call `EmailTemplate::render()`, which also gives the From name/address from `emails/senders.json`. The template folder is `config('mail.templates_path')` (env `EMAIL_TEMPLATES_PATH`): it defaults to `base_path('../emails')` for local dev; the Docker image copies `/emails` into `/app/resources/emails` and sets the variable to that path.
+- Other mail in the client (Records "send email" and "request proof") opens the staff member's mail app (`mailto:`, the body includes the portal sign-in link) and the record's history says "Email composed". The API records these (`record_review` + `audit_log`) without sending.
+- **Calendar:** Add to Calendar is a client-side Google Calendar link (`googleCalendarUrl()` in `data/events.js`, Asia/Manila, linking back to `{APP_URL}/alumni/events?event=…`). No API endpoint or `.ics` file.
 
-    `SURVEY_RESPONSE.reason_udm` and `reason_program` are not asked by the current survey. Keep them nullable. The typed columns used by stats are filled from `answers` on submit.
-13. **Sessions:** server-side sessions and "other active sessions have been signed out" need a table. Add `AUTH_SESSION(session_id PK, user_id FK, session_hash UK, user_agent, ip, created_at, last_seen_at, expires_at, revoked_at)`.
-14. **Update the ERD** (`docs/UDM Alumni ERD.dc.html`): entities 26 → 28 (`APP_SETTING`, `AUTH_SESSION`), relationships 35 → 37 (`AUTH_SESSION.user_id → USER_ACCOUNT`, `ALUMNUS.declared_college_id → COLLEGE`).
-
-## Password reset email (Google integration)
-**Status (2026-10-15):** done except the Google credentials. The simulated "Sample Email Inbox" (`ResetInbox.jsx`, `/forgot-password/inbox`) is deleted, the reset email is built in `backend/src/services/emailTemplates.js`, `/reset-password` handles the link, and `ForgotPassword` calls the real endpoints. Until the Workspace service account exists, `MAIL_DRIVER=console` prints each email (link and code) in the API console.
-
-**Sending**
-- `services/mailer.js` is shared by password reset and outreach emails. It sends through the Gmail API as the Google Workspace sender `no-reply@udmalumni.edu` (decided). It authenticates with a Workspace service account using domain-wide delegation, impersonating that address with the `gmail.send` scope only. Google SMTP with an app password is the fallback if delegation is not available.
-- The credentials (`GOOGLE_SERVICE_ACCOUNT_JSON`, `GOOGLE_IMPERSONATE_USER=no-reply@udmalumni.edu`, `MAIL_FROM`) are host environment variables, listed in `backend/.env.example` and never sent to the client.
-- Setup needed from the UDM Workspace admin:
-  - Create the `no-reply@udmalumni.edu` mailbox.
-  - Create a service account in Google Cloud and enable the Gmail API.
-  - Grant domain-wide delegation for the `https://www.googleapis.com/auth/gmail.send` scope.
-  - Set SPF, DKIM and DMARC for `udmalumni.edu`, so reset emails reach inboxes and not spam.
-
-  Workspace sending limits (about 2,000 messages per day per user) are far above the expected reset and outreach volume.
-- Until the credentials exist, `MAIL_DRIVER=console` logs each email (including the link and the code) to the server console. This mode is allowed only when `NODE_ENV !== 'production'`, and the API refuses to start in production with the console driver.
-- The email matches the mockup: the UDM header, "Reset your password" with a **Reset Password** button, the 6-digit code, the steps, "expires in 30 minutes and can only be used once", and the plain link `{APP_URL}/reset-password?token=...`.
-
-**Flow**
-1. `POST /auth/forgot-password {identifier}` looks the account up by email or Alumni ID. It always responds 200 with the same message (no account enumeration) and is rate-limited per IP and per account. If the account exists, it creates a `PASSWORD_RESET` row with `token_hash` (SHA-256 of a random 32-byte token), `code_hash` (6 digits), `sent_to`, `expires_at` (30 min) and `attempts`, then sends the email.
-2. **Link path:** `GET /auth/reset-password/verify?token=` returns `{valid, email}` or `{valid:false}`. A valid token shows "Reset link verified for ..." on the set-password step. An invalid, used or expired token shows the **Link expired** screen with "Request a New Reset Link".
-3. **Code path:** `POST /auth/reset-password/verify-code {identifier, code}`, with a maximum of 5 attempts. After that the reset is invalidated.
-4. `POST /auth/reset-password {token|resetSession, password}` validates the password rules (8+ characters, one number, one uppercase letter). It sets the hash, marks `used_at`, revokes every `AUTH_SESSION` ("other active sessions have been signed out") and writes `AUDIT_LOG`. A token works once.
-5. Requesting a new reset invalidates earlier unused ones for that account.
-
-**Frontend changes (done)**
-- Add the route `/reset-password`, which reads `?token=`, calls verify, and renders step 3 (valid) or step 5 (expired) of `ForgotPassword`. It must sit outside `PublicOnly` or work while signed out, and the existing SPA rewrite already serves it.
-- `ForgotPassword` calls the endpoints above instead of accepting any 6 digits. Remove the "Prototype: any 6 digits will work" hint.
-- Delete `ResetInbox.jsx`, its route `/forgot-password/inbox`, the "Demo / Open the sample inbox to view the reset email" row and `goInbox` in `ForgotPasswordView`/`ForgotPassword`, and the `linkUsed`/`sentAt` demo fields in `ResetFlowContext`.
-
-**Tests:**
-- A token is single-use.
-- An expired token is rejected.
-- A wrong code increments `attempts` and locks the reset at 5.
-- An unknown identifier gets the same response as a known one.
-- A password change revokes sessions.
-- The mailer is called with the right recipient (mock the Google client).
+### Password reset flow
+1. `POST /auth/forgot-password {identifier}`: looks up by email or Alumni ID, always returns the same 200 response, rate-limited. If the account exists, it creates a `password_reset` row (token and 6-digit code hashed, 30-minute expiry), invalidates earlier unused ones, sends the email and writes `audit_log` (with the address masked).
+2. `GET /auth/reset-password/verify?token=` → `{valid, email}` or `{valid:false}` (the client shows "Link expired").
+3. `POST /auth/reset-password/verify-code {identifier, code}`: at most 5 attempts, then the reset is invalidated.
+4. `POST /auth/reset-password {token|resetSession, password}`: checks the password rules, sets the hash, marks `used_at`, revokes every session and writes `audit_log`. Single use.
 
 ## API (all under `/api/v1`)
+A JSON REST API: resources are nouns, `GET` reads, `POST` creates or runs an action, `PATCH` changes part of a resource, `PUT` replaces, `DELETE` removes. Lists accept `page`, `per_page` (max 100), `sort` and filter query parameters and return `{ data, meta: { page, per_page, total } }` (`app/Support/Lists.php`). Routes are in `routes/api.php`, one controller per area in `app/Http/Controllers/Api/V1/`. Route parameters named `{id}` are numeric.
+
 | Area | Endpoints | Access |
 |---|---|---|
-| Health | `GET /health` (checks the DB with `select 1`) | public |
-| Auth | `POST /auth/register` (creates the user, alumnus, consent and password hash in one transaction), `/login`, `/logout`, `/forgot-password`, `/reset-password/verify`, `/reset-password/verify-code`, `/reset-password` | public |
-| Alumni records | `GET /alumni` (filters, search, pagination), `GET/PATCH /alumni/:id`, `POST /alumni`, `POST /alumni/:id/status` (verify/flag/archive), `POST /alumni/:id/merge`, `POST /alumni/:id/map-program`, `POST /alumni/import` | admin; dept scoped |
-| Me | `GET/PATCH /me`, `PUT /me/survey` (draft/submit), `POST/DELETE /me/employment`, `PATCH /me/privacy`, `POST /me/photo`, `/me/links`, `/me/credentials`, `/me/skills` | alumni |
+| Health | `GET /health` (`select 1`, logs the DB error on failure) | public |
+| Lookups | `GET /lookups` (colleges, programs, skills, enums) | public |
+| Auth | `GET /auth/session`, `POST /auth/register`, `/login`, `/logout`, `/forgot-password`, `GET /auth/reset-password/verify`, `POST /auth/reset-password/verify-code`, `POST /auth/reset-password`, `POST /auth/change-password` (signed in) | public |
+| Alumni records | `GET /alumni` (filters incl. `batch_from` / `batch_to`, search, pagination), `POST /alumni`, `GET/PATCH /alumni/:id`, `POST /alumni/:id/status` (verify/flag/archive/restore; verifying a registrant also approves their `pending` account, admin only), `POST /alumni/bulk-status`, `POST /alumni/:id/merge`, `POST /alumni/:id/map-program`, `GET /alumni/:id/proofs`, `POST /alumni/:id/request-proof`, `POST /alumni/:id/emails` (records "Email composed"; sends nothing), `POST /alumni/import`, `GET /alumni/activity` | admin; dept scoped |
+| Me | `GET/PATCH /me` (profile fields, `privacy` incl. link visibility, `skills`), `PUT /me/survey` (draft or submit), `POST/DELETE /me/photo`, `GET/POST /me/proofs` (employment proof upload) | alumni |
 | Directory | `GET /directory`, `GET /directory/:id` | signed-in, masked |
-| Stats | `GET /stats/summary`, `/stats/by-batch`, `/stats/by-program`, `/stats/sectors`, `/stats/unresponsive`, `/stats/counters` | admin all; dept own college |
-| Reports | `GET /reports/:type?college&course&year` (`type` ∈ `ched`, `employability`, `coverage`, `employer`, `inclusion`), `GET /reports/exports`, `POST /reports/exports` (logs `REPORT_EXPORT`) | admin, dept |
-| Outreach | `POST /outreach` (sends the email and logs it), `PATCH /outreach/:id` (outcome), list via `GET /stats/unresponsive` | dept (own college), admin |
-| Jobs | `GET/POST /jobs`, `PATCH/DELETE /jobs/:id`, `POST /jobs/:id/approve\|reject\|deactivate`, `/save`, `/apply` | per role |
-| Events | CRUD, `POST /events/:id/duplicate`, `POST/DELETE /events/:id/photo` (cover), `POST /events/:id/rsvp\|cancel`, `POST /events/:id/cancel-event`, `GET /events/:id/registrations`, announcements CRUD | per role |
-| Notifications | `GET /notifications`, `POST /notifications/:id/read`, `POST /notifications/read-all` | signed-in (own only) |
-| Users | `GET/POST/PATCH /users` (create dept/admin accounts, set `college_id`, disable accounts) | admin |
+| Stats | `GET /stats/summary`, `/stats/by-batch`, `/stats/by-program`, `/stats/sectors`, `/stats/inclusion`, `/stats/unresponsive`, `/stats/counters`, `/stats/benchmark` (university rates only, no counts) | admin all; dept own college |
+| Reports | `GET /reports/types`, `GET /reports/:type?college_id&program_id&batch_from&batch_to` (default window: the last five batches), `GET/POST /reports/exports` | admin, dept |
+| Outreach | `POST /outreach` (records a contact; sends nothing), `PATCH/DELETE /outreach/:id` | dept (own college), admin |
+| Jobs | `GET /jobs?view=board\|all\|mine\|queue`, `GET /jobs/:id` (signed-in); `POST /jobs`, `PATCH/DELETE /jobs/:id`, `POST /jobs/:id/photo` (alumni, admin); `POST/DELETE /jobs/:id/save`, `POST /jobs/:id/apply {via}`, `DELETE /jobs/:id/apply` (alumni); `POST /jobs/:id/approve\|reject\|deactivate\|activate\|restore` (admin) | per role |
+| Events | `GET /events`, `GET /events/:id` (signed-in; the email's deep link); `POST /events`, `PATCH/DELETE /events/:id`, `POST /events/:id/duplicate`, `POST/DELETE /events/:id/photo`, `POST /events/:id/cancel-event`, `GET /events/:id/registrations` (admin); `POST /events/:id/rsvp` (stores answers, issues the entry pass, sends the confirmation email), `POST /events/:id/cancel` (alumni) | per role |
+| Announcements | `GET /announcements`, `POST /announcements`, `PATCH/DELETE /announcements/:id` | read: signed-in; write: admin |
+| Notifications | `GET /notifications`, `POST /notifications/:id/read`, `POST /notifications/read-all` | own only |
+| Users | `GET /users`, `POST /users`, `PATCH /users/:id` | admin |
 | Settings / audit | `GET/PUT /settings`, `GET /audit` | admin |
-| Internal jobs | `POST /internal/jobs/:name` (needs the `CRON_SECRET` header) | scheduler only |
+| Tracer questions | `GET /tracer/questions` (the edits, applied by the client on top of `formDefs.js`), `PUT /tracer/questions/:field_id`, `POST /tracer/questions` (added question), `DELETE /tracer/questions/:field_id` (reset an edit or delete an added question), `DELETE /tracer/questions` (reset all), `PUT /tracer/sections/:section/order` | read: public (registration needs it); write: admin |
+| Files | `GET /files/public/…` (photos, logos, covers), `GET /files/private/…` (proofs; short-lived signed link from `GET /alumni/:id/proofs` or `/me/proofs`; on S3 the bucket's presigned URL) | public / signed |
+| Internal jobs | `POST /internal/jobs/:name` (`X-Cron-Secret` header; `coverage-alerts`, `notification-retention`, `token-cleanup`) | scheduler only |
 
-There is no admin screen for user management yet. `GET /users` works (admin only) but nothing in the UI calls it. Until a screen is built, staff accounts are created with `npm run create-user` (see Deployment). Alumni accounts are visible in Records (the `hasAccount` flag marks records with a login).
+**Error shape:** `{ error, code?, fields?, request_id }`, where `fields` maps form field ids to the first message (the client shows them inline). Every exception is rendered to this shape in `bootstrap/app.php` (`ApiException`, validation, 401, 403, 404, 429, other HTTP errors, 500). Status codes: 200/201/204 on success, 401 unauthenticated, 403 out of scope, 404, 409 conflict (e.g. a duplicate email), 413 JSON body over 1 MB, 422 validation, 429 rate limit. 401 on a non-auth route makes the client sign out. A pending account signing in gets 403 with `code: "account_pending"`, but only after the password matches. Unknown `/api/*` paths get a JSON 404, never the client page.
 
 ## Screen to data map
 | Screen | Source |
 |---|---|
-| Admin dashboard | `/stats/*`; recent registrations from `/alumni?sort=created_at` |
-| College dashboard / outreach | `/stats/*` (auto-scoped), `/stats/unresponsive`, `/outreach` |
-| Records | `/alumni` + `/stats/counters` |
-| Reports (5 types: ched, employability, coverage, employer, inclusion) | `/reports/:type` over `v_stats_grain`; history from `/reports/exports`; CSV/XLS/PDF are still built client-side |
-| Alumni dashboard / profile (the survey is inside the profile) | `/me` |
+| Admin dashboard | `/stats/*`, `/alumni/activity` |
+| College dashboard / outreach | `/stats/*` (auto-scoped), `/stats/benchmark`, `/stats/unresponsive`, `/outreach` |
+| Records | `/alumni`, `/stats/counters` |
+| Reports | `/reports/types`, `/reports/:type`, `/reports/exports`; CSV/XLS/PDF are built client-side |
+| Alumni dashboard / profile / survey | `/me`, `/me/survey` |
 | Search overlay, contact modal, alumni card | `/directory` |
-| Jobs / Events / Notifications | their endpoints; counts come from the tables |
-
-## Frontend integration (order)
-1. Add `client/src/lib/api.js` (fetch wrapper with `credentials: 'include'`, the `X-Requested-With` header, a redirect to sign-in on 401, error mapping). The base URL is `import.meta.env.VITE_API_URL || '/api/v1'`. In development, `vite.config.js` gets `server.proxy['/api'] → http://localhost:4000`, so dev runs on one origin just like production.
-2. Point `AuthContext` at `/auth/*` and `/me`.
-3. Point `RecordsContext` at `/alumni`, and delete the overlay state (`statusOv`, `added`, `deleted`, `log`).
-4. Replace the stat logic in `lib/analytics.js`, `lib/adminDash.js` and `lib/collegeDash.js` with fetchers. Keep only the chart shaping.
-5. Point `SearchContext` at `/directory`.
-6. Move `JobsContext`, `EventsContext` and notifications to the API.
-7. Remove the `localStorage` persistence (keys `udm.auth.v1`, `udm.records.v1`, `udm.jobs.v1`, `udm.events.v1`, `udm.notif.read.v1`), except the unsent survey draft `udm.tracer.draft.v1`. On first load after the swap, delete those old keys from the browser so stale demo state cannot leak into the UI.
-8. Delete the dead code: `TODAY_ISO`, all hardcoded totals, `data/demoAccounts.js` (keep `ROLE_HOME` elsewhere) and the demo inbox. `pages/alumni/AlumniSurvey.jsx` is already deleted.
+| Jobs / Events / Notifications | their endpoints |
 
 ## Folder layout (`backend/`)
 ```
 backend/
-├── src/
-│   ├── app.js            express app (helmet, json, cookies, routes, error handler)
-│   ├── server.js         listen on PORT
-│   ├── config/           env parsing with zod; fails fast on missing vars
-│   ├── db/               pg pool, transaction helper
-│   ├── middleware/       auth, scope, validate, rateLimit, error
-│   ├── routes/           one file per API area, plus health and internal jobs
-│   ├── services/         stats, alumni, survey, jobs, events, notifications, outreach, mailer, storage
-│   └── jobs/             coverageAlerts, notificationRetention, expiredTokenCleanup
-├── migrations/           node-pg-migrate (schema + views)
-├── seed/                 lookups.js (all envs), demo.js (demo/staging only)
-├── scripts/              create-user.js
-├── tests/
+├── app/
+│   ├── Auth/                     SessionGuard (udm_sid cookie → auth_session)
+│   ├── Console/Commands/         CreateUser, EnsureAdmin, GoogleOauthToken, MailTest, RunScheduledJob,
+│   │                             CoverageAlerts, NotificationRetention, TokenCleanup
+│   ├── Exceptions/               ApiException
+│   ├── Http/
+│   │   ├── Controllers/Api/V1/   one controller per API area
+│   │   ├── Controllers/SpaController.php   returns the built client's index.html for non-API paths
+│   │   ├── Middleware/           RequestId, RequireRole, RequireXhr, SecurityHeaders (+ 1 MB JSON limit)
+│   │   └── Requests/Auth/        Form Requests for register, login, forgot and new password
+│   ├── Mail/                     EmailTemplate, GmailTransport, PasswordResetMail, EventRegistrationMail
+│   ├── Models/                   Alumnus, UserAccount
+│   ├── Providers/                AppServiceProvider (guard, gmail transport, rate limiters, production config check)
+│   ├── Services/                 Account, Alumni, Audit, Event, Job, Notification, PasswordReset, Profile,
+│   │                             Registration, Reports, ScheduledJobs, Session, Settings, Stats, Storage,
+│   │                             Survey, TracerQuestion
+│   └── Support/                  Scope, SurveyMapping, Vocab, Mobile, Contact, EntryPass, Lists,
+│                                 ProfileProgress, RegistrationRules
+├── bootstrap/app.php             routing (api prefix api/v1, SPA fallback), middleware, exception rendering
+├── config/                       Laravel config; env read only here
+├── database/
+│   ├── migrations/               two migrations that run the SQL files
+│   ├── sql/                      001_schema.sql, 002_views.sql
+│   └── seeders/                  LookupSeeder (all envs, data/catalog.php), DemoSeeder (local only)
+├── docker/start.sh               container start: config:cache, migrate, LookupSeeder, ensure-admin, serve
+├── routes/api.php, routes/console.php
+├── tests/Feature, tests/Unit     Pest
 ├── .env.example
-└── package.json          scripts: dev, start, migrate, seed:lookups, seed:demo, create-user, test, lint
+└── composer.json                 scripts: test, lint (pint + larastan)
 ```
+The root `Dockerfile` and `.dockerignore` build the production image (see "Deployment").
+
+Common commands (from `backend/`): `php artisan serve --port=4000`, `php artisan migrate`, `php artisan db:seed --class=LookupSeeder`, `php artisan db:seed --class=DemoSeeder`, `php artisan app:create-user`, `composer test`, `composer lint`. To rebuild the local database: `php artisan migrate:fresh --drop-views --drop-types --seed`.
 
 ## Seed
-- **Lookups (every environment, including production):** `COLLEGE`, `PROGRAM`, `SKILL`, `APP_SETTING` defaults (targets 80 / 60, outreach every 7 days) and the first `SURVEY_CYCLE`. The script is idempotent (upsert by `code` or `key`).
-- **Demo data (local, preview and staging only; the script refuses to run when `NODE_ENV=production`):** one script replaces every conflicting demo dataset. Overlapping people (Angela Mae Dizon, Maria Santos, etc.) become single `ALUMNUS` rows with both `membership_id` and `student_no`. It generates a few hundred realistic alumni across all colleges and programs for the batches the reports use (2019–2026), with survey responses and current employment, so the stats are real and checkable. It also seeds the three demo accounts with password `demoPass123`.
-- **Production users** are never seeded with known passwords. The first admin is created with `npm run create-user -- --role admin --email ...`, which prints a one-time password that must be changed at first sign-in. College accounts are then created the same way (with `--college CCS`) or through `/users`.
+- **Lookups (every environment, every container start):** `college`, `program`, `skill`, `app_setting` defaults and the first `survey_cycle`, from `database/seeders/data/catalog.php`. Idempotent (upsert by `code` or `key`), and never overwrites a setting an admin changed.
+- **Demo data (local only):** a few hundred realistic alumni across all colleges and programs for batches 2019–2026, with survey responses and current employment so the stats are real and checkable, plus the demo accounts. `DemoSeeder` refuses `APP_ENV=production`, a database that requires TLS, a non-local host (unless `ALLOW_DEMO_SEED=true`), or a database that already has alumni.
+- **Production users** are never seeded:
+  - The built-in admin (`ADMIN_EMAIL`, default `admin@udmalumni.edu`) is created on container start by `php artisan app:ensure-admin` from `ADMIN_PASSWORD`, only if it is missing. It must change the password at first sign-in; an existing account is never touched. `ADMIN_PASSWORD` is removed from the host after that.
+  - Other staff accounts: `php artisan app:create-user --role=admin|dept [--college=CCS] --email=… --name=…` from a shell on the service, which prints a one-time password that must be changed at first sign-in. Or through `/users`.
+  - Alumni come only through registration (and admin approval) or Records import.
 
 ## Deployment
-
-### Target topology
 ```
-Browser ──► Vercel (udm-alumni-demo)
-              ├─ /api/*  ──rewrite──►  API (Node/Express, container or web service)
-              │                          ├─► PostgreSQL 16 (managed, TLS, daily backups)
-              │                          ├─► Object storage (S3-compatible: photos, proof documents)
-              │                          └─► Gmail API (no-reply@udmalumni.edu)
-              └─ /*      ──rewrite──►  client/dist/index.html
-Scheduler (host cron) ──► POST /api/v1/internal/jobs/:name
+Browser ──► Railway service (production domain, branch main, Singapore)
+              ├─ /api/v1/*  ──►  Laravel API (php artisan serve, 4 workers)
+              │                    ├─► Neon PostgreSQL 16 (Singapore; pooled URL at runtime, direct URL for migrations)
+              │                    ├─► uploads: Railway volume at /app/storage/app, or an S3-compatible bucket
+              │                    └─► Gmail API (udm.alumni.mailer@gmail.com), templates from /emails
+              └─ /*         ──►  built client (public/ assets as files; SpaController → index.html)
+Cron (daily) ──► POST /api/v1/internal/jobs/:name   (X-Cron-Secret header)
 ```
-- **Recommended hosts (to confirm, see Open questions):** the API on Render (Web Service, Node 20) and Postgres on Neon. Place both in the **Singapore** region, the closest to Manila, and keep them in the same region to avoid cross-region query latency. Railway (API + Postgres together) is the alternative. Object storage: Neon Object Storage (same project and region as the database), or any S3-compatible bucket such as Cloudflare R2.
-- **Same origin through Vercel.** The browser calls `/api/v1/...` on the Vercel domain, and Vercel proxies it to the API. As a result:
-  - auth cookies are first-party (`HttpOnly; Secure; SameSite=Lax; Path=/`), so they are not blocked as third-party cookies;
-  - production needs no CORS, and `CORS_ORIGIN` is only used if the API is ever called directly.
-- The root `vercel.json` gains an API rewrite **before** the SPA catch-all:
-  ```json
-  {
-    "installCommand": "npm --prefix client install",
-    "buildCommand": "npm run build",
-    "outputDirectory": "client/dist",
-    "rewrites": [
-      { "source": "/api/(.*)", "destination": "https://<api-host>/api/$1" },
-      { "source": "/(.*)", "destination": "/index.html" }
-    ]
-  }
-  ```
-  Delete `client/vercel.json` so there is only one config.
-- **Behind a proxy:** set `app.set('trust proxy', true)` so the client IP is read from `X-Forwarded-For` for rate limiting and `AUTH_SESSION.ip`. During staging, verify that the IP arriving through the Vercel rewrite is the real client IP. If it is not, rate-limit by identifier and account only.
+- **One image, one origin.** The root `Dockerfile` has three stages: build the client (`npm --prefix client ci && run build`, with `/emails` available), install Composer dependencies (`--no-dev`), then a `php:8.4-cli-bookworm` runtime with `pdo_pgsql`, `zip`, `intl`, `opcache` and `pcntl`. The built assets go into `public/`, `index.html` into `resources/spa/` (served by `SpaController` with `Cache-Control: no-cache`), and `/emails` into `resources/emails/`. Same origin means first-party cookies and no CORS. Build-time artisan runs with `APP_ENV=build`, so the production config check runs only at container start.
+- **Image defaults:** `APP_ENV=production`, `APP_DEBUG=false`, `LOG_CHANNEL=stderr`, `SESSION_SECURE_COOKIE=true`, `SPA_INDEX_PATH`, `EMAIL_TEMPLATES_PATH`, `PHP_CLI_SERVER_WORKERS=4`, `PORT=8080`.
+- **Container start** (`backend/docker/start.sh`): `config:cache` → `migrate --force --database=pgsql_direct` → `db:seed --class=LookupSeeder --force` → `app:ensure-admin` → `php artisan serve --host=0.0.0.0 --port=$PORT --no-reload`. Any failure stops the container, and Railway keeps the previous deploy running (traffic switches only when `/api/v1/health` passes).
+- **Proxy:** Railway's edge terminates TLS, so `bootstrap/app.php` trusts the proxy headers (`trustProxies(at: '*')`) for the client IP and `https` scheme.
+- **Web server:** `php artisan serve` with 4 workers is enough for the expected load. Move to nginx + PHP-FPM if traffic grows.
+- **Vercel is not used.** The old `udm-alumni-demo.vercel.app` prototype is taken down or redirected at go-live.
 
 ### Environments
-| Env | Frontend | API | DB | Data |
-|---|---|---|---|---|
-| Local | `npm run dev` (Vite, proxy `/api` → `:4000`) | `npm --prefix backend run dev` | local Postgres 16 (or Docker) | lookups + demo seed |
-| Staging / preview | Vercel preview deployment | separate API service | separate DB (or a Neon branch) | lookups + demo seed |
-| Production | Vercel production (`udm-alumni-demo`) | production API service | production DB | lookups + real accounts only |
+| Env | App | DB | Data |
+|---|---|---|---|
+| Local | `npm run dev` (Vite on 5173, proxies `/api`) + `php artisan serve --port=4000` in `backend/` | local Postgres 16 (port 5433) or a personal Neon dev branch | lookups + `DemoSeeder` |
+| Production | Railway service from `main` (the Docker image) | Neon project in Singapore, branch `main` (protected) | lookups + real accounts only |
 
-Vercel preview deployments must point their `/api` rewrite (or `VITE_API_URL`) at staging, never at production.
+There is no staging environment. To test a risky migration against real data, run it on a Neon branch of production from a local checkout (see "Release procedure").
 
-### Environment variables
-| Variable | Where | Notes |
-|---|---|---|
-| `NODE_ENV` | API | `production` in prod; turns off the console mailer and the demo seed |
-| `PORT` | API | set by the host |
-| `DATABASE_URL` | API | must use `sslmode=require` in prod; pooled URL for the app, direct URL for migrations (`DATABASE_URL_DIRECT`) if the host uses a pooler |
-| `SESSION_TTL_DAYS`, `SESSION_IDLE_HOURS` | API | e.g. `14`, `12` |
-| `APP_URL` | API | public frontend URL, used in email links (`https://<vercel-domain>`) |
-| `CORS_ORIGIN` | API | only if the API is called cross-origin; otherwise unset |
-| `MAIL_DRIVER`, `MAIL_FROM` | API | `google` in prod; `MAIL_FROM="UDM Alumni <no-reply@udmalumni.edu>"` |
-| `GOOGLE_SERVICE_ACCOUNT_JSON`, `GOOGLE_IMPERSONATE_USER` | API | secret; whole JSON in one variable |
-| `STORAGE_DRIVER`, `S3_ENDPOINT`, `S3_REGION`, `S3_BUCKET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` | API | `s3` in prod; host disks are ephemeral, so never use `local` there |
-| `CRON_SECRET` | API + scheduler | protects `/internal/jobs/*` |
-| `VITE_API_URL` | Vercel (build) | optional; default `/api/v1` (same origin) |
+### Environment variables (production)
+Set on Railway; secrets never go in the repo. `backend/.env.example` lists the local defaults.
 
-`config/` validates all of these at startup and exits with a clear error if any is missing. Secrets live only in the host's and Vercel's environment settings. `.gitignore` already excludes `.env*`. The current root `.env.local` holds a Vercel OIDC token and must not be committed or shared.
+| Variable | Notes |
+|---|---|
+| `APP_KEY` | `php artisan key:generate --show`; production only, never reused. Also signs private file URLs |
+| `APP_URL` | public `https://` URL of the service, no trailing slash; used in email links and the email logo |
+| `DB_CONNECTION`, `DB_URL`, `DB_URL_DIRECT` | `pgsql`; Neon pooled URL (`-pooler` host) for the app, direct URL for migrations; both `?sslmode=require` |
+| `MAIL_MAILER`, `MAIL_FROM_ADDRESS`, `MAIL_FROM_NAME` | `gmail`; the from address must be the sending mailbox |
+| `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET`, `GOOGLE_OAUTH_REFRESH_TOKEN` | Gmail OAuth (now) |
+| `GOOGLE_SERVICE_ACCOUNT_JSON`, `GOOGLE_IMPERSONATE_USER` | Workspace service account (later) |
+| `CRON_SECRET` | 24+ characters (`openssl rand -hex 32`); protects `/internal/jobs/*` |
+| `ADMIN_PASSWORD` | only until the built-in admin has signed in and changed it; `ADMIN_EMAIL` optional (default `admin@udmalumni.edu`) |
+| `FILESYSTEM_DISK`, `AWS_ENDPOINT`, `AWS_DEFAULT_REGION`, `AWS_BUCKET`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_USE_PATH_STYLE_ENDPOINT` | only when uploads use an S3 bucket instead of a Railway volume |
+| `SESSION_TTL_DAYS`, `SESSION_IDLE_HOURS`, `AUTH_RATE_LIMIT` | optional; defaults `14`, `12`, `10` |
+
+Not set on Railway: `APP_ENV`, `APP_DEBUG`, `LOG_CHANNEL`, `SESSION_SECURE_COOKIE`, `EMAIL_TEMPLATES_PATH` (the image sets them), `HASH_DRIVER` (defaults to `argon2id`) and `ALLOW_DEMO_SEED`.
+
+### Production config check
+`AppServiceProvider::productionConfigProblems()` runs at boot when `APP_ENV=production` and refuses to start, naming every problem at once, unless:
+- `APP_DEBUG` is false and `APP_KEY` is set;
+- `APP_URL` is `https://` and not localhost;
+- `DB_URL` is set, and `DB_URL_DIRECT` is set, differs from `DB_URL` and is not a `-pooler` host;
+- `MAIL_MAILER` is not `log`/`array`, and `gmail` has a refresh token with its client ID and secret, or a service account with an impersonated user;
+- `FILESYSTEM_DISK=s3` has its bucket, key, secret and region;
+- the session cookie is `Secure`;
+- `HASH_DRIVER` is `argon2id` and PHP supports it;
+- `CRON_SECRET` has 24+ characters.
+
+It cannot see whether a volume is mounted, so uploads are checked by hand after a redeploy. Tests: `tests/Unit/ProductionConfigTest.php`.
 
 ### Release procedure
-1. **Source control first.** The local repo exists (`f153dfa` baseline, `24574bd` phases 1–5); push it to a private GitHub repo. Render, Railway and Vercel's Git integration deploy from it, and migrations need history. Until then, Vercel keeps deploying with `npx vercel --prod --yes`.
-2. **Migrations run before the new code starts:** the host's pre-deploy command is `npm --prefix backend run migrate up`. Migrations must be backward-compatible with the running version (add columns before code uses them, drop them in a later release). Views are recreated in migrations.
-3. **Lookups:** `npm --prefix backend run seed:lookups` runs after migrations. It is idempotent.
-4. **Deploy order:** API first, then check `GET /api/v1/health`, then the frontend (Vercel). Rollback: redeploy the previous API build. A migration that has run is only reversed with a new forward migration.
-5. **Health check:** the host polls `/api/v1/health`, and an external uptime check alerts on failure.
+1. Before merging to `main`: `composer test` and `composer lint` in `backend/`, `npm --prefix client test`, `npm --prefix client run lint` and `npm run build`.
+2. Push or merge to `main`. Railway rebuilds the image; the new container migrates, re-seeds the lookups and starts. Traffic switches once `/api/v1/health` passes.
+3. Check the parts of the deploy-notes test checklist the release touches.
+4. Migrations stay backward-compatible with the running code (add columns before the code uses them, drop them in a later release). A migration that has run is never rolled back in production; fix it with a new forward migration.
+5. Before a risky migration: take a Neon branch of `main` as a snapshot, and run the migration first on a second branch from a local checkout (`DB_URL`/`DB_URL_DIRECT` pointed at it, `php artisan migrate --database=pgsql_direct`), then delete that branch.
+6. Rollback: redeploy the previous build on Railway (the database stays as it is).
 
 ### Scheduled jobs
-In-process timers are not used, because instances may sleep or run as several copies. The host's cron (Render Cron Job or Railway cron) calls `POST /api/v1/internal/jobs/:name` with `CRON_SECRET`:
-- `coverage-alerts`: daily; notifies college users when batch coverage is below target (deduped by `dedupe_key`).
-- `notification-retention`: daily; deletes read notifications older than 90 days.
-- `token-cleanup`: daily; deletes expired `PASSWORD_RESET` and `AUTH_SESSION` rows.
+No queue worker or long-running process. Each job is an Artisan command (`app:coverage-alerts`, `app:notification-retention`, `app:token-cleanup`), run in production by a daily Railway cron (or an external HTTP cron) calling `POST /api/v1/internal/jobs/:name` with `X-Cron-Secret`. `routes/console.php` holds the same schedule for hosts with a shell cron running `php artisan schedule:run`; production uses the HTTP cron only, never both. Suggested times (Asia/Manila): coverage alerts 08:00, notification retention 02:00, token cleanup 02:30.
 
 ### Files
-- Profile photos and job/event images go to a bucket path served through the API or a public-read prefix.
-- `PROOF_DOCUMENT` files sit in a **private** prefix and are only reachable through short-lived signed URLs issued after a scope check.
-- Limits: images up to 2 MB (jpeg/png/webp), proofs up to 5 MB (pdf/jpeg/png). The MIME type is checked by content, not by extension.
+- The container disk is wiped on every deploy, so uploads go to a **Railway volume mounted at `/app/storage/app`** or an **S3-compatible bucket** (`FILESYSTEM_DISK=s3`, private, with a key limited to that bucket).
+- Profile photos, job logos and event covers: public prefix, served through `GET /files/public/…`.
+- `proof_document` files: private prefix, reachable only through short-lived signed URLs (`signed:relative` route, or `Storage::temporaryUrl()` on S3) issued after a scope check.
+- Images up to 2 MB (jpeg/png/webp), proofs up to 5 MB (pdf/jpeg/png). MIME type checked by content (`fileinfo`). **To do:** the image doesn't set `upload_max_filesize` / `post_max_size` yet, so PHP's defaults (2 MB / 8 MB) reject proofs over 2 MB; add a `php.ini` with at least 6 MB / 8 MB to the `Dockerfile`.
+- Replacing or removing an image deletes the old file unless another row (e.g. a duplicated event) still uses it.
+- A Neon restore covers the database only; the volume or bucket needs its own backup.
+
+### Database (Neon)
+- Its own Neon project in Singapore, PostgreSQL 16; branch `main` is the production branch and is **protected**. A dedicated role and database for the app (not `neondb_owner` / `neondb`).
+- Pooled connection for the app (`DB_URL`, emulated prepares), direct connection for migrations (`DB_URL_DIRECT`).
+- Restore window (point-in-time history) of at least 7 days on a paid plan. A branch of `main` is taken before risky migrations or bulk imports; restores go first into a new branch and are checked there.
+- Production data is changed through the app (so the audit log records it) or through forward migrations, never by hand in the SQL editor.
 
 ### Security and data privacy
-- The data includes personal and sensitive personal information (birth date, civil status, PWD and Indigenous status), which falls under the Philippine Data Privacy Act of 2012 (RA 10173). Before go-live, confirm with UDM's Data Protection Officer the retention period, the consent text (already captured as `privacy_consent_at`) and the breach procedure.
-- TLS everywhere (Vercel, API host, `sslmode=require` to Postgres). Bucket and DB are not publicly listable.
-- `helmet`, a JSON body limit (e.g. 1 MB), `express-rate-limit` on `/auth/*` and `/outreach`, argon2id (or bcrypt cost 12) password hashing, generic login errors, and account lockout after repeated failures.
-- Exports and reports show aggregated counts only. The Inclusion report never lists names.
-- `AUDIT_LOG` records staff reads of sensitive fields in Records as well as every change.
-
-### Backups and monitoring
-- Daily automated DB backups with point-in-time recovery if the plan offers it. Test a restore into staging before go-live and then once per term.
-- Structured `pino` logs, with no passwords, tokens, codes or full emails in the logs. Request ids are returned in error responses.
-- Optional error tracking (e.g. Sentry) for the API and the client.
-
-### Cutover from the demo
-- Demo data currently lives in each visitor's `localStorage` and is not migrated. Real alumni register again, or staff import them with `POST /alumni/import` from the registrar's graduate list.
-- Ship the frontend swap (Frontend integration steps 1–8) in one release, after the production API is live, seeded with lookups and has its admin account.
-- Remove the demo accounts and the "Demo" hints from the production build. Keep them only in staging.
+- The data includes sensitive personal information (birth date, civil status, PWD and Indigenous status) under the Philippine Data Privacy Act (RA 10173). Before go-live, confirm the retention period, the consent text (`privacy_consent_at`) and the breach procedure with UDM's Data Protection Officer.
+- TLS everywhere (Railway's edge, `sslmode=require` to Neon, HSTS), no publicly listable bucket or database.
+- `SecurityHeaders`: a strict CSP on `/api/*` (`default-src 'none'`), a CSP for the client that allows only its own scripts and Google Fonts, `nosniff`, `Referrer-Policy`, `X-Frame-Options: DENY`, `Cross-Origin-Resource-Policy`, and the 1 MB limit on JSON bodies. Rate limits on `/auth/*` and `POST /outreach`. `APP_DEBUG=false`, so errors never show stack traces.
+- Exports show aggregated counts only. `audit_log` records every change, failed logins and staff reads of sensitive fields.
+- Passwords, tokens and codes are never logged (`dontFlash` in `bootstrap/app.php`), and emails in audit entries are masked (`AuditService::maskEmail`). Every error response carries a `request_id` (`RequestId` middleware) to find it in the logs.
+- The production image is built without `VITE_DEMO`, so no Demo Access panel or Sample Email inbox.
 
 ### Go-live checklist
-- [ ] Git repo created; `.env.local` and other secrets not committed
-- [ ] Hosts chosen; API and DB in the same region (Singapore)
-- [ ] Production env vars set; the API starts with `NODE_ENV=production`
-- [ ] Production database has only `migrate` + `seed:lookups` + `create-user` run against it. `seed:demo` (~650 fake alumni, public demo password) is local/staging only and refuses production-style database URLs
-- [ ] Migrations and `seed:lookups` applied; first admin created with `create-user`
-- [ ] `vercel.json` `/api` rewrite deployed; `client/vercel.json` removed
-- [ ] Google Workspace delegation granted; SPF/DKIM/DMARC pass; reset email received in a Gmail inbox
-- [ ] Bucket created with a private prefix for proofs
-- [ ] Scheduled jobs configured and run once by hand
-- [ ] Backup restore tested; uptime check on `/health`
-- [ ] Invariant tests pass against staging (see Verification)
+- [x] Repo on GitHub; no `.env` file tracked (`backend/.env.example` only)
+- [x] Single-host Docker image; production config check, built-in admin on start, Neon pooler fix
+- [x] Railway (app) and Neon (database) chosen, both in Singapore
+- [ ] Repo, Railway, Neon and Google Cloud moved to university-owned accounts; repo private
+- [ ] Production variables set (unique `APP_KEY`, pooled + direct `DB_URL*`, Gmail OAuth, `CRON_SECRET`, `ADMIN_PASSWORD`); first deploy healthy at `/api/v1/health`
+- [ ] Built-in admin signed in and changed the password; `ADMIN_PASSWORD` removed; staff accounts created with `app:create-user`
+- [ ] PHP upload limits raised in the image (see "Files")
+- [ ] Uploads on a Railway volume or S3 bucket, and they survive a redeploy
+- [ ] Reset and RSVP emails land in a Gmail inbox (not spam); OAuth consent screen is "In production"
+- [ ] Daily cron for the three jobs, each run once by hand
+- [ ] Neon restore window set and a restore into a branch tested; uptime check on `/health`; Railway and Neon usage alerts
+- [ ] Production test checklist (deploy-notes section 2) passed in a real browser
+- [ ] Old Vercel prototype taken down or redirected
 - [ ] DPO sign-off on privacy notice and retention
 
 ## Phases
-0. Git repo, hosting accounts, staging DB and API service with the health endpoint deployed (so every later phase is deployed to staging as it lands)
-1. Scaffold, ERD gap fixes, migrations, lookups, demo seed
-2. Auth + `AUTH_SESSION` + `scopeFor` + middleware + password reset (mailer with the console stub, then the Google driver) + `create-user`
-3. Alumni CRUD, review/audit, merge/archive, program mapping, directory + privacy, file storage
-4. Survey/employment, stat views, `/stats`, `/reports`
-5. Jobs, events, announcements, notifications, outreach, scheduled jobs
-6. Frontend swap and removal of the fake-stat code (on staging)
-7. Production: go-live checklist, cutover, and monitoring
+Each phase ends with `composer test` and `composer lint` passing; from phase 2 on, the matching client screens are checked against the local API.
 
-**Progress (2026-10-15):** phases 1–5 are committed (`24574bd`). Phase 6 is done in the working tree: every context reads the API (`lib/api.js`), `RecordsContext`, `demoAccounts.js`, `ResetInbox.jsx`, `TODAY_ISO`, the seed events and every hardcoded total are deleted, and only the survey draft stays in `localStorage`. The admin event panel lists real `EVENT_REGISTRATION` rows. Not committed yet. Registration, sign-in and the Records listing were checked against the local API on 2026-10-15. Next: an admin **Users** screen over `GET/POST/PATCH /users` (optional, see API), then phase 0/7: pushing to GitHub, deploying to staging, the `vercel.json` `/api` rewrite and deleting `client/vercel.json`. Known gap: removing an event's cover photo has no endpoint yet (upload/replace works).
+1. ✅ (2026-10-19) **Scaffold and schema:** API-only Laravel, `routes/api.php` with the `api/v1` prefix (no Sanctum), Postgres connection, error rendering, `/health`, the schema and views, `LookupSeeder`, `DemoSeeder`.
+2. ✅ (2026-10-19) **Auth:** register, login/logout, `/auth/session`, `SessionGuard`, lockout, rate limits, `Scope::for`, password reset, the Gmail transport with `/emails/password-reset`, `app:create-user`, `/lookups`.
+3. ✅ (2026-10-19) **Records and profile:** `/alumni`, status, bulk status, merge, program mapping, proofs, import, activity; `/me`, photos and the storage disk; `/directory` with privacy masking.
+4. ✅ (2026-10-19) **Survey and stats:** `PUT /me/survey` (answers → typed columns), the stat views, `/stats/*`, `/reports/*`.
+5. ✅ (2026-10-19) **Jobs, events, notifications, outreach:** jobs and approval queue, events, RSVPs (confirmation from `/emails/event-registration`), announcements, notification fan-out, outreach, scheduled jobs, account approval, `/tracer/questions`.
+6. ✅ (2026-10-19) **Reconnect the client:** `lib/api.js`, the Vite `/api` proxy and `src/test/mockApi.js`; every context on the API, keeping the prototype features.
+7. 🟡 **Production:** single-host Docker image, Railway + Neon, production config check, built-in admin, argon2id (done); the go-live checklist above, a real-browser pass per role, monitoring (open).
 
 ## Verification
-- **Invariant tests** (Supertest on a seeded DB):
+- **Invariant tests** (seeded DB, `tests/Feature/InvariantTest.php`):
   - the sum of `v_stats_grain` = the population count;
   - admin total = sum of college totals = Records counter = Reports total;
   - traced ≤ total, and employed ≤ traced;
   - no alumnus has two current employment records;
   - merged or archived alumni appear in no count;
-  - alumni with an unmapped program are still counted once in their declared college;
-  - the event registration count in the API = the rows in `EVENT_REGISTRATION`.
-- **Scope tests:** a dept user cannot read another college. An alumnus cannot PATCH another alumnus's row, sees only opted-in directory entries, and sees masked contacts.
-- **Manual end-to-end (staging):**
-  - Add one alumnus in Records. The Records counter, the admin KPI, the college dashboard and Reports each change by exactly 1.
+  - unmapped-program alumni are counted once in their declared college;
+  - an event's registration count = its `event_registration` rows.
+- **Scope tests:** a dept user cannot read or change another college's records; an alumnus cannot read or PATCH another alumnus, sees only opted-in directory entries, and sees masked contacts; a user cannot read another user's notifications.
+- **Auth tests:** a self-registered account cannot sign in until approved, and the pending message appears only after a correct password; after logout, a reset or disabling the account, the old cookie gets 401 at once; lockout and rate limit trigger; a reset token works once, expires, and the code locks after 5 attempts; an unknown identifier gets the same response as a known one; old hashes are upgraded to argon2id at sign-in.
+- **Feature tests:** registration notifies admin and that college only; approving a job notifies only the poster; milestones do not repeat; outreach writes one `outreach_contact` and sends no email, and a dept user cannot record outreach for another college; applying records `applied_via`; an RSVP sends one confirmation email (mocked mailer) with a stable entry pass; tracer question edits change which fields registration requires; the SPA fallback serves `index.html` but not for `/api/*`; `app:ensure-admin` creates the admin once and never changes it.
+- **Config tests:** `ProductionConfigTest` covers every rule in "Production config check".
+- **Manual end-to-end (local with demo data):**
+  - Add one alumnus in Records. The Records counter, admin KPI, college dashboard and Reports each change by exactly 1.
   - Submit a survey. Coverage and employment change by exactly that person.
   - Hide a contact. The directory and the modal update.
-  - Request a password reset. The email arrives in a real Gmail inbox, and the link works once.
-- **Deployment smoke test** after each production deploy: `/health` is OK, sign-in works, one dashboard loads, and the cookies are set as `Secure` and first-party.
-- Extend the existing Vitest/axe setup to cover the API client.
+- **Production test** (deploy-notes section 2, real browser, real test accounts archived afterwards): `/health` OK and deep links load; cookies `HttpOnly`, `Secure`, first-party; sign-in for each role; registration → pending → approval; the reset email arrives in a Gmail inbox, matches the template and its link works once; the RSVP confirmation shows the same entry pass as the portal; uploads survive a redeploy; cron jobs run.
 
 ## Open questions
-- **Employment groups.** The survey asks `ever_employed` and `job_status` (Regular or Permanent / Temporary / Casual / Contractual / Self-employed), but not full-time vs part-time, and it has no "Business Owner" answer. Proposals:
-  - employed = `ever_employed = Yes` (with `still_working` or any current job);
-  - self-employed = `job_status = Self-employed` or `org_type = Self-owned business`;
-  - further studies = `unemployed_reason` includes "Advance or further study", excluded from the employment-rate denominator or not (to decide);
-  - either add a full-time/part-time question to the survey, or drop Part-time and Business Owner from the labels.
-- **Months to first job.** Use the range midpoint (e.g. "1 to 6 months" → 3.5) for averages, or report only the bucket distribution (Form A uses buckets)?
-- **Survey cycles.** Is there one active `SURVEY_CYCLE` at a time (assumed), or do stats compare cycles?
-- **Hosting.** Confirm Render + Neon (Singapore) or Railway, and who owns the hosting accounts and billing (the university, not a personal account).
-- **Domain.** Will the production frontend stay on the `*.vercel.app` domain or move to a UDM domain (e.g. `alumni.udm.edu.ph`)? `APP_URL` and the email links depend on it.
-- **Google Workspace.** Resolved: reset emails are sent from `no-reply@udmalumni.edu` via a service account. Still needed: confirmation that the UDM Workspace admin will create the mailbox and grant domain-wide delegation.
+- **Employment groups.** The survey has no full-time/part-time question and no "Business Owner" answer, but the Records labels include them. Proposal: self-employed = `job_status = Self-employed` or `org_type = Self-owned business`; further studies = `unemployed_reason` includes "Advance or further study" (decide whether it is excluded from the employment-rate denominator); either add a full-time/part-time question or drop Part-time and Business Owner from the labels.
+- **Months to first job.** Averages from bucket midpoints, or only the bucket distribution (Form A uses buckets)?
+- **Survey cycles.** One open cycle at a time (assumed), or do stats compare cycles?
+- **Account ownership.** The GitHub repo, Railway, Neon and Google Cloud are on personal accounts. When do they move to the university, and who pays?
+- **Uploads.** Railway volume or S3-compatible bucket, and how the chosen one is backed up.
+- **Domain.** Stay on the Railway domain or move to a UDM domain (e.g. `alumni.udm.edu.ph`)? `APP_URL`, email links and the OAuth consent screen depend on it.
+- **Google Workspace.** When will the UDM Workspace admin create `no-reply@udmalumni.edu` and grant domain-wide delegation?
 - **Initial data.** Will the registrar provide a graduate list for import (format and fields), or do all alumni self-register?
+- **Server-sent outreach.** The portal hands contact off to staff's own Messenger or mail app. Should the API also send outreach, proof-request and custom staff emails from the system mailbox? That would need `/emails` templates, the send-interval limit and a 429 response.
+- **Account-approval email.** Approving a pending account notifies in-app only. Sending an email too needs an `/emails/account-approved` template (`.html` + `.txt` + a `senders.json` entry) designed like the other two.
