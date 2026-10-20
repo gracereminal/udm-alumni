@@ -197,6 +197,7 @@ export default function ReportsView(v) {
                 <select
                   value={repCollegeVal}
                   onChange={repOnCollege}
+                  aria-label="Filter by college"
                   style={selectStyle('12.5px', '280px')}
                   {...selectFx}
                 >
@@ -209,6 +210,7 @@ export default function ReportsView(v) {
                 <select
                   value={repCourseVal}
                   onChange={repOnCourse}
+                  aria-label="Filter by program"
                   disabled={repCourseDisabled}
                   style={selectStyle('12.5px', '280px', { opacity: repCourseOpacity })}
                   {...selectFx}

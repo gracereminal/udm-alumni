@@ -13,3 +13,4 @@ backend/storage/framework/cache/*
 backend/storage/framework/views/*
 backend/storage/app/private/*
 backend/bootstrap/cache/*.php
+backend/account.md
