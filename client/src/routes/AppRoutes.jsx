@@ -7,13 +7,14 @@ import SignIn from '../pages/auth/SignIn';
 import ForgotPassword, { ResetPasswordLink } from '../pages/auth/ForgotPassword';
 import PrivacyConsent from '../pages/auth/PrivacyConsent';
 
-// Registration and signed-in pages load on demand (AppShell's Suspense) so sign-in ships a small first bundle.
+// Registration and signed-in pages load on demand (the Suspense in App.jsx) so sign-in ships a small first bundle.
 const SampleInbox = lazy(() => import('../pages/auth/SampleInbox'));
 const AlumniRegistration = lazy(() => import('../pages/auth/AlumniRegistration'));
 const RegistrationSuccess = lazy(() => import('../pages/auth/RegistrationSuccess'));
 const AlumniDashboard = lazy(() => import('../pages/alumni/AlumniDashboard'));
 const AlumniProfile = lazy(() => import('../pages/alumni/AlumniProfile'));
 const AlumniProfileEdit = lazy(() => import('../pages/alumni/AlumniProfileEdit'));
+const AlumniPrivacy = lazy(() => import('../pages/alumni/AlumniPrivacy'));
 const AlumniJobs = lazy(() => import('../pages/alumni/AlumniJobs'));
 const AlumniEvents = lazy(() => import('../pages/alumni/AlumniEvents'));
 const AdminDashboard = lazy(() => import('../pages/admin/AdminDashboard'));
@@ -53,6 +54,7 @@ export default function AppRoutes() {
         <Route path="dashboard" element={<AlumniDashboard />} />
         <Route path="profile" element={<AlumniProfile />} />
         <Route path="profile/edit" element={<AlumniProfileEdit />} />
+        <Route path="privacy" element={<AlumniPrivacy />} />
         <Route path="survey" element={<Navigate to="/alumni/profile/edit" replace />} />
         <Route path="jobs" element={<AlumniJobs />} />
         <Route path="events" element={<AlumniEvents />} />

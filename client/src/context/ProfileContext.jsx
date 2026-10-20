@@ -67,20 +67,29 @@ export function ProfileProvider({ children }) {
 
   /**
    * Edit Profile save: profile fields -> PATCH /me; survey answers -> PUT /me/survey (submitted once
-   * "Have you ever been employed?" is answered, so the alumnus counts as traced). Throws ApiError with field errors.
+   * "Have you ever been employed?" is answered, so the alumnus counts as traced). `extra` adds `privacy` / `skills` to
+   * the same PATCH (applied after the fields, so a link added in this save can be made visible). Throws ApiError with
+   * field errors.
    */
-  const saveProfile = useCallback(async (answers) => {
+  const saveProfile = useCallback(async (answers, extra = {}) => {
     // Built per save, so the Admin's added questions are included. Their answers are stored with the survey.
     const reg = regStepDefs(answers, { raw: true }).flatMap((s) => s.questions);
     const profileIds = reg.filter((q) => !q.custom).map((q) => q.id);
     const surveyIds = [...ids(surveySectionDefs({ raw: true })), ...reg.filter((q) => q.custom).map((q) => q.id)];
     const survey = pick(answers, surveyIds.filter((k) => !profileIds.includes(k)));
-    await patch('/me', pick(answers, profileIds));
+    await patch('/me', { ...pick(answers, profileIds), ...extra });
     if (Object.values(survey).some(filled) || me?.survey?.submitted) {
       await put('/me/survey', { answers: survey, submit: !!survey.ever_employed });
     }
     return reload();
   }, [me, reload]);
+
+  /** Privacy & My Data: directory and contact visibility, { directoryOptIn, showEmail, showMobile, links: { platform: bool } }. */
+  const savePrivacy = useCallback(async (privacy) => {
+    const data = await patch('/me', { privacy });
+    setMe(data);
+    return data;
+  }, []);
 
   const uploadAvatar = useCallback(async (file) => { await upload('/me/photo', 'photo', file); return reload(); }, [reload]);
   const removeAvatar = useCallback(async () => { await del('/me/photo'); return reload(); }, [reload]);
@@ -105,8 +114,8 @@ export function ProfileProvider({ children }) {
     dashboard: me?.dashboard || null,
     savedAt: me?.record?.updatedAt || null,
     avatar: me?.record?.photoUrl || null,
-    setA, setMany, toggleA, resetRegistration, completeRegistration, saveProfile, uploadAvatar, removeAvatar, reload,
-  }), [me, a, alumniName, progress, surveyComplete, lastRegistration, setA, setMany, toggleA, resetRegistration, completeRegistration, saveProfile, uploadAvatar, removeAvatar, reload]);
+    setA, setMany, toggleA, resetRegistration, completeRegistration, saveProfile, savePrivacy, uploadAvatar, removeAvatar, reload,
+  }), [me, a, alumniName, progress, surveyComplete, lastRegistration, setA, setMany, toggleA, resetRegistration, completeRegistration, saveProfile, savePrivacy, uploadAvatar, removeAvatar, reload]);
   return <ProfileContext.Provider value={value}>{children}</ProfileContext.Provider>;
 }
 

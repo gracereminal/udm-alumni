@@ -10,6 +10,7 @@ export const ICONS = {
   calendar: 'M4.5 6h15a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1h-15a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1zM8 3.5V6M16 3.5V6M3.5 10.5h17',
   outreach: 'M4 5h16v11H8l-4 4zM8 9.5h8M8 12.5h5',
   pencil: 'M16.5 3.8a2.1 2.1 0 0 1 3 3L7.5 18.8 3.5 20l1.2-4zM14.5 5.8l3 3',
+  shield: 'M12 3l7.5 3v5.5c0 4.6-3.2 8.3-7.5 9.5-4.3-1.2-7.5-4.9-7.5-9.5V6zM9 12l2.2 2.2L15.5 10',
 };
 
 export const NAV = {
@@ -18,6 +19,7 @@ export const NAV = {
     { id: 'profile', label: 'Profile', to: '/alumni/profile', icon: ICONS.user },
     { id: 'jobs', label: 'Jobs', to: '/alumni/jobs', icon: ICONS.briefcase },
     { id: 'events', label: 'Events', to: '/alumni/events', icon: ICONS.calendar },
+    { id: 'privacy', label: 'Privacy & My Data', to: '/alumni/privacy', icon: ICONS.shield },
   ],
   dept: [
     { id: 'dashboard', label: 'Dashboard', to: '/college/dashboard', icon: ICONS.dashboard },

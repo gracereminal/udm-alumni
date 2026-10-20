@@ -70,6 +70,7 @@ Route::prefix('me')->middleware('role:alumni')->group(function () {
     Route::get('/', [MeController::class, 'show']);
     Route::patch('/', [MeController::class, 'update']);
     Route::put('/survey', [MeController::class, 'survey']);
+    Route::get('/export', [MeController::class, 'export'])->middleware('throttle:10,1');
     Route::post('/photo', [MeController::class, 'uploadPhoto']);
     Route::delete('/photo', [MeController::class, 'deletePhoto']);
     Route::get('/proofs', [MeController::class, 'proofs']);
