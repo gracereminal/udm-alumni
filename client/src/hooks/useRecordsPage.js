@@ -6,6 +6,7 @@ import { CATALOG, programById } from '../data/colleges';
 import { fmtShortDate, num } from '../lib/format';
 import { get, page as getPage, patch, post } from '../lib/api';
 import { mailtoUrl, openExternal } from '../lib/contact';
+import { capitalizeInput } from '../lib/fields';
 
 const portalUrl = () => `${window.location.origin}/signin`;
 
@@ -360,7 +361,7 @@ export default function useRecordsPage(role) {
       recFormSid: editing ? form.sid : 'Assigned on save',
       recFormSidNote: editing ? 'Can’t be changed' : 'Auto-assigned',
       recFormClose: () => setForm(null), recFormStop: (e) => e.stopPropagation(), recFormSubmit: save,
-      recFName: f.name || '', recFSetName: (e) => setF({ name: e.target.value }), recFNameBorder: border('Name'),
+      recFName: f.name || '', recFSetName: (e) => setF({ name: capitalizeInput(e) }), recFNameBorder: border('Name'),
       recFEmail: f.email || '', recFSetEmail: (e) => { if (!f.hasAccount) setF({ email: e.target.value }); }, recFEmailBorder: border('Email'),
       recFCompany: needsCo ? f.company || '' : '', recFSetCompany: (e) => setF({ company: e.target.value }), recFCompanyBorder: border('Company'),
       recFHasErrName: formTried && !!errs.Name, recFErrName: errs.Name,
