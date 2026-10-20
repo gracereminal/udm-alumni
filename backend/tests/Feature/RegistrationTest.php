@@ -134,3 +134,19 @@ it('follows the Admin tracer-question edits for required and hidden fields', fun
 
     $this->postJson('/api/v1/auth/register', registration(['facebook' => '', 'middle_name' => 'Reyes']))->assertCreated();
 });
+
+it('activates the account right away when registration does not require approval (production)', function () {
+    config(['app.registration_requires_approval' => false]);
+
+    $this->postJson('/api/v1/auth/register', registration())
+        ->assertCreated()
+        ->assertJson(['ok' => true, 'status' => 'active', 'message' => 'Registration complete. You can now sign in.'])
+        ->assertCookieMissing('udm_sid');
+
+    expect(DB::table('user_account')->where('email', 'lea.garcia@example.com')->value('account_status'))->toBe('active')
+        ->and(DB::table('alumnus')->where('membership_id', 'AM-2025-N0001')->value('verification_status'))->toBe('pending')
+        ->and(DB::table('notification')->where('type', 'registration')->orderByDesc('notification_id')->value('message'))->toBe('Lea Garcia (BSIT 2025) registered.');
+
+    $this->postJson('/api/v1/auth/login', ['identifier' => 'lea.garcia@example.com', 'password' => 'Register123'])
+        ->assertOk()->assertJsonPath('user.role', 'alumni');
+});
