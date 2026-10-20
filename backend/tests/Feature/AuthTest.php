@@ -192,3 +192,13 @@ it('changes the password, keeps this session and signs out the others', function
 it('requires a session to change the password', function () {
     withSession('')->postJson('/api/v1/auth/change-password', ['current' => 'demoPass123', 'password' => 'NewPass123'])->assertUnauthorized();
 });
+
+it('stores argon2id hashes and upgrades a bcrypt hash at sign-in', function () {
+    $email = 'admin@udmalumni.edu';
+    expect(DB::table('user_account')->where('email', $email)->value('password_hash'))->toStartWith('$argon2id$');
+
+    DB::table('user_account')->where('email', $email)->update(['password_hash' => password_hash('demoPass123', PASSWORD_BCRYPT)]);
+    $this->postJson('/api/v1/auth/login', ['identifier' => $email, 'password' => 'demoPass123'])->assertOk();
+
+    expect(DB::table('user_account')->where('email', $email)->value('password_hash'))->toStartWith('$argon2id$');
+});

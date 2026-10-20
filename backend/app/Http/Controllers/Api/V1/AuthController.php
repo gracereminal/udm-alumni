@@ -84,8 +84,12 @@ class AuthController extends Controller
             throw new ApiException(403, self::PENDING, 'account_pending', ['identifier' => self::PENDING]);
         }
 
-        $token = DB::transaction(function () use ($user, $request) {
+        $token = DB::transaction(function () use ($user, $request, $password) {
             DB::update('UPDATE user_account SET failed_login_count = 0, locked_until = NULL, last_login_at = now() WHERE user_id = ?', [$user->user_id]);
+            // Upgrade a hash made with another algorithm or older argon2id settings (config/hashing.php).
+            if (Hash::needsRehash($user->password_hash)) {
+                DB::update('UPDATE user_account SET password_hash = ? WHERE user_id = ?', [Hash::make($password), $user->user_id]);
+            }
             $this->audit->log('login', 'user', $user->user_id, $user->user_id);
 
             return $this->sessions->create($user->user_id, $request);
