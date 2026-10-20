@@ -11,8 +11,8 @@ use Illuminate\Support\Facades\Hash;
 
 /**
  * Self-registration: user_account + alumnus + social links + record_review + audit_log + notifications, in one
- * transaction. The account starts active, or pending until an admin approves it when app.registration_requires_approval
- * is on. No session is created here either way: the alumnus signs in afterwards.
+ * transaction. The account is active right away (staff still verify the record), but no session is created here: the
+ * alumnus signs in afterwards.
  */
 class RegistrationService
 {
@@ -25,7 +25,7 @@ class RegistrationService
 
     /**
      * @param  array<string, mixed>  $a  a body that passed RegisterRequest
-     * @return array{userId: int, alumniId: int, membershipId: string, status: 'pending'|'active'}
+     * @return array{userId: int, alumniId: int, membershipId: string}
      */
     public function register(array $a): array
     {
@@ -42,12 +42,11 @@ class RegistrationService
         $name = trim($t('first_name').' '.$t('last_name'));
         $year = (int) $t('year_graduated');
         $hash = Hash::make((string) $a['reg_pw']);
-        $status = config('app.registration_requires_approval') ? 'pending' : 'active';
 
         try {
-            return DB::transaction(function () use ($a, $t, $email, $program, $name, $year, $hash, $status) {
+            return DB::transaction(function () use ($a, $t, $email, $program, $name, $year, $hash) {
                 $userId = (int) DB::table('user_account')->insertGetId([
-                    'email' => $email, 'password_hash' => $hash, 'role' => 'alumni', 'display_name' => $name, 'account_status' => $status,
+                    'email' => $email, 'password_hash' => $hash, 'role' => 'alumni', 'display_name' => $name, 'account_status' => 'active',
                 ], 'user_id');
 
                 $membershipId = $this->nextPendingMembershipId($year);
@@ -90,10 +89,10 @@ class RegistrationService
                 $who = sprintf('%s (%s %d)', $name, $program['abbr'] ?? 'Unmapped program', $year);
                 $this->notifications->notify(
                     [...$this->notifications->adminIds(), ...$this->notifications->deptIds($program['collegeId'])],
-                    'registration', 'New alumni registration', $status === 'pending' ? "{$who} registered and is awaiting approval." : "{$who} registered.", 'records',
+                    'registration', 'New alumni registration', "{$who} registered.", 'records',
                 );
 
-                return ['userId' => $userId, 'alumniId' => $alumniId, 'membershipId' => $membershipId, 'status' => $status];
+                return ['userId' => $userId, 'alumniId' => $alumniId, 'membershipId' => $membershipId];
             });
         } catch (UniqueConstraintViolationException) {
             throw $duplicate(); // a concurrent registration with the same email won the race
