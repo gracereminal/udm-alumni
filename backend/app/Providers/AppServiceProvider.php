@@ -116,6 +116,11 @@ class AppServiceProvider extends ServiceProvider
         if (! config('auth.session.secure')) {
             $problems[] = 'the session cookie must be Secure (SESSION_SECURE_COOKIE)';
         }
+        if (config('hashing.driver') !== 'argon2id') {
+            $problems[] = 'HASH_DRIVER must be argon2id';
+        } elseif (! defined('PASSWORD_ARGON2ID')) {
+            $problems[] = 'this PHP build lacks argon2id (PASSWORD_ARGON2ID)';
+        }
         if (strlen((string) config('app.cron_secret')) < 24) {
             $problems[] = 'CRON_SECRET must be at least 24 characters';
         }

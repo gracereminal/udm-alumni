@@ -16,6 +16,7 @@ function productionConfig(array $overrides = []): void
         'filesystems.default' => 'local',
         'auth.session.secure' => true,
         'app.cron_secret' => str_repeat('c', 32),
+        'hashing.driver' => 'argon2id',
     ], $overrides));
 }
 
@@ -43,4 +44,5 @@ it('names what is wrong with a production config', function (array $overrides, s
     's3 without bucket' => [['filesystems.default' => 's3', 'filesystems.disks.s3' => ['driver' => 's3', 'key' => 'k', 'secret' => 's', 'region' => 'auto']], 'AWS_BUCKET'],
     'insecure cookie' => [['auth.session.secure' => false], 'Secure'],
     'short CRON_SECRET' => [['app.cron_secret' => 'short'], 'CRON_SECRET'],
+    'bcrypt hashing' => [['hashing.driver' => 'bcrypt'], 'HASH_DRIVER'],
 ]);
