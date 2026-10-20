@@ -1,11 +1,11 @@
 import { lazy } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
-import { PublicOnly, RequireConsent, RequireRegistered, RequireRole } from './guards';
+import { PublicOnly, RequireConsent, RequirePasswordChange, RequireRegistered, RequireRole, homeFor } from './guards';
 import { useAuth } from '../context/AuthContext';
-import { ROLE_HOME } from '../data/navigation';
 import SignIn from '../pages/auth/SignIn';
 import ForgotPassword, { ResetPasswordLink } from '../pages/auth/ForgotPassword';
 import PrivacyConsent from '../pages/auth/PrivacyConsent';
+import ChangePassword from '../pages/auth/ChangePassword';
 
 // Registration and signed-in pages load on demand (the Suspense in App.jsx) so sign-in ships a small first bundle.
 const SampleInbox = lazy(() => import('../pages/auth/SampleInbox'));
@@ -28,7 +28,7 @@ const CollegeDashboard = lazy(() => import('../pages/college/CollegeDashboard'))
 function Home() {
   const { user, ready } = useAuth();
   if (!ready) return null;
-  return <Navigate to={user ? ROLE_HOME[user.role] : '/signin'} replace />;
+  return <Navigate to={user ? homeFor(user) : '/signin'} replace />;
 }
 
 export default function AppRoutes() {
@@ -38,6 +38,9 @@ export default function AppRoutes() {
       <Route element={<PublicOnly />}>
         <Route path="/signin" element={<SignIn />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
+      </Route>
+      <Route element={<RequirePasswordChange />}>
+        <Route path="/change-password" element={<ChangePassword />} />
       </Route>
       {/* The emailed reset link works whether or not someone is signed in. */}
       <Route path="/reset-password" element={<ResetPasswordLink />} />

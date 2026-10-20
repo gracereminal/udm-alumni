@@ -17,7 +17,11 @@ it('creates a college account with a one-time password that must be changed', fu
 
     $token = $this->postJson('/api/v1/auth/login', ['identifier' => 'cet.staff@udm.edu.ph', 'password' => $m[1]])
         ->assertOk()->assertJsonPath('user.mustChangePassword', true)->getCookie('udm_sid', false)->getValue();
+    // Until the one-time password is replaced, only /auth/* works.
+    withSession($token)->getJson('/api/v1/notifications')->assertForbidden()->assertJsonPath('code', 'password_change_required');
+    withSession($token)->getJson('/api/v1/auth/session')->assertOk();
     withSession($token)->postJson('/api/v1/auth/change-password', ['current' => $m[1], 'password' => 'MyOwnPass123'])->assertOk();
+    withSession($token)->getJson('/api/v1/notifications')->assertOk();
     withSession($token)->getJson('/api/v1/auth/session')->assertJsonPath('user.mustChangePassword', false);
 });
 

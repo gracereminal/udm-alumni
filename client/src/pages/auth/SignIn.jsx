@@ -4,7 +4,7 @@ import SignInView from '../../views/SignInView';
 import Modal, { modalBtn } from '../../components/Modal';
 import { useAuth } from '../../context/AuthContext';
 import { DEMO_ACCOUNTS, DEMO_PASSWORD, SHOW_DEMO } from '../../data/demoAccounts';
-import { ROLE_HOME } from '../../data/navigation';
+import { homeFor } from '../../routes/guards';
 
 const DEMOS = [
   ['alumni', 'Alumni'],
@@ -48,7 +48,7 @@ export default function SignIn() {
     const res = await signIn(identifier, password);
     setBusy(false);
     if (!res.ok) { setErr({ error: res.error, field: res.field }); return; }
-    navigate(ROLE_HOME[res.user.role], { replace: true });
+    navigate(homeFor(res.user), { replace: true });
   };
 
   const v = {
