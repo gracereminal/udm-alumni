@@ -15,11 +15,18 @@ import { initials } from '../../lib/format';
 import { validateProfile } from '../../lib/validation';
 import { answered, countedQs, profileGroups, profileProgress } from '../../lib/profileProgress';
 import { useQuestionConfig } from '../../lib/questionStore';
+import { filledPlatforms, privacyDraft, samePrivacy } from '../../lib/privacy';
+import PrivacyToggles from '../../components/alumni/PrivacyToggles';
 
 const BG = 'radial-gradient(900px 520px at 0% 0%,#E3F1EA 0%,rgba(227,241,234,0) 70%),radial-gradient(800px 500px at 100% 100%,#EAF2EE 0%,rgba(234,242,238,0) 70%),#F3F6F4';
 const pill = { whiteSpace: 'nowrap', fontSize: 11.5, fontWeight: 600, padding: '5px 11px', borderRadius: 999, background: 'rgba(255,255,255,.12)', color: '#fff' };
 const pillBtn = { whiteSpace: 'nowrap', fontFamily: 'inherit', fontSize: 11.5, fontWeight: 700, padding: '5px 11px', borderRadius: 999, cursor: 'pointer' };
 const heroBtn = { whiteSpace: 'nowrap', fontFamily: 'inherit', fontWeight: 700, fontSize: 13, padding: '11px 18px', borderRadius: 12, cursor: 'pointer' };
+const sideHead = { margin: 0, fontSize: 10.5, fontWeight: 700, letterSpacing: 0.6, textTransform: 'uppercase', color: '#94A3B8' };
+const raBadge = { fontSize: 10.5, fontWeight: 700, color: '#0F3D2E', background: '#E6F0EB', padding: '2px 8px', borderRadius: 999 };
+
+const skillList = (text) => [...new Set(String(text).split(',').map((s) => s.trim()).filter(Boolean))];
+const skillsText = (skills) => (skills || []).map((s) => s.name).join(', ');
 
 /** Edit Profile: one section at a time (tabs + Back / Continue) with explicit Save / Cancel — per "UDM Alumni.dc.html". */
 export default function AlumniProfileEdit() {
@@ -31,12 +38,19 @@ export default function AlumniProfileEdit() {
   const photo = useAvatarPicker(() => setDirty(true));
   const [draft, setDraft] = useState(profile.a);
   const [errors, setErrors] = useState({});
-  const [leave, setLeave] = useState(false);
+  const [leave, setLeave] = useState(null); // where to go once unsaved changes are discarded
   const [tab, setTab] = useState(0);
   const [saving, setSaving] = useState(false);
+  const [privacy, setPrivacy] = useState(() => privacyDraft(profile.privacy));
+  const [skills, setSkills] = useState(() => skillsText(profile.skills));
 
   // The profile arrives from GET /me after the first render; adopt it until the user starts editing.
-  useEffect(() => { if (profile.loaded && !dirty) setDraft(profile.a); }, [profile.loaded, profile.a, dirty]);
+  useEffect(() => {
+    if (!profile.loaded || dirty) return;
+    setDraft(profile.a);
+    setPrivacy(privacyDraft(profile.privacy));
+    setSkills(skillsText(profile.skills));
+  }, [profile.loaded, profile.a, profile.privacy, profile.skills, dirty]);
 
   useEffect(() => {
     if (!dirty) return undefined;
@@ -116,8 +130,11 @@ export default function AlumniProfileEdit() {
     }
     setSaving(true);
     try {
-      // Profile fields -> PATCH /me, survey answers -> PUT /me/survey, then the photo change (if any).
-      await profile.saveProfile(draft);
+      // Profile fields (+ privacy / skills when changed) -> PATCH /me, survey answers -> PUT /me/survey, then the photo.
+      const extra = {};
+      if (!samePrivacy(privacy, privacyDraft(profile.privacy))) extra.privacy = privacy;
+      if (skillList(skills).join('\n') !== skillList(skillsText(profile.skills)).join('\n')) extra.skills = skillList(skills);
+      await profile.saveProfile(draft, extra);
       await photo.commit();
       setDirty(false);
       toast('Profile saved — your record in Alumni Records was updated.');
@@ -129,7 +146,8 @@ export default function AlumniProfileEdit() {
       setSaving(false);
     }
   };
-  const cancel = () => (dirty ? setLeave(true) : navigate('/alumni/profile'));
+  const leaveTo = (path) => (dirty ? setLeave(path) : navigate(path));
+  const cancel = () => leaveTo('/alumni/profile');
 
   return (
     <div data-screen-label="Edit Profile" style={{ display: 'flex', minHeight: '100vh', background: BG, fontFamily: 'Inter,system-ui,sans-serif' }}>
@@ -238,7 +256,7 @@ export default function AlumniProfileEdit() {
 
           <div data-m="sv-card" role="tabpanel" style={{ ...card, padding: '24px 28px' }}>
             <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 16, marginBottom: 4 }}>
-              <h2 data-m="sv-title" style={{ margin: 0, fontSize: 15, fontWeight: 700, letterSpacing: 0.6, textTransform: 'uppercase', color: '#0F3D2E' }}>
+              <h2 data-m="sv-title" style={{ margin: 0, fontFamily: 'Inter,sans-serif', fontSize: 21, fontWeight: 700, color: '#0A0A0A' }}>
                 {current.title}
               </h2>
               <div style={{ fontSize: 11, fontWeight: 700, color: '#004D40', background: '#E7F0EE', padding: '5px 11px', borderRadius: 8, letterSpacing: 0.4, flex: 'none' }}>
@@ -269,18 +287,72 @@ export default function AlumniProfileEdit() {
               </button>
             </div>
           </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(100%,320px),1fr))', gap: 14, alignItems: 'start' }}>
+            <section data-m="pf-priv" aria-labelledby="pf-priv-h" style={{ ...card, padding: '20px 22px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 8 }}>
+                <h2 id="pf-priv-h" style={sideHead}>Contact Privacy</h2>
+                <div style={raBadge}>RA 10173</div>
+              </div>
+              <div style={{ fontSize: 12, color: '#64748B', lineHeight: 1.5, marginBottom: 6 }}>Choose what other alumni see in the directory. All switches start hidden.</div>
+              <PrivacyToggles
+                value={privacy}
+                platforms={filledPlatforms(draft)}
+                onChange={(p) => { setDirty(true); setPrivacy(p); }}
+              />
+              <div style={{ fontSize: 11.5, color: '#94A3B8', lineHeight: 1.5, paddingTop: 10, borderTop: '1px solid #EEF0F3' }}>
+                Hidden details are blank for other alumni. You and Admin still see them; the university can still contact you.{' '}
+                <button type="button" onClick={() => leaveTo('/alumni/privacy')} style={{ border: 0, background: 'none', padding: 0, fontFamily: 'inherit', fontSize: 'inherit', fontWeight: 700, color: '#004D40', cursor: 'pointer' }}>
+                  Privacy &amp; My Data →
+                </button>
+              </div>
+            </section>
+
+            <section data-m="pf-skills" aria-labelledby="pf-skills-h" style={{ ...card, padding: '20px 22px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 8 }}>
+                <h2 id="pf-skills-h" style={sideHead}>Skills &amp; Interests</h2>
+                <div style={raBadge}>Directory</div>
+              </div>
+              <div style={{ fontSize: 12, color: '#64748B', lineHeight: 1.5, marginBottom: 12 }}>Shown on your directory card. Your first three appear as your top skills.</div>
+              <label htmlFor="pf-skills-input" style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#0B1220', paddingTop: 12, borderTop: '1px solid #EEF0F3', marginBottom: 8 }}>
+                Skills &amp; interests
+              </label>
+              <input
+                id="pf-skills-input"
+                type="text"
+                value={skills}
+                onChange={(e) => { clear('skills'); setDirty(true); setSkills(e.target.value); }}
+                placeholder="e.g. web dev, accounting, teaching"
+                aria-invalid={errors.skills ? 'true' : undefined}
+                aria-describedby="pf-skills-hint"
+                style={{ width: '100%', boxSizing: 'border-box', border: `1px solid ${errors.skills ? '#B3261E' : '#D5DBE3'}`, borderRadius: 10, padding: '11px 12px', fontSize: 13, background: '#FBFAF8', color: '#0A0A0A', fontFamily: 'inherit', outline: 'none' }}
+              />
+              <div id="pf-skills-hint" role={errors.skills ? 'alert' : undefined} style={{ fontSize: 11.5, color: errors.skills ? '#B3261E' : '#94A3B8', marginTop: 6 }}>
+                {errors.skills || 'Separate tags with commas.'}
+              </div>
+              {skillList(skills).length ? (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 12 }}>
+                  {skillList(skills).map((s, i) => (
+                    <span key={s} style={{ fontSize: 12, fontWeight: 600, padding: '5px 10px', borderRadius: 999, background: i < 3 ? '#E6F0EB' : '#F1F3F5', color: i < 3 ? '#0F3D2E' : '#475569' }}>
+                      {s}
+                    </span>
+                  ))}
+                </div>
+              ) : null}
+            </section>
+          </div>
         </div>
       </div>
       <Modal
-        open={leave}
-        onClose={() => setLeave(false)}
+        open={!!leave}
+        onClose={() => setLeave(null)}
         title="Discard your changes?"
         footer={
           <>
-            <button type="button" style={modalBtn(false)} onClick={() => setLeave(false)}>
+            <button type="button" style={modalBtn(false)} onClick={() => setLeave(null)}>
               Keep editing
             </button>
-            <button type="button" style={modalBtn(true)} onClick={() => navigate('/alumni/profile')}>
+            <button type="button" style={modalBtn(true)} onClick={() => navigate(leave)}>
               Discard
             </button>
           </>

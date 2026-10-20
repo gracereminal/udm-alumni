@@ -4,13 +4,14 @@ import PrivacyConsentView from '../../views/PrivacyConsentView';
 
 export const PRIVACY_KEY = 'udm.privacy.consented';
 
-const SECTIONS = [
+/** The Data Privacy Notice, also shown again from Privacy & My Data. */
+export const PRIVACY_SECTIONS = [
   { n: 1, title: 'Who we are', body: 'The UDM Alumni Relations Office is the personal information controller for UDM Alumni.' },
   { n: 2, title: 'What we collect', body: 'Your personal details, educational background, and career information from the Alumni Survey. With consent, also sensitive data: Indigenous People (IP) membership and PWD status. Answering these is voluntary.' },
   { n: 3, title: 'Why we collect it', body: 'To run the graduate outcomes study, meet CHED and accreditation reporting, and connect you with events and jobs. IP and PWD data supports inclusion programs and accommodations.' },
   { n: 4, title: 'Who can see it', body: 'Authorized UDM personnel only. IP and PWD data is limited to the Alumni Relations Office. Shared reports are aggregated and anonymized. We never sell your data.' },
   { n: 5, title: 'Storage & retention', body: 'Kept on secured university systems while your record is active or as required by law, then securely disposed of.' },
-  { n: 6, title: 'Your rights', body: 'Access, correct, object, erase, or withdraw consent anytime via My Profile or our office. You may also complain to the National Privacy Commission.' },
+  { n: 6, title: 'Your rights', body: 'Access, correct, object, erase, or withdraw consent anytime via Privacy & My Data or our office. You may also complain to the National Privacy Commission.' },
 ];
 
 const CONSENTS = [
@@ -28,7 +29,7 @@ export default function PrivacyConsent() {
   const ok = !!(pc.process && pc.accurate);
 
   const v = {
-    privacySections: SECTIONS,
+    privacySections: PRIVACY_SECTIONS,
     privacyConsents: CONSENTS.map((it) => {
       const on = !!pc[it.k];
       return {
