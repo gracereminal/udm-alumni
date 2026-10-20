@@ -24,11 +24,14 @@ export default function ForgotPasswordView(v) {
     code, setCode, codeKey, codeMsg, codeMsgColor, verify, verifyBg, verifyColor, verifyCursor, resend, changeEmail,
     pw, pw2, pwType, pwToggle, togglePw, setPw, setPw2, pwKey, rules, save, saveBg, saveColor, saveCursor,
     finish, backSignin, viaLink, linkEmail, requestNew, pwErr,
+    // Change Password (a one-time password on first sign-in) reuses step 3, with a current-password field.
+    change, current, setCurrent, currentErr,
   } = v;
+  const backLabel = change ? 'Sign out' : 'Back to Sign In';
   const btnHover = hv({ background: '#0B3D2E' });
   return (
     <div
-      data-screen-label="Forgot Password"
+      data-screen-label={change ? 'Change Password' : 'Forgot Password'}
       data-auth="1"
       data-m="si-root"
       style={{ display: 'grid', gridTemplateColumns: 'minmax(0,11fr) minmax(min(400px,100%),9fr)', minHeight: '100vh' }}
@@ -80,18 +83,22 @@ export default function ForgotPasswordView(v) {
             }}
           >
             <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#D9B45A' }} />
-            <div style={{ whiteSpace: 'nowrap', fontWeight: '700', letterSpacing: '.1em', textTransform: 'uppercase', color: '#8FD9B6' }}>Account Recovery</div>
+            <div style={{ whiteSpace: 'nowrap', fontWeight: '700', letterSpacing: '.1em', textTransform: 'uppercase', color: '#8FD9B6' }}>{change ? 'Account Security' : 'Account Recovery'}</div>
           </div>
           <div
             data-m="si-title"
             style={{ fontWeight: '800', fontSize: 'clamp(40px,min(5.4vw,8.8dvh),104px)', lineHeight: '1', letterSpacing: '-.035em', marginBottom: 'clamp(14px,2.8dvh,32px)' }}
           >
-            Locked out?
+            {change ? 'Welcome.' : 'Locked out?'}
             <br />
-            <span style={{ fontFamily: "'Playfair Display',serif", fontStyle: 'italic', fontWeight: '600', letterSpacing: '-.008em', color: '#D9B45A' }}>We&apos;ve got you.</span>
+            <span style={{ fontFamily: "'Playfair Display',serif", fontStyle: 'italic', fontWeight: '600', letterSpacing: '-.008em', color: '#D9B45A' }}>
+              {change ? 'Make it yours.' : "We've got you."}
+            </span>
           </div>
           <div data-m="si-desc" style={{ fontSize: 'clamp(15px,min(1.2vw,2.1dvh),21px)', lineHeight: '1.6', color: 'rgba(214,234,225,.72)', maxWidth: '34em', textWrap: 'pretty' }}>
-            Verify the email linked to your alumni record and set a new password in three quick steps.
+            {change
+              ? 'Your account was set up with a one-time password. Choose your own password before you continue.'
+              : 'Verify the email linked to your alumni record and set a new password in three quick steps.'}
           </div>
         </div>
         <div
@@ -164,7 +171,19 @@ export default function ForgotPasswordView(v) {
           {step === 3 ? (
             <>
               <div data-m="f-title" style={{ ...titleStyle, marginBottom: '14px' }}>Set a new <span style={italic}>password</span></div>
-              <div data-m="f-desc" style={{ ...descStyle, marginBottom: '24px' }}>Choose a password you haven&apos;t used before on this portal.</div>
+              <div data-m="f-desc" style={{ ...descStyle, marginBottom: '24px' }}>
+                {change ? 'Enter the one-time password you were given, then choose a new one.' : "Choose a password you haven't used before on this portal."}
+              </div>
+              {change ? (
+                <>
+                  <div style={labelStyle}>One-time password</div>
+                  <input
+                    data-m="f-input" type={pwType} value={current} onChange={setCurrent} autoFocus autoComplete="current-password"
+                    style={inputStyle(currentErr ? '#B3261E' : '#9CA3AF')} {...fv(FOCUS)}
+                  />
+                  <div role="alert" style={msgStyle('#B3261E')}>{currentErr}</div>
+                </>
+              ) : null}
               {viaLink ? (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: '#E3F1EA', borderRadius: '10px', padding: '10px 12px', margin: '-8px 0 20px', fontSize: '12.5px', color: '#0B5A40', fontWeight: '600' }}>
                   <div style={{ width: '18px', height: '18px', flex: 'none', borderRadius: '50%', background: '#0B5A40', color: '#fff', fontSize: '10px', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✓</div>
@@ -175,7 +194,7 @@ export default function ForgotPasswordView(v) {
                 <div style={{ fontSize: '12.5px', fontWeight: '700', color: '#0A0A0A' }}>New password</div>
                 <div role="button" tabIndex={0} onKeyDown={onActivate(togglePw)} onClick={togglePw} style={{ fontSize: '11.5px', fontWeight: '700', color: '#004D40', cursor: 'pointer', letterSpacing: '.3px' }}>{pwToggle}</div>
               </div>
-              <input data-m="f-input" type={pwType} value={pw} onChange={setPw} autoFocus autoComplete="new-password" style={inputStyle('#9CA3AF', { marginBottom: '16px' })} {...fv(FOCUS)} />
+              <input data-m="f-input" type={pwType} value={pw} onChange={setPw} autoFocus={!change} autoComplete="new-password" style={inputStyle('#9CA3AF', { marginBottom: '16px' })} {...fv(FOCUS)} />
               <div style={labelStyle}>Confirm new password</div>
               <input data-m="f-input" type={pwType} value={pw2} onChange={setPw2} onKeyDown={pwKey} autoComplete="new-password" style={inputStyle('#9CA3AF', { marginBottom: '14px' })} {...fv(FOCUS)} />
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(150px,1fr))', gap: '6px 14px', marginBottom: '22px' }}>
@@ -214,9 +233,9 @@ export default function ForgotPasswordView(v) {
             </div>
           ) : null}
 
-          {showSteps ? (
+          {showSteps || change ? (
             <div style={{ textAlign: 'center', fontSize: '13px' }}>
-              <button type="button" className="link-btn" onClick={backSignin} style={{ fontWeight: '700', textDecoration: 'none' }}>Back to Sign In</button>
+              <button type="button" className="link-btn" onClick={backSignin} style={{ fontWeight: '700', textDecoration: 'none' }}>{backLabel}</button>
             </div>
           ) : null}
           <div data-m="f-foot" style={{ display: 'flex', justifyContent: 'center', gap: '18px', marginTop: '24px', fontSize: '11.5px', fontWeight: '600', color: 'rgba(0,0,0,.4)' }}>
