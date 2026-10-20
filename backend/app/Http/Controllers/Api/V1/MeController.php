@@ -6,6 +6,7 @@ use App\Exceptions\ApiException;
 use App\Http\Controllers\Controller;
 use App\Models\UserAccount;
 use App\Services\AccountService;
+use App\Services\AuditService;
 use App\Services\ProfileService;
 use App\Services\StorageService;
 use App\Services\SurveyService;
@@ -15,7 +16,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
-/** /me: the signed-in alumnus' profile, privacy, skills, survey, photo and proof documents (role:alumni). */
+/** /me: the signed-in alumnus' profile, privacy, skills, survey, photo, proof documents and data export (role:alumni). */
 class MeController extends Controller
 {
     public function __construct(
@@ -24,6 +25,7 @@ class MeController extends Controller
         private readonly StorageService $storage,
         private readonly AccountService $accounts,
         private readonly TracerQuestionService $tracer,
+        private readonly AuditService $audit,
     ) {}
 
     /** GET /me */
@@ -105,6 +107,61 @@ class MeController extends Controller
         return response()->json(['id' => $id, 'mime' => $file['mime'], 'size' => $file['size']], 201);
     }
 
+    /**
+     * GET /me/export: a JSON copy of everything the portal holds about the signed-in alumnus (RA 10173 right of access),
+     * downloaded from Privacy & My Data. Proof documents are listed without their files. Audited.
+     */
+    public function export(Request $request): JsonResponse
+    {
+        $id = $this->alumniId($request);
+        $p = $this->payload($request);
+
+        $data = [
+            'exportedAt' => now()->toIso8601String(),
+            'about' => 'A copy of the personal data the UDM Alumni Tracer holds about you, under the Data Privacy Act of 2012 (RA 10173).',
+            'account' => $p['user'],
+            'record' => $p['record'],
+            'profile' => $p['a'],
+            'privacy' => $p['privacy'],
+            'skills' => $p['skills'],
+            'credentials' => $p['credentials'],
+            'survey' => $p['survey'],
+            'employment' => DB::select(
+                'SELECT employment_status AS "employmentStatus", job_title AS "jobTitle", employer_name AS employer, org_type AS "orgType",
+                        place_of_work AS "placeOfWork", job_status AS "jobStatus", job_location AS location, is_current AS "isCurrent",
+                        created_at AS "createdAt", updated_at AS "updatedAt"
+                   FROM employment_record WHERE alumni_id = ? ORDER BY employment_id',
+                [$id],
+            ),
+            'jobs' => DB::select(
+                'SELECT j.title, j.company, s.saved_at AS "savedAt", s.applied_at AS "appliedAt", s.applied_via AS "appliedVia"
+                   FROM saved_job s JOIN job_posting j ON j.job_id = s.job_id WHERE s.alumni_id = ? ORDER BY s.created_at',
+                [$id],
+            ),
+            'eventRegistrations' => array_map(function ($r) {
+                $r->answers = json_decode((string) $r->answers, true) ?? [];
+
+                return $r;
+            }, DB::select(
+                'SELECT e.title, e.starts_at AS "startsAt", r.rsvp, r.answers, r.entry_pass AS "entryPass",
+                        r.created_at AS "registeredAt", r.cancelled_at AS "cancelledAt"
+                   FROM event_registration r JOIN event e ON e.event_id = r.event_id WHERE r.alumni_id = ? ORDER BY r.created_at',
+                [$id],
+            )),
+            'proofDocuments' => DB::select(
+                'SELECT mime, size_bytes AS size, requested_at AS "requestedAt", uploaded_at AS "uploadedAt"
+                   FROM proof_document WHERE alumni_id = ? ORDER BY document_id',
+                [$id],
+            ),
+        ];
+        $this->audit->log('data_export', 'alumnus', $id, $this->actorId($request));
+
+        return response()->json($data, 200, [
+            'Content-Disposition' => 'attachment; filename="udm-alumni-my-data-'.now()->format('Y-m-d').'.json"',
+            'Cache-Control' => 'no-store',
+        ]);
+    }
+
     /** @return array<string, mixed> */
     private function payload(Request $request): array
     {
@@ -130,6 +187,7 @@ class MeController extends Controller
                 'flagNote' => $row->flag_note,
                 'photoUrl' => StorageService::publicUrl($row->photo_url),
                 'registeredAt' => $row->created_at,
+                'consentAt' => $row->privacy_consent_at,
                 'updatedAt' => $row->updated_at,
                 'industry' => $row->industry ?? '',
                 'bio' => $row->bio ?? '',

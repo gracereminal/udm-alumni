@@ -151,3 +151,22 @@ it('keeps proof documents private behind short-lived signed links', function () 
     $this->get(strtok($url, '?'))->assertForbidden();
     expect($dean)->toBeInt();
 });
+
+it('exports everything held about the alumnus as a JSON download, audited', function () {
+    $token = signIn('maria.delacruz@udmalumni.edu');
+
+    expect(withSession($token)->getJson('/api/v1/me')->json('record.consentAt'))->not->toBeNull();
+
+    $r = withSession($token)->getJson('/api/v1/me/export')->assertOk()
+        ->assertHeader('Cache-Control', 'no-store, private');
+    expect($r->headers->get('Content-Disposition'))->toStartWith('attachment; filename="udm-alumni-my-data-')
+        ->and($r->json('account.email'))->toBe('maria.delacruz@udmalumni.edu')
+        ->and($r->json('profile.mobile'))->toBe('0917 123 4567')
+        ->and($r->json('privacy'))->toHaveKeys(['directoryOptIn', 'showEmail', 'showMobile', 'links'])
+        ->and($r->json('jobs'))->toHaveCount(3)
+        ->and($r->json())->toHaveKeys(['survey', 'skills', 'employment', 'eventRegistrations', 'proofDocuments'])
+        ->and(json_encode($r->json()))->not->toContain('password_hash')
+        ->and(DB::table('audit_log')->where(['action' => 'data_export', 'entity_id' => mariaId()])->exists())->toBeTrue();
+
+    withSession(signIn('admin@udmalumni.edu'))->getJson('/api/v1/me/export')->assertForbidden();
+});
