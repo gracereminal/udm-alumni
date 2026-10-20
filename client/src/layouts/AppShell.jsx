@@ -1,4 +1,4 @@
-import useMobilePreview, { PREVIEW_MODES } from '../hooks/useMobilePreview';
+import useMobilePreview, { PREVIEW_MODES, previewEnabled } from '../hooks/useMobilePreview';
 
 /** Battery, signal and clock row drawn at the top of the device frame (from UDM Alumni.dc.html). */
 function PhoneStatus() {
@@ -20,7 +20,7 @@ function PhoneStatus() {
   );
 }
 
-/** Auto / Phone frame / Desktop toggle, styled like the design file's preview bar. Shown in dev, or once a preview mode is picked with `?preview=`; hidden on an actual phone. */
+/** Auto / Phone frame / Desktop toggle, styled like the design file's preview bar. Shown in dev, or once a preview mode is picked with `?preview=` (until `?preview=off`); hidden on an actual phone. */
 function PreviewSwitcher({ mode, setMode }) {
   return (
     <div role="radiogroup" aria-label="Layout preview" style={{ position: 'fixed', right: 16, bottom: 16, zIndex: 500, display: 'flex', alignItems: 'center', gap: 4, padding: 5, borderRadius: 999, background: '#00332B', boxShadow: '0 10px 28px -8px rgba(0,25,18,.5)', fontFamily: 'Inter,system-ui,sans-serif' }}>
@@ -43,7 +43,7 @@ function PreviewSwitcher({ mode, setMode }) {
  */
 export default function AppShell({ children }) {
   const { mode, setMode, mobile, frame, narrow } = useMobilePreview();
-  const showSwitcher = !narrow && (import.meta.env.DEV || mode !== 'auto');
+  const showSwitcher = !narrow && (import.meta.env.DEV || previewEnabled);
   return (
     <div data-mobile={mobile ? '1' : '0'} data-frame={frame ? '1' : '0'} style={{ fontFamily: 'Inter,system-ui,sans-serif', background: '#F3F6F4', minHeight: '100vh' }}>
       {showSwitcher ? <PreviewSwitcher mode={mode} setMode={setMode} /> : null}

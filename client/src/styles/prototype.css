@@ -134,6 +134,8 @@ body:has([data-auth]){overflow:hidden}
 [data-mobile="1"] [data-auth] [data-m=hero-title] br{display:none}
 [data-mobile="1"] [data-auth] [data-m=form-panel]{flex:1 1 auto!important;min-height:0;padding:12px 12px 20px!important}
 [data-frame="1"] [data-screen-label="Register as Alumni"][data-auth="1"]{height:auto!important;min-height:100%!important;overflow:visible!important}
+[data-mobile="1"][data-frame="0"] [data-screen-label="Register as Alumni"][data-auth="1"]{height:auto!important;min-height:100dvh!important;overflow:visible!important}
+body:has([data-mobile="1"][data-frame="0"] [data-screen-label="Register as Alumni"][data-auth]){overflow:auto}
 [data-mobile="1"] [data-auth][data-screen-label="Register as Alumni"]{background:#062A20}
 [data-mobile="1"] [data-auth][data-screen-label="Register as Alumni"] [data-m=hero]{padding:18px 22px 54px!important;background-size:100% 100%,100% 100%,32px 32px,32px 32px!important}
 [data-mobile="1"] [data-auth][data-screen-label="Register as Alumni"] [data-m=hero] > [data-m=hero-pill]{display:flex!important;margin:0 0 10px!important;padding:4px 9px!important}
