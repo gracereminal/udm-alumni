@@ -10,3 +10,6 @@ dist
 stats.html
 coverage
 !.env.example
+
+# Local list of real accounts and one-time passwords. Never commit or ship it.
+backend/account.md

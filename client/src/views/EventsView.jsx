@@ -246,8 +246,9 @@ export default function EventsView(v) {
                     </div>
                   </div>
                   <div style={{ padding: '24px 28px 28px' }}>
-                    <div
+                    <h2
                       style={{
+                        margin: '0',
                         fontFamily: 'Inter,sans-serif',
                         fontWeight: '700',
                         fontSize: '24px',
@@ -258,7 +259,7 @@ export default function EventsView(v) {
                       }}
                     >
                       {evTitle}
-                    </div>
+                    </h2>
                     <div style={{ fontSize: '12.5px', color: '#64748B', marginTop: '6px' }}>Hosted by {evOrganizer}</div>
                     <div
                       style={{

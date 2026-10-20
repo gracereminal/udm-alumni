@@ -3266,210 +3266,210 @@ export default function AdminPostsView(v) {
                       </div>
                     </>
                   ) : null}
+                </div>
+              </>
+            ) : null}
+            <div
+              aria-live="polite"
+              style={{
+                position: 'fixed',
+                left: '50%',
+                bottom: '24px',
+                transform: 'translateX(-50%)',
+                zIndex: '90',
+                pointerEvents: 'none',
+                width: 'max-content',
+                maxWidth: 'calc(100vw - 32px)',
+              }}
+            >
+              {toastOn ? (
+                <>
                   <div
-                    aria-live="polite"
+                    role="status"
                     style={{
-                      position: 'fixed',
-                      left: '50%',
-                      bottom: '24px',
-                      transform: 'translateX(-50%)',
-                      zIndex: '90',
-                      pointerEvents: 'none',
-                      width: 'max-content',
-                      maxWidth: 'calc(100vw - 32px)',
+                      pointerEvents: 'auto',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      background: toastBg,
+                      color: '#fff',
+                      padding: '10px 10px 10px 16px',
+                      borderRadius: '12px',
+                      boxShadow: '0 12px 32px rgba(11,18,32,.25)',
+                      fontFamily: 'Inter,system-ui,sans-serif',
+                      fontSize: '13.5px',
+                      fontWeight: '600',
                     }}
                   >
-                    {toastOn ? (
+                    <span
+                      style={{
+                        flex: 'none',
+                        width: '22px',
+                        height: '22px',
+                        borderRadius: '50%',
+                        background: 'rgba(255,255,255,.18)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '12px',
+                      }}
+                    >
+                      {toastIcon}
+                    </span>
+                    <span style={{ textWrap: 'pretty' }}>{toastText}</span>
+                    <button
+                      type="button"
+                      onClick={toastClose}
+                      aria-label="Dismiss"
+                      style={{
+                        flex: 'none',
+                        width: '32px',
+                        height: '32px',
+                        border: 'none',
+                        background: 'none',
+                        color: '#fff',
+                        fontSize: '17px',
+                        cursor: 'pointer',
+                        borderRadius: '8px',
+                        fontFamily: 'inherit',
+                      }}
+                    >
+                      ×
+                    </button>
+                  </div>
+                </>
+              ) : null}
+            </div>
+            {cfOn ? (
+              <>
+                <div role="presentation"
+                  onClick={onBackdrop(cfCancel)}
+                  style={{
+                    position: 'fixed',
+                    inset: '0',
+                    zIndex: '95',
+                    background: 'rgba(11,18,32,.45)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: '20px',
+                    fontFamily: 'Inter,system-ui,sans-serif',
+                  }}
+                >
+                  <div
+                    role="alertdialog"
+                    aria-modal="true"
+                    aria-labelledby="cf-title"
+                    aria-describedby="cf-body"
+                    style={{
+                      width: '100%',
+                      maxWidth: '420px',
+                      background: '#fff',
+                      borderRadius: '16px',
+                      boxShadow: '0 24px 60px rgba(11,18,32,.3)',
+                      padding: '22px 24px',
+                    }}
+                  >
+                    <div id="cf-title" style={{ fontWeight: '700', fontSize: '17px', color: '#0B1220' }}>
+                      {cfTitle}
+                    </div>
+                    <div
+                      id="cf-body"
+                      style={{ fontSize: '13.5px', lineHeight: '1.55', color: '#475569', marginTop: '6px', textWrap: 'pretty' }}
+                    >
+                      {cfBody}
+                    </div>
+                    {cfHasDetail ? (
                       <>
                         <div
-                          role="status"
                           style={{
-                            pointerEvents: 'auto',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '12px',
-                            background: toastBg,
-                            color: '#fff',
-                            padding: '10px 10px 10px 16px',
-                            borderRadius: '12px',
-                            boxShadow: '0 12px 32px rgba(11,18,32,.25)',
-                            fontFamily: 'Inter,system-ui,sans-serif',
-                            fontSize: '13.5px',
-                            fontWeight: '600',
+                            fontSize: '13px',
+                            fontWeight: '700',
+                            color: '#0B1220',
+                            background: '#F6F8F7',
+                            borderRadius: '10px',
+                            padding: '10px 12px',
+                            marginTop: '12px',
                           }}
                         >
-                          <span
-                            style={{
-                              flex: 'none',
-                              width: '22px',
-                              height: '22px',
-                              borderRadius: '50%',
-                              background: 'rgba(255,255,255,.18)',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              fontSize: '12px',
-                            }}
-                          >
-                            {toastIcon}
-                          </span>
-                          <span style={{ textWrap: 'pretty' }}>{toastText}</span>
-                          <button
-                            type="button"
-                            onClick={toastClose}
-                            aria-label="Dismiss"
-                            style={{
-                              flex: 'none',
-                              width: '32px',
-                              height: '32px',
-                              border: 'none',
-                              background: 'none',
-                              color: '#fff',
-                              fontSize: '17px',
-                              cursor: 'pointer',
-                              borderRadius: '8px',
-                              fontFamily: 'inherit',
-                            }}
-                          >
-                            ×
-                          </button>
+                          {cfDetail}
                         </div>
                       </>
                     ) : null}
-                  </div>
-                  {cfOn ? (
-                    <>
-                      <div role="presentation"
-                        onClick={onBackdrop(cfCancel)}
+                    <div aria-live="assertive">
+                      {cfHasErr ? (
+                        <>
+                          <div
+                            role="alert"
+                            style={{
+                              fontSize: '12.5px',
+                              fontWeight: '600',
+                              color: '#B42318',
+                              background: '#FEF3F2',
+                              border: '1px solid #FECDCA',
+                              borderRadius: '10px',
+                              padding: '9px 12px',
+                              marginTop: '12px',
+                            }}
+                          >
+                            {cfErr}
+                          </div>
+                        </>
+                      ) : null}
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '20px', flexWrap: 'wrap' }}>
+                      <button
+                        type="button"
+                        ref={cfCancelRef}
+                        onClick={cfCancel}
+                        disabled={cfBusy}
                         style={{
-                          position: 'fixed',
-                          inset: '0',
-                          zIndex: '95',
-                          background: 'rgba(11,18,32,.45)',
-                          display: 'flex',
+                          display: 'inline-flex',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          padding: '20px',
-                          fontFamily: 'Inter,system-ui,sans-serif',
+                          gap: '8px',
+                          background: '#fff',
+                          color: '#0B1220',
+                          fontFamily: 'inherit',
+                          fontWeight: '600',
+                          fontSize: '13.5px',
+                          padding: '0 18px',
+                          minHeight: '44px',
+                          border: '1px solid #E2E5EA',
+                          borderRadius: '10px',
+                          cursor: 'pointer',
+                          whiteSpace: 'nowrap',
                         }}
                       >
-                        <div
-                          role="alertdialog"
-                          aria-modal="true"
-                          aria-labelledby="cf-title"
-                          aria-describedby="cf-body"
-                          style={{
-                            width: '100%',
-                            maxWidth: '420px',
-                            background: '#fff',
-                            borderRadius: '16px',
-                            boxShadow: '0 24px 60px rgba(11,18,32,.3)',
-                            padding: '22px 24px',
-                          }}
-                        >
-                          <div id="cf-title" style={{ fontWeight: '700', fontSize: '17px', color: '#0B1220' }}>
-                            {cfTitle}
-                          </div>
-                          <div
-                            id="cf-body"
-                            style={{ fontSize: '13.5px', lineHeight: '1.55', color: '#475569', marginTop: '6px', textWrap: 'pretty' }}
-                          >
-                            {cfBody}
-                          </div>
-                          {cfHasDetail ? (
-                            <>
-                              <div
-                                style={{
-                                  fontSize: '13px',
-                                  fontWeight: '700',
-                                  color: '#0B1220',
-                                  background: '#F6F8F7',
-                                  borderRadius: '10px',
-                                  padding: '10px 12px',
-                                  marginTop: '12px',
-                                }}
-                              >
-                                {cfDetail}
-                              </div>
-                            </>
-                          ) : null}
-                          <div aria-live="assertive">
-                            {cfHasErr ? (
-                              <>
-                                <div
-                                  role="alert"
-                                  style={{
-                                    fontSize: '12.5px',
-                                    fontWeight: '600',
-                                    color: '#B42318',
-                                    background: '#FEF3F2',
-                                    border: '1px solid #FECDCA',
-                                    borderRadius: '10px',
-                                    padding: '9px 12px',
-                                    marginTop: '12px',
-                                  }}
-                                >
-                                  {cfErr}
-                                </div>
-                              </>
-                            ) : null}
-                          </div>
-                          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '20px', flexWrap: 'wrap' }}>
-                            <button
-                              type="button"
-                              ref={cfCancelRef}
-                              onClick={cfCancel}
-                              disabled={cfBusy}
-                              style={{
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                gap: '8px',
-                                background: '#fff',
-                                color: '#0B1220',
-                                fontFamily: 'inherit',
-                                fontWeight: '600',
-                                fontSize: '13.5px',
-                                padding: '0 18px',
-                                minHeight: '44px',
-                                border: '1px solid #E2E5EA',
-                                borderRadius: '10px',
-                                cursor: 'pointer',
-                                whiteSpace: 'nowrap',
-                              }}
-                            >
-                              {cfCancelLabel}
-                            </button>
-                            <button
-                              type="button"
-                              onClick={cfOk}
-                              disabled={cfBusy}
-                              style={{
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                gap: '8px',
-                                color: '#fff',
-                                fontFamily: 'inherit',
-                                fontWeight: '700',
-                                fontSize: '13.5px',
-                                padding: '0 20px',
-                                minHeight: '44px',
-                                border: 'none',
-                                borderRadius: '10px',
-                                background: cfOkBg,
-                                cursor: 'pointer',
-                                whiteSpace: 'nowrap',
-                                opacity: cfOpacity,
-                              }}
-                            >
-                              {cfOkLabel}
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    </>
-                  ) : null}
+                        {cfCancelLabel}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={cfOk}
+                        disabled={cfBusy}
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '8px',
+                          color: '#fff',
+                          fontFamily: 'inherit',
+                          fontWeight: '700',
+                          fontSize: '13.5px',
+                          padding: '0 20px',
+                          minHeight: '44px',
+                          border: 'none',
+                          borderRadius: '10px',
+                          background: cfOkBg,
+                          cursor: 'pointer',
+                          whiteSpace: 'nowrap',
+                          opacity: cfOpacity,
+                        }}
+                      >
+                        {cfOkLabel}
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </>
             ) : null}
