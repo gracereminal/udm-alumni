@@ -43,6 +43,27 @@ export const put = (path, body) => api(path, { method: 'PUT', body: body ?? {} }
 export const patch = (path, body) => api(path, { method: 'PATCH', body: body ?? {} });
 export const del = (path) => api(path, { method: 'DELETE' });
 
+/**
+ * Start-up data (GET `path`, passed to `apply`) kept in localStorage, so a returning visitor renders at once from the
+ * last copy while the fresh one loads in the background. Resolves when there is data to render; the first visit waits.
+ */
+export function getCached(path, apply) {
+  const key = `udm.cache.v1:${path}`;
+  const fresh = get(path).then((data) => {
+    apply(data);
+    try { localStorage.setItem(key, JSON.stringify(data)); } catch { /* storage unavailable or full */ }
+  });
+  try {
+    const saved = JSON.parse(localStorage.getItem(key));
+    if (saved) {
+      apply(saved);
+      fresh.catch(() => {}); // keep the saved copy if the refresh fails
+      return Promise.resolve();
+    }
+  } catch { /* no usable copy: wait for the API */ }
+  return fresh;
+}
+
 /** Multipart upload of one file under `field`. */
 export function upload(path, field, file, name) {
   const form = new FormData();

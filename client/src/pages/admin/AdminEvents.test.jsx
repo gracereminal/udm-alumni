@@ -99,7 +99,7 @@ describe('Admin Events page', () => {
     expect(await screen.findByText('Enter a title.')).toBeInTheDocument();
 
     await user.type(screen.getByLabelText(/^Title/), 'Tracer survey is open');
-    await user.type(screen.getByLabelText(/^Message/), 'Please update your record.');
+    await user.type(screen.getByRole('textbox', { name: /^Message/ }), 'Please update your record.');
     await user.click(screen.getByRole('button', { name: 'Post to Dashboard' }));
     await waitFor(() => expect(api.find('POST', '/announcements')).toHaveLength(1));
     expect(api.last('POST', '/announcements').body).toEqual({ kind: 'Notice', title: 'Tracer survey is open', body: 'Please update your record.', source: 'UDM Alumni Relations Office' });

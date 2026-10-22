@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import RegSuccessView from '../../views/RegSuccessView';
 import { useProfile } from '../../context/ProfileContext';
 
-/** Registration Submitted — summary of what was carried over. Leads to Sign In: right away when the account is active, or once an Admin approves a pending one. */
+/** Registration Submitted — summary of what was carried over. The account is active, so it leads straight to Sign In. */
 export default function RegistrationSuccess() {
   const navigate = useNavigate();
   const reg = useProfile().lastRegistration;
@@ -25,7 +25,6 @@ export default function RegistrationSuccess() {
     <RegSuccessView
       regFirstName={a.first_name || 'Alumnus'}
       regEmail={a.email || 'your email'}
-      regPending={reg?.status !== 'active'}
       carryOver={carryOver}
       goSignin={() => navigate('/signin', { replace: true })}
       goHome={() => navigate('/', { replace: true })}

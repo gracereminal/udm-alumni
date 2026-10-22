@@ -5,6 +5,7 @@ import { useProfile } from '../context/ProfileContext';
 import { NAV, ROLE_LABEL } from '../data/navigation';
 import { hv } from '../lib/stateStyle';
 import Icon from './Icon';
+import MessagesWidget from './MessagesWidget';
 
 const initialsOf = (n) =>
   String(n || '')
@@ -99,6 +100,7 @@ export default function NavSidebar({ style }) {
   };
 
   return (
+    <>
     <aside
       data-m="nav"
       aria-label="Main navigation"
@@ -203,5 +205,7 @@ export default function NavSidebar({ style }) {
         </button>
       </div>
     </aside>
+    <MessagesWidget />
+    </>
   );
 }

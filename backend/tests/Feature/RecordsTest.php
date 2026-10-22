@@ -78,7 +78,7 @@ it('filters by status, batch, employment and search', function () {
 it('creates a record that counts once in the population, Records counters and the college', function () {
     $token = signIn('admin@udmalumni.edu');
     $population = DB::table('v_alumni_current')->count();
-    $ccsPending = (int) DB::table('v_records_counters')->where('college_id', collegeId('CCS'))->sum('pending');
+    $ccsVerified = (int) DB::table('v_records_counters')->where('college_id', collegeId('CCS'))->sum('verified');
 
     $r = withSession($token)->postJson('/api/v1/alumni', [
         'name' => 'Juan Dela Cruz', 'college' => 'CCS', 'course' => 'CCS-BSIT', 'year_graduated' => 2025,
@@ -87,10 +87,10 @@ it('creates a record that counts once in the population, Records counters and th
 
     expect($r->json('firstName'))->toBe('Juan')->and($r->json('lastName'))->toBe('Dela Cruz')
         ->and($r->json('membershipId'))->toMatch('/^AM-2025-\d{5}$/')
-        ->and($r->json('status'))->toBe('pending')->and($r->json('mobile'))->toBe('0917 555 0101')
+        ->and($r->json('status'))->toBe('verified')->and($r->json('mobile'))->toBe('0917 555 0101')
         ->and($r->json('employmentStatus'))->toBe('employed')->and($r->json('hasAccount'))->toBeFalse()
         ->and(DB::table('v_alumni_current')->count())->toBe($population + 1)
-        ->and((int) DB::table('v_records_counters')->where('college_id', collegeId('CCS'))->sum('pending'))->toBe($ccsPending + 1)
+        ->and((int) DB::table('v_records_counters')->where('college_id', collegeId('CCS'))->sum('verified'))->toBe($ccsVerified + 1)
         ->and(DB::table('record_review')->where('alumni_id', $r->json('id'))->where('action', 'create')->exists())->toBeTrue()
         ->and(DB::table('audit_log')->where(['entity' => 'alumnus', 'entity_id' => $r->json('id'), 'action' => 'create'])->exists())->toBeTrue();
 });
@@ -138,30 +138,24 @@ it('flags with a note, notifies the alumnus, and archive removes the record from
     withSession($token)->postJson("/api/v1/alumni/{$maria}/status", ['action' => 'restore'])->assertOk()->assertJsonPath('status', 'flagged');
 });
 
-it('approves a pending registration when an admin verifies it, and only an admin can', function () {
+it('clears a flag back to verified, not pending', function () {
     $paolo = alumniIdOf('paolo.mendoza@gmail.com');
+    $token = signIn('ccs.dean@udmalumni.edu');
 
-    withSession(signIn('ccs.dean@udmalumni.edu'))->postJson("/api/v1/alumni/{$paolo}/status", ['action' => 'verify'])
-        ->assertForbidden()->assertJsonPath('error', 'Only the Alumni Office Admin can approve a pending registration.');
-    $this->postJson('/api/v1/auth/login', ['identifier' => 'paolo.mendoza@gmail.com', 'password' => 'demoPass123'])->assertForbidden();
-
-    withSession(signIn('admin@udmalumni.edu'))->postJson("/api/v1/alumni/{$paolo}/status", ['action' => 'verify'])
-        ->assertOk()->assertJsonPath('status', 'verified')->assertJsonPath('accountStatus', 'active');
-
-    $userId = DB::table('user_account')->where('email', 'paolo.mendoza@gmail.com')->value('user_id');
-    expect(DB::table('notification')->where(['user_id' => $userId, 'type' => 'account_approved'])->count())->toBe(1);
-    $this->postJson('/api/v1/auth/login', ['identifier' => 'paolo.mendoza@gmail.com', 'password' => 'demoPass123'])->assertOk();
+    withSession($token)->postJson("/api/v1/alumni/{$paolo}/status", ['action' => 'flag', 'reason' => 'Check the batch year.'])->assertOk()->assertJsonPath('status', 'flagged');
+    withSession($token)->postJson("/api/v1/alumni/{$paolo}/status", ['action' => 'unflag'])->assertOk()->assertJsonPath('status', 'verified');
+    withSession($token)->getJson('/api/v1/alumni?status=pending')->assertUnprocessable();
 });
 
 it('changes status in bulk, all or nothing', function () {
     $token = signIn('admin@udmalumni.edu');
-    $ids = DB::table('alumnus')->where('verification_status', 'pending')->whereNull('archived_at')->whereNull('user_id')->orderBy('alumni_id')->limit(3)->pluck('alumni_id')->all();
+    $ids = DB::table('alumnus')->where('verification_status', 'flagged')->whereNull('archived_at')->whereNull('user_id')->orderBy('alumni_id')->limit(3)->pluck('alumni_id')->all();
 
     withSession($token)->postJson('/api/v1/alumni/bulk-status', ['ids' => $ids, 'action' => 'verify'])->assertOk()->assertJsonPath('count', 3);
     expect(DB::table('alumnus')->whereIn('alumni_id', $ids)->where('verification_status', 'verified')->count())->toBe(3);
 
     // One unknown id fails the request before anything changes.
-    $more = DB::table('alumnus')->where('verification_status', 'pending')->whereNull('archived_at')->whereNull('user_id')->orderBy('alumni_id')->limit(2)->pluck('alumni_id')->all();
+    $more = DB::table('alumnus')->where('verification_status', 'flagged')->whereNull('archived_at')->whereNull('user_id')->orderBy('alumni_id')->limit(2)->pluck('alumni_id')->all();
     withSession($token)->postJson('/api/v1/alumni/bulk-status', ['ids' => [...$more, 99999999], 'action' => 'verify'])->assertNotFound();
     expect(DB::table('alumnus')->whereIn('alumni_id', $more)->where('verification_status', 'verified')->count())->toBe(0);
 });

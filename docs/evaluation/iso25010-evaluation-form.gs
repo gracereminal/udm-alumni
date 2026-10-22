@@ -20,6 +20,10 @@
 const SYSTEM_NAME = 'UDM-AMES';
 const SYSTEM_SUBTITLE = 'A Data-Driven Approach to Graduate Employability Tracking';
 const PRODUCTION_URL = 'https://udm-alumni-production.up.railway.app/signin';
+const DEMO_VIDEO_ALUMNI_URL =
+  'https://drive.google.com/drive/folders/1olHwml9Zu1PYkA2r8QNf-_7mvKGJs9kY';
+const DEMO_VIDEO_ADMIN_COLLEGE_URL =
+  'https://drive.google.com/drive/folders/1fVwCK-0Ndt0Jupb6Qhc_LttdFF6dPgLe';
 
 const SCALE = [
   '1 – Strongly Disagree',
@@ -226,7 +230,10 @@ function createEvaluationForm() {
         'No personal identifiers (such as your name, ID number, or contact information) will be ' +
         'included or published in the results of this study. By continuing to answer this form, you ' +
         'are giving your consent for your responses to be used for the stated purpose.\n\n' +
-        `Please use the system before answering: ${PRODUCTION_URL}`
+        `Please use the system before answering: ${PRODUCTION_URL}\n\n` +
+        'Demo videos:\n' +
+        `• ${SYSTEM_NAME} (Alumni): ${DEMO_VIDEO_ALUMNI_URL}\n` +
+        `• ${SYSTEM_NAME} (Admin and College / Department): ${DEMO_VIDEO_ADMIN_COLLEGE_URL}`
     )
     .setConfirmationMessage(
       `Thank you! Your evaluation of the ${SYSTEM_NAME} has been recorded.`

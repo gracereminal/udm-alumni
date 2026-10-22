@@ -25,7 +25,7 @@ class StatsService
 
     /**
      * Stat filters (snake_case query parameters): college_id, program_id, unmapped, batch, batch_from, batch_to,
-     * batches (list), status (pending|verified|flagged).
+     * batches (list), status (verified|flagged).
      *
      * @param  array<string, mixed>  $f
      * @return array{0: string, 1: list<mixed>} WHERE clause (or ''), bindings
@@ -82,7 +82,6 @@ class StatsService
         $select = implode(",\n", [
             ...array_map(fn ($c) => "COALESCE(sum({$c}), 0)::int AS {$c}", [...self::SUMS, ...array_map(fn ($k) => "ttj_{$k}", self::TTJ)]),
             'COALESCE(sum(months_sum), 0)::numeric AS months_sum',
-            "COALESCE(sum(total) FILTER (WHERE verification_status = 'pending'), 0)::int AS pending",
             "COALESCE(sum(total) FILTER (WHERE verification_status = 'verified'), 0)::int AS verified",
             "COALESCE(sum(total) FILTER (WHERE verification_status = 'flagged'), 0)::int AS flagged",
         ]);
@@ -141,7 +140,6 @@ class StatsService
             'nonPwdEmploymentRate' => self::pct($r->employed - $r->pwd_employed, $labour - $pwdLabour),
             'monthsAvg' => $r->months_n ? round((float) $r->months_sum / $r->months_n, 1) : null,
             'timeToJob' => array_combine(self::TTJ, array_map(fn ($k) => $r->{"ttj_{$k}"}, self::TTJ)),
-            'pending' => $r->pending,
             'verified' => $r->verified,
             'flagged' => $r->flagged,
         ];
@@ -228,26 +226,24 @@ class StatsService
     public function counters(Scope $scope, array $f = []): array
     {
         [$w, $params] = $this->where($scope, array_diff_key($f, ['status' => 1]));
-        $r = DB::selectOne("SELECT COALESCE(sum(pending), 0)::int AS pending, COALESCE(sum(flagged), 0)::int AS flagged,
+        $r = DB::selectOne("SELECT COALESCE(sum(flagged), 0)::int AS flagged,
                                    COALESCE(sum(verified), 0)::int AS verified, COALESCE(sum(archived), 0)::int AS archived
                               FROM v_records_counters {$w}", $params);
         $scoped = 'FROM alumnus a LEFT JOIN program p ON p.program_id = a.program_id WHERE a.merged_into_id IS NULL'
             .($scope->role === 'dept' ? ' AND COALESCE(p.college_id, a.declared_college_id) = ?' : '');
         $sp = $scope->role === 'dept' ? [$scope->collegeId] : [];
         $x = DB::selectOne(
-            "SELECT (SELECT min(a.created_at) {$scoped} AND a.archived_at IS NULL AND a.verification_status = 'pending') AS oldest_pending_at,
-                    (SELECT max(a.updated_at) {$scoped}) AS last_updated_at,
+            "SELECT (SELECT max(a.updated_at) {$scoped}) AS last_updated_at,
                     (SELECT count(*)::int FROM record_review rr WHERE rr.action = 'verify' AND rr.created_at > now() - interval '7 days'
                         AND rr.alumni_id IN (SELECT a.alumni_id {$scoped})) AS verified_7d,
                     (SELECT COALESCE(json_agg(DISTINCT a.year_graduated ORDER BY a.year_graduated DESC), '[]') {$scoped}) AS batches",
-            [...$sp, ...$sp, ...$sp, ...$sp],
+            [...$sp, ...$sp, ...$sp],
         );
 
         return [
-            'pending' => $r->pending, 'flagged' => $r->flagged, 'verified' => $r->verified, 'archived' => $r->archived,
-            'active' => $r->pending + $r->flagged + $r->verified,
-            'all' => $r->pending + $r->flagged + $r->verified + $r->archived,
-            'oldestPendingAt' => $x->oldest_pending_at,
+            'flagged' => $r->flagged, 'verified' => $r->verified, 'archived' => $r->archived,
+            'active' => $r->flagged + $r->verified,
+            'all' => $r->flagged + $r->verified + $r->archived,
             'lastUpdatedAt' => $x->last_updated_at,
             'verifiedLast7d' => $x->verified_7d,
             'batches' => json_decode((string) $x->batches, true),

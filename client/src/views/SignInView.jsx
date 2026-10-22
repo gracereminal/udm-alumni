@@ -29,12 +29,6 @@ export default function SignInView(v) {
     demoDeptBg,
     demoDeptBorder,
     demoOpacity,
-    demoPendingAction,
-    demoPendingActionColor,
-    demoPendingBg,
-    demoPendingBorder,
-    demoPendingEmail,
-    demoPendingLabel,
     demoRows,
     demoToggleLabel,
     showDemo,
@@ -398,59 +392,6 @@ export default function SignInView(v) {
                       </div>
                       <div style={{ flex: 'none', whiteSpace: 'nowrap', fontSize: '10.75px', fontWeight: '600', color: demoDeptActionColor }}>
                         {demoDeptAction}
-                      </div>
-                    </div>
-                    <div role="button" tabIndex={0} onKeyDown={onActivate(pickDemo('pending'))}
-                      data-m="si-demo-row"
-                      onClick={pickDemo('pending')}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '9px',
-                        background: demoPendingBg,
-                        border: `1px solid ${demoPendingBorder}`,
-                        borderRadius: '7px',
-                        padding: '6px 8px',
-                        cursor: 'pointer',
-                        transition: 'background .15s',
-                      }}
-                    >
-                      <div
-                        style={{
-                          width: '20px',
-                          height: '20px',
-                          flex: 'none',
-                          borderRadius: '5px',
-                          background: 'rgba(240,160,90,.16)',
-                          color: '#F2B27A',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontWeight: '800',
-                          fontSize: '10.25px',
-                        }}
-                      >
-                        P
-                      </div>
-                      <div style={{ flex: 'none', fontSize: '12.25px', fontWeight: '600', color: 'rgba(255,255,255,.88)', whiteSpace: 'nowrap' }}>
-                        {demoPendingLabel}
-                      </div>
-                      <div
-                        style={{
-                          flex: '1',
-                          minWidth: '0',
-                          fontFamily: "'JetBrains Mono',monospace",
-                          fontSize: '10.25px',
-                          color: 'rgba(214,234,225,.45)',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap',
-                        }}
-                      >
-                        {demoPendingEmail}
-                      </div>
-                      <div style={{ flex: 'none', whiteSpace: 'nowrap', fontSize: '10.75px', fontWeight: '600', color: demoPendingActionColor }}>
-                        {demoPendingAction}
                       </div>
                     </div>
                   </div>

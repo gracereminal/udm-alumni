@@ -31,7 +31,6 @@ export function SearchProvider({ children }) {
   const [kbd, setKbd] = useState(false);
   const [filters, setFilters] = useState({});
   const [menu, setMenu] = useState(null);
-  const [filtersOpen, setFiltersOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [card, setCard] = useState(null);
   const [contactOpen, setContactOpen] = useState(false);
@@ -54,7 +53,7 @@ export function SearchProvider({ children }) {
 
   const openSearch = useCallback(() => {
     if (!user) return;
-    setOpen(true); setQuery(''); setIdx(0); setKbd(false); setFilters({}); setMenu(null); setFiltersOpen(false); setLoading(false);
+    setOpen(true); setQuery(''); setIdx(0); setKbd(false); setFilters({}); setMenu(null); setLoading(false);
     setTimeout(() => { const el = inputRef.current; if (el) el.focus({ preventScroll: true }); }, 40);
   }, [user]);
   const closeSearch = useCallback(() => setOpen(false), []);
@@ -214,7 +213,7 @@ export function SearchProvider({ children }) {
     srListRef: listRef,
     searchQuery: query,
     setSearchQuery: (e) => { const v = e.target.value; setQuery(v); setIdx(0); setKbd(false); if (v.trim()) pulse(); },
-    srPlaceholder: narrow ? 'Search alumni…' : staff ? 'Search verified alumni records by name, Membership ID, program or employer…' : 'Search alumni by name, program, batch, skill, or company…',
+    srPlaceholder: narrow ? 'Name, program, batch, college…' : staff ? 'Search verified alumni records by name, Membership ID, program or employer…' : 'Search alumni by name, program, batch, skill, or company…',
     srHasQuery: !!query,
     srClearQuery: () => { setQuery(''); setIdx(0); focusSoon(inputRef); },
     srMobile: narrow,
@@ -225,14 +224,9 @@ export function SearchProvider({ children }) {
     srH: narrow ? '100%' : 'auto',
     srHeadPad: narrow ? '8px 12px' : '12px 18px',
     srChipH: narrow ? '40px' : '32px',
-    srShowChips: !narrow || filtersOpen || nF > 0,
-    srToggleFilters: () => { setFiltersOpen((o) => !o); if (filtersOpen) setMenu(null); },
-    srFiltersExpanded: filtersOpen ? 'true' : 'false',
-    srFilterBtnBg: filtersOpen || nF ? '#EEF6F2' : '#fff',
-    srFilterBtnBorder: filtersOpen || nF ? '#9FBFB1' : '#DCE5E0',
+    srShowChips: true,
     srChips: chips,
     srHasFilters: nF > 0,
-    srFilterCount: String(nF),
     srClearFilters: () => { setFilters({}); setMenu(null); setIdx(0); pulse(); },
     srMenuOn: !!menu,
     srMenuLabel: menu ? `Filter by ${FK.find(([k]) => k === menu)[1].toLowerCase()}` : '',

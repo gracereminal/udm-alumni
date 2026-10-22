@@ -2,7 +2,6 @@ import { useState } from 'react';
 import PortalPage from '../../layouts/PortalPage';
 import Modal, { modalBtn } from '../../components/Modal';
 import { useToast } from '../../context/ToastContext';
-import useNarrow from '../../hooks/useNarrow';
 import { hv } from '../../lib/stateStyle';
 import { regStepDefs, regPasswordStep, surveySectionDefs } from '../../data/formDefs';
 import { questionApi, useQuestionConfig } from '../../lib/questionStore';
@@ -63,7 +62,6 @@ function Toggle({ on, locked, label, onClick, title }) {
 export default function AlumniTracer() {
   const config = useQuestionConfig();
   const { toast } = useToast();
-  const narrow = useNarrow();
   const [tab, setTab] = useState('all');
   const [ed, setEd] = useState(null); // { id, label, placeholder, optText, hasOpt }
   const [add, setAdd] = useState(null); // { sec, label, type, optText }
@@ -138,7 +136,7 @@ export default function AlumniTracer() {
   };
 
   const actions = changes > 0 ? (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 'none', flexWrap: 'wrap' }}>
+    <div data-m="tq-bar" style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 'none', flexWrap: 'wrap' }}>
       <div style={{ fontSize: 12, fontWeight: 600, color: '#6B4E00', background: '#FBF0D8', padding: '5px 11px', borderRadius: 999 }}>{changes} customised</div>
       <button type="button" onClick={resetAll} style={{ ...btnGhost, padding: '9px 14px' }} {...hv({ background: '#F7F8FA' })}>Reset all to default</button>
     </div>
@@ -150,7 +148,7 @@ export default function AlumniTracer() {
     <PortalPage label="Alumni Tracer" title="Alumni Tracer" caption="UDM ALUMNI · QUESTION MANAGER" tone="gold" tools={false} actions={actions} contentStyle={{ padding: '14px 12px 32px' }}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px 12px', flexWrap: 'wrap' }}>
-          <div role="tablist" aria-label="Form" style={{ display: 'flex', gap: 8, flexWrap: 'wrap', flex: 'none' }}>
+          <div data-m="tq-tabs" role="tablist" aria-label="Form" style={{ display: 'flex', gap: 8, flexWrap: 'wrap', flex: 'none' }}>
             {tabs.map(([k, label, count]) => {
               const on = k === tab;
               return (
@@ -164,7 +162,7 @@ export default function AlumniTracer() {
               );
             })}
           </div>
-          <div style={{ fontSize: 12.5, color: '#64748B', flex: '1 1 260px', minWidth: 0, textWrap: 'pretty' }}>Edits apply immediately to the alumni Register form and Edit Profile page.</div>
+          <div data-m="tq-note" style={{ fontSize: 12.5, color: '#64748B', flex: '1 1 260px', minWidth: 0, textWrap: 'pretty' }}>Edits apply immediately to the alumni Register form and Edit Profile page.</div>
         </div>
 
         {groups.map((d) => {
@@ -172,7 +170,7 @@ export default function AlumniTracer() {
           const addHasOpt = adding && OPT_TYPES.includes(add.type);
           return (
             <section key={d.key} aria-label={d.title} style={card}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '14px 18px', flexWrap: 'wrap', background: '#FBFAF7' }}>
+              <div data-m="tq-ghead" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '14px 18px', flexWrap: 'wrap', background: '#FBFAF7' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', minWidth: 0 }}>
                   <h2 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#0B1220', letterSpacing: -0.2 }}>{d.title}</h2>
                   <div style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: 0.6, color: '#94A3B8' }}>{d.tag}</div>
@@ -180,7 +178,7 @@ export default function AlumniTracer() {
                     <div key={l} style={{ fontSize: 11, fontWeight: 700, padding: '2px 9px', borderRadius: 999, background: l === R ? '#E6F0EB' : '#FBF0D8', color: l === R ? '#0F3D2E' : '#6B4E00' }}>{l}</div>
                   ))}
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                <div data-m="tq-gact" style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
                   <div style={{ fontSize: 12, color: '#64748B' }}>{d.qs.length} {d.qs.length === 1 ? 'question' : 'questions'}</div>
                   <button
                     type="button"
@@ -193,6 +191,29 @@ export default function AlumniTracer() {
                 </div>
               </div>
 
+              {adding ? (
+                <div data-m="tq-add" style={{ borderTop: '1px solid #F1F2F4', background: '#FBF8EA', padding: '16px 18px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#0B1220' }}>New question in {d.title}</div>
+                  <input type="text" aria-label="Question text" value={add.label} onChange={(e) => { setErr(''); setAdd({ ...add, label: e.target.value }); }} placeholder="Question text" style={input} />
+                  <div role="radiogroup" aria-label="Answer type" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                    {ADD_TYPES.map(([k, l]) => (
+                      <button key={k} type="button" role="radio" aria-checked={add.type === k} onClick={() => { setErr(''); setAdd({ ...add, type: k }); }} style={chip(add.type === k)}>{l}</button>
+                    ))}
+                  </div>
+                  {addHasOpt ? (
+                    <textarea
+                      rows={4} aria-label="Answer options" value={add.optText} onChange={(e) => { setErr(''); setAdd({ ...add, optText: e.target.value }); }}
+                      placeholder="Answer options — one per line, at least 2" style={{ ...input, fontSize: 13, resize: 'vertical', lineHeight: 1.5 }}
+                    />
+                  ) : null}
+                  {errLine}
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+                    <button type="button" onClick={close} style={btnGhost}>Cancel</button>
+                    <button type="button" onClick={saveAdd} style={btnPrimary} {...hv({ background: '#00251F' })}>Add question</button>
+                  </div>
+                </div>
+              ) : null}
+
               {d.qs.map((q, i) => {
                 const editing = !!(ed && ed.id === q.id);
                 const hidden = !!q.hidden;
@@ -203,10 +224,7 @@ export default function AlumniTracer() {
                 const canReset = !q.custom && !!ov && (ov.label != null || ov.placeholder != null || ov.options != null);
                 return (
                   <div key={q.id} style={{ borderTop: '1px solid #F1F2F4', background: editing ? '#FBF8EA' : '#fff' }}>
-                    <div style={narrow
-                      ? { display: 'flex', alignItems: 'center', gap: 14, padding: '12px 18px', flexWrap: 'wrap' }
-                      : { display: 'grid', gridTemplateColumns: '22px 30px minmax(0,1fr) 112px 94px 64px', alignItems: 'center', columnGap: 14, padding: '12px 18px' }}
-                    >
+                    <div data-m="tq-row" style={{ display: 'grid', gridTemplateColumns: '22px 30px minmax(0,1fr) 112px 94px 64px', alignItems: 'center', columnGap: 14, padding: '12px 18px' }}>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 2, width: 22, flex: 'none' }}>
                         {[[-1, '▲', 'Move up', i === 0], [1, '▼', 'Move down', i === d.qs.length - 1]].map(([dir, sym, t, off]) => (
                           <button
@@ -218,7 +236,7 @@ export default function AlumniTracer() {
                         ))}
                       </div>
                       <div style={{ width: 30, height: 30, boxSizing: 'border-box', borderRadius: '50%', background: '#F1F3F5', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: '#475569', fontVariantNumeric: 'tabular-nums', flex: 'none' }}>{i + 1}</div>
-                      <div style={{ minWidth: 0, flex: narrow ? '1 1 180px' : undefined, opacity: hidden ? 0.5 : 1 }}>
+                      <div style={{ minWidth: 0, opacity: hidden ? 0.5 : 1 }}>
                         <div style={{ fontSize: 13.5, fontWeight: 600, color: '#0B1220', lineHeight: 1.4, textWrap: 'pretty' }}>{q.label}</div>
                         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 5, alignItems: 'center' }}>
                           <span style={tag('#F1F3F5', '#475569')}>{TYPE_LABEL[q.type] || q.type}</span>
@@ -230,7 +248,7 @@ export default function AlumniTracer() {
                           <span style={{ fontSize: 11, color: '#94A3B8', fontFamily: 'ui-monospace,Menlo,monospace' }}>{q.id}</span>
                         </div>
                       </div>
-                      <div style={narrow ? { display: 'flex', alignItems: 'center', gap: 18, flex: 'none', flexWrap: 'wrap' } : { display: 'contents' }}>
+                      <div data-m="tq-ctl" style={{ display: 'contents' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                           <Toggle on={!!q.required} locked={q.core} label={`Required: ${q.label}`} title={q.core ? 'Core fields are always required' : 'Required on forms'} onClick={() => setOv(q.id, { required: !q.required })} />
                           <div style={{ fontSize: 12, fontWeight: 600, color: '#475569' }}>Required</div>
@@ -241,7 +259,7 @@ export default function AlumniTracer() {
                         </div>
                         <button
                           type="button" aria-expanded={editing} onClick={() => openEdit(q)}
-                          style={{ fontFamily: 'inherit', fontSize: 12.5, fontWeight: 700, color: '#0F3D2E', border: '1px solid #CFE3DA', borderRadius: 9, padding: narrow ? '7px 14px' : '7px 0', cursor: 'pointer', background: '#fff', textAlign: 'center' }}
+                          style={{ fontFamily: 'inherit', fontSize: 12.5, fontWeight: 700, color: '#0F3D2E', border: '1px solid #CFE3DA', borderRadius: 9, padding: '7px 0', cursor: 'pointer', background: '#fff', textAlign: 'center' }}
                           {...hv({ background: '#EEF6F1' })}
                         >
                           {editing ? 'Close' : 'Edit'}
@@ -250,7 +268,7 @@ export default function AlumniTracer() {
                     </div>
 
                     {editing ? (
-                      <div style={{ padding: narrow ? '4px 18px 18px' : '4px 18px 18px 74px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+                      <div data-m="tq-edit" style={{ padding: '4px 18px 18px 74px', display: 'flex', flexDirection: 'column', gap: 12 }}>
                         <label style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
                           <span style={fieldLabel}>Question text</span>
                           <input type="text" value={ed.label} onChange={(e) => { setErr(''); setEd({ ...ed, label: e.target.value }); }} style={input} />
@@ -288,29 +306,6 @@ export default function AlumniTracer() {
                   </div>
                 );
               })}
-
-              {adding ? (
-                <div style={{ borderTop: '1px solid #F1F2F4', background: '#FBF8EA', padding: '16px 18px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: '#0B1220' }}>New question in {d.title}</div>
-                  <input type="text" aria-label="Question text" value={add.label} onChange={(e) => { setErr(''); setAdd({ ...add, label: e.target.value }); }} placeholder="Question text" style={input} />
-                  <div role="radiogroup" aria-label="Answer type" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                    {ADD_TYPES.map(([k, l]) => (
-                      <button key={k} type="button" role="radio" aria-checked={add.type === k} onClick={() => { setErr(''); setAdd({ ...add, type: k }); }} style={chip(add.type === k)}>{l}</button>
-                    ))}
-                  </div>
-                  {addHasOpt ? (
-                    <textarea
-                      rows={4} aria-label="Answer options" value={add.optText} onChange={(e) => { setErr(''); setAdd({ ...add, optText: e.target.value }); }}
-                      placeholder="Answer options — one per line, at least 2" style={{ ...input, fontSize: 13, resize: 'vertical', lineHeight: 1.5 }}
-                    />
-                  ) : null}
-                  {errLine}
-                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-                    <button type="button" onClick={close} style={btnGhost}>Cancel</button>
-                    <button type="button" onClick={saveAdd} style={btnPrimary} {...hv({ background: '#00251F' })}>Add question</button>
-                  </div>
-                </div>
-              ) : null}
             </section>
           );
         })}

@@ -17,7 +17,7 @@ it('seeds the demo accounts with the demo password', function (string $email, st
     ['maria.delacruz@udmalumni.edu', 'alumni', 'active'],
     ['ccs.dean@udmalumni.edu', 'dept', 'active'],
     ['admin@udmalumni.edu', 'admin', 'active'],
-    ['paolo.mendoza@gmail.com', 'alumni', 'pending'],
+    ['paolo.mendoza@gmail.com', 'alumni', 'active'],
 ]);
 
 it('links Maria to her alumni record with both identifiers', function () {

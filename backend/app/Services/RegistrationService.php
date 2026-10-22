@@ -49,7 +49,7 @@ class RegistrationService
                     'email' => $email, 'password_hash' => $hash, 'role' => 'alumni', 'display_name' => $name, 'account_status' => 'active',
                 ], 'user_id');
 
-                $membershipId = $this->nextPendingMembershipId($year);
+                $membershipId = $this->nextMembershipId($year);
                 $married = $t('marital_status') === 'Married';
                 $alumniId = (int) DB::table('alumnus')->insertGetId([
                     'user_id' => $userId,
@@ -72,7 +72,7 @@ class RegistrationService
                     'is_indigenous' => $t('indigenous') === 'Yes',
                     'indigenous_group' => $t('indigenous') === 'Yes' ? $t('indigenous_group') : null,
                     'pwd_type' => $t('pwd') === 'Yes' ? Vocab::code(Vocab::PWD_TYPE, $t('pwd_type')) : null,
-                    'verification_status' => 'pending',
+                    'verification_status' => 'verified',
                     'record_source' => 'self_registration',
                     'privacy_consent_at' => now(),
                 ], 'alumni_id');
@@ -129,17 +129,14 @@ class RegistrationService
     }
 
     /**
-     * Self-registrations get AM-YYYY-Nnnnn (YYYY = class year, N = new) until staff assign the final number. The
-     * advisory lock serializes concurrent registrations so two never get the same number.
+     * AM-YYYY-NNNNN (YYYY = class year) for every new record, self-registered or staff-created. Call inside a
+     * transaction: the advisory lock serializes concurrent inserts so two never get the same number.
      */
-    private function nextPendingMembershipId(int $year): string
+    public function nextMembershipId(int $year): string
     {
-        DB::statement('SELECT pg_advisory_xact_lock(hashtext(?))', ['membership_id_pending']);
-        $last = DB::selectOne(
-            "SELECT max(substring(membership_id from 10)::int) AS n FROM alumnus WHERE membership_id ~ ('^AM-' || ? || '-N[0-9]{4}$')",
-            [$year],
-        )->n;
+        DB::statement('SELECT pg_advisory_xact_lock(hashtext(?))', ['membership_id']);
+        $last = DB::selectOne("SELECT max(substring(membership_id from 9)::int) AS n FROM alumnus WHERE membership_id ~ ('^AM-' || ? || '-[0-9]{5}$')", [$year])->n;
 
-        return sprintf('AM-%d-N%04d', $year, ((int) $last) + 1);
+        return sprintf('AM-%d-%05d', $year, ((int) $last) + 1);
     }
 }

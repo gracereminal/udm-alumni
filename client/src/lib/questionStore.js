@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react';
-import { del, get, post, put } from './api';
+import { del, getCached, post, put } from './api';
 
 /**
  * Admin "Alumni Tracer" edits to the Register and Edit Profile questions, from GET /tracer/questions (the
@@ -24,8 +24,8 @@ export function setQuestionConfig(t) {
 }
 
 /** GET /tracer/questions (public: registration needs it). */
-export async function loadQuestionConfig() {
-  return setQuestionConfig(await get('/tracer/questions'));
+export function loadQuestionConfig() {
+  return getCached('/tracer/questions', setQuestionConfig);
 }
 
 /**
