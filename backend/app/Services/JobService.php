@@ -69,6 +69,38 @@ class JobService
         return ['rows' => array_map(fn ($j) => self::out($j, $viewer), $rows), 'total' => $total];
     }
 
+    /**
+     * Board summary over the open postings (approved, active, not deleted): how many, distinct employers, the average
+     * disclosed salary range, and the share of postings alumni have applied to.
+     *
+     * @return array{open: int, employers: int, salary: array{low: int, high: int, disclosed: int}|null, applications: int, responseRate: int|null}
+     */
+    public function stats(): array
+    {
+        $open = "j.deleted_at IS NULL AND j.approval_status = 'approved' AND j.is_active";
+        $s = DB::selectOne("SELECT count(*) AS open, count(DISTINCT lower(trim(j.company))) AS employers,
+                                   count(*) FILTER (WHERE s.applications > 0) AS responded, COALESCE(sum(s.applications), 0) AS applications
+                              FROM job_posting j LEFT JOIN v_job_stats s ON s.job_id = j.job_id WHERE {$open}");
+        $ranges = array_values(array_filter(array_map(self::salaryRange(...), DB::table('job_posting as j')->whereRaw($open)->pluck('salary_range')->all())));
+        $avg = fn (int $i) => (int) round(array_sum(array_column($ranges, $i)) / count($ranges));
+
+        return [
+            'open' => (int) $s->open, 'employers' => (int) $s->employers,
+            'salary' => $ranges ? ['low' => $avg(0), 'high' => $avg(1), 'disclosed' => count($ranges)] : null,
+            'applications' => (int) $s->applications,
+            'responseRate' => $s->open > 0 ? (int) round(100 * $s->responded / $s->open) : null,
+        ];
+    }
+
+    /** "₱35,000 - ₱48,000" / "₱45k" -> [low, high] in pesos; null when no amount is given. */
+    private static function salaryRange(?string $text): ?array
+    {
+        preg_match_all('/(\d[\d,]*(?:\.\d+)?)\s*(k)?/i', (string) $text, $m, PREG_SET_ORDER);
+        $amounts = array_values(array_filter(array_map(fn ($x) => (float) str_replace(',', '', $x[1]) * (empty($x[2]) ? 1 : 1000), $m), fn ($n) => $n >= 1000));
+
+        return $amounts ? [(int) min($amounts), (int) max($amounts)] : null;
+    }
+
     /** @return array<string, mixed> */
     public function get(int $jobId, UserAccount $viewer): array
     {

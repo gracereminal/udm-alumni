@@ -75,19 +75,33 @@ class DemoSeeder extends Seeder
         ['first' => 'Grace', 'last' => 'Villanueva', 'mid' => 'AM-2017-05590', 'prog' => 'COED-BSEd-Math', 'batch' => 2017, 'status' => 'verified', 'archived' => true, 'emp' => ['employed', 'Secondary School Teacher', 'Manila City Schools Division', 'edu']],
     ];
 
-    private const JOBS = [
-        ['title' => 'Junior Backend Developer', 'company' => 'Brightline Tech', 'location' => 'Manila · Hybrid', 'type' => 'full_time', 'badge' => 'Alumni Founded', 'salary' => '₱35,000 - ₱48,000', 'note' => '2 UDM alumni work here', 'tags' => ['Node.js', 'SQL', 'Express', 'AWS'], 'days' => 2, 'deadline' => 11, 'apply' => 'careers@brightline.tech', 'messenger' => 'brightlinetech', 'desc' => 'Build and maintain REST APIs for Brightline’s logistics platform. You will pair with senior engineers, write tests, and ship weekly. Fresh graduates with solid Node.js and SQL fundamentals are welcome.'],
-        ['title' => 'Product Marketing Associate', 'company' => 'Nimbus Systems', 'location' => 'Cebu · Remote', 'type' => 'full_time', 'badge' => 'UDM Referral Available', 'salary' => '₱40,000 - ₱55,000', 'tags' => ['Marketing', 'SaaS', 'Growth Marketing'], 'days' => 5, 'deadline' => 16, 'apply' => 'talent@nimbus.systems', 'desc' => 'Own go-to-market messaging for Nimbus’ SaaS suite: launch campaigns, write product copy, and work with sales on enablement. Marketing, communication or business graduates preferred.'],
-        ['title' => 'Data Analyst Intern', 'company' => 'Veyra Analytics', 'location' => 'Quezon City · On-site', 'type' => 'internship', 'badge' => 'Alumni Hiring Partner', 'salary' => '₱18,000 - ₱22,000', 'salary_note' => 'allowance / month', 'tags' => ['SQL', 'Excel', 'Python', 'Power BI'], 'days' => 7, 'deadline' => 6, 'apply' => 'https://veyra.ai/careers', 'desc' => '6-month internship supporting client reporting. You will clean data, build Power BI dashboards and present weekly findings. Open to final-year students and recent graduates.'],
-        ['title' => 'UX/UI Designer', 'company' => 'Formwell Studio', 'location' => 'Pasig · Hybrid', 'type' => 'full_time', 'badge' => 'Lead by Alumni', 'salary' => '₱45,000 - ₱65,000', 'tags' => ['Figma', 'Design Systems', 'User Research'], 'days' => 3, 'deadline' => 22, 'apply' => 'hello@formwell.studio', 'messenger' => 'formwellstudio', 'desc' => 'Design end-to-end product experiences for fintech and e-commerce clients, maintain the studio design system and run usability sessions. A portfolio is required.'],
-        ['title' => 'Cloud Support Engineer', 'company' => 'Northpoint Cloud', 'location' => 'Davao · Remote', 'type' => 'full_time', 'badge' => 'Urgent Hiring', 'salary' => '₱50,000 - ₱70,000', 'note' => 'Fast-track interview for UDM grads', 'tags' => ['AWS', 'Linux', 'Docker', 'Terraform'], 'days' => 0, 'deadline' => 4, 'apply' => 'jobs@northpoint.cloud', 'desc' => 'Troubleshoot customer workloads on AWS, own incident follow-ups and write runbooks. Rotating on-call with allowance.'],
-    ];
+    /** Shared text of UDM's "We are hiring educators!" post (2nd Semester, SY 2026–2027); each posting adds its own qualifications. */
+    private const FACULTY_INTRO = "Universidad de Manila invites qualified educators to join its academic community for the Second Semester of SY 2026–2027.\n\nQualifications\n";
 
-    /** Alumni-submitted postings waiting in the approval queue. */
-    private const QUEUE = [
-        ['by' => 'maria.santos@udm.edu.ph', 'hours' => 2, 'title' => 'QA Automation Engineer', 'company' => 'Seaboard Digital', 'location' => 'Manila · Hybrid', 'type' => 'full_time', 'salary' => '₱38,000 - ₱50,000', 'tags' => ['Selenium', 'Cypress', 'CI/CD', 'JavaScript'], 'apply' => 'careers@seaboard.digital', 'deadline' => 7, 'desc' => 'Seaboard Digital is hiring a QA Automation Engineer to build and maintain end-to-end test suites for its banking apps. 1–2 years of test automation experience preferred; fresh grads with strong JavaScript fundamentals are welcome to apply. I work on the QA team and can refer UDM alumni directly.'],
-        ['by' => 'rafael.delacruz@udm.edu.ph', 'hours' => 26, 'title' => 'IT Support Associate', 'company' => 'Coastal Bank', 'location' => 'Makati · On-site', 'type' => 'full_time', 'salary' => '₱25,000 - ₱30,000', 'tags' => ['Help Desk', 'Windows', 'Networking'], 'apply' => 'hr.recruitment@coastalbank.ph', 'deadline' => 9, 'desc' => 'Entry-level IT support role at the Makati head office. Handles employee tickets, device setup and basic network troubleshooting. Rotating shifts, with HMO from day one. Open to BSIT and BSCS graduates.'],
-        ['by' => 'patricia.lim@udm.edu.ph', 'hours' => 600, 'title' => 'Finance Analyst', 'company' => 'Veyra Analytics', 'location' => 'Quezon City · Hybrid', 'type' => 'contract', 'salary' => '₱32,000 - ₱40,000', 'tags' => ['Excel', 'Financial Modeling', 'Power BI'], 'apply' => 'talent@veyra.ai', 'deadline' => 12, 'desc' => '6-month contract, extendable, supporting month-end close and client reporting. Strong Excel required; Power BI is a plus. Hybrid set-up, 3 days on-site in Quezon City.'],
+    private const FACULTY_APPLY = "\n\nPlease provide the following:\n1. Fully-accomplished Personal Data Sheet / Curriculum Vitae\n2. Certified True Copy of Transcript of Records\n3. Certified True Copy of Certificate of Trainings Attended\n4. Employment Certification\n\nSubmit your Letter of Intent and requirements to hrmdd@udm.edu.ph no later than 15 November 2026.";
+
+    /** Admin postings on the job board: Universidad de Manila's own openings (from the UDM Facebook page). */
+    private const JOBS = [
+        ['title' => 'Full-time and Part-time Faculty, BS Hospitality Management Program', 'tags' => ['Teaching', 'Hospitality Management', 'Tourism Management'],
+            'desc' => self::FACULTY_INTRO."• Education & eligibility: Master’s Degree in Tourism, HRM/HM, with at least 10 hours of relevant training\n• Experience: at least 2 years of relevant experience\n• Has obtained skill-based certifications related to TM/HM".self::FACULTY_APPLY],
+        ['title' => 'Full-time and Part-time Faculty, Business and Management Programs', 'tags' => ['Teaching', 'Business Administration', 'Management'],
+            'desc' => self::FACULTY_INTRO."• Education & eligibility: Master’s Degree in Business Administration/Management, or a Master’s Degree in any field with business or corporate experience; with at least 10 hours of relevant training\n• Experience: at least 3 years of relevant experience".self::FACULTY_APPLY],
+        ['title' => 'Full-time and Part-time Faculty, BS Physical Therapy Program', 'tags' => ['Teaching', 'Physical Therapy'],
+            'desc' => self::FACULTY_INTRO."• Education & eligibility: Master’s Degree in Physical Therapy, with at least 10 hours of relevant training, and must have a professional license\n• Experience: at least 1 year of clinical experience".self::FACULTY_APPLY],
+        ['title' => 'Full-time and Part-time Faculty, BS Social Work Program', 'tags' => ['Teaching', 'Social Work'],
+            'desc' => self::FACULTY_INTRO."• Education & eligibility: Master’s Degree in Social Work, with at least 10 hours of relevant training, and must have a professional license\n• Experience: at least 2 years of relevant experience".self::FACULTY_APPLY],
+        ['title' => 'Full-time and Part-time Faculty, BA Communication Program', 'tags' => ['Teaching', 'Communication'],
+            'desc' => self::FACULTY_INTRO."• Education & eligibility: Master’s Degree in Communication or allied fields from a recognized HEI, with at least 10 hours of relevant training\n• Experience: at least 2 years of relevant experience".self::FACULTY_APPLY],
+        ['title' => 'Full-time and Part-time Faculty, BA Political Science Program', 'tags' => ['Teaching', 'Political Science'],
+            'desc' => self::FACULTY_INTRO."• Education & eligibility: Master’s Degree in Political Science, with at least 10 hours of relevant training\n• Experience: at least 2 years of relevant experience".self::FACULTY_APPLY],
+        ['title' => 'Full-time and Part-time Faculty, BS Information Technology', 'tags' => ['Teaching', 'Information Technology'],
+            'desc' => self::FACULTY_INTRO."• Education & eligibility: Baccalaureate and Master’s Degree in Information Technology, with at least 10 hours of relevant training\n• Experience: at least 2 years of relevant experience".self::FACULTY_APPLY],
+        ['title' => 'Full-time and Part-time Faculty, BSED Social Studies Program', 'tags' => ['Teaching', 'Social Studies'],
+            'desc' => self::FACULTY_INTRO."• Education & eligibility: Master’s Degree in Social Studies, with at least 10 hours of relevant training, and must have a professional license\n• Experience: at least 2 years of relevant experience".self::FACULTY_APPLY],
+        ['title' => 'Full-time and Part-time Faculty, BS Criminology Program', 'tags' => ['Teaching', 'Criminology'],
+            'desc' => self::FACULTY_INTRO."• Education & eligibility: Baccalaureate and Master’s Degree in Criminology, with at least 10 hours of relevant training, and must have a professional license\n• Experience: at least 2 years of relevant experience".self::FACULTY_APPLY],
+        ['title' => 'Full-time and Part-time Faculty, BSED General Science Program', 'tags' => ['Teaching', 'Chemistry', 'Physics'],
+            'desc' => self::FACULTY_INTRO."• Education & eligibility: Master’s Degree in Chemistry or Physics, with at least 10 hours of relevant training, and must have a professional license\n• Experience: at least 2 years of relevant experience".self::FACULTY_APPLY],
     ];
 
     /** Events relative to "today" (Manila), so the demo always has upcoming and past events. */
@@ -217,13 +231,9 @@ class DemoSeeder extends Seeder
         ]);
         $this->links($paoloId, ['facebook' => 'paolo.mendoza'], false);
 
-        $accountByEmail = [];
         foreach (self::PEOPLE as $p) {
             $prog = $byCode[$p['prog']];
             $userId = isset($p['account']) ? $this->user($p['account'], 'alumni', "{$p['first']} {$p['last']}", [], $this->unusableHash) : null;
-            if ($userId) {
-                $accountByEmail[$p['account']] = $userId;
-            }
             $digits = substr($p['mid'], -5);
             $id = $this->alumnus([
                 'user_id' => $userId, 'membership_id' => $p['mid'], 'student_no' => sprintf('%02d-%s-%s', $p['batch'] % 100, substr($digits, 0, 2), substr($digits, 2)),
@@ -299,34 +309,16 @@ class DemoSeeder extends Seeder
             }
         }
 
-        // Jobs: admin postings (approved), alumni submissions (pending), Maria's saves and one application.
-        $jobIds = [];
+        // Jobs: admin postings (approved), all from the same UDM hiring post.
         foreach (self::JOBS as $j) {
             $jobId = DB::table('job_posting')->insertGetId([
-                'posted_by' => $adminId, 'reviewed_by' => $adminId, 'title' => $j['title'], 'company' => $j['company'], 'location' => $j['location'],
-                'employment_type' => $j['type'], 'salary_range' => $j['salary'], 'salary_note' => $j['salary_note'] ?? 'per month',
-                'deadline' => $this->today->addDays($j['deadline'])->toDateString(), 'apply_via' => $j['apply'], 'messenger' => $j['messenger'] ?? null,
-                'description' => $j['desc'], 'badge' => $j['badge'], 'note' => $j['note'] ?? null, 'source' => 'admin', 'approval_status' => 'approved',
-                'published_at' => $this->at(-$j['days']), 'created_at' => $this->at(-$j['days']),
+                'posted_by' => $adminId, 'reviewed_by' => $adminId, 'title' => $j['title'], 'company' => 'Universidad de Manila', 'location' => 'Manila · On-site',
+                'employment_type' => 'contract', 'deadline' => '2026-11-15', 'apply_via' => 'hrmdd@udm.edu.ph',
+                'description' => $j['desc'], 'note' => 'Contract of Service · Full-time and Part-time', 'source' => 'admin', 'approval_status' => 'approved',
+                'published_at' => $this->at(0), 'created_at' => $this->at(0),
             ], 'job_id');
-            $jobIds[$j['company']] = $jobId;
             $this->jobSkills($jobId, $j['tags']);
         }
-        foreach (self::QUEUE as $q) {
-            $jobId = DB::table('job_posting')->insertGetId([
-                'posted_by' => $accountByEmail[$q['by']], 'title' => $q['title'], 'company' => $q['company'], 'location' => $q['location'],
-                'employment_type' => $q['type'], 'salary_range' => $q['salary'], 'salary_note' => 'per month',
-                'deadline' => $this->today->addDays($q['deadline'])->toDateString(), 'apply_via' => $q['apply'], 'submitter_email' => $q['by'],
-                'description' => $q['desc'], 'source' => 'alumni', 'approval_status' => 'pending',
-                'created_at' => CarbonImmutable::now()->subHours($q['hours']),
-            ], 'job_id');
-            $this->jobSkills($jobId, $q['tags']);
-        }
-        foreach (['Brightline Tech', 'Formwell Studio', 'Northpoint Cloud'] as $company) {
-            DB::table('saved_job')->insert(['alumni_id' => $mariaId, 'job_id' => $jobIds[$company], 'saved_at' => $this->at(-1)]);
-        }
-        DB::table('saved_job')->where(['alumni_id' => $mariaId, 'job_id' => $jobIds['Brightline Tech']])
-            ->update(['applied_at' => $this->at(-1, '14:00'), 'applied_via' => 'email']);
 
         // Events with real registrations from the population.
         $active = DB::table('alumnus as a')->leftJoin('user_account as u', 'u.user_id', '=', 'a.user_id')
@@ -394,8 +386,6 @@ class DemoSeeder extends Seeder
         ]);
         $notify($adminId, 'registration', 'New alumni registration', 'Paolo Mendoza (BSIT 2026) registered.', 'records');
         $notify($deanId, 'registration', 'New alumni registration', 'Paolo Mendoza (BSIT 2026) registered.', 'records');
-        $notify($adminId, 'job_submitted', count(self::QUEUE).' job postings submitted for review', 'Alumni-submitted postings are waiting in the approval queue.', 'jobs');
-        $notify($mariaUser, 'job_match', 'New job match: Cloud Support Engineer', 'Northpoint Cloud is hiring and your skills match this posting.', 'jobs');
         $notify($mariaUser, 'survey', 'Alumni survey response received', 'Thank you — your AY 2025–2026 survey has been recorded.', 'dashboard');
 
         $this->messages($mariaId, $mariaUser, $adminId, $deanId);
@@ -544,7 +534,8 @@ class DemoSeeder extends Seeder
     private function jobSkills(int $jobId, array $tags): void
     {
         foreach ($tags as $tag) {
-            DB::insert('INSERT INTO job_skill (job_id, skill_id) SELECT ?, skill_id FROM skill WHERE lower(name) = lower(?)', [$jobId, $tag]);
+            $skillId = DB::selectOne('INSERT INTO skill (name) VALUES (?) ON CONFLICT (lower(name)) DO UPDATE SET name = skill.name RETURNING skill_id', [$tag])->skill_id;
+            DB::table('job_skill')->insertOrIgnore(['job_id' => $jobId, 'skill_id' => $skillId]);
         }
     }
 

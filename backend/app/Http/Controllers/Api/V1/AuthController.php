@@ -76,6 +76,11 @@ class AuthController extends Controller
             $this->recordFailure($user, $ok ? 'disabled' : 'password');
             throw new ApiException(401, self::INVALID, 'invalid_credentials');
         }
+        // A temporary password from a masterlist import (AI Data Management) works for 7 days.
+        if ($user->must_change_password && $user->temp_password_expires_at !== null && $user->temp_password_expires_at->isPast()) {
+            $this->audit->log('login_failed', 'user', $user->user_id, $user->user_id, ['reason' => 'temp_password_expired']);
+            throw new ApiException(401, 'Your temporary password has expired. Use “Forgot password?” to set a new one.', 'temp_password_expired');
+        }
 
         $token = DB::transaction(function () use ($user, $request, $password) {
             DB::update('UPDATE user_account SET failed_login_count = 0, locked_until = NULL, last_login_at = now() WHERE user_id = ?', [$user->user_id]);
@@ -117,7 +122,7 @@ class AuthController extends Controller
         $keep = $guard instanceof SessionGuard ? $guard->sessionId() : null;
 
         DB::transaction(function () use ($user, $request, $keep) {
-            DB::update('UPDATE user_account SET password_hash = ?, must_change_password = false WHERE user_id = ?', [Hash::make((string) $request->input('password')), $user->user_id]);
+            DB::update('UPDATE user_account SET password_hash = ?, must_change_password = false, temp_password_expires_at = NULL WHERE user_id = ?',[Hash::make((string) $request->input('password')), $user->user_id]);
             $this->sessions->revokeAll($user->user_id, $keep);
             $this->audit->log('password_changed', 'user', $user->user_id);
         });

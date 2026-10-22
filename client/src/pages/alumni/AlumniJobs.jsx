@@ -30,6 +30,9 @@ const matchKind = (j, k) => {
   if (k === 'Contract') return t.indexOf('contract') > -1;
   return true;
 };
+const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
+/** 45000 -> "₱45k" for the salary benchmark tile. */
+const pesoK = (n) => `₱${Math.round(n / 1000)}k`;
 const salaryMin = (j) => Number(String(j.salary || '').replace(/[^\d-]/g, '').split('-')[0]) || 0;
 const postedRank = (j) => {
   const s = String(j.posted || '').toLowerCase();
@@ -62,6 +65,7 @@ export default function AlumniJobs() {
   const photoRef = useRef(null);
 
   const all = jobsCtx.activeJobs;
+  const { stats } = jobsCtx;
   const [applying, setApplying] = useState(null); // job key whose apply chooser is open
   const [applyMsg, setApplyMsg] = useState('');
   const closeApply = () => setApplying(null);
@@ -168,10 +172,10 @@ export default function AlumniJobs() {
     resetHover: { color: '#0B3123' },
     inputFocus: { borderColor: '#0F3D2E' },
     jobStats: [
-      { label: 'Open Positions', value: `${all.length} Openings` },
-      { label: 'Alumni Employers', value: '42 Partners' },
-      { label: 'Salary Benchmark', value: '₱45k – ₱85k Avg' },
-      { label: 'Placement Response', value: '94% Response Rate' },
+      { label: 'Open Positions', value: plural(stats ? stats.open : all.length, 'Opening') },
+      { label: 'Alumni Employers', value: stats ? plural(stats.employers, 'Employer') : '—' },
+      { label: 'Salary Benchmark', value: !stats ? '—' : stats.salary ? `${pesoK(stats.salary.low)} – ${pesoK(stats.salary.high)} Avg` : 'Not disclosed' },
+      { label: 'Placement Response', value: !stats ? '—' : stats.applications ? `${stats.responseRate}% Response Rate` : 'No applications yet' },
     ],
     showJobForm: formOpen,
     jobFormButtonLabel: formOpen ? 'Close composer' : 'Post a Job',

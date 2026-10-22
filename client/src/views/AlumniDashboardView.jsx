@@ -20,6 +20,8 @@ export default function AlumniDashboardView(v) {
     avatarInitials,
     dashBatch,
     dashJobs,
+    dashJobsOpen,
+    dashJobsBrowseLabel,
     dashMetrics,
     dashStatus,
     dashSubline,
@@ -693,10 +695,15 @@ export default function AlumniDashboardView(v) {
                         whiteSpace: 'nowrap',
                       }}
                     >
-                      5 OPEN
+                      {dashJobsOpen} OPEN
                     </div>
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '14px' }}>
+                    {!(dashJobs || []).length ? (
+                      <div style={{ background: '#F7FAF8', border: '1px dashed #DCE5E0', borderRadius: '14px', padding: '16px 14px', fontSize: '12.5px', color: '#64748B', textAlign: 'center' }}>
+                        No open job postings right now.
+                      </div>
+                    ) : null}
                     {(dashJobs || []).map((job, _i) => (
                       <React.Fragment key={_i}>
                         <div
@@ -776,7 +783,7 @@ export default function AlumniDashboardView(v) {
                           cursor: 'pointer',
                         }}
                       >
-                        Browse all postings →
+                        {dashJobsBrowseLabel}
                       </div>
                     </>
                   ) : null}
@@ -795,7 +802,7 @@ export default function AlumniDashboardView(v) {
                           cursor: 'pointer',
                         }}
                       >
-                        Browse all 5 postings →
+                        {dashJobsBrowseLabel}
                       </div>
                     </>
                   ) : null}

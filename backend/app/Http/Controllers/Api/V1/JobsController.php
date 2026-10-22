@@ -30,6 +30,12 @@ class JobsController extends Controller
         return response()->json(Lists::out($r['rows'], $r['total'], $page, $per));
     }
 
+    /** GET /jobs/stats: the job board's summary tiles, from the open postings. */
+    public function stats(): JsonResponse
+    {
+        return response()->json($this->jobs->stats());
+    }
+
     /** GET /jobs/:id */
     public function show(Request $request, int $id): JsonResponse
     {

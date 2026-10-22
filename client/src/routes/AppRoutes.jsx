@@ -23,6 +23,7 @@ const Reports = lazy(() => import('../pages/admin/Reports'));
 const AdminJobs = lazy(() => import('../pages/admin/AdminJobs'));
 const AdminEvents = lazy(() => import('../pages/admin/AdminEvents'));
 const AlumniTracer = lazy(() => import('../pages/admin/AlumniTracer'));
+const AiDataManagement = lazy(() => import('../pages/admin/AiDataManagement'));
 const CollegeDashboard = lazy(() => import('../pages/college/CollegeDashboard'));
 
 function Home() {
@@ -78,6 +79,7 @@ export default function AppRoutes() {
         <Route path="jobs" element={<AdminJobs />} />
         <Route path="events" element={<AdminEvents />} />
         <Route path="tracer" element={<AlumniTracer />} />
+        <Route path="ai-data" element={<AiDataManagement />} />
       </Route>
       <Route path="*" element={<Home />} />
     </Routes>

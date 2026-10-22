@@ -1,0 +1,23 @@
+Welcome to the UDM Alumni portal
+
+Hi {{ first_name }},
+
+The Alumni Relations Office added you to the UDM Alumni portal from the official graduate masterlist. Your Alumni ID is {{ membership_id }}. Sign in with the details below to complete your profile and the alumni tracer.
+
+Email: {{ email }}
+Temporary password: {{ temp_password }}
+
+Sign in: {{ signin_url }}
+
+How to get started
+1. Open the link above and enter your email (or Alumni ID) and the temporary password.
+2. Choose your own password (8+ characters, one number, one uppercase letter).
+3. Review your profile. Your contact details stay hidden until you choose to share them.
+
+The temporary password expires in {{ expires_days }} days. After that, use "Forgot password?" on the sign-in page.
+
+Not a UDM graduate, or not expecting this? Let the Alumni Relations Office know. Never share this email or password with anyone.
+
+--
+UDM Alumni Relations Office · Universidad de Manila, Cecilia Muñoz-Palma St., Ermita, Manila
+This is an automated message. Please do not reply.
