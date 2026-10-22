@@ -94,6 +94,8 @@ export default function AlumniDashboard() {
     annShowFooter: annTab !== 'announcements',
     annFeedEmptyText: annTab === 'events' ? 'No upcoming events right now.' : annTab === 'announcements' ? 'No announcements right now.' : 'Nothing posted yet.',
     dashJobs: activeJobs.slice(0, 3),
+    dashJobsOpen: activeJobs.length,
+    dashJobsBrowseLabel: activeJobs.length === 1 ? 'Browse 1 posting →' : `Browse all ${activeJobs.length} postings →`,
     goJobs: () => navigate('/alumni/jobs'),
     goEvents: () => navigate('/alumni/events'),
     goProfile: () => navigate('/alumni/profile'),

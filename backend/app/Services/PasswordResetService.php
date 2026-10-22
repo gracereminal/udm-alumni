@@ -130,7 +130,7 @@ class PasswordResetService
             }
             DB::update('UPDATE password_reset SET used_at = now() WHERE reset_id = ?', [$r->reset_id]);
             DB::update(
-                'UPDATE user_account SET password_hash = ?, must_change_password = false, failed_login_count = 0, locked_until = NULL WHERE user_id = ?',
+                'UPDATE user_account SET password_hash = ?, must_change_password = false, temp_password_expires_at = NULL, failed_login_count = 0, locked_until = NULL WHERE user_id = ?',
                 [$hash, $r->user_id],
             );
             $this->sessions->revokeAll((int) $r->user_id);

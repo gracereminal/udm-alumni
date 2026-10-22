@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Your UDM Alumni portal account is ready</title>
+</head>
+<body style="margin:0;padding:0;background:#F4F6F5">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#F4F6F5">
+<tr><td style="padding:0">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;border:1px solid #E3E7E5;border-radius:12px;border-collapse:separate;overflow:hidden;background:#FFFFFF;font-family:Inter,Arial,Helvetica,sans-serif">
+  <tr>
+    <td style="background:#062A20;padding:18px 28px">
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
+        <td style="vertical-align:middle;padding-right:12px"><img src="{{ logo_url }}" width="40" height="40" alt="UDM Alumni seal" style="display:block;width:40px;height:40px;border:0"></td>
+        <td style="vertical-align:middle">
+          <div style="font-family:'Plus Jakarta Sans',Arial,Helvetica,sans-serif;font-weight:800;font-size:17px;color:#FFFFFF">UDM Alumni</div>
+          <div style="font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#D9B45A;font-weight:700;margin-top:2px">Universidad de Manila</div>
+        </td>
+      </tr></table>
+    </td>
+  </tr>
+  <tr>
+    <td style="padding:30px 28px 26px;font-size:14.5px;line-height:1.6;color:#2B3330">
+      <div style="font-family:'Plus Jakarta Sans',Arial,Helvetica,sans-serif;font-weight:800;font-size:22px;letter-spacing:-.4px;color:#0A1F18;margin-bottom:14px">Welcome to the UDM Alumni portal</div>
+      <div style="margin-bottom:12px">Hi {{ first_name }},</div>
+      <div style="margin-bottom:22px">The Alumni Relations Office added you to the UDM Alumni portal from the official graduate masterlist. Your Alumni ID is <strong style="color:#0A1F18">{{ membership_id }}</strong>. Sign in with the details below to complete your profile and the alumni tracer.</div>
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:22px;background:#F2F8F5;border:1px solid #CFE3D9;border-radius:8px;border-collapse:separate">
+        <tr><td style="padding:12px 16px 4px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:#5F6B66">Email</td></tr>
+        <tr><td style="padding:0 16px 10px;font-size:14.5px;font-weight:700;color:#0A1F18">{{ email }}</td></tr>
+        <tr><td style="padding:4px 16px 4px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:#5F6B66">Temporary password</td></tr>
+        <tr><td style="padding:0 16px 12px;font-family:'JetBrains Mono',Consolas,'Courier New',monospace;font-size:18px;font-weight:700;letter-spacing:.08em;color:#0A1F18">{{ temp_password }}</td></tr>
+      </table>
+      <div style="margin-bottom:22px"><a href="{{ signin_url }}" style="display:inline-block;background:#0B5A40;color:#FFFFFF;border-radius:8px;padding:13px 28px;font-weight:700;font-size:14.5px;text-decoration:none">Sign In</a></div>
+      <div style="font-size:13.5px;margin-bottom:6px;font-weight:700;color:#0A1F18">How to get started</div>
+      <div style="font-size:13.5px;margin-bottom:22px">
+        <div style="margin-bottom:4px">1. Click <strong>Sign In</strong> above and enter your email (or Alumni ID) and the temporary password.</div>
+        <div style="margin-bottom:4px">2. Choose your own password (8+ characters, one number, one uppercase letter).</div>
+        <div>3. Review your profile. Your contact details stay hidden until you choose to share them.</div>
+      </div>
+      <div style="font-size:13px;color:#5F6B66;margin-bottom:22px">The temporary password expires in <strong style="color:#2B3330">{{ expires_days }} days</strong>. After that, use <strong style="color:#2B3330">Forgot password?</strong> on the sign-in page.</div>
+      <div style="border-top:1px solid #E3E7E5;padding-top:16px;font-size:12.5px;color:#5F6B66">Not a UDM graduate, or not expecting this? Let the Alumni Relations Office know. Never share this email or password with anyone.</div>
+    </td>
+  </tr>
+  <tr>
+    <td style="background:#F4F6F5;padding:14px 28px;font-size:11.5px;color:#6B7672;line-height:1.5">UDM Alumni Relations Office · Universidad de Manila, Cecilia Muñoz-Palma St., Ermita, Manila<br>This is an automated message. Please do not reply.</td>
+  </tr>
+</table>
+</td></tr>
+</table>
+</body>
+</html>

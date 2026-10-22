@@ -9,6 +9,7 @@ Laravel API sends exactly these files through the Gmail API once the backend exi
 |---|---|---|
 | `password-reset` | `POST /auth/forgot-password` | `first_name`, `reset_url`, `code` (shown as `482 913`), `expires_minutes`, `logo_url` |
 | `event-registration` | `POST /events/:id/rsvp` | `first_name`, `event_title`, `event_date`, `event_time`, `event_venue`, `event_fee`, `answers` (optional), `pass_code`, `event_url`, `logo_url` |
+| `account-invite` | `POST /imports/:id/confirm` (AI Data Management), one per new account | `first_name`, `email`, `temp_password`, `membership_id`, `signin_url`, `expires_days`, `logo_url` |
 
 Each template has an `.html` part and a `.txt` part (send both as `multipart/alternative`).
 

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\V1\AlumniController;
 use App\Http\Controllers\Api\V1\AuthController;
+use App\Http\Controllers\Api\V1\DataManagementController;
 use App\Http\Controllers\Api\V1\DirectoryController;
 use App\Http\Controllers\Api\V1\EventsController;
 use App\Http\Controllers\Api\V1\FileController;
@@ -119,6 +120,20 @@ Route::middleware('role:admin')->group(function () {
     Route::get('/audit', [SettingsController::class, 'audit']);
 });
 
+// AI Data Management: masterlist import (upload → AI review → confirm → synced, roll back), record export, audit log.
+Route::prefix('imports')->middleware('role:admin')->group(function () {
+    Route::get('/', [DataManagementController::class, 'current']);
+    Route::post('/', [DataManagementController::class, 'upload'])->middleware('throttle:20,1');
+    Route::get('/log', [DataManagementController::class, 'log']);
+    Route::get('/export', [DataManagementController::class, 'export'])->middleware('throttle:30,1');
+    Route::get('/{id}', [DataManagementController::class, 'show']);
+    Route::delete('/{id}', [DataManagementController::class, 'discard']);
+    Route::post('/{id}/validate', [DataManagementController::class, 'validateBatch']);
+    Route::post('/{id}/rows/{rowId}', [DataManagementController::class, 'decide'])->where('rowId', '[0-9]+');
+    Route::post('/{id}/confirm', [DataManagementController::class, 'confirm']);
+    Route::post('/{id}/rollback', [DataManagementController::class, 'rollback']);
+});
+
 Route::prefix('notifications')->middleware('role:alumni,dept,admin')->group(function () {
     Route::get('/', [NotificationController::class, 'index']);
     Route::post('/read-all', [NotificationController::class, 'readAll']);
@@ -142,6 +157,7 @@ Route::prefix('messages')->middleware('role:alumni,dept,admin')->group(function 
 Route::prefix('jobs')->group(function () {
     Route::middleware('role:alumni,dept,admin')->group(function () {
         Route::get('/', [JobsController::class, 'index']);
+        Route::get('/stats', [JobsController::class, 'stats']);
         Route::get('/{id}', [JobsController::class, 'show']);
     });
     Route::middleware('role:alumni,admin')->group(function () {

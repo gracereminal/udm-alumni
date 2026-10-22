@@ -12,9 +12,12 @@ use Illuminate\Support\Facades\Mail;
 | applied_via; an RSVP sends one confirmation email with a stable entry pass; an event's count = its registrations.
 */
 
-function jobId(string $company): int
+/** An approved admin posting; the demo board itself holds only UDM's own openings. */
+function adminJob(array $fields = []): int
 {
-    return (int) DB::table('job_posting')->where('company', $company)->where('source', 'admin')->value('job_id');
+    return (int) withSession(signIn('admin@udmalumni.edu'))->postJson('/api/v1/jobs', $fields + [
+        'title' => 'Instructor', 'company' => 'Test Employer', 'type' => 'Full-time', 'applyVia' => 'hr@test-employer.ph',
+    ])->assertCreated()->json('id');
 }
 
 function upcomingEventId(?int $capacity = null): int
@@ -23,10 +26,17 @@ function upcomingEventId(?int $capacity = null): int
 }
 
 it('shows the job board with the viewer\'s own saves and applications', function () {
-    $r = withSession(signIn('maria.delacruz@udmalumni.edu'))->getJson('/api/v1/jobs')->assertOk();
+    $total = DB::table('job_posting')->where('approval_status', 'approved')->count();
+    $brightline = adminJob(['company' => 'Brightline Tech', 'messenger' => 'brightlinetech']);
+    adminJob(['company' => 'Nimbus Systems']);
+    $token = signIn('maria.delacruz@udmalumni.edu');
+    withSession($token)->postJson("/api/v1/jobs/{$brightline}/save")->assertOk();
+    withSession($token)->postJson("/api/v1/jobs/{$brightline}/apply", ['via' => 'email'])->assertOk();
+
+    $r = withSession($token)->getJson('/api/v1/jobs')->assertOk();
     $byCompany = collect($r->json('data'))->keyBy('company');
 
-    expect($r->json('meta.total'))->toBe(5)
+    expect($r->json('meta.total'))->toBe($total + 2)
         ->and($byCompany['Brightline Tech']['saved'])->toBeTrue()
         ->and($byCompany['Brightline Tech']['applied']['via'])->toBe('email')
         ->and($byCompany['Brightline Tech']['messenger'])->toBe('brightlinetech')
@@ -34,11 +44,35 @@ it('shows the job board with the viewer\'s own saves and applications', function
         ->and($byCompany['Brightline Tech'])->not->toHaveKey('saves');
 });
 
+it('summarizes the open postings for the board tiles', function () {
+    $before = withSession(signIn('maria.delacruz@udmalumni.edu'))->getJson('/api/v1/jobs/stats')->assertOk()->json();
+    $a = adminJob(['company' => 'Acme Corp', 'salary' => '₱30,000 - ₱50,000']);
+    adminJob(['company' => 'acme corp ', 'salary' => '₱40k']);
+    $hidden = adminJob(['company' => 'Hidden Co', 'salary' => '₱900,000']);
+    withSession(signIn('admin@udmalumni.edu'))->postJson("/api/v1/jobs/{$hidden}/deactivate")->assertOk();
+    $token = signIn('maria.delacruz@udmalumni.edu');
+    withSession($token)->postJson("/api/v1/jobs/{$a}/apply", ['via' => 'email'])->assertOk();
+
+    $s = withSession($token)->getJson('/api/v1/jobs/stats')->assertOk();
+    $open = $before['open'] + 2;
+    expect($s->json('open'))->toBe($open)
+        ->and($s->json('employers'))->toBe($before['employers'] + 1)
+        ->and($s->json('applications'))->toBe($before['applications'] + 1)
+        ->and($s->json('responseRate'))->toBe((int) round(100 * (DB::table('v_job_stats as s')->join('job_posting as j', 'j.job_id', '=', 's.job_id')
+            ->where(['j.approval_status' => 'approved', 'j.is_active' => true])->whereNull('j.deleted_at')->where('s.applications', '>', 0)->count()) / $open));
+    if ($before['salary'] === null) {
+        expect($s->json('salary'))->toBe(['low' => 35000, 'high' => 45000, 'disclosed' => 2]);
+    }
+});
+
 it('keeps the approval queue for the admin', function () {
-    withSession(signIn('maria.delacruz@udmalumni.edu'))->getJson('/api/v1/jobs?view=queue')->assertForbidden();
+    $maria = signIn('maria.delacruz@udmalumni.edu');
+    withSession($maria)->postJson('/api/v1/jobs', ['title' => 'QA Engineer', 'company' => 'Seaboard Digital', 'applyVia' => 'careers@seaboard.ph'])->assertCreated();
+
+    withSession($maria)->getJson('/api/v1/jobs?view=queue')->assertForbidden();
     $queue = withSession(signIn('admin@udmalumni.edu'))->getJson('/api/v1/jobs?view=queue')->assertOk();
 
-    expect($queue->json('meta.total'))->toBe(3)->and($queue->json('data.0.email'))->toContain('@udm.edu.ph');
+    expect($queue->json('meta.total'))->toBe(1)->and($queue->json('data.0.email'))->toBe('maria.delacruz@udmalumni.edu');
 });
 
 it('queues an alumni posting, notifies the admins, and approval notifies only the poster', function () {
@@ -73,7 +107,8 @@ it('queues an alumni posting, notifies the admins, and approval notifies only th
 });
 
 it('rejects with a reason sent to the poster', function () {
-    $id = (int) DB::table('job_posting')->where('approval_status', 'pending')->orderBy('job_id')->value('job_id');
+    $id = withSession(signIn('maria.delacruz@udmalumni.edu'))->postJson('/api/v1/jobs', ['title' => 'IT Support', 'company' => 'Coastal Bank', 'applyVia' => 'hr@coastalbank.ph'])
+        ->assertCreated()->json('id');
     $poster = DB::table('job_posting')->where('job_id', $id)->value('posted_by');
 
     withSession(signIn('admin@udmalumni.edu'))->postJson("/api/v1/jobs/{$id}/reject", ['reason' => 'Missing salary details'])->assertOk()->assertJsonPath('approvalStatus', 'rejected');
@@ -82,7 +117,7 @@ it('rejects with a reason sent to the poster', function () {
 
 it('saves, applies through a listed channel, and withdraws', function () {
     $token = signIn('maria.delacruz@udmalumni.edu');
-    $nimbus = jobId('Nimbus Systems'); // email only, no Messenger
+    $nimbus = adminJob(['company' => 'Nimbus Systems']); // email only, no Messenger
     $alumni = (int) DB::table('alumnus as a')->join('user_account as u', 'u.user_id', '=', 'a.user_id')->where('u.email', 'maria.delacruz@udmalumni.edu')->value('a.alumni_id');
 
     withSession($token)->postJson("/api/v1/jobs/{$nimbus}/save")->assertOk()->assertJsonPath('saved', true);
@@ -94,14 +129,14 @@ it('saves, applies through a listed channel, and withdraws', function () {
     withSession($token)->deleteJson("/api/v1/jobs/{$nimbus}/save")->assertOk()->assertJsonPath('saved', false);
     expect(DB::table('saved_job')->where(['alumni_id' => $alumni, 'job_id' => $nimbus])->exists())->toBeFalse();
 
-    $veyra = jobId('Veyra Analytics'); // a careers page
+    $veyra = adminJob(['company' => 'Veyra Analytics', 'applyVia' => 'https://veyra.ai/careers']); // a careers page
     withSession($token)->postJson("/api/v1/jobs/{$veyra}/apply", ['via' => 'website'])->assertOk()->assertJsonPath('applied.via', 'website');
 });
 
 it('lets the admin deactivate, delete and restore a posting', function () {
     $admin = signIn('admin@udmalumni.edu');
     $maria = signIn('maria.delacruz@udmalumni.edu');
-    $id = jobId('Northpoint Cloud');
+    $id = adminJob(['company' => 'Northpoint Cloud']);
 
     withSession($admin)->postJson("/api/v1/jobs/{$id}/deactivate")->assertOk()->assertJsonPath('status', 'inactive');
     withSession($maria)->getJson("/api/v1/jobs/{$id}")->assertNotFound();
