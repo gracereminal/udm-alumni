@@ -18,8 +18,11 @@ export default function AlumniDashboardView(v) {
     announceOrder,
     avatarCss,
     avatarInitials,
+    dashBatch,
     dashJobs,
     dashMetrics,
+    dashStatus,
+    dashSubline,
     dashSurveyPct,
     dashSurveyRemainingLabel,
     dismissSurveyBanner,
@@ -150,20 +153,23 @@ export default function AlumniDashboardView(v) {
                   ) : null}
                 </div>
                 <div>
-                  <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+                  <div style={{ display: 'flex', gap: '8px', marginBottom: '8px', flexWrap: 'wrap' }}>
+                    {dashStatus ? (
                     <div
                       style={{
                         fontSize: '10.5px',
                         fontWeight: '700',
-                        color: '#0F8A5F',
-                        background: '#E1F3EA',
+                        color: dashStatus.color,
+                        background: dashStatus.bg,
                         padding: '4px 10px',
                         borderRadius: '8px',
                         letterSpacing: '.3px',
                       }}
                     >
-                      ✓ VERIFIED GRADUATE
+                      {dashStatus.label}
                     </div>
+                    ) : null}
+                    {dashBatch ? (
                     <div
                       style={{
                         fontSize: '10.5px',
@@ -175,13 +181,14 @@ export default function AlumniDashboardView(v) {
                         letterSpacing: '.3px',
                       }}
                     >
-                      CLASS OF 2024
+                      {dashBatch}
                     </div>
+                    ) : null}
                   </div>
                   <div style={{ fontFamily: 'Inter,sans-serif', fontWeight: '700', fontSize: '30px', letterSpacing: '-.7px', color: '#0B1220' }}>
                     Welcome, {alumniName}
                   </div>
-                  <div style={{ fontSize: '13px', color: '#64748B', marginTop: '5px' }}>BS Information Technology · 24-01-234</div>
+                  <div style={{ fontSize: '13px', color: '#64748B', marginTop: '5px' }}>{dashSubline}</div>
                 </div>
               </div>
               <div style={{ display: 'flex', gap: '10px', flex: 'none' }}>

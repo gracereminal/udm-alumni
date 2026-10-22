@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\V1\InternalJobsController;
 use App\Http\Controllers\Api\V1\JobsController;
 use App\Http\Controllers\Api\V1\LookupController;
 use App\Http\Controllers\Api\V1\MeController;
+use App\Http\Controllers\Api\V1\MessagesController;
 use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\OutreachController;
 use App\Http\Controllers\Api\V1\PasswordResetController;
@@ -128,6 +129,14 @@ Route::prefix('outreach')->middleware('role:admin,dept')->group(function () {
     Route::post('/', [OutreachController::class, 'store'])->middleware('throttle:outreach');
     Route::patch('/{id}', [OutreachController::class, 'update']);
     Route::delete('/{id}', [OutreachController::class, 'destroy']);
+});
+
+// Messages widget: one-to-one threads (alumnus <-> office, alumnus <-> their college, college staff <-> office).
+Route::prefix('messages')->middleware('role:alumni,dept,admin')->group(function () {
+    Route::get('/threads', [MessagesController::class, 'index']);
+    Route::post('/threads', [MessagesController::class, 'open']);
+    Route::get('/threads/{id}', [MessagesController::class, 'show']);
+    Route::post('/threads/{id}/messages', [MessagesController::class, 'send'])->middleware('throttle:messages');
 });
 
 Route::prefix('jobs')->group(function () {

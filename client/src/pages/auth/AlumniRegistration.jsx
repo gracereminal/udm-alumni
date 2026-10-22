@@ -67,8 +67,8 @@ export default function AlumniRegistration() {
     try { consent = JSON.parse(sessionStorage.getItem(PRIVACY_KEY) || 'null'); } catch { consent = null; }
     setBusy(true);
     try {
-      // The password is sent once over HTTPS; the API stores only its hash. No sign-in here: the account is either
-      // active (sign in next) or pending an Admin's approval, per res.status.
+      // The password is sent once over HTTPS; the API stores only its hash. No sign-in here: the account is active
+      // straight away, so the success screen leads to Sign In.
       const res = await registerAlumni({ ...a, ...pw, privacy_consent: !!consent, marketing_opt_in: !!(consent && consent.comms) });
       completeRegistration(a, res);
       try { sessionStorage.removeItem(PRIVACY_KEY); } catch { /* ignore */ }

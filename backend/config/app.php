@@ -63,6 +63,9 @@ return [
     // Lets the DemoSeeder run against a non-local (staging) database.
     'allow_demo_seed' => (bool) env('ALLOW_DEMO_SEED', false),
 
+    // Total alumni the DemoSeeder creates (named demo people included), e.g. 3000 for a load test. Unset = the default set.
+    'demo_alumni' => env('DEMO_ALUMNI') !== null ? (int) env('DEMO_ALUMNI') : null,
+
     // The built-in admin that app:ensure-admin creates on container start if it is missing.
     'admin_email' => env('ADMIN_EMAIL', 'admin@udmalumni.edu'),
     'admin_password' => env('ADMIN_PASSWORD'),

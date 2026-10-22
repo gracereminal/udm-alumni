@@ -10,6 +10,7 @@ const TABLES = [
     'alumnus', 'social_link', 'credential', 'skill', 'alumni_skill', 'survey_cycle', 'survey_response', 'employment_record',
     'proof_document', 'record_review', 'outreach_contact', 'job_posting', 'job_skill', 'saved_job', 'event',
     'event_agenda_item', 'event_reg_field', 'event_registration', 'announcement', 'audit_log', 'report_export',
+    'message_thread', 'message', 'message_read',
 ];
 
 const VIEWS = [

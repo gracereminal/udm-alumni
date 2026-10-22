@@ -18,7 +18,7 @@ use Illuminate\Support\Carbon;
  * @property int|null $college_id
  * @property string $display_name
  * @property string|null $role_label
- * @property string $account_status pending | active | disabled
+ * @property string $account_status active | disabled
  * @property bool $must_change_password
  * @property int $failed_login_count
  * @property Carbon|null $locked_until

@@ -6,9 +6,9 @@ import { listOf, loadTestCatalog, mockApi, session } from '../test/mockApi';
 
 const ROW = {
   id: 7, membershipId: '2022-00007', name: 'Ana Cruz', program: 'BSIT', course: 'BS Information Technology', college: 'College of Computer Studies', collegeId: 1,
-  batch: '2022', employmentStatus: 'employed', company: 'Acme', email: 'ana@example.com', source: 'self_registration', updatedAt: '2026-10-01T00:00:00Z', status: 'pending', hasAccount: true,
+  batch: '2022', employmentStatus: 'employed', company: 'Acme', email: 'ana@example.com', source: 'self_registration', updatedAt: '2026-10-01T00:00:00Z', status: 'verified', hasAccount: true,
 };
-const COUNTERS = { pending: 1, flagged: 0, verified: 3, archived: 0, all: 4, batches: [2024, 2022] };
+const COUNTERS = { flagged: 1, verified: 3, archived: 0, all: 4, batches: [2024, 2022] };
 
 function setup(role, routes = [], rows = [ROW]) {
   loadTestCatalog();
@@ -27,12 +27,12 @@ const lastList = (api) => api.last('GET', '/alumni').query;
 const ev = (value) => ({ target: { value } });
 
 describe('Alumni Records filters', () => {
-  it('loads the pending tab, newest first, 10 per page', async () => {
+  it('loads all records, newest first, 10 per page', async () => {
     const { api, vals } = setup('admin');
     await waitFor(() => expect(vals().recRowsView).toHaveLength(1));
-    expect(lastList(api)).toEqual({ status: 'pending', page: '1', per_page: '10', sort: 'updated_at' });
-    expect(vals().recRowsView[0]).toMatchObject({ name: 'Ana Cruz', employment: 'Employed', source: 'Self-registration', statusLabel: 'Pending', progBatch: 'BSIT · Batch 2022' });
-    expect(vals().recTabs.map((t) => `${t.label} ${t.count}`)).toEqual(['Pending review 1', 'Flagged 0', 'Verified 3', 'Archived 0', 'All records 4']);
+    expect(lastList(api)).toEqual({ page: '1', per_page: '10', sort: 'updated_at' });
+    expect(vals().recRowsView[0]).toMatchObject({ name: 'Ana Cruz', employment: 'Employed', source: 'Self-registration', statusLabel: 'Verified', progBatch: 'BSIT · Batch 2022' });
+    expect(vals().recTabs.map((t) => `${t.label} ${t.count}`)).toEqual(['All records 4', 'Verified 3', 'Flagged 1', 'Archived 0']);
     expect(vals().recBatchOpts.map((o) => o.value)).toEqual(['all', '2024', '2022']);
   });
 
@@ -44,7 +44,7 @@ describe('Alumni Records filters', () => {
     act(() => vals().recSetEmpSel(ev('self_employed')));
     act(() => vals().recSetSort(ev('name')));
     await waitFor(() => expect(lastList(api)).toEqual({
-      status: 'pending', program_id: '10', batch: '2022', employment: 'self_employed', page: '1', per_page: '10', sort: 'name', dir: 'asc',
+      program_id: '10', batch: '2022', employment: 'self_employed', page: '1', per_page: '10', sort: 'name', dir: 'asc',
     }));
     expect(vals().recResultLabel).toBe('1 record match your filters');
   });
@@ -69,7 +69,7 @@ describe('Alumni Records filters', () => {
   it('switching tab or filter goes back to page 1', async () => {
     const { api, vals } = setup('admin');
     await waitFor(() => expect(api.find('GET', '/alumni')).toHaveLength(1));
-    act(() => vals().recTabs[2].onClick());
+    act(() => vals().recTabs[1].onClick());
     await waitFor(() => expect(lastList(api)).toMatchObject({ status: 'verified', page: '1' }));
     act(() => vals().recSetPageSize(ev('25')));
     await waitFor(() => expect(lastList(api)).toMatchObject({ status: 'verified', per_page: '25', page: '1' }));
@@ -107,28 +107,27 @@ describe('Alumni Records filters', () => {
 });
 
 describe('Alumni Records actions', () => {
-  // A self-registration whose sign-in account is still waiting for an Admin.
-  const PENDING = { ...ROW, id: 8, membershipId: 'AM-2026-N0001', name: 'Paolo Mendoza', accountStatus: 'pending' };
+  // A record the Alumni Office flagged for follow-up.
+  const FLAGGED = { ...ROW, id: 8, membershipId: 'AM-2026-00001', name: 'Paolo Mendoza', status: 'flagged', note: 'Check the batch year.' };
   const detail = (r) => ['GET', new RegExp(`^/alumni/${r.id}$`), { ...r, history: [] }];
   const proofs = (r) => ['GET', new RegExp(`^/alumni/${r.id}/proofs$`), listOf([])];
 
-  it('verifying a pending registration approves the account (Admin only)', async () => {
-    const { api, vals } = setup('admin', [detail(PENDING), proofs(PENDING), ['POST', '/alumni/8/status', { ...PENDING, status: 'verified', accountStatus: 'active' }]], [PENDING]);
+  it('clears a flag and marks the record verified', async () => {
+    const { api, vals } = setup('admin', [detail(FLAGGED), proofs(FLAGGED), ['POST', '/alumni/8/status', { ...FLAGGED, status: 'verified' }]], [FLAGGED]);
     await waitFor(() => expect(vals().recRowsView).toHaveLength(1));
     act(() => vals().recRowsView[0].onView());
-    await waitFor(() => expect(vals().recDrawerApproveLabel).toBe('Approve account & verify'));
+    await waitFor(() => expect(vals().recDrawerApproveLabel).toBe('Clear flag & mark verified'));
     expect(vals().recDrawerCanApprove).toBe(true);
-    expect(vals().recDrawerStatusNote).toMatch(/account pending/);
     await act(() => vals().recDrawerApprove());
     expect(api.last('POST', '/alumni/8/status').body).toEqual({ action: 'verify', reason: null });
-    await waitFor(() => expect(vals().repToast).toBe('Paolo Mendoza’s account approved — they can now sign in'));
+    await waitFor(() => expect(vals().repToast).toBe('Paolo Mendoza verified'));
   });
 
-  it('college users cannot approve a pending account', async () => {
-    const { vals } = setup('dept', [detail(PENDING), proofs(PENDING)], [PENDING]);
+  it('a verified record has nothing to approve', async () => {
+    const { vals } = setup('dept', [detail(ROW), proofs(ROW)]);
     await waitFor(() => expect(vals().recRowsView).toHaveLength(1));
     act(() => vals().recRowsView[0].onView());
-    await waitFor(() => expect(vals().recDrawerStatusNote).toBe('New registration · account awaiting Admin approval'));
+    await waitFor(() => expect(vals().recDrawerStatusNote).toMatch(/^Verified/));
     expect(vals().recDrawerCanApprove).toBe(false);
   });
 
@@ -142,7 +141,7 @@ describe('Alumni Records actions', () => {
     expect(vals().recActBody).toContain('/signin');
     await act(() => vals().recActSubmit());
     expect(opened[0]).toMatch(/^mailto:ana@example\.com\?subject=/);
-    expect(api.last('POST', '/alumni/7/emails').body).toEqual({ subject: 'UDM Alumni Tracer — please complete your submission' });
+    expect(api.last('POST', '/alumni/7/emails').body).toEqual({ subject: 'UDM Alumni Tracer — annual employment update' });
     expect(api.find('POST', '/outreach')).toHaveLength(0);
     click.mockRestore();
   });

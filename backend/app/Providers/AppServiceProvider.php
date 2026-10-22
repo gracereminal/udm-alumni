@@ -43,6 +43,9 @@ class AppServiceProvider extends ServiceProvider
 
         // throttle:outreach on POST /outreach: per staff account, per minute.
         RateLimiter::for('outreach', fn (Request $request) => Limit::perMinute(30)->by('outreach|'.(auth()->id() ?? $request->ip())));
+
+        // throttle:messages on POST /messages/threads/:id/messages: per account, per minute.
+        RateLimiter::for('messages', fn (Request $request) => Limit::perMinute(30)->by('messages|'.(auth()->id() ?? $request->ip())));
     }
 
     /** Fail fast with a clear message when production is missing configuration (docs/deploy-notes.md, section 1.2). */

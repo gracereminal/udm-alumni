@@ -96,7 +96,7 @@ class StatsController extends Controller
             'batch_from' => 'nullable|integer|between:1950,2100',
             'batch_to' => 'nullable|integer|between:1950,2100',
             'batches' => ['nullable', 'regex:/^\d{4}(,\d{4})*$/'],
-            'status' => 'nullable|in:pending,verified,flagged',
+            'status' => 'nullable|in:verified,flagged',
         ]);
         if (isset($f['batches'])) {
             $f['batches'] = array_map('intval', explode(',', $f['batches']));

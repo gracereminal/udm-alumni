@@ -5,6 +5,13 @@ export const initials = (name, n = 2) => String(name || '').split(' ').filter(Bo
 /** "Bachelor of Science in Information Technology" -> "BSIT" */
 export const courseCode = (full) => progCode(full);
 
+/** Record status -> [badge label, text colour, background], shared by the Alumni Dashboard and Profile badges. */
+export const RECORD_STATUS = {
+  verified: ['✓ VERIFIED GRADUATE', '#0F8A5F', '#E1F3EA'],
+  flagged: ['NEEDS REVIEW', '#B42318', '#FDECEA'],
+  archived: ['ARCHIVED RECORD', '#475569', '#EEF1F4'],
+};
+
 export const num = (n) => Number(n).toLocaleString('en-US');
 
 export function fmtShortDate(ts) {

@@ -12,10 +12,10 @@ use Illuminate\Support\Facades\Hash;
 use RuntimeException;
 
 /**
- * Demo data for local, testing and staging ONLY. A few hundred alumni across every college and program for batches
- * 2019–2026, with survey responses and current employment so the stats are real and checkable, plus the demo accounts
+ * Demo data for local, testing and staging ONLY. A few hundred alumni (or DEMO_ALUMNI in total, e.g. 3000 for a load
+ * test) across every college and program for batches 2019–2026, with survey responses and current employment so the stats are real and checkable, plus the demo accounts
  * (password demoPass123): alumni maria.delacruz@udmalumni.edu, college ccs.dean@udmalumni.edu, admin
- * admin@udmalumni.edu and the pending self-registration paolo.mendoza@gmail.com.
+ * admin@udmalumni.edu and the self-registered paolo.mendoza@gmail.com.
  *
  * Refuses to run with APP_ENV=production, against a production-looking database, or when alumni already exist
  * (start over with: php artisan migrate:fresh --seed).
@@ -55,16 +55,16 @@ class DemoSeeder extends Seeder
 
     /** Named people from the prototype (records, directory, job queue), one row per person. */
     private const PEOPLE = [
-        ['first' => 'Angela Mae', 'last' => 'Dizon', 'mid' => 'AM-2024-00891', 'prog' => 'CBPM-BSBA-MM', 'batch' => 2024, 'status' => 'pending', 'emp' => ['employed', 'SAP Systems Analyst', 'Accenture Philippines', 'tech'], 'note' => 'Membership ID pending confirmation — submitted before Alumni Office activation.', 'dir' => ['industry' => 'IT Consulting', 'skills' => ['SAP ERP', 'SQL', 'Business Process Modeling'], 'email' => true, 'links' => ['linkedin' => 'linkedin.com/in/angeladizon']]],
-        ['first' => 'Christian Paul', 'last' => 'Mendoza', 'mid' => 'AM-2024-03310', 'prog' => 'CCS-BSIT', 'batch' => 2024, 'status' => 'pending', 'emp' => ['employed', 'Associate Cybersecurity Engineer', 'Trend Micro', 'tech'], 'dir' => ['industry' => 'Cybersecurity', 'skills' => ['Network Security', 'Penetration Testing', 'Python'], 'links' => ['facebook' => 'cpmendoza', 'linkedin' => 'linkedin.com/in/cpmendoza']]],
-        ['first' => 'Kristine', 'last' => 'Bautista', 'mid' => 'AM-2024-04421', 'prog' => 'CBPM-BSBA-HRM', 'batch' => 2024, 'status' => 'pending', 'emp' => ['employed', 'HR Associate', 'BDO Unibank', 'biz']],
-        ['first' => 'Jerome', 'last' => 'Aquino', 'mid' => 'AM-2023-02219', 'prog' => 'CCS-BSIT', 'batch' => 2023, 'status' => 'pending', 'emp' => ['employed', 'Database Administrator', 'Oracle Philippines', 'tech'], 'note' => 'Employer certificate uploaded — awaiting cross-check with masterlist entry.'],
-        ['first' => 'Michelle', 'last' => 'Ramos', 'mid' => 'AM-2023-06654', 'prog' => 'CAS-BSPsych', 'batch' => 2023, 'status' => 'pending', 'emp' => ['employed', 'Customer Experience Specialist', 'Concentrix', 'biz']],
-        ['first' => 'Allan', 'last' => 'Del Rosario', 'mid' => 'AM-2022-07781', 'prog' => 'CCS-BSIT', 'batch' => 2022, 'status' => 'pending', 'emp' => ['self_employed', 'Freelance Web Developer', 'Self-employed', 'tech'], 'note' => 'Self-employment declared — request business or BIR registration proof.', 'proof' => true],
-        ['first' => 'Charmaine', 'last' => 'Lopez', 'mid' => 'AM-2022-03390', 'prog' => 'CCJ-BSCrim', 'batch' => 2022, 'status' => 'pending', 'emp' => ['employed', 'Police Officer', 'Manila Police District', 'gov']],
-        ['first' => 'Bryan', 'last' => 'Navarro', 'mid' => 'AM-2021-05512', 'prog' => 'CHS-BSN', 'batch' => 2021, 'status' => 'pending', 'emp' => ['further_studies']],
-        ['first' => 'Kathleen', 'last' => 'Mercado', 'mid' => 'AM-2021-00984', 'prog' => 'COED-BSEd-Eng', 'batch' => 2021, 'status' => 'pending', 'emp' => ['not_employed'], 'note' => 'Survey submitted without employment section — follow up before batch clearance.'],
-        ['first' => 'Paolo', 'last' => 'Enriquez', 'mid' => 'AM-2020-06120', 'prog' => 'CHS-BSN', 'batch' => 2020, 'status' => 'pending', 'emp' => ['employed', 'Staff Nurse', 'Ospital ng Maynila', 'health']],
+        ['first' => 'Angela Mae', 'last' => 'Dizon', 'mid' => 'AM-2024-00891', 'prog' => 'CBPM-BSBA-MM', 'batch' => 2024, 'status' => 'flagged', 'emp' => ['employed', 'SAP Systems Analyst', 'Accenture Philippines', 'tech'], 'note' => 'Membership ID needs confirmation — submitted before Alumni Office activation.', 'dir' => ['industry' => 'IT Consulting', 'skills' => ['SAP ERP', 'SQL', 'Business Process Modeling'], 'email' => true, 'links' => ['linkedin' => 'linkedin.com/in/angeladizon']]],
+        ['first' => 'Christian Paul', 'last' => 'Mendoza', 'mid' => 'AM-2024-03310', 'prog' => 'CCS-BSIT', 'batch' => 2024, 'status' => 'verified', 'emp' => ['employed', 'Associate Cybersecurity Engineer', 'Trend Micro', 'tech'], 'dir' => ['industry' => 'Cybersecurity', 'skills' => ['Network Security', 'Penetration Testing', 'Python'], 'links' => ['facebook' => 'cpmendoza', 'linkedin' => 'linkedin.com/in/cpmendoza']]],
+        ['first' => 'Kristine', 'last' => 'Bautista', 'mid' => 'AM-2024-04421', 'prog' => 'CBPM-BSBA-HRM', 'batch' => 2024, 'status' => 'verified', 'emp' => ['employed', 'HR Associate', 'BDO Unibank', 'biz']],
+        ['first' => 'Jerome', 'last' => 'Aquino', 'mid' => 'AM-2023-02219', 'prog' => 'CCS-BSIT', 'batch' => 2023, 'status' => 'flagged', 'emp' => ['employed', 'Database Administrator', 'Oracle Philippines', 'tech'], 'note' => 'Employer certificate uploaded — awaiting cross-check with masterlist entry.'],
+        ['first' => 'Michelle', 'last' => 'Ramos', 'mid' => 'AM-2023-06654', 'prog' => 'CAS-BSPsych', 'batch' => 2023, 'status' => 'verified', 'emp' => ['employed', 'Customer Experience Specialist', 'Concentrix', 'biz']],
+        ['first' => 'Allan', 'last' => 'Del Rosario', 'mid' => 'AM-2022-07781', 'prog' => 'CCS-BSIT', 'batch' => 2022, 'status' => 'flagged', 'emp' => ['self_employed', 'Freelance Web Developer', 'Self-employed', 'tech'], 'note' => 'Self-employment declared — request business or BIR registration proof.', 'proof' => true],
+        ['first' => 'Charmaine', 'last' => 'Lopez', 'mid' => 'AM-2022-03390', 'prog' => 'CCJ-BSCrim', 'batch' => 2022, 'status' => 'verified', 'emp' => ['employed', 'Police Officer', 'Manila Police District', 'gov']],
+        ['first' => 'Bryan', 'last' => 'Navarro', 'mid' => 'AM-2021-05512', 'prog' => 'CHS-BSN', 'batch' => 2021, 'status' => 'verified', 'emp' => ['further_studies']],
+        ['first' => 'Kathleen', 'last' => 'Mercado', 'mid' => 'AM-2021-00984', 'prog' => 'COED-BSEd-Eng', 'batch' => 2021, 'status' => 'flagged', 'emp' => ['not_employed'], 'note' => 'Survey submitted without employment section — follow up before batch clearance.'],
+        ['first' => 'Paolo', 'last' => 'Enriquez', 'mid' => 'AM-2020-06120', 'prog' => 'CHS-BSN', 'batch' => 2020, 'status' => 'verified', 'emp' => ['employed', 'Staff Nurse', 'Ospital ng Maynila', 'health']],
         ['first' => 'John Carlo', 'last' => 'Reyes', 'mid' => 'AM-2022-01932', 'prog' => 'CCS-BSIT', 'batch' => 2022, 'status' => 'flagged', 'emp' => ['employed', 'Cloud DevOps Specialist', 'GCash (Mynt)', 'tech'], 'note' => 'Two submissions filed under one Membership ID — merge duplicates before review.', 'dir' => ['industry' => 'Financial Technology', 'skills' => ['Kubernetes', 'Docker', 'Terraform'], 'email' => true, 'links' => ['linkedin' => 'linkedin.com/in/jcreyes-devops', 'website' => 'jcreyes.dev']]],
         ['first' => 'Maria', 'last' => 'Santos', 'mid' => 'AM-2023-04128', 'prog' => 'CCS-BSIT', 'batch' => 2023, 'status' => 'verified', 'emp' => ['employed', 'Senior Software Engineer', 'Canva Philippines', 'tech'], 'account' => 'maria.santos@udm.edu.ph', 'dir' => ['industry' => 'Software & Design', 'skills' => ['React', 'TypeScript', 'Node.js'], 'email' => true, 'links' => ['facebook' => 'mariasantos.dev', 'linkedin' => 'linkedin.com/in/mariasantos', 'website' => 'mariasantos.io']]],
         ['first' => 'Mark Kenneth', 'last' => 'Torres', 'mid' => 'AM-2023-07712', 'prog' => 'CCS-BSIT', 'batch' => 2023, 'status' => 'verified', 'emp' => ['self_employed', 'Full-Stack Mobile Developer', 'Independent Consultant', 'tech'], 'dir' => ['industry' => 'Freelance Software Development', 'skills' => ['React Native', 'Firebase', 'Next.js'], 'email' => true, 'links' => ['facebook' => 'mktorres', 'website' => 'mktorres.studio']]],
@@ -171,6 +171,21 @@ class DemoSeeder extends Seeder
         }
     }
 
+    /** Generated alumni on top of Maria, Paolo and PEOPLE, so the total matches DEMO_ALUMNI when it is set. */
+    private static function generatedCount(): int
+    {
+        $total = config('app.demo_alumni');
+        if ($total === null) {
+            return self::GENERATED;
+        }
+        $named = 2 + count(self::PEOPLE);
+        if ($total <= $named || $total > 50000) {
+            throw new RuntimeException(sprintf('DEMO_ALUMNI must be between %d and 50000.', $named + 1));
+        }
+
+        return $total - $named;
+    }
+
     private function seed(): void
     {
         $cycleId = DB::selectOne('SELECT cycle_id FROM v_active_cycle')->cycle_id;
@@ -185,8 +200,7 @@ class DemoSeeder extends Seeder
         $mariaId = $this->alumnus([
             'user_id' => $mariaUser, 'membership_id' => 'AM-2024-00567', 'student_no' => '24-05-567', 'program_id' => $byCode['CCS-BSIT']->program_id,
             'year_graduated' => 2024, 'first_name' => 'Maria', 'last_name' => 'Dela Cruz', 'birth_date' => '2002-03-14', 'sex' => 'female',
-            'present_address' => '1520 Dalupan St., Sampaloc, Manila', 'mobile_no' => '639171234567', 'verification_status' => 'pending', 'record_source' => 'survey',
-            'flag_note' => 'Survey items on industry and income bracket left blank — request completion from alumna.',
+            'present_address' => '1520 Dalupan St., Sampaloc, Manila', 'mobile_no' => '639171234567', 'verification_status' => 'verified', 'record_source' => 'survey',
             'privacy_consent_at' => $this->at(-60), 'directory_opt_in' => true, 'industry' => 'Data Engineering', 'created_at' => $this->at(-60),
         ]);
         $this->links($mariaId, ['linkedin' => 'linkedin.com/in/mariadelacruz'], true);
@@ -194,12 +208,12 @@ class DemoSeeder extends Seeder
         $this->submitSurvey($mariaId, $cycleId, $this->answersFor(['employed', 'Junior Data Engineer', 'Maya Philippines', 'tech'], 'tech'), $this->at(-28, '10:00'));
         $this->skills($mariaId, ['Python', 'Spark', 'SQL', 'Power BI', 'Excel']);
 
-        // The pending self-registration (BSIT, College of Computing Studies): signs in only after an admin approves it.
-        $paoloUser = $this->user('paolo.mendoza@gmail.com', 'alumni', 'Paolo Mendoza', ['account_status' => 'pending'], $this->demoHash);
+        // A recent self-registration (BSIT, College of Computing Studies): active and verified straight away.
+        $paoloUser = $this->user('paolo.mendoza@gmail.com', 'alumni', 'Paolo Mendoza', [], $this->demoHash);
         $paoloId = $this->alumnus([
-            'user_id' => $paoloUser, 'membership_id' => 'AM-2026-N0001', 'program_id' => $byCode['CCS-BSIT']->program_id, 'year_graduated' => 2026, 'first_name' => 'Paolo', 'last_name' => 'Mendoza',
+            'user_id' => $paoloUser, 'membership_id' => 'AM-2026-00001', 'program_id' => $byCode['CCS-BSIT']->program_id, 'year_graduated' => 2026, 'first_name' => 'Paolo', 'last_name' => 'Mendoza',
             'birth_date' => '2004-06-21', 'sex' => 'male', 'civil_status' => 'single', 'present_address' => '2187 Juan Luna St., Tondo, Manila', 'mobile_no' => '639175550142',
-            'verification_status' => 'pending', 'record_source' => 'self_registration', 'privacy_consent_at' => $this->at(-2), 'created_at' => $this->at(-2),
+            'verification_status' => 'verified', 'record_source' => 'self_registration', 'privacy_consent_at' => $this->at(-2), 'created_at' => $this->at(-2),
         ]);
         $this->links($paoloId, ['facebook' => 'paolo.mendoza'], false);
 
@@ -238,7 +252,8 @@ class DemoSeeder extends Seeder
         $catalogPrograms = $programs->where('college_code', '!=', 'OTH')->values()->all();
         $popular = ['CCS-BSIT', 'CET-BSCS', 'CHS-BSN', 'CCJ-BSCrim'];
         $othId = $collegeId('OTH');
-        for ($i = 0; $i < self::GENERATED; $i++) {
+        $generated = self::generatedCount();
+        for ($i = 0; $i < $generated; $i++) {
             $unmapped = $i % 97 === 13;
             $prog = $unmapped ? null : ($this->rand() < 0.22 ? $byCode[$this->pick($popular)] : $this->pick($catalogPrograms));
             $batch = 2019 + mt_rand(0, 7);
@@ -259,7 +274,7 @@ class DemoSeeder extends Seeder
                 'contact_email' => $userId ? null : $this->exampleEmail($first, $last, (string) $seq),
                 'is_indigenous' => ($ip = $this->rand() < 0.04), 'indigenous_group' => $ip ? $this->pick(['Aeta', 'Igorot', 'Lumad', 'Mangyan', 'Ifugao']) : null,
                 'pwd_type' => $this->rand() < 0.022 ? $this->pick(['physical', 'visual', 'hearing', 'psychosocial', 'chronic_illness']) : null,
-                'verification_status' => $this->rand() < 0.04 ? 'flagged' : ($this->rand() < 0.2 ? 'pending' : 'verified'),
+                'verification_status' => $this->rand() < 0.04 ? 'flagged' : 'verified',
                 'archived_at' => $this->rand() < 0.03 ? $this->at(-10) : null,
                 'record_source' => $userId ? 'self_registration' : $this->pick(['import', 'admin_encoded']),
                 'privacy_consent_at' => $userId ? $this->at(-200) : null,
@@ -374,18 +389,48 @@ class DemoSeeder extends Seeder
         ]);
 
         // Notifications whose numbers come from the views at creation time (never typed).
-        $pending = DB::table('v_alumni_current')->where('verification_status', 'pending')->count();
-        $pendingCcs = DB::table('v_alumni_current')->where('verification_status', 'pending')->where('college_id', $collegeId('CCS'))->count();
         $notify = fn (int $userId, string $type, string $title, string $message, string $link) => DB::table('notification')->insert([
             'user_id' => $userId, 'type' => $type, 'title' => $title, 'message' => $message, 'link_url' => $link,
         ]);
-        $notify($adminId, 'registration', 'New registration awaiting approval', 'Paolo Mendoza (Others · Batch 2026) registered and is waiting for approval.', 'records');
-        $notify($deanId, 'registration', 'New registration awaiting approval', 'Paolo Mendoza (Others · Batch 2026) registered and is waiting for approval.', 'records');
-        $notify($adminId, 'registration', "{$pending} alumni records awaiting verification", 'Review them against the registrar’s graduate list.', 'records');
-        $notify($deanId, 'registration', "{$pendingCcs} CCS records awaiting verification", 'Review them against the registrar’s graduate list.', 'records');
+        $notify($adminId, 'registration', 'New alumni registration', 'Paolo Mendoza (BSIT 2026) registered.', 'records');
+        $notify($deanId, 'registration', 'New alumni registration', 'Paolo Mendoza (BSIT 2026) registered.', 'records');
         $notify($adminId, 'job_submitted', count(self::QUEUE).' job postings submitted for review', 'Alumni-submitted postings are waiting in the approval queue.', 'jobs');
         $notify($mariaUser, 'job_match', 'New job match: Cloud Support Engineer', 'Northpoint Cloud is hiring and your skills match this posting.', 'jobs');
         $notify($mariaUser, 'survey', 'Alumni survey response received', 'Thank you — your AY 2025–2026 survey has been recorded.', 'dashboard');
+
+        $this->messages($mariaId, $mariaUser, $adminId, $deanId);
+    }
+
+    /** The mockup's sample Messages: Maria with the office and with CCS, and the CCS dean with the office. */
+    private function messages(int $mariaId, int $mariaUser, int $adminId, int $deanId): void
+    {
+        $threads = [
+            [['channel' => 'office', 'alumni_id' => $mariaId], [
+                [$adminId, 'admin', -3, '09:12', 'Hi! Welcome to the UDM Alumni portal. Let us know if you need help completing your profile.'],
+                [$mariaUser, 'alumni', -3, '09:20', 'Thank you! Where can I update my employment details?'],
+                [$adminId, 'admin', -3, '09:24', 'Open Alumni Profile → Edit Profile → Employment. Our office reviews changes within 2 working days.'],
+            ]],
+            [['channel' => 'college', 'alumni_id' => $mariaId], [
+                [$deanId, 'dept', -2, '13:10', 'Hello! This is the CCS Coordinator. Please confirm your program and graduation year for our records.'],
+                [$mariaUser, 'alumni', -2, '13:32', 'BSIT, graduated 2024. Thank you!'],
+            ]],
+            [['channel' => 'admin', 'staff_user_id' => $deanId], [
+                [$adminId, 'admin', -1, '10:05', 'Good day, Coordinator. Please send the CCS outreach summary before the end of the month.'],
+                [$deanId, 'dept', -1, '10:22', 'Noted. I will send it by Friday.'],
+            ]],
+        ];
+        foreach ($threads as [$thread, $msgs]) {
+            $last = $this->at($msgs[array_key_last($msgs)][2], $msgs[array_key_last($msgs)][3]);
+            $id = DB::table('message_thread')->insertGetId($thread + ['last_message_at' => $last, 'created_at' => $this->at($msgs[0][2], $msgs[0][3])], 'thread_id');
+            // Each sender has read up to their own last message; the other side's newest reply stays unread.
+            $read = [];
+            foreach ($msgs as [$by, $role, $day, $time, $body]) {
+                $read[$by] = DB::table('message')->insertGetId(['thread_id' => $id, 'sender_id' => $by, 'sender_role' => $role, 'body' => $body, 'created_at' => $this->at($day, $time)], 'message_id');
+            }
+            foreach ($read as $by => $lastId) {
+                DB::table('message_read')->insert(['thread_id' => $id, 'user_id' => $by, 'last_read_id' => $lastId]);
+            }
+        }
     }
 
     /** @param  array<string, mixed>  $extra */

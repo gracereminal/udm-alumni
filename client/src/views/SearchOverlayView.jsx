@@ -20,10 +20,6 @@ export default function SearchOverlayView(v) {
     srClearFilters,
     srClearQuery,
     srDesktop,
-    srFilterBtnBg,
-    srFilterBtnBorder,
-    srFilterCount,
-    srFiltersExpanded,
     srH,
     srHasFilters,
     srHasQuery,
@@ -43,7 +39,6 @@ export default function SearchOverlayView(v) {
     srRadius,
     srShowChips,
     srSkeletons,
-    srToggleFilters,
   } = v;
   return (
     <>
@@ -171,67 +166,6 @@ export default function SearchOverlayView(v) {
                   {...fv({ boxShadow: '0 0 0 3px rgba(15,107,79,.22)' })}
                 >
                   ✕
-                </button>
-              </>
-            ) : null}
-            {srMobile ? (
-              <>
-                <button
-                  type="button"
-                  onClick={srToggleFilters}
-                  aria-expanded={srFiltersExpanded}
-                  aria-label="Filters"
-                  style={{
-                    flex: 'none',
-                    height: '44px',
-                    padding: '0 12px',
-                    borderRadius: '12px',
-                    border: `1px solid ${srFilterBtnBorder}`,
-                    background: srFilterBtnBg,
-                    color: '#0F3D2E',
-                    fontFamily: 'inherit',
-                    fontSize: '13px',
-                    fontWeight: '600',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    cursor: 'pointer',
-                    outline: 'none',
-                  }}
-                  {...fv({ boxShadow: '0 0 0 3px rgba(15,107,79,.22)' })}
-                >
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    style={{ width: '16px', height: '16px' }}
-                  >
-                    <path d="M4 6h16M7 12h10M10 18h4" />
-                  </svg>
-                  {srHasFilters ? (
-                    <>
-                      <span
-                        style={{
-                          minWidth: '18px',
-                          height: '18px',
-                          borderRadius: '99px',
-                          background: '#0F3D2E',
-                          color: '#fff',
-                          fontSize: '11px',
-                          fontWeight: '700',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          padding: '0 5px',
-                          boxSizing: 'border-box',
-                        }}
-                      >
-                        {srFilterCount}
-                      </span>
-                    </>
-                  ) : null}
                 </button>
               </>
             ) : null}

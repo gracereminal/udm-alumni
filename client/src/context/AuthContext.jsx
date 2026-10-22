@@ -28,8 +28,7 @@ export function AuthProvider({ children }) {
   }, [setUser]);
 
   /**
-   * Email or Alumni ID (membership ID / student number) + password. A self-registered account that an Admin hasn't
-   * approved yet gets `pending: true`; the API says so only after the password matches.
+   * Email or Alumni ID (membership ID / student number) + password.
    */
   const signIn = useCallback(async (identifier, password) => {
     const id = String(identifier || '').trim();
@@ -40,7 +39,6 @@ export function AuthProvider({ children }) {
       setUser(r.user);
       return { ok: true, user: r.user };
     } catch (err) {
-      if (err.code === 'account_pending') return { ok: false, field: 'identifier', pending: true, error: err.message };
       return { ok: false, field: err.status === 401 ? 'password' : '', error: err.message };
     }
   }, [setUser]);

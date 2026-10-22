@@ -1,7 +1,6 @@
 // Alumni Records labels and styles. The records themselves come from the API (GET /alumni).
-// Statuses: pending | flagged | verified | archived (archived = ALUMNUS.archived_at, outside every count).
+// Statuses: verified | flagged | archived (archived = ALUMNUS.archived_at, outside every count).
 export const REC_STATUS_STYLE = {
-  pending: { label: 'Pending', bg: '#FBF0D8', color: '#8A6D1F' },
   verified: { label: 'Verified', bg: '#E1F3EA', color: '#0F6B4F' },
   flagged: { label: 'Flagged', bg: '#FDE7EC', color: '#B3213C' },
   archived: { label: 'Archived', bg: '#EDEFF2', color: '#5A6572' },

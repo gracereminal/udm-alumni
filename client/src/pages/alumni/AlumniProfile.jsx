@@ -1,10 +1,14 @@
+import { useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import PortalPage, { card } from '../../layouts/PortalPage';
 import Icon from '../../components/Icon';
 import { useProfile } from '../../context/ProfileContext';
+import useDialogDismiss from '../../hooks/useDialogDismiss';
 import { visibleQs, isAnswered } from '../../data/formDefs';
 import { ICONS } from '../../data/navigation';
-import { initials } from '../../lib/format';
+import { onBackdrop } from '../../lib/a11y';
+import { initials, RECORD_STATUS } from '../../lib/format';
+import { hv } from '../../lib/stateStyle';
 import { profileGroups, profileProgress } from '../../lib/profileProgress';
 import { useQuestionConfig } from '../../lib/questionStore';
 
@@ -27,12 +31,6 @@ const SOCIAL = {
   linkedin: ['LinkedIn', 'M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-4 0v7h-4v-7a6 6 0 016-6z M2 9h4v12H2z M4 2a2 2 0 110 4 2 2 0 010-4z', 'linkedin.com/in/'],
 };
 
-const STATUS = {
-  verified: ['✓ VERIFIED GRADUATE', '#0F8A5F', '#E1F3EA'],
-  pending: ['PENDING VERIFICATION', '#8A6D1F', '#FBF0D8'],
-  flagged: ['NEEDS REVIEW', '#B42318', '#FDECEA'],
-  archived: ['ARCHIVED RECORD', '#475569', '#EEF1F4'],
-};
 const badge = (color, bg) => ({ fontSize: 10.5, fontWeight: 700, color, background: bg, padding: '4px 10px', borderRadius: 8, letterSpacing: 0.3, textTransform: 'uppercase' });
 
 const display = (a, q) => {
@@ -50,11 +48,64 @@ function socialHref(raw, base) {
   return '';
 }
 
-/** Alumni Profile: read-only summary of the alumnus' record, per "UDM Alumni.dc.html", with an Edit Profile action. */
+/** The alumnus' ID card dialog ("View Alumni ID"): photo, name, program, batch and Membership ID. */
+function AlumniIdCard({ name, course, batch, avatar, idNo, verified, onClose }) {
+  const closeRef = useRef(null);
+  useDialogDismiss(true, onClose, closeRef);
+  return (
+    <div
+      role="presentation"
+      onClick={onBackdrop(onClose)}
+      style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'rgba(0,37,31,.55)', display: 'flex', alignItems: 'safe center', justifyContent: 'center', overflowY: 'auto', padding: 20, boxSizing: 'border-box' }}
+    >
+      <div role="dialog" aria-modal="true" aria-labelledby="alumni-id-name" style={{ flex: 'none', width: '100%', maxWidth: 360, display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'stretch' }}>
+        <div style={{ flex: 'none', background: 'linear-gradient(165deg,#00251F,#0F3D2E)', borderRadius: 22, overflow: 'hidden', boxShadow: '0 30px 60px -20px rgba(0,0,0,.55)', color: '#fff', fontFamily: 'Inter,sans-serif' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '16px 20px', borderBottom: '1px solid rgba(255,255,255,.14)' }}>
+            <img src="/alumni-logo.png" alt="" style={{ width: 36, height: 36, objectFit: 'contain', borderRadius: '50%', background: '#fff' }} />
+            <div>
+              <div style={{ fontWeight: 700, fontSize: 13, letterSpacing: 0.3 }}>UNIVERSIDAD DE MANILA</div>
+              <div style={{ fontSize: 10.5, color: '#F0C428', fontWeight: 600, letterSpacing: 0.8 }}>ALUMNI IDENTIFICATION</div>
+            </div>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px 20px 20px', gap: 4, textAlign: 'center' }}>
+            {avatar ? (
+              <div role="img" aria-label="Profile photo" style={{ width: 96, height: 96, borderRadius: '50%', border: '3px solid #F0C428', boxSizing: 'border-box', background: `url("${avatar}") center/cover no-repeat` }} />
+            ) : (
+              <div aria-hidden="true" style={{ width: 96, height: 96, borderRadius: '50%', border: '3px solid #F0C428', boxSizing: 'border-box', background: '#F0C428', color: '#0F3D2E', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 30 }}>
+                {initials(name) || 'AL'}
+              </div>
+            )}
+            <div id="alumni-id-name" style={{ fontWeight: 700, fontSize: 21, marginTop: 12, lineHeight: 1.2, overflowWrap: 'anywhere' }}>{name}</div>
+            <div style={{ fontSize: 12.5, color: 'rgba(255,255,255,.78)', lineHeight: 1.45 }}>{course}</div>
+            <div style={{ flex: 'none', whiteSpace: 'nowrap', marginTop: 10, fontSize: 10.5, fontWeight: 700, color: '#00251F', background: '#F0C428', padding: '4px 12px', borderRadius: 8, letterSpacing: 0.4, textTransform: 'uppercase' }}>{batch}</div>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '14px 20px 18px', background: 'rgba(0,0,0,.22)' }}>
+            <div>
+              <div style={{ fontSize: 10, letterSpacing: 0.8, color: 'rgba(255,255,255,.65)', fontWeight: 600 }}>ALUMNI ID NO.</div>
+              <div style={{ fontFamily: 'ui-monospace,Menlo,monospace', fontWeight: 700, fontSize: 16, letterSpacing: 0.6 }}>{idNo || 'Not yet assigned'}</div>
+            </div>
+            {verified ? <div style={{ fontSize: 10.5, fontWeight: 700, color: '#7FE0B4', whiteSpace: 'nowrap' }}>✓ VERIFIED</div> : null}
+          </div>
+        </div>
+        <button
+          ref={closeRef}
+          type="button"
+          onClick={onClose}
+          style={{ alignSelf: 'center', background: '#fff', color: '#0F3D2E', fontFamily: 'inherit', fontWeight: 600, fontSize: 13.5, padding: '10px 28px', borderRadius: 999, border: 'none', cursor: 'pointer' }}
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/** Alumni Profile: read-only summary of the alumnus' record, per "UDM Alumni.dc.html", with Edit Profile and View Alumni ID actions. */
 export default function AlumniProfile() {
   const navigate = useNavigate();
   useQuestionConfig(); // re-render when an Admin edits the questions
   const { a, alumniName, avatar, savedAt, record } = useProfile();
+  const [idOpen, setIdOpen] = useState(false);
 
   const { total, done } = profileProgress(a);
   const groups = profileGroups(a);
@@ -82,12 +133,17 @@ export default function AlumniProfile() {
 
   const course = a.course || a.course_other || 'Course not set';
   const batch = a.year_graduated ? `Class of ${String(a.year_graduated).slice(0, 4)}` : 'Batch year not set';
-  const status = STATUS[record?.status] || null;
+  const status = RECORD_STATUS[record?.status] || null;
   const updated = savedAt ? new Date(savedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : null;
+
+  const actionBtn = (primary) => ({
+    flex: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, fontFamily: 'inherit', fontWeight: 600, fontSize: 14, borderRadius: 12, cursor: 'pointer', whiteSpace: 'nowrap',
+    ...(primary ? { background: '#0F3D2E', color: '#fff', padding: '12px 20px', border: 'none' } : { background: '#fff', color: '#0F3D2E', padding: '11px 20px', border: '1.5px solid #0F3D2E' }),
+  });
 
   return (
     <PortalPage label="Alumni Profile" title="Alumni Profile" caption="UDM ALUMNI RELATIONS OFFICE · ALUMNI" contentStyle={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-      <section data-m="pf-head" aria-label="Profile summary" style={{ ...card, padding: '24px 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 14, flexWrap: 'wrap' }}>
+      <div data-m="pf-head" role="region" aria-label="Profile summary" style={{ ...card, padding: '24px 28px', marginTop: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 14, flexWrap: 'wrap' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 18, minWidth: 0, flex: '1 1 320px' }}>
           {avatar ? (
             <div role="img" aria-label="Profile photo" style={{ flex: 'none', width: 64, height: 64, borderRadius: '50%', border: '2px solid #F0C428', boxSizing: 'border-box', background: `url("${avatar}") center/cover no-repeat` }} />
@@ -96,7 +152,7 @@ export default function AlumniProfile() {
               {initials(alumniName) || 'AL'}
             </div>
           )}
-          <div style={{ minWidth: 0 }}>
+          <div data-m="pf-info" style={{ minWidth: 0 }}>
             <div style={{ display: 'flex', gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
               {status ? <div style={badge(status[1], status[2])}>{status[0]}</div> : null}
               <div style={badge('#0F3D2E', '#E6F0EB')}>{batch}</div>
@@ -111,20 +167,30 @@ export default function AlumniProfile() {
             </div>
           </div>
         </div>
-        <button
-          type="button"
-          onClick={() => navigate('/alumni/profile/edit')}
-          style={{ flex: 'none', display: 'flex', alignItems: 'center', gap: 8, background: '#0F3D2E', color: '#fff', fontFamily: 'inherit', fontWeight: 600, fontSize: 14, padding: '12px 20px', borderRadius: 12, border: 'none', cursor: 'pointer', whiteSpace: 'nowrap' }}
-        >
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#F0C428" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M12 20h9M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z" />
-          </svg>
-          Edit Profile
-        </button>
-      </section>
+        <div style={{ flex: 'none', display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <button type="button" onClick={() => navigate('/alumni/profile/edit')} style={actionBtn(true)} {...hv({ background: '#00251F' })}>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#F0C428" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M12 20h9M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z" />
+            </svg>
+            Edit Profile
+          </button>
+          <button type="button" onClick={() => setIdOpen(true)} aria-haspopup="dialog" style={actionBtn(false)} {...hv({ background: '#E6F0EB' })}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0F3D2E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <rect x="3" y="4" width="18" height="16" rx="2" />
+              <circle cx="9" cy="11" r="2.2" />
+              <path d="M14 9.5h4M14 13h4M6 17c.6-1.7 1.8-2.5 3-2.5s2.4.8 3 2.5" />
+            </svg>
+            View Alumni ID
+          </button>
+        </div>
+      </div>
+
+      {idOpen ? (
+        <AlumniIdCard name={alumniName} course={course} batch={batch} avatar={avatar} idNo={record?.membershipId} verified={record?.status === 'verified'} onClose={() => setIdOpen(false)} />
+      ) : null}
 
       {cards.map((c) => (
-        <section key={c.key} data-m="pf-card" aria-label={c.title} style={{ ...card, padding: '24px 28px 28px' }}>
+        <div key={c.key} data-m="pf-card" role="region" aria-label={c.title} style={{ ...card, padding: '24px 28px 28px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 14, paddingBottom: 18, borderBottom: '1px solid #EEF1EF' }}>
             <div style={{ flex: 'none', width: 40, height: 40, borderRadius: '50%', background: '#E3F1EA', color: '#0F3D2E', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Icon d={c.icon} size={19} />
@@ -174,7 +240,7 @@ export default function AlumniProfile() {
               </div>
             </div>
           ) : null}
-        </section>
+        </div>
       ))}
     </PortalPage>
   );

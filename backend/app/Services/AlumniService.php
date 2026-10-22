@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\DB;
  */
 class AlumniService
 {
-    public const STATUSES = ['pending', 'verified', 'flagged', 'archived'];
+    public const STATUSES = ['verified', 'flagged', 'archived'];
 
     public const EMPLOYMENT = ['employed', 'self_employed', 'further_studies', 'not_employed'];
 
@@ -215,16 +215,14 @@ class AlumniService
     // --- Status, merge, mapping ------------------------------------------------------------------------
 
     /**
-     * verify | flag | unflag | archive | restore. Verifying a registrant whose account is pending also approves the
-     * account; only an admin may do that (the College portal cannot approve accounts).
+     * verify | flag | unflag | archive | restore. Records start verified, so verify and unflag both clear a flag.
      *
      * @return array{from: string, to: string}
      */
     public function changeStatus(int $alumniId, string $action, ?string $reason, UserAccount $actor): array
     {
         $r = DB::selectOne(
-            'SELECT a.alumni_id, a.verification_status, a.archived_at, a.user_id, a.merged_into_id, u.account_status
-               FROM alumnus a LEFT JOIN user_account u ON u.user_id = a.user_id WHERE a.alumni_id = ? FOR UPDATE OF a',
+            'SELECT alumni_id, verification_status, archived_at, user_id, merged_into_id FROM alumnus WHERE alumni_id = ? FOR UPDATE',
             [$alumniId],
         );
         if ($r === null || $r->merged_into_id !== null) {
@@ -234,16 +232,12 @@ class AlumniService
         if ($action === 'flag' && $reason === null) {
             throw new ApiException(422, 'Add a note explaining what needs to be fixed.', 'validation', ['reason' => 'Add a note explaining what needs to be fixed.']);
         }
-        $approve = $action === 'verify' && $r->account_status === 'pending';
-        if ($approve && $actor->role !== 'admin') {
-            throw ApiException::forbidden('Only the Alumni Office Admin can approve a pending registration.');
-        }
 
         $from = $r->archived_at !== null ? 'archived' : $r->verification_status;
         [$set, $to] = match ($action) {
             'verify' => ["verification_status = 'verified', flag_note = NULL, archived_at = NULL", 'verified'],
             'flag' => ["verification_status = 'flagged', flag_note = ?, archived_at = NULL", 'flagged'],
-            'unflag' => ["verification_status = 'pending', flag_note = NULL", 'pending'],
+            'unflag' => ["verification_status = 'verified', flag_note = NULL", 'verified'],
             'archive' => ['archived_at = now()', 'archived'],
             'restore' => ['archived_at = NULL', $r->verification_status],
             default => throw new ApiException(422, 'Unknown action.', 'validation', ['action' => 'Unknown action.']),
@@ -251,16 +245,11 @@ class AlumniService
         DB::update("UPDATE alumnus SET {$set} WHERE alumni_id = ?", $action === 'flag' ? [$reason, $alumniId] : [$alumniId]);
         DB::table('record_review')->insert([
             'alumni_id' => $alumniId, 'reviewer_id' => $actor->user_id, 'action' => $action, 'note' => $reason,
-            'diff' => json_encode(['from' => $from, 'to' => $to] + ($approve ? ['account' => 'approved'] : [])),
+            'diff' => json_encode(['from' => $from, 'to' => $to]),
         ]);
         $this->audit->log("status_{$action}", 'alumnus', $alumniId, $actor->user_id, ['from' => $from, 'to' => $to]);
 
-        if ($approve) {
-            DB::update("UPDATE user_account SET account_status = 'active' WHERE user_id = ?", [$r->user_id]);
-            $this->audit->log('account_approve', 'user', (int) $r->user_id, $actor->user_id);
-            $this->notifications->notify([(int) $r->user_id], 'account_approved', 'Your alumni account was approved',
-                'The UDM Alumni Office approved your registration. You can now sign in to the portal.', 'signin');
-        } elseif ($r->user_id !== null && in_array($action, ['verify', 'flag', 'archive'], true)) {
+        if ($r->user_id !== null && in_array($action, ['verify', 'flag', 'archive'], true)) {
             [$title, $message] = match ($action) {
                 'verify' => ['Your alumni record was verified', 'The Alumni Office verified your record. Thank you for keeping it up to date.'],
                 'flag' => ['Your alumni record needs an update', "The Alumni Office flagged your record: {$reason}"],
@@ -385,7 +374,7 @@ class AlumniService
         }
 
         $alumniId = (int) DB::table('alumnus')->insertGetId([
-            'membership_id' => $this->nextMembershipId($year),
+            'membership_id' => $this->registration->nextMembershipId($year),
             'student_no' => $studentNo,
             'program_id' => $prog['programId'], 'course_other' => $prog['courseOther'], 'declared_college_id' => $prog['declaredCollegeId'],
             'year_graduated' => $year,
@@ -693,20 +682,10 @@ class AlumniService
         }
         if ($status !== $r->verification_status) {
             match ($status) {
-                'verified' => $this->changeStatus($alumniId, 'verify', null, $actor),
                 'flagged' => $this->changeStatus($alumniId, 'flag', $note ?? 'Flagged by the Alumni Office for follow-up.', $actor),
-                default => $this->changeStatus($alumniId, 'unflag', null, $actor),
+                default => $this->changeStatus($alumniId, 'verify', null, $actor),
             };
         }
-    }
-
-    /** AM-YYYY-NNNNN for staff-created records (YYYY = class year); serialized with an advisory lock. */
-    private function nextMembershipId(int $year): string
-    {
-        DB::statement('SELECT pg_advisory_xact_lock(hashtext(?))', ['membership_id']);
-        $last = DB::selectOne("SELECT max(substring(membership_id from 9)::int) AS n FROM alumnus WHERE membership_id ~ ('^AM-' || ? || '-[0-9]{5}$')", [$year])->n;
-
-        return sprintf('AM-%d-%05d', $year, ((int) $last) + 1);
     }
 
     private static function text(mixed $v): ?string

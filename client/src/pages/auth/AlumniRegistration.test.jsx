@@ -82,9 +82,9 @@ describe('Alumni registration', () => {
     expect(screen.getByText('Enter your email address.')).toBeInTheDocument();
   });
 
-  it('checks the password rules, then registers a pending account and opens the success screen', async () => {
-    // Registration creates a PENDING account and does not sign in.
-    const api = mockApi([session(null), ['POST', '/auth/register', { status: 201, body: { ok: true, status: 'pending', membershipId: 'AM-2022-N0001', message: 'Registration received.' } }]]);
+  it('checks the password rules, then registers an active account and opens the success screen', async () => {
+    // Registration creates an active account and does not sign in.
+    const api = mockApi([session(null), ['POST', '/auth/register', { status: 201, body: { ok: true, status: 'active', membershipId: 'AM-2022-00001', message: 'Registration received.' } }]]);
     renderRegistration(VALID);
     await next(); await next(); await next();
     expect(screen.getByText('STEP 4 OF 4')).toBeInTheDocument();
