@@ -93,8 +93,8 @@ describe('Privacy & My Data', () => {
     vi.stubGlobal('URL', Object.assign(URL, { createObjectURL, revokeObjectURL: vi.fn() }));
     const api = mockApi([session('alumni'), ['GET', '/me', ME], lists, ['GET', '/me/export', { exportedAt: '2026-10-20T00:00:00Z', profile: A }]]);
     renderAt('/alumni/privacy');
-    const hero = await screen.findByRole('region', { name: 'Your data, your choice' });
-    await user.click(within(hero).getByRole('button', { name: /Download My Data/ }));
+    const hero = await screen.findByRole('region', { name: /You own your data/ });
+    await user.click(within(hero).getByRole('button', { name: /Download my data/i }));
     await waitFor(() => expect(createObjectURL).toHaveBeenCalled());
     expect(api.find('GET', '/me/export')).toHaveLength(1);
   });

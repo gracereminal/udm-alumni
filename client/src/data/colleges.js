@@ -1,6 +1,6 @@
 // Colleges / departments and their programs — loaded from the API (COLLEGE and PROGRAM tables) once at start-up.
 // COLLEGES keeps the old shape ({ collegeName: [programName, ...] }, 'Others' last) so forms can read it synchronously.
-import { get } from '../lib/api';
+import { getCached } from '../lib/api';
 
 export const COLLEGES = {};
 export const CATALOG = { colleges: [], programs: [], targets: { employment: 80, coverage: 60 }, cycle: null, skills: [], loaded: false };
@@ -19,8 +19,8 @@ export function setCatalog(data) {
   CATALOG.loaded = true;
 }
 
-export async function loadCatalog() {
-  setCatalog(await get('/lookups'));
+export function loadCatalog() {
+  return getCached('/lookups', setCatalog);
 }
 
 export const collegeByName = (name) => CATALOG.colleges.find((c) => c.name === name) || null;

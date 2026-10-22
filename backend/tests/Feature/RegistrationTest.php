@@ -19,7 +19,8 @@ function registration(array $overrides = []): array
 it('registers an active account with its alumni record, without signing in', function () {
     $response = $this->postJson('/api/v1/auth/register', registration())
         ->assertCreated()
-        ->assertJson(['ok' => true, 'status' => 'active', 'membershipId' => 'AM-2025-N0001'])
+        ->assertJson(['ok' => true, 'status' => 'active'])
+        ->assertJsonPath('membershipId', fn ($id) => (bool) preg_match('/^AM-2025-\d{5}$/', $id))
         ->assertCookieMissing('udm_sid');
 
     $user = DB::table('user_account')->where('email', 'lea.garcia@example.com')->first();
@@ -35,7 +36,7 @@ it('registers an active account with its alumni record, without signing in', fun
         ->and($alumnus->permanent_address)->toBe('123 Mabini St., Brgy. 650, Ermita, Manila')
         ->and($alumnus->sex)->toBe('female')
         ->and($alumnus->civil_status)->toBe('single')
-        ->and($alumnus->verification_status)->toBe('pending')
+        ->and($alumnus->verification_status)->toBe('verified')
         ->and($alumnus->record_source)->toBe('self_registration')
         ->and($alumnus->privacy_consent_at)->not->toBeNull()
         ->and(DB::table('social_link')->where('alumni_id', $alumnus->alumni_id)->orderBy('platform')->pluck('url', 'platform')->all())
@@ -48,11 +49,12 @@ it('registers an active account with its alumni record, without signing in', fun
         ->assertOk()->assertJsonPath('user.role', 'alumni');
 });
 
-it('numbers pending registrations per class year', function () {
+it('numbers registrations in the same AM-YYYY-NNNNN sequence as staff-created records', function () {
+    $last = (int) DB::table('alumnus')->where('membership_id', '~', '^AM-2026-[0-9]{5}$')->max(DB::raw('substring(membership_id from 9)::int'));
     $this->postJson('/api/v1/auth/register', registration(['year_graduated' => '2026']))->assertCreated()
-        ->assertJsonPath('membershipId', 'AM-2026-N0002'); // Paolo is AM-2026-N0001
+        ->assertJsonPath('membershipId', sprintf('AM-2026-%05d', $last + 1));
     $this->postJson('/api/v1/auth/register', registration(['email' => 'second@example.com', 'year_graduated' => '2026']))->assertCreated()
-        ->assertJsonPath('membershipId', 'AM-2026-N0003');
+        ->assertJsonPath('membershipId', sprintf('AM-2026-%05d', $last + 2));
 });
 
 it('notifies admins and that college only', function () {

@@ -5,12 +5,12 @@ import { useProfile } from '../../context/ProfileContext';
 import { useJobs } from '../../context/JobsContext';
 import { useEvents } from '../../context/EventsContext';
 import { isAnswered } from '../../data/formDefs';
-import { initials } from '../../lib/format';
+import { initials, RECORD_STATUS } from '../../lib/format';
 
 /** Alumni Dashboard — profile summary, survey status, announcements & events feed, job matches. */
 export default function AlumniDashboard() {
   const navigate = useNavigate();
-  const { a, surveyComplete, progress, alumniName, avatar } = useProfile();
+  const { a, surveyComplete, progress, alumniName, avatar, record } = useProfile();
   const { activeJobs } = useJobs();
   const { announcementItems } = useEvents();
   const [bannerDismissed, setBannerDismissed] = useState(false);
@@ -47,8 +47,14 @@ export default function AlumniDashboard() {
     };
   });
 
+  const course = a.course || a.course_other;
+  const status = RECORD_STATUS[record?.status] || null;
+
   const v = {
     alumniName,
+    dashStatus: status ? { label: status[0], color: status[1], bg: status[2] } : null,
+    dashBatch: a.year_graduated ? `CLASS OF ${String(a.year_graduated).slice(0, 4)}` : null,
+    dashSubline: [course ? course.replace(/^Bachelor of Science in /, 'BS ').replace(/^Bachelor of Arts in /, 'BA ') : 'Course not set', record?.membershipId || 'Alumni ID not yet assigned'].join(' · '),
     avatarInitials: initials(alumniName),
     avatarCss: avatar ? `url("${avatar}") center/cover no-repeat` : 'none',
     hasAvatar: !!avatar,
@@ -68,17 +74,17 @@ export default function AlumniDashboard() {
     dashMetrics: [
       { label: 'Portal Status', value: 'Active', sub: 'Alumni account in good standing', tag: 'VERIFIED ALUMNI', valueColor: '#0A0A0A', tagColor: '#0F8A5F', tagBg: '#E1F3EA' },
       {
-        label: 'Employment Status', value: empValue, sub: employed ? av('org_type', 'Organization type pending') : 'Section IV response',
-        tag: employed ? 'EMPLOYED' : a.ever_employed === 'No' ? 'UNEMPLOYED' : 'PENDING', valueColor: set('ever_employed') ? ink : muted,
+        label: 'Employment Status', value: empValue, sub: employed ? av('org_type', 'Organization type not answered') : 'Section IV response',
+        tag: employed ? 'EMPLOYED' : a.ever_employed === 'No' ? 'UNEMPLOYED' : 'NOT ANSWERED', valueColor: set('ever_employed') ? ink : muted,
         tagColor: employed ? '#0F8A5F' : '#8A6D1F', tagBg: employed ? '#E1F3EA' : '#FBF0D8',
       },
       {
         label: 'Months Before First Job', value: av('time_to_job'), sub: employed ? 'Months after graduating from UDM' : 'Answer Section V to record this',
-        tag: set('time_to_job') ? 'RECORDED' : 'PENDING', valueColor: set('time_to_job') ? ink : muted,
+        tag: set('time_to_job') ? 'RECORDED' : 'NOT ANSWERED', valueColor: set('time_to_job') ? ink : muted,
         tagColor: set('time_to_job') ? '#0F3D2E' : '#8A6D1F', tagBg: set('time_to_job') ? '#E6F0EB' : '#FBF0D8',
       },
       {
-        label: 'Course Relevance', value: relevance, sub: av('occ_class', 'Occupational classification pending'),
+        label: 'Course Relevance', value: relevance, sub: av('occ_class', 'Occupational classification not answered'),
         tag: selfEmp ? 'SELF-EMPLOYED' : 'GRADUATE OUTCOME', valueColor: set('job_related') ? ink : muted, tagColor: 'rgba(0,0,0,.5)', tagBg: '#F2F0EA',
       },
     ],

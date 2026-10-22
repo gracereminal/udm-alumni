@@ -60,28 +60,18 @@ it('validates the sign-in body with the client messages', function () {
         ->assertJsonPath('fields.password', 'Enter your password.');
 });
 
-it('refuses a pending account, but says so only after the password matches', function () {
-    $this->postJson('/api/v1/auth/login', ['identifier' => 'paolo.mendoza@gmail.com', 'password' => 'wrongPass123'])
-        ->assertUnauthorized()
-        ->assertJsonPath('error', AuthController::INVALID);
-
-    $this->postJson('/api/v1/auth/login', ['identifier' => 'paolo.mendoza@gmail.com', 'password' => 'demoPass123'])
-        ->assertForbidden()
-        ->assertJsonPath('code', 'account_pending')
-        ->assertJsonPath('error', AuthController::PENDING)
-        ->assertCookieMissing('udm_sid');
-
-    expect(DB::table('auth_session')->join('user_account', 'user_account.user_id', '=', 'auth_session.user_id')
-        ->where('email', 'paolo.mendoza@gmail.com')->exists())->toBeFalse();
-});
-
-it('signs Paolo in once an admin approves the account', function () {
-    DB::table('user_account')->where('email', 'paolo.mendoza@gmail.com')->update(['account_status' => 'active']);
-
+it('signs a self-registered alumnus in without any admin approval', function () {
     $this->postJson('/api/v1/auth/login', ['identifier' => 'paolo.mendoza@gmail.com', 'password' => 'demoPass123'])
         ->assertOk()
         ->assertJsonPath('user.role', 'alumni')
-        ->assertJsonPath('user.membershipId', 'AM-2026-N0001');
+        ->assertJsonPath('user.membershipId', 'AM-2026-00001');
+});
+
+it('keeps pending out of accounts and records', function () {
+    expect(fn () => DB::table('user_account')->where('email', 'paolo.mendoza@gmail.com')->update(['account_status' => 'pending']))
+        ->toThrow(Illuminate\Database\QueryException::class);
+    expect(fn () => DB::table('alumnus')->where('membership_id', 'AM-2026-00001')->update(['verification_status' => 'pending']))
+        ->toThrow(Illuminate\Database\QueryException::class);
 });
 
 it('revokes the session on logout, so the old cookie gets 401 at once', function () {

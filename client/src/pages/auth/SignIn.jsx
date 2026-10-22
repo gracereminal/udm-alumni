@@ -10,7 +10,6 @@ const DEMOS = [
   ['alumni', 'Alumni'],
   ['admin', 'Admin'],
   ['dept', 'Dept'],
-  ['pending', 'Pending'],
 ];
 
 const INFO = {
@@ -69,9 +68,6 @@ export default function SignIn() {
     demoToggleLabel: demoOpen ? 'Hide ↑' : 'Show demo accounts →',
     demoRows: demoOpen ? '1fr' : '0fr',
     demoOpacity: demoOpen ? 1 : 0,
-    demoPendingEmail: DEMO_ACCOUNTS.pending.email,
-    // The API only says whether this account is still pending when it signs in, so the label shows the seeded state.
-    demoPendingLabel: 'Registered Alumni · Pending',
     showDemo: SHOW_DEMO,
     pickDemo: (key) => () => {
       setSelectedDemo(key);

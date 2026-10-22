@@ -20,12 +20,11 @@ const DOCS = [
 const SORT = { updated: { sort: 'updated_at' }, name: { sort: 'name', dir: 'asc' }, batch: { sort: 'batch', dir: 'desc' } };
 const EMP_FILTERS = [...Object.entries(EMPLOYMENT_LABEL), ['unanswered', NO_SURVEY]];
 const REVIEW_TEXT = {
-  create: 'Record created', edit: 'Record details updated', verify: 'Record verified', flag: 'Flagged', unflag: 'Flag cleared — back to pending review',
+  create: 'Record created', edit: 'Record details updated', verify: 'Record verified', flag: 'Flagged', unflag: 'Flag cleared — marked verified',
   archive: 'Archived', restore: 'Restored from archive', merge: 'Duplicate merge', map_program: 'Program mapped from the catalog',
 };
 const initialsOf = (n) => String(n || '').split(' ').filter(Boolean).map((w) => w[0]).slice(0, 2).join('').toUpperCase();
 const dateTime = (iso) => (iso ? new Date(iso).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', timeZone: 'Asia/Manila' }) : '');
-const daysSince = (iso) => (iso ? Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 864e5)) : 0);
 
 /** API record -> the row shape RecordsView renders. */
 function toRow(r) {
@@ -34,8 +33,6 @@ function toRow(r) {
     employment: employmentLabel(r.employmentStatus), employmentCode: r.employmentStatus || '', company: r.company || '—', jobTitle: r.jobTitle || '',
     email: r.email || '', mobile: r.mobile || '', address: r.address || '', source: SOURCE_LABEL[r.source] || r.source, sourceCode: r.source,
     updated: fmtShortDate(r.updatedAt), updatedAt: r.updatedAt, status: r.status, note: r.note || '', hasAccount: r.hasAccount, unmapped: r.unmapped, isSelf: false,
-    // A self-registration whose sign-in an Admin hasn't approved yet (verifying the record approves it).
-    accountPending: r.accountStatus === 'pending',
   };
 }
 
@@ -61,7 +58,7 @@ export default function useRecordsPage(role) {
   const { user } = useAuth();
   const location = useLocation();
 
-  const [tab, setTab] = useState('pending');
+  const [tab, setTab] = useState('all');
   const [query, setQuery] = useState('');
   const [debounced, setDebounced] = useState('');
   const [program, setProgram] = useState('all');
@@ -168,11 +165,11 @@ export default function useRecordsPage(role) {
 
   const ROWS = list.rows;
   const rowOf = (id) => ROWS.find((r) => r.id === id) || seen.current[id] || null;
-  const TOT = counters || { pending: 0, flagged: 0, verified: 0, archived: 0, all: 0, batches: [] };
+  const TOT = counters || { flagged: 0, verified: 0, archived: 0, all: 0, batches: [] };
   const q = debounced.toLowerCase();
   const tabDefs = [
-    { id: 'pending', label: 'Pending review', n: TOT.pending }, { id: 'flagged', label: 'Flagged', n: TOT.flagged },
-    { id: 'verified', label: 'Verified', n: TOT.verified }, { id: 'archived', label: 'Archived', n: TOT.archived }, { id: 'all', label: 'All records', n: TOT.all },
+    { id: 'all', label: 'All records', n: TOT.all }, { id: 'verified', label: 'Verified', n: TOT.verified },
+    { id: 'flagged', label: 'Flagged', n: TOT.flagged }, { id: 'archived', label: 'Archived', n: TOT.archived },
   ];
   const total = list.total;
   const visIds = ROWS.map((r) => r.id);
@@ -305,7 +302,7 @@ export default function useRecordsPage(role) {
     const prog = r && CATALOG.programs.find((p) => p.name === r.course && Number(p.collegeId) === Number(r.collegeId));
     const f = r
       ? { name: r.name, email: r.email, programId: prog ? String(prog.id) : '', batch: r.batch, employment: r.employment, company: r.company === '—' ? '' : r.company, source: r.sourceCode, status: r.status, note: r.note || '', hasAccount: r.hasAccount }
-      : { name: '', email: '', programId: defaultProgram(), batch: new Date().getFullYear(), employment: NO_SURVEY, company: '', source: 'admin_encoded', status: 'pending', note: '' };
+      : { name: '', email: '', programId: defaultProgram(), batch: new Date().getFullYear(), employment: NO_SURVEY, company: '', source: 'admin_encoded', status: 'verified', note: '' };
     setForm({ id: r ? r.id : null, sid: r ? r.sid : null }); setRecF(f); setFormTried(false); setFormErrs({}); setDrawer(null); setRowMenu(null);
   };
   const crudVals = () => {
@@ -336,8 +333,7 @@ export default function useRecordsPage(role) {
         setForm(null);
         if (!editing) { setTab((t) => (t === out.status ? t : 'all')); setQuery(''); setProgram('all'); setSortK('updated'); resetPage(); }
         flash(out.id);
-        const approved = editing && origStatus !== 'verified' && out.status === 'verified' && rowOf(form.id)?.accountPending;
-        done(approved ? `${out.name}’s account approved — they can now sign in` : editing ? `Saved changes to ${out.name}` : `${out.name} added · ${out.membershipId}`);
+        done(editing ? `Saved changes to ${out.name}` : `${out.name} added · ${out.membershipId}`);
       } catch (err) {
         if (err.fields) { setFormErrs(err.fields); setFormTried(true); }
         fail(err);
@@ -374,11 +370,11 @@ export default function useRecordsPage(role) {
       recFBatch: String(f.batch), recFSetBatch: (e) => setF({ batch: Number(e.target.value) }), recFBatchOpts: Array.from({ length: thisYear - 1998 }, (_, i) => thisYear - i).map((b) => ({ value: String(b), label: `Batch ${b}` })),
       recFEmp: f.employment, recFSetEmp: (e) => setF({ employment: e.target.value }), recFEmpOpts: [NO_SURVEY, ...Object.values(EMPLOYMENT_LABEL)].map((x) => ({ value: x, label: x })),
       recFSource: f.source, recFSetSource: (e) => setF({ source: e.target.value }), recFSourceOpts: ['admin_encoded', 'survey', 'alumni_update', 'import'].map((x) => ({ value: x, label: SOURCE_LABEL[x] })),
-      // A verified record can't go back to Pending; an archived one can only be restored to Verified.
-      recFStatusChips: ['pending', 'verified', 'flagged', 'archived'].map((k) => {
+      // An archived record can only be restored to Verified.
+      recFStatusChips: ['verified', 'flagged', 'archived'].map((k) => {
         const on = f.status === k;
-        const off = (k === 'pending' && origStatus === 'verified') || (origStatus === 'archived' && (k === 'pending' || k === 'flagged'));
-        const why = origStatus === 'archived' ? 'Archived records can only be restored to Verified' : 'Already verified — can’t be set back to Pending';
+        const off = origStatus === 'archived' && k === 'flagged';
+        const why = 'Archived records can only be restored to Verified';
         return {
           label: STY[k].label, checked: on ? 'true' : 'false', disabled: off ? 'true' : 'false', title: off ? why : undefined, cursor: off ? 'not-allowed' : 'pointer',
           bg: on ? STY[k].bg : off ? '#F4F5F7' : '#fff', color: on ? STY[k].color : off ? '#94A3B8' : '#475569', border: on ? STY[k].color : '#E2E5EA', dot: STY[k].color,
@@ -414,9 +410,8 @@ export default function useRecordsPage(role) {
       recBulkFlag: () => bulk('flag', `${n}${noun} flagged for follow-up`, 'Flagged for follow-up from Alumni Records.'),
       recBulkExport: () => { exportCsv(selIds.map(rowOf).filter(Boolean)); setSel({}); toast(`Exported ${n}${noun} to CSV`); },
       recBulkDelete: () => setDel([...selIds]),
-      // A pending account can only be approved by an Admin, not from the College portal.
-      recDrawerCanApprove: !!(dr && dr.status !== 'verified' && dr.status !== 'archived' && !(dept && dr.accountPending)),
-      recDrawerApproveLabel: dr && dr.accountPending ? 'Approve account & verify' : 'Approve & mark verified',
+      recDrawerCanApprove: !!(dr && dr.status === 'flagged'),
+      recDrawerApproveLabel: 'Clear flag & mark verified',
       recDrawerEdit: () => dr && formOpen(dr.id),
       recDrawerDelete: () => dr && setDel([dr.id]),
     };
@@ -438,12 +433,12 @@ export default function useRecordsPage(role) {
       return {
         name: r[0].trim(), college: p ? p.collegeName : 'Others', ...(p ? { course: p.name } : { course_other: code || 'Not specified' }), year_graduated: Number(r[2]) || new Date().getFullYear(),
         employment: emp, company: (r[4] || '').trim(), student_no: (r[5] || '').trim() || undefined, email: (r[6] || '').trim() || undefined,
-        note: 'Imported from master list — awaiting verification.',
+        note: 'Imported from master list.',
       };
     });
     try {
       const out = await post('/alumni/import', { rows: body });
-      setTab('pending'); resetPage();
+      setTab('all'); resetPage();
       done(`Imported ${out.created} of ${rows.length} from ${file.name}${out.skipped ? ` · ${out.skipped} already on file` : ''}${out.failed ? ` · ${out.failed} need fixing (row ${out.errors.map((x) => x.row).slice(0, 3).join(', ')})` : ''}`);
     } catch (err) { fail(err); }
   };
@@ -500,7 +495,7 @@ export default function useRecordsPage(role) {
         checkBg: on ? '#0F3D2E' : '#fff', checkBorder: on ? '#0F3D2E' : '#C9CFD6', checkMark: on ? '✓' : '', hasNote: !!r.note,
         menuOpen: open, menuExpanded: open ? 'true' : 'false', dotsBg: open ? '#F1F3F5' : 'transparent', dotsColor: open ? '#5A6572' : '#A7B0BC',
         menuToggle: (e) => { e.stopPropagation(); setRowMenu(open ? null : r.id); },
-        menuHeading: r.status === 'flagged' ? 'FLAGGED RECORD' : r.status === 'verified' ? 'VERIFIED RECORD' : r.status === 'archived' ? 'ARCHIVED RECORD' : 'PENDING SUBMISSION',
+        menuHeading: r.status === 'flagged' ? 'FLAGGED RECORD' : r.status === 'archived' ? 'ARCHIVED RECORD' : 'VERIFIED RECORD',
         menuItems: [
           { k: 'history', label: 'View edit history / audit log', icon: '◷' },
           { k: 'email', label: r.status === 'verified' ? 'Send follow-up email' : 'Send email / follow-up link', icon: '✉' },
@@ -511,7 +506,7 @@ export default function useRecordsPage(role) {
           { k: 'archive', label: r.status === 'archived' ? 'Restore from archive' : 'Archive record', icon: '▣' },
           { k: 'dup', label: r.status === 'flagged' ? 'Confirm as duplicate' : 'Mark as duplicate / flag', icon: '⚑' },
         ].map((m) => ({ ...m, onClick: (e) => { if (e && e.stopPropagation) e.stopPropagation(); actOpen(m.k, r.id); } })),
-        primaryAction: r.status === 'pending' ? 'Review' : r.status === 'flagged' ? 'Resolve' : r.status === 'archived' ? 'Restore' : 'View',
+        primaryAction: r.status === 'flagged' ? 'Resolve' : r.status === 'archived' ? 'Restore' : 'View',
         rowBg: hi === r.id ? '#FFF8E1' : on ? '#F5FAF7' : '#fff',
         onView: () => { setDrawer(r.id); setRowMenu(null); },
         onEdit: () => formOpen(r.id),
@@ -548,13 +543,13 @@ export default function useRecordsPage(role) {
         : { name: 'Requested — not uploaded yet', meta: `Requested ${fmtShortDate(p.requestedAt)}`, ok: false }))
       : [{ name: 'No proof uploaded yet', meta: 'Use “Request document proof” to ask the alumnus for files', ok: false }],
     recDrawerNote: adminNote, recDrawerSetNote: (e) => setAdminNote(e.target.value), recDrawerClose: () => setDrawer(null),
-    recDrawerApprove: () => { if (dr) statusAction(dr.id, 'verify', null, dr.accountPending ? `${dr.name}’s account approved — they can now sign in` : `${dr.name} verified`); },
+    recDrawerApprove: () => { if (dr) statusAction(dr.id, 'verify', null, `${dr.name} verified`); },
     recDrawerFlagAction: () => { if (dr) statusAction(dr.id, 'flag', adminNote.trim() || 'More information requested from alumnus by the Alumni Office.', `${dr.name} flagged for follow-up`); },
     recHasSel: !dept && selIds.length > 0,
     recCanEdit: !dept,
     recGridCols: dept ? 'minmax(0,1.8fr) minmax(0,1fr) minmax(0,1.5fr) minmax(0,.8fr) minmax(0,.8fr) 60px' : '34px minmax(0,1.8fr) minmax(0,1fr) minmax(0,1.5fr) minmax(0,.8fr) minmax(0,.8fr) 152px',
     recIsQueue: true,
-    recDrawerStatusNote: dr && dr.accountPending ? (dept ? 'New registration · account awaiting Admin approval' : 'New registration · account pending — approve so the alumnus can sign in') : dr ? ({ pending: 'Self-reported · awaiting Alumni Office verification', flagged: 'Flagged · needs follow-up before verification', verified: 'Verified by the Alumni Office · listed in Global Alumni Search', archived: 'Archived · excluded from search and reports' })[dr.status] || '' : '',
+    recDrawerStatusNote: dr ? ({ flagged: 'Flagged · needs follow-up before verification', verified: 'Verified by the Alumni Office · listed in Global Alumni Search', archived: 'Archived · excluded from search and reports' })[dr.status] || '' : '',
     recBatchBorder: selIds.length ? '#0F3D2E' : '#E2E5EA', recBatchBg: selIds.length ? '#0F3D2E' : '#F4F5F7', recBatchColor: selIds.length ? '#fff' : '#A7B0BC',
     recBatchOpacity: selIds.length ? 1 : 0.7, recBatchCursor: selIds.length ? 'pointer' : 'not-allowed', recBatchClick: selIds.length ? () => setSel({}) : () => {},
     recBatchNote: selIds.length ? `${selIds.length}${selIds.length === 1 ? ' record selected — batch actions available' : ' records selected — batch actions available'}` : 'Select one or more records to enable batch actions',
@@ -562,14 +557,13 @@ export default function useRecordsPage(role) {
     recSelLabel: selIds.length + (selIds.length === 1 ? ' record selected' : ' records selected'),
     recClearSel: () => setSel({}),
     recCountLabel: (() => {
-      const noun = tab === 'all' ? 'alumni records' : tab === 'pending' ? 'submissions pending review' : `${tab} records`;
+      const noun = tab === 'all' ? 'alumni records' : `${tab} records`;
       if (!total) return `Showing 0 of 0 ${noun}`;
       const from = (page - 1) * pageSize + 1;
       return `Showing ${from}–${from + ROWS.length - 1} of ${num(total)} ${noun} · Page ${page} of ${totalPages}`;
     })(),
     recStats: [
       { label: 'Total alumni records', value: num(TOT.all), sub: batches.length ? `Membership IDs on file, batches ${batches[batches.length - 1]}–${batches[0]}` : 'Membership IDs on file', icon: 'M4 8h16v11H4z M9 8V6a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2 M4 13h16', iconBg: '#E7F0EE', iconColor: '#0F3D2E', pill: TOT.lastUpdatedAt ? `Last updated ${new Date(TOT.lastUpdatedAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'Asia/Manila' })}` : 'No records yet', pillBg: '#F1F3F5', pillColor: '#475569', hasDot: false },
-      { label: 'Pending review', value: num(TOT.pending), sub: 'Self-reported submissions awaiting Alumni Office review', icon: 'M4 6h16v14H4z M4 10h16 M8 3v4 M16 3v4', iconBg: '#FBF0D8', iconColor: '#8A6D1F', pill: TOT.oldestPendingAt ? `Oldest waiting ${daysSince(TOT.oldestPendingAt)} day${daysSince(TOT.oldestPendingAt) === 1 ? '' : 's'}` : 'Nothing waiting', pillBg: '#FBF0D8', pillColor: '#8A6D1F', hasDot: TOT.pending > 0 },
       { label: 'Flagged for follow-up', value: num(TOT.flagged), sub: 'Incomplete surveys, duplicates or unconfirmed IDs', icon: 'M5 21V4 M5 4h11l-2 4 2 4H5', iconBg: '#FDE7EC', iconColor: '#B3213C', pill: TOT.flagged ? 'Needs resolution' : 'All clear', pillBg: '#FDE7EC', pillColor: '#B3213C', hasDot: TOT.flagged > 0 },
       { label: 'Verified records', value: num(TOT.verified), sub: `${verifiedPct.toFixed(1)}% of all alumni records (${num(TOT.archived)} archived)`, icon: 'M12 3l7 3v5c0 4.5-3 8.5-7 10-4-1.5-7-5.5-7-10V6l7-3z M9 12l2 2 4-4', iconBg: '#E1F3EA', iconColor: '#0F6B4F', pill: `+${num(TOT.verifiedLast7d || 0)} this week`, pillBg: '#E1F3EA', pillColor: '#0F6B4F', hasDot: false },
     ],

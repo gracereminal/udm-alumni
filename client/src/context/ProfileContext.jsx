@@ -58,7 +58,7 @@ export function ProfileProvider({ children }) {
   const resetRegistration = useCallback(() => { writeDraft({}); setDraft({}); }, []);
   /** After POST /auth/register: the draft was sent, so it is cleared and the success screen shows what was submitted. */
   const completeRegistration = useCallback((answers, res) => {
-    const done = { a: answers, membershipId: res?.membershipId || null, status: res?.status || 'pending', message: res?.message || '' };
+    const done = { a: answers, membershipId: res?.membershipId || null, status: res?.status || 'active', message: res?.message || '' };
     writeJson(sessionStorage, JUST_REGISTERED, done);
     setLastRegistration(done);
     writeDraft({});

@@ -24,8 +24,6 @@ class AuthController extends Controller
 {
     public const INVALID = 'Incorrect email / Alumni ID or password.';
 
-    public const PENDING = 'Your account is pending approval. You can sign in once the UDM Alumni Office Admin approves your registration.';
-
     public function __construct(
         private readonly AccountService $accounts,
         private readonly SessionService $sessions,
@@ -77,11 +75,6 @@ class AuthController extends Controller
         if (! $ok || $user->account_status === 'disabled') {
             $this->recordFailure($user, $ok ? 'disabled' : 'password');
             throw new ApiException(401, self::INVALID, 'invalid_credentials');
-        }
-        // Only after the password matches, so the pending state never reveals which emails are registered.
-        if ($user->account_status === 'pending') {
-            $this->audit->log('login_failed', 'user', $user->user_id, $user->user_id, ['reason' => 'pending']);
-            throw new ApiException(403, self::PENDING, 'account_pending', ['identifier' => self::PENDING]);
         }
 
         $token = DB::transaction(function () use ($user, $request, $password) {

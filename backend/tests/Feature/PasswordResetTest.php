@@ -44,8 +44,9 @@ it('resolves an Alumni ID to the account email', function () {
     Mail::assertSent(PasswordResetMail::class, fn (PasswordResetMail $m) => $m->hasTo(MARIA));
 });
 
-it('sends nothing to a pending account', function () {
+it('sends nothing to a disabled account', function () {
     Mail::fake();
+    DB::table('user_account')->where('email', 'paolo.mendoza@gmail.com')->update(['account_status' => 'disabled']);
     $this->postJson('/api/v1/auth/forgot-password', ['identifier' => 'paolo.mendoza@gmail.com'])->assertOk()->assertJsonPath('message', PasswordResetService::SENT);
 
     Mail::assertNothingSent();

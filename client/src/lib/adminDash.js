@@ -4,9 +4,8 @@ import { CATALOG, collegeById, programById } from '../data/colleges';
 import { employmentLabel } from '../data/records';
 import { qs } from './api';
 
-export const STATUS_FILTER_LABELS = { all: 'All statuses', verified: 'Verified only', pending: 'Pending review', flagged: 'Flagged' };
+export const STATUS_FILTER_LABELS = { all: 'All statuses', verified: 'Verified only', flagged: 'Flagged' };
 const ST = {
-  pending: ['Pending', '#8A6D1F', '#FBF0D8', 'Review', '#0F6B4F'],
   verified: ['Verified', '#0F6B4F', '#E1F3EA', 'Details', '#64748B'],
   flagged: ['Flagged', '#B3213C', '#FDE7EC', 'Review', '#0F6B4F'],
   archived: ['Archived', '#5A6572', '#EDEFF2', 'Details', '#64748B'],
@@ -35,7 +34,7 @@ export function adminScope(sel) {
   const years = AY.filter((y) => y >= lo && y <= hi).reverse();
   const batch = years.length === AY.length ? 'all' : years.length === 1 ? years[0] : null;
   const batchLabel = batch === 'all' ? '' : years.length === 1 ? `Batch ${lo}` : `Batches ${lo}–${hi}`;
-  const status = ['verified', 'pending', 'flagged'].includes(sel.status) ? sel.status : 'all';
+  const status = ['verified', 'flagged'].includes(sel.status) ? sel.status : 'all';
   const level = course !== 'all' ? 'batch' : college !== 'all' ? 'course' : 'college';
   // Year-on-year comparison: the selected batches against the batches a year earlier (the latest four when all).
   const now = batch === 'all' ? [0, 1, 2, 3].map((i) => thisYear() - 3 + i) : years;
@@ -103,7 +102,7 @@ export function buildAdminDash(sel, data, tipH) {
 
   const recent = data.recent.data || [];
   const registrations = recent.map((r) => {
-    const s = ST[r.status] || ST.pending;
+    const s = ST[r.status] || ST.verified;
     return {
       name: r.name, program: r.program, full: r.course ? `${r.course} · ${r.college}` : '', batch: String(r.batch), employment: employmentLabel(r.employmentStatus), dot: dotOf(r.employmentStatus),
       date: new Date(r.createdAt).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
@@ -227,7 +226,7 @@ function admDash(sc, S, data, rows, tipH, target) {
       donutTotal: N(traced), activeLabor: `${P1(traced ? 100 - pct(S.notEmployed, traced) : 0)}%`, medianMonths: med == null ? '—' : P1(med),
       timeToJob: groups.map(([lb, , color, text], i) => ({ label: lb, pct: `${tt[i]}%`, grow: tt[i] || 0, color, text, ...tipH(lb, `${tt[i]}% of employed graduates`) })),
       insights: ins.slice(0, 3).map(([lead, text, k]) => ({ lead, text, color: tone[k][0], leadColor: tone[k][1], bg: tone[k][2], border: tone[k][3] })),
-      adminAwaiting: sc.status === 'verified' ? 'Showing verified submissions only' : sc.status === 'flagged' ? `${N(S.flagged)} flagged for follow-up` : `${N(S.pending)} awaiting administrative verification`,
+      adminAwaiting: sc.status === 'verified' ? 'Showing verified submissions only' : `${N(S.flagged)} flagged for follow-up`,
       ...inclusionProfile(data.inclusion),
     },
   };

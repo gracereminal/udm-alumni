@@ -4,7 +4,7 @@ import { onActivate } from '../lib/a11y';
 
 /* View layer for the "RegSuccess" screen — converted from "Alumni Tracer Mockups.dc.html". */
 export default function RegSuccessView(v) {
-  const { carryOver, goSignin, goHome, regFirstName, regEmail, regPending } = v;
+  const { carryOver, goSignin, goHome, regFirstName, regEmail } = v;
   return (
     <>
       <div
@@ -105,26 +105,17 @@ export default function RegSuccessView(v) {
                   textWrap: 'pretty',
                 }}
               >
-                Thanks, {regFirstName}. {regPending ? 'Your account is pending approval.' : 'Your account is ready.'}
+                Thanks, {regFirstName}. Your account is ready.
               </div>
               <div style={{ fontSize: '13.5px', lineHeight: '1.55', color: 'rgba(0,0,0,.6)', marginTop: '12px', textWrap: 'pretty' }}>
-                {regPending ? (
-                  <>
-                    The <strong style={{ color: '#0A0A0A' }}>UDM Alumni Office</strong> reviews every new registration. You can sign in with{' '}
-                    <strong style={{ color: '#0A0A0A' }}>{regEmail}</strong> and your password once an Admin approves your account.
-                  </>
-                ) : (
-                  <>
-                    You can now sign in with <strong style={{ color: '#0A0A0A' }}>{regEmail}</strong> and your password.
-                  </>
-                )}
+                You can now sign in with <strong style={{ color: '#0A0A0A' }}>{regEmail}</strong> and your password.
               </div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <div style={{ width: '22px', height: '4px', borderRadius: '2px', background: '#0F8A5F' }} />
               <div style={{ width: '22px', height: '4px', borderRadius: '2px', background: '#0F8A5F' }} />
               <div style={{ width: '22px', height: '4px', borderRadius: '2px', background: 'rgba(0,0,0,.12)' }} />
-              <div style={{ fontSize: '11.5px', fontWeight: '600', color: 'rgba(0,0,0,.5)', marginLeft: '4px' }}>Step 2 of 3 · {regPending ? 'Admin approval next' : 'Sign in next'}</div>
+              <div style={{ fontSize: '11.5px', fontWeight: '600', color: 'rgba(0,0,0,.5)', marginLeft: '4px' }}>Step 2 of 3 · Sign in next</div>
             </div>
           </div>
           <div
@@ -200,7 +191,7 @@ export default function RegSuccessView(v) {
                 }}
                 {...hv({ background: '#00382E' })}
               >
-                {regPending ? 'Back to Sign In →' : 'Sign In →'}
+                Sign In →
               </div>
               <div role="button" tabIndex={0} onKeyDown={onActivate(goHome)}
                 onClick={goHome}
