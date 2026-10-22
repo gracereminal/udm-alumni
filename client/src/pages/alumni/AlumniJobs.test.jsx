@@ -13,12 +13,22 @@ const ME = { a: { first_name: 'Ana', last_name: 'Cruz', email: 'ana@example.com'
 function setup(board, routes = []) {
   return mockApi([
     session('alumni'), ['GET', '/me', ME], ['GET', /^\/(events|announcements|notifications)(\?|$)/, listOf([])],
-    ['GET', '/jobs', (req) => listOf(req.query.view === 'mine' ? [] : board)],
     ...routes,
+    ['GET', '/jobs/stats', { open: 2, employers: 1, salary: { low: 35000, high: 45000, disclosed: 2 }, applications: 1, responseRate: 50 }],
+    ['GET', '/jobs', (req) => listOf(req.query.view === 'mine' ? [] : board)],
   ]);
 }
 
 describe('Alumni Job Board page', () => {
+  it('shows the summary tiles from the API', async () => {
+    setup([job(1), job(2)]);
+    renderAt('/alumni/jobs');
+    expect(await screen.findByText('1 Employer')).toBeInTheDocument();
+    expect(screen.getByText('2 Openings')).toBeInTheDocument();
+    expect(screen.getByText('₱35k – ₱45k Avg')).toBeInTheDocument();
+    expect(screen.getByText('50% Response Rate')).toBeInTheDocument();
+  });
+
   it('lists the active postings and filters them by search', async () => {
     const user = userEvent.setup();
     setup([job(1, { title: 'Backend Developer' }), job(2, { title: 'QA Intern', type: 'Internship' }), job(3, { status: 'inactive' })]);

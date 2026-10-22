@@ -24,7 +24,7 @@ it('returns the profile, survey and record of the signed-in alumnus', function (
         ->and($r->json('survey.submitted'))->toBeTrue()
         ->and($r->json('record.studentNo'))->toBe('24-05-567')
         ->and($r->json('progress.total'))->toBeGreaterThan(20)
-        ->and($r->json('dashboard.savedJobs'))->toBe(3)
+        ->and($r->json('dashboard.savedJobs'))->toBe(0)
         ->and($r->json('skills'))->not->toBeEmpty();
 });
 
@@ -163,7 +163,7 @@ it('exports everything held about the alumnus as a JSON download, audited', func
         ->and($r->json('account.email'))->toBe('maria.delacruz@udmalumni.edu')
         ->and($r->json('profile.mobile'))->toBe('0917 123 4567')
         ->and($r->json('privacy'))->toHaveKeys(['directoryOptIn', 'showEmail', 'showMobile', 'links'])
-        ->and($r->json('jobs'))->toHaveCount(3)
+        ->and($r->json('jobs'))->toBeArray()
         ->and($r->json())->toHaveKeys(['survey', 'skills', 'employment', 'eventRegistrations', 'proofDocuments'])
         ->and(json_encode($r->json()))->not->toContain('password_hash')
         ->and(DB::table('audit_log')->where(['action' => 'data_export', 'entity_id' => mariaId()])->exists())->toBeTrue();

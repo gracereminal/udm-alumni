@@ -11,6 +11,7 @@ export const ICONS = {
   outreach: 'M4 5h16v11H8l-4 4zM8 9.5h8M8 12.5h5',
   pencil: 'M16.5 3.8a2.1 2.1 0 0 1 3 3L7.5 18.8 3.5 20l1.2-4zM14.5 5.8l3 3',
   shield: 'M12 3l7.5 3v5.5c0 4.6-3.2 8.3-7.5 9.5-4.3-1.2-7.5-4.9-7.5-9.5V6zM9 12l2.2 2.2L15.5 10',
+  sparkle: 'M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM19 16l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8z',
 };
 
 export const NAV = {
@@ -30,6 +31,7 @@ export const NAV = {
   admin: [
     { id: 'dashboard', label: 'Admin Dashboard', to: '/admin/dashboard', icon: ICONS.dashboard },
     { id: 'records', label: 'Alumni Records', to: '/admin/records', icon: ICONS.records },
+    { id: 'ai-data', label: 'AI Data Management', to: '/admin/ai-data', icon: ICONS.sparkle },
     { id: 'reports', label: 'Reports', to: '/admin/reports', icon: ICONS.chart },
     { id: 'jobs', label: 'Jobs', to: '/admin/jobs', icon: ICONS.briefcase },
     { id: 'events', label: 'Events', to: '/admin/events', icon: ICONS.calendar },

@@ -1,8 +1,9 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { useAuth } from './AuthContext';
-import { dataUrlToBlob, del, list, patch, post, upload } from '../lib/api';
+import { dataUrlToBlob, del, get, list, patch, post, upload } from '../lib/api';
 
 const JobsContext = createContext(null);
+const REFRESH_MS = 60_000;
 
 const fmtDate = (iso) => (iso ? new Date(`${iso}T00:00:00+08:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'Asia/Manila' }) : '');
 function ago(iso, verb) {
@@ -51,18 +52,30 @@ export function JobsProvider({ children }) {
   const [jobs, setJobs] = useState([]);
   const [queue, setQueue] = useState([]);
   const [mine, setMine] = useState([]);
+  /** Board summary tiles (open postings, employers, salary benchmark, response rate), computed by the API. */
+  const [stats, setStats] = useState(null);
 
   const reload = useCallback(async () => {
-    if (!user || (role !== 'admin' && role !== 'alumni')) { setJobs([]); setQueue([]); setMine([]); return; }
+    if (!user || (role !== 'admin' && role !== 'alumni')) { setJobs([]); setQueue([]); setMine([]); setStats(null); return; }
     if (role === 'admin') {
       const [all, q] = await Promise.all([list('/jobs', { view: 'all' }), list('/jobs', { view: 'queue' })]);
       setJobs(all.map(toJob)); setQueue(q.map(toJob));
     } else {
-      const [board, own] = await Promise.all([list('/jobs'), list('/jobs', { view: 'mine' })]);
-      setJobs(board.map(toJob)); setMine(own.map(toJob));
+      const [board, own, s] = await Promise.all([list('/jobs'), list('/jobs', { view: 'mine' }), get('/jobs/stats').catch(() => null)]);
+      setJobs(board.map(toJob)); setMine(own.map(toJob)); setStats(s);
     }
   }, [user, role]);
   useEffect(() => { reload().catch(() => {}); }, [reload]);
+  // Keep the board, the dashboard's Job Board card and the summary tiles in step with postings changed elsewhere
+  // (an admin posting, deactivating or approving): refetch when the tab comes back into view and every minute while it is.
+  useEffect(() => {
+    if (!user) return undefined;
+    const refresh = () => { if (document.visibilityState === 'visible') reload().catch(() => {}); };
+    const timer = setInterval(refresh, REFRESH_MS);
+    window.addEventListener('focus', refresh);
+    document.addEventListener('visibilitychange', refresh);
+    return () => { clearInterval(timer); window.removeEventListener('focus', refresh); document.removeEventListener('visibilitychange', refresh); };
+  }, [user, reload]);
 
   const replace = (j) => setJobs((all) => all.map((x) => (x.id === j.id ? toJob(j) : x)));
   const attachPhoto = async (id, photo) => (photo && String(photo).startsWith('data:') ? upload(`/jobs/${id}/photo`, 'photo', dataUrlToBlob(photo), 'company.jpg') : null);
@@ -103,6 +116,7 @@ export function JobsProvider({ children }) {
   const toggleApply = useCallback(async (id, via) => {
     const cur = jobs.find((x) => x.id === id);
     replace(cur && cur.applied ? await del(`/jobs/${id}/apply`) : await post(`/jobs/${id}/apply`, { via: VIA_CODE[via] || via }));
+    get('/jobs/stats').then(setStats, () => {});
   }, [jobs]);
 
   const value = useMemo(() => {
@@ -110,10 +124,10 @@ export function JobsProvider({ children }) {
     const savedJobs = Object.fromEntries(jobs.filter((j) => j.saved).map((j) => [j.id, true]));
     const applied = Object.fromEntries(jobs.filter((j) => j.applied).map((j) => [j.id, j.applied]));
     return {
-      jobs, activeJobs, queue, mine, savedJobs, applied, reload,
+      jobs, activeJobs, queue, mine, stats, savedJobs, applied, reload,
       postJob, updateJob, deleteJob, restoreJob, setJobStatus, approveQueued, rejectQueued, submitForReview, toggleSave, toggleApply,
     };
-  }, [jobs, queue, mine, reload, postJob, updateJob, deleteJob, restoreJob, setJobStatus, approveQueued, rejectQueued, submitForReview, toggleSave, toggleApply]);
+  }, [jobs, queue, mine, stats, reload, postJob, updateJob, deleteJob, restoreJob, setJobStatus, approveQueued, rejectQueued, submitForReview, toggleSave, toggleApply]);
   return <JobsContext.Provider value={value}>{children}</JobsContext.Provider>;
 }
 

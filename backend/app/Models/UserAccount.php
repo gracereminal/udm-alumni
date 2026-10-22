@@ -23,6 +23,7 @@ use Illuminate\Support\Carbon;
  * @property int $failed_login_count
  * @property Carbon|null $locked_until
  * @property Carbon|null $last_login_at
+ * @property Carbon|null $temp_password_expires_at set while an import's temporary password is in use
  */
 class UserAccount extends Model implements AuthenticatableContract
 {
@@ -42,6 +43,7 @@ class UserAccount extends Model implements AuthenticatableContract
             'must_change_password' => 'boolean',
             'locked_until' => 'datetime',
             'last_login_at' => 'datetime',
+            'temp_password_expires_at' => 'datetime',
         ];
     }
 
