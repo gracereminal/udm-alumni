@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import CollegeDashboardView from '../../views/CollegeDashboardView';
 import OfflineContactModal from '../../components/OfflineContactModal';
@@ -14,7 +14,8 @@ const PAGES = {
   outreach: { title: 'Outreach', kpis: false, insights: false, outreach: true },
 };
 
-const SUBJECT = 'UDM Alumni Tracer — we’d love to hear from you';
+const REFRESH_MS = 60000;
+const SUBJECT ='UDM Alumni Tracer — we’d love to hear from you';
 /** Default outreach message; the dean can edit it before sending. */
 const outreachMessage = (first, status, college) => (status === 'Seeking work'
   ? `Hi ${first}! This is the ${college}, Universidad de Manila. We saw that you’re still looking for work — the UDM Alumni portal has new job postings from partner employers, and we’d be glad to help with referrals. Could you also update your employment details in the Alumni Tracer survey when you have a minute? Thank you!`
@@ -35,6 +36,7 @@ export default function CollegeDashboard({ section = 'dashboard' }) {
   const [hover, setHover] = useState(null);
   const [data, setData] = useState(emptyDeptData);
   const [reloadKey, setReloadKey] = useState(0);
+  const quiet = useRef(false); // the next fetch is a background refresh
   const [target, setTarget] = useState(null); // outreach row being contacted
   const [message, setMessage] = useState('');
   const page = PAGES[section] || PAGES.dashboard;
@@ -45,11 +47,22 @@ export default function CollegeDashboard({ section = 'dashboard' }) {
     let live = true;
     const r = JSON.parse(reqKey);
     const keys = Object.keys(r);
+    const background = quiet.current;
+    quiet.current = false;
     Promise.all(keys.map((k) => get(r[k])))
       .then((res) => { if (live) setData(Object.fromEntries(keys.map((k, i) => [k, res[i]]))); })
-      .catch((err) => { if (live) toast(err.message, false); });
+      .catch((err) => { if (live && !background) toast(err.message, false); });
     return () => { live = false; };
   }, [reqKey, reloadKey, toast]);
+  // Keep the numbers in step with survey answers submitted while the page is open: refetch when the tab comes back
+  // into view and every minute while it is (background refreshes fail silently).
+  useEffect(() => {
+    const refresh = () => { if (document.visibilityState === 'visible') { quiet.current = true; setReloadKey((k) => k + 1); } };
+    const timer = setInterval(refresh, REFRESH_MS);
+    window.addEventListener('focus', refresh);
+    document.addEventListener('visibilitychange', refresh);
+    return () => { clearInterval(timer); window.removeEventListener('focus', refresh); document.removeEventListener('visibilitychange', refresh); };
+  }, []);
 
   const close = () => setTarget(null);
   const done = (msg) => { close(); toast(msg); setReloadKey((k) => k + 1); };
