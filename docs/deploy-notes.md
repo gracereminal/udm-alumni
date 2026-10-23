@@ -3,23 +3,25 @@
 The production runbook for the UDM Alumni Tracer: how it is deployed, what to test after a deploy, and how to run it day
 to day. The design and the reasons behind it are in [plan-backend.md](plan-backend.md) ("Deployment").
 
-**Production setup:** one Docker image (root `Dockerfile`) on **Railway**, with **Neon** PostgreSQL, both in **Singapore**.
+**Production setup:** one Docker image (root `Dockerfile`) on a **Render** web service, with **Neon** PostgreSQL, both in
+**Singapore**. (It moved from Railway after Railway's October 2026 environment-variable breach; every secret was reissued.)
 Laravel (PHP 8.4) serves the API under `/api/v1` and the built React client from the same origin (`SpaController` returns
 `index.html` for every client route), so there is no Vercel rewrite and no CORS. Email goes through the **Gmail API** as
 `udm.alumni.mailer@gmail.com` (OAuth). The production branch is `main`.
 
-Replace `<prod domain>` below with the Railway domain of the production service (it is also `APP_URL`).
+Replace `<prod domain>` below with the Render domain of the production service (`<name>.onrender.com`, it is also
+`APP_URL`).
 
 ## Overview
 
 ```
-Browser ──► Railway service (<prod domain>, branch main, Singapore)
+Browser ──► Render web service (<prod domain>, branch main, Singapore)
               ├─ /api/v1/*  ──►  Laravel API (php artisan serve, 4 workers)
               │                    ├─► Neon PostgreSQL (pooled URL at runtime, direct URL for migrations)
-              │                    ├─► uploads: Railway volume at /app/storage/app, or an S3 bucket
+              │                    ├─► uploads: S3-compatible bucket (e.g. Cloudflare R2)
               │                    └─► Gmail API (udm.alumni.mailer@gmail.com), templates from /emails
               └─ /*         ──►  built client (public/ assets, SpaController → index.html)
-Cron (daily) ──► POST /api/v1/internal/jobs/:name   (X-Cron-Secret header)
+HTTP cron (daily, e.g. cron-job.org) ──► POST /api/v1/internal/jobs/:name   (X-Cron-Secret header)
 ```
 
 **What every container start does** (`backend/docker/start.sh`):
@@ -33,22 +35,28 @@ exec php artisan serve --host=0.0.0.0 --port="${PORT:-8080}" --no-reload
 ```
 
 If any step fails (missing variable, failed migration, missing `ADMIN_PASSWORD` while the admin doesn't exist yet), the
-container exits and Railway keeps the previous deploy running. The image itself sets `APP_ENV=production`,
+container exits and Render keeps the previous deploy running. The image itself sets `APP_ENV=production`,
 `APP_DEBUG=false`, `LOG_CHANNEL=stderr`, `SESSION_SECURE_COOKIE=true`, `SPA_INDEX_PATH`, `EMAIL_TEMPLATES_PATH`,
-`PHP_CLI_SERVER_WORKERS=4` and `PORT=8080`.
+`PHP_CLI_SERVER_WORKERS=4` and `PORT=8080`. Render sets its own `PORT` at runtime, and the server listens on it.
 
 ---
 
 ## 1. Production configuration
 
-### 1.1 Railway service
+### 1.1 Render web service
 
-- *Settings → Region*: Southeast Asia (Singapore), next to the database.
-- *Settings → Source*: deploy branch `main`.
-- *Settings → Networking*: the generated domain (`<prod domain>`), later a custom domain (section 6).
-- *Settings → Healthcheck path*: `/api/v1/health`.
+- *New → Web Service*, connect the GitHub repo. *Language*: **Docker** (it finds the root `Dockerfile`).
+- *Region*: **Singapore**, next to the database. It can't be changed after creation.
+- *Branch*: `main`, with *Auto-Deploy* on.
+- *Settings → Health Check Path*: `/api/v1/health`.
+- The generated domain is `<prod domain>`. A custom domain comes later (section 6).
+- **Instance type:** on the **Free** plan the service sleeps after 15 minutes without traffic, and the next visitor waits
+  about a minute while it starts (migrations included). It also gets no disk, and Render offers no shell on it. Use
+  **Starter** or higher for steady response times and *Shell* access.
 
 ### 1.2 Variables
+
+Set these under the service's *Environment* tab. Saving them redeploys the service.
 
 ```
 APP_KEY=base64:...                  # php artisan key:generate --show; never shared with any other environment
@@ -64,7 +72,8 @@ GOOGLE_OAUTH_CLIENT_SECRET=...
 GOOGLE_OAUTH_REFRESH_TOKEN=...
 CRON_SECRET=...                     # openssl rand -hex 32 (24+ characters required)
 ADMIN_PASSWORD=...                  # only until the built-in admin has signed in (section 3)
-# Uploads on S3 instead of a volume (section 1.4):
+MFA_ENABLED=false                   # true = emailed 6-digit code at every sign-in; only once every account (admin too) has a real inbox
+# Uploads (section 1.4):
 FILESYSTEM_DISK=s3
 AWS_ENDPOINT=... / AWS_DEFAULT_REGION=... / AWS_BUCKET=... / AWS_ACCESS_KEY_ID=... / AWS_SECRET_ACCESS_KEY=...
 AWS_USE_PATH_STYLE_ENDPOINT=true    # most non-AWS S3 providers
@@ -76,7 +85,7 @@ to `admin@udmalumni.edu`). With `APP_ENV=production`, `AppServiceProvider` refus
 credentials (refresh token plus client ID and secret), the `AWS_*` bucket settings when `FILESYSTEM_DISK=s3`, and a 24+
 character `CRON_SECRET`. It also refuses `APP_DEBUG=true`, `MAIL_MAILER=log`, and any `HASH_DRIVER` other than
 `argon2id` (the default in `config/hashing.php`; older bcrypt hashes are upgraded at sign-in). The deploy log names every problem
-at once. It can't see whether a volume is mounted, so check uploads after a redeploy (section 2.6).
+at once. It can't tell whether the bucket really works, so check uploads after a redeploy (section 2.6).
 
 ### 1.3 Production database (Neon)
 
@@ -92,8 +101,8 @@ at once. It can't see whether a volume is mounted, so check uploads after a rede
    - **Pooled** (toggle *Connection pooling* on, host contains `-pooler`) → `DB_URL`.
    - **Direct** (pooling off, same host without `-pooler`) → `DB_URL_DIRECT`.
 
-   Both end in `?sslmode=require`. Paste them on Railway only. They contain the password, so they never go in the repo,
-   a chat or a screenshot.
+   Both end in `?sslmode=require`. Paste them on Render only, as the bare URL (not the `psql '...'` command Neon also
+   offers). They contain the password, so they never go in the repo, a chat or a screenshot.
 5. Compute: set the minimum size to at least 0.25 CU. *Scale to zero* can stay on (the first request after an idle
    period waits ~1 s while the compute wakes), or turn it off on a paid plan for steady response times.
 6. Deploy (section 4). The first container start creates the schema, the lookups and the built-in admin. Nothing else is
@@ -142,16 +151,19 @@ forward migration (section 4).
 - A Neon restore covers the database only. Uploaded files live on the volume or bucket (section 1.4) and need their own
   backup.
 
-**Access:** only the people who deploy have access to the Neon project. Use the role password only in Railway; reset it
-(*Roles → Reset password*, then update both URLs on Railway and redeploy) if it ever leaks or someone leaves the team.
+**Access:** only the people who deploy have access to the Neon project. Use the role password only in Render; reset it
+(*Branches → main → Roles & Databases → ⋯ → Reset password*, then update both URLs on Render) if it ever leaks or
+someone leaves the team.
 
 ### 1.4 Uploads
 
-The container's disk is wiped on every deploy, so photos, job logos, event covers and proof documents need one of:
+The container's disk is wiped on every deploy (and on every wake-up on the Free plan), so photos, job logos, event covers
+and proof documents go to an S3-compatible bucket (the `FILESYSTEM_DISK=s3` and `AWS_*` variables), **private**, with an
+access key limited to that bucket. Proofs are only served through short-lived signed URLs.
 
-- a Railway **volume** mounted at `/app/storage/app`, or
-- an S3-compatible bucket (the `FILESYSTEM_DISK=s3` and `AWS_*` variables), **private**, with an access key limited to
-  that bucket. Proofs are only served through short-lived signed URLs.
+With **Cloudflare R2**: create the bucket, then *Manage R2 API Tokens* → a token with *Object Read & Write* on that bucket
+only. Set `AWS_ENDPOINT=https://<account id>.r2.cloudflarestorage.com`, `AWS_DEFAULT_REGION=auto`,
+`AWS_USE_PATH_STYLE_ENDPOINT=true`, and the token's key ID and secret.
 
 ### 1.5 Email (Gmail API, OAuth)
 
@@ -163,14 +175,16 @@ sent, synchronously inside the request: `password-reset` and `event-registration
   email silently stops.
 - Changing the account's password, or removing the app at <https://myaccount.google.com/permissions>, revokes the token.
   To get a new one, run `php artisan app:google-oauth-token --client-id=... --client-secret=...` locally (from `backend/`),
-  sign in as `udm.alumni.mailer@gmail.com`, and put the new `GOOGLE_OAUTH_REFRESH_TOKEN` on Railway.
+  sign in as `udm.alumni.mailer@gmail.com`, and put the new `GOOGLE_OAUTH_REFRESH_TOKEN` on Render.
 - A Gmail account sends roughly **500 emails a day**. Enough for resets and RSVPs.
 - Mail arrives from `udm.alumni.mailer@gmail.com` unless `no-reply@` / `events@udmalumni.edu` are added to that account as
   verified *Send mail as* aliases. The move to the UDM Workspace is in section 7.
 
 ### 1.6 Scheduled jobs
 
-A Railway **cron** service (or an external HTTP cron) calls these once a day:
+An external HTTP cron (e.g. **cron-job.org**, free) calls these once a day, with method `POST` and the header
+`X-Cron-Secret: <CRON_SECRET>`. On the Free plan the first call wakes the service, so set the cron's timeout to at least
+90 seconds.
 
 | Job | Suggested time (Asia/Manila) |
 |---|---|
@@ -194,7 +208,7 @@ them afterwards).
 
 ### 2.1 Platform
 
-- [ ] `https://<prod domain>/api/v1/health` returns OK, and the Railway healthcheck is green.
+- [ ] `https://<prod domain>/api/v1/health` returns OK, and the Render deploy shows **Live**.
 - [ ] The deploy log shows the migrations, `Created admin account …` (first deploy) or `Admin account … exists`, then the
       server starting. No errors.
 - [ ] Reloading a deep link (e.g. `/admin/records`, `/alumni/jobs`, `/college/outreach`) loads the app, not a 404.
@@ -246,7 +260,7 @@ them afterwards).
 
 - [ ] Edit Profile: profile fields, survey answers and the photo save, and survive a reload.
 - [ ] Upload a proof document. It opens only through its signed link (the link stops working after it expires).
-- [ ] **Redeploy once, then check the photo and proof still load** (proves the volume or bucket is set up).
+- [ ] **Redeploy once, then check the photo and proof still load** (proves the bucket is set up).
 - [ ] Directory: hiding a contact field hides it in the directory and the profile modal.
 - [ ] Jobs: post a job (pending), the admin approves it and the poster is notified. Save a job. Apply by Messenger, email
       or careers page and the job shows "Application sent via …".
@@ -269,7 +283,7 @@ them afterwards).
 
 - [ ] Run each job once by hand with `curl` (section 1.6). Each returns OK and writes a log line.
 - [ ] The next day, the cron runs show in the log at the expected times.
-- [ ] Scan the Railway logs: no passwords, tokens, reset codes, cookies or full email bodies.
+- [ ] Scan the Render logs: no passwords, tokens, reset codes, cookies or full email bodies.
 
 ---
 
@@ -280,8 +294,10 @@ production** (it refuses `APP_ENV=production` anyway, so don't set `ALLOW_DEMO_S
 
 1. **Built-in admin:** created on start by `app:ensure-admin` from `ADMIN_PASSWORD` (8+ characters, 1 number, 1 uppercase)
    when `admin@udmalumni.edu` is missing. An existing account is never changed. After the first sign-in and password
-   change, **remove `ADMIN_PASSWORD`** from Railway.
-2. **Other staff accounts:** open a shell on the service (`railway ssh`, or *service → ⋯ → SSH*) and run:
+   change, **remove `ADMIN_PASSWORD`** from Render.
+2. **Other staff accounts:** open the service's *Shell* tab (paid instances only) and run the commands below. On the Free
+   plan, run them locally from `backend/` instead, with `DB_URL` in `.env` temporarily pointed at the production pooled
+   URL. Put the local URL back afterwards.
    ```bash
    php artisan app:create-user --role=admin --email="<real admin email>" --name="Alumni Office Admin"
    php artisan app:create-user --role=dept --college=CCS --email="<dean email>" --name="<name>" --label="College Dean"
@@ -298,12 +314,12 @@ production** (it refuses `APP_ENV=production` anyway, so don't set `ALLOW_DEMO_S
    npm --prefix client test && npm --prefix client run lint
    npm run build
    ```
-2. Push / merge to `main`. Railway rebuilds the image and the new container migrates on start. Traffic switches only
-   once the healthcheck passes.
+2. Push / merge to `main`. Render rebuilds the image and the new container migrates on start. Traffic switches only
+   once the health check passes.
 3. Run the parts of the checklist (section 2) that the release touches, plus 2.1 and 2.2.
 4. **Migrations must be backward-compatible** with the code that's still running: add columns before the code uses them,
    drop them in a later release.
-5. **Rollback:** Railway → *Deployments* → *Redeploy* the previous build. A migration that already ran is never rolled
+5. **Rollback:** Render → service → *Events* → the previous deploy → *Rollback*. A migration that already ran is never rolled
    back (`migrate:rollback` isn't used in production). Fix it with a new forward migration.
 6. Before a risky migration, take a Neon branch (snapshot) of the production database so it can be restored (section 1.3).
    Test the migration on a second branch of production first: point a local `DB_URL` / `DB_URL_DIRECT` at that branch,
@@ -313,27 +329,30 @@ production** (it refuses `APP_ENV=production` anyway, so don't set `ALLOW_DEMO_S
 
 - [ ] **Uptime monitor** (e.g. UptimeRobot or Better Stack) on `https://<prod domain>/api/v1/health`, alerting the alumni
       office's IT contact.
-- [ ] Railway usage / billing alerts set.
+- [ ] Render billing notifications set (*Workspace → Billing*), and R2 usage checked now and then.
 - [ ] **Restore test:** restore a point in time into a separate Neon branch once (section 1.3), and check that the data
       is there. Repeat after big changes.
 - [ ] Neon usage alerts set (storage and compute hours), so the database doesn't hit a plan limit and get suspended.
-- [ ] If uploads use a Railway volume, plan its backup (volumes are not backed up by the database restore).
+- [ ] Plan a backup of the uploads bucket (it is not covered by the database restore).
 - [ ] Check the Gmail account now and then for bounces and "unusual activity" warnings.
 
 ## 6. Custom domain (later)
 
 If the app moves to a UDM domain (e.g. `alumni.udm.edu.ph`):
 
-1. Railway → service → *Settings → Networking → Custom domain*, then create the DNS record Railway shows (CNAME).
+1. Render → service → *Settings → Custom Domains*, then create the DNS record Render shows (CNAME).
 2. Set `APP_URL=https://alumni.udm.edu.ph` and redeploy, so email links and the logo use the new domain.
 3. Add the domain to the Google OAuth consent screen's app domains.
 4. Re-test sign-in (cookies are per domain, so everyone signs in again) and the reset / RSVP email links.
 
 ## 7. Open items
 
-- [ ] **Ownership:** the GitHub repo is on a personal account (`gracereminal/udm-alumni`) and Railway / Neon / Google are
-      on personal accounts. Move them to the university (GitHub → Settings → *Transfer ownership* into the org; Railway and
+- [ ] **Ownership:** the GitHub repo is on a personal account (`gracereminal/udm-alumni`) and Render / Neon / Google are
+      on personal accounts. Move them to the university (GitHub → Settings → *Transfer ownership* into the org; Render and
       Neon project transfer to a university team; billing in the university's name). Keep the repo **private**.
+- [ ] **Railway clean-up:** once Render is live, delete the old Railway project, so the secrets exposed in Railway's
+      breach aren't stored there any more. Every secret it held was reissued (Neon password, Google OAuth secret and
+      refresh token, `APP_KEY`, `CRON_SECRET`, bucket keys).
 - [ ] **Secrets:** no `.env` file is tracked (`git ls-files | grep -i "\.env"` prints only `backend/.env.example`). Move the
       root `.env.local` (Vercel OIDC token) out of the project folder.
 - [ ] **Old Vercel site:** `udm-alumni-demo.vercel.app` is still the frontend-only prototype that keeps data in each
