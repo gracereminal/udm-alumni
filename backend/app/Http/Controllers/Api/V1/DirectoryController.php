@@ -40,8 +40,9 @@ class DirectoryController extends Controller
         }
         $w = $where === [] ? '' : 'WHERE '.implode(' AND ', $where);
         $from = 'FROM v_directory d LEFT JOIN college c ON c.college_id = d.college_id';
-        $total = (int) DB::selectOne("SELECT count(*) AS n {$from} {$w}", $params)->n;
-        $rows = DB::select("SELECT d.*, c.name AS college_name {$from} {$w} ORDER BY d.name, d.alumni_id LIMIT ? OFFSET ?", [...$params, $per, ($page - 1) * $per]);
+        // one round trip: the total rides along on every row (a page past the end falls back to a count)
+        $rows = DB::select("SELECT d.*, c.name AS college_name, count(*) OVER () AS total_rows {$from} {$w} ORDER BY d.name, d.alumni_id LIMIT ? OFFSET ?", [...$params, $per, ($page - 1) * $per]);
+        $total = $rows !== [] ? (int) $rows[0]->total_rows : ($page > 1 ? (int) DB::selectOne("SELECT count(*) AS n {$from} {$w}", $params)->n : 0);
 
         return response()->json(Lists::out(array_map(self::card(...), $rows), $total, $page, $per));
     }
