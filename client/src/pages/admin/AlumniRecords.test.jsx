@@ -45,7 +45,6 @@ describe('Alumni Records page', () => {
     const user = userEvent.setup();
     const api = setup('admin', [
       ['GET', /^\/alumni\/8$/, { ...FLAGGED, history: [] }],
-      ['GET', /^\/alumni\/8\/proofs$/, listOf([])],
       ['POST', '/alumni/8/status', { ...FLAGGED, status: 'verified' }],
     ]);
     renderAt('/admin/records');
@@ -70,7 +69,7 @@ describe('Alumni Records page', () => {
   });
 
   it('shows no approve button for a verified record', async () => {
-    setup('dept', [['GET', /^\/alumni\/7$/, { ...ROW, history: [] }], ['GET', /^\/alumni\/7\/proofs$/, listOf([])]]);
+    setup('dept', [['GET', /^\/alumni\/7$/, { ...ROW, history: [] }]]);
     const user = userEvent.setup();
     renderAt('/college/records');
     await user.click((await screen.findAllByRole('button', { name: 'View record' }))[0]);

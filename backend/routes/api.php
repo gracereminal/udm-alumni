@@ -64,8 +64,6 @@ Route::prefix('alumni')->middleware('role:admin,dept')->group(function () {
     Route::post('/{id}/status', [AlumniController::class, 'status']);
     Route::post('/{id}/merge', [AlumniController::class, 'merge']);
     Route::post('/{id}/map-program', [AlumniController::class, 'mapProgram']);
-    Route::get('/{id}/proofs', [AlumniController::class, 'proofs']);
-    Route::post('/{id}/request-proof', [AlumniController::class, 'requestProof']);
     Route::post('/{id}/emails', [AlumniController::class, 'emailComposed']);
 });
 
@@ -77,8 +75,6 @@ Route::prefix('me')->middleware('role:alumni')->group(function () {
     Route::get('/export', [MeController::class, 'export'])->middleware('throttle:10,1');
     Route::post('/photo', [MeController::class, 'uploadPhoto']);
     Route::delete('/photo', [MeController::class, 'deletePhoto']);
-    Route::get('/proofs', [MeController::class, 'proofs']);
-    Route::post('/proofs', [MeController::class, 'uploadProof']);
 });
 
 // Directory (any signed-in user; masked by v_directory).
