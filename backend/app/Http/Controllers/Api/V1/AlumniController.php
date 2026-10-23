@@ -6,7 +6,6 @@ use App\Exceptions\ApiException;
 use App\Http\Controllers\Controller;
 use App\Models\UserAccount;
 use App\Services\AlumniService;
-use App\Services\StorageService;
 use App\Support\Lists;
 use App\Support\Scope;
 use Illuminate\Http\JsonResponse;
@@ -125,27 +124,6 @@ class AlumniController extends Controller
         $user = $this->user($request);
         $this->inScope($request, $id);
         DB::transaction(fn () => $this->alumni->mapProgram($id, $programId, $user, Scope::for($user)));
-
-        return response()->json(AlumniService::row($this->alumni->find($id)));
-    }
-
-    /** GET /alumni/:id/proofs: proof documents with short-lived signed links (the read is audited). */
-    public function proofs(Request $request, int $id, StorageService $storage): JsonResponse
-    {
-        $this->inScope($request, $id);
-
-        return response()->json(['data' => $this->alumni->proofs($id, $storage)]);
-    }
-
-    /** POST /alumni/:id/request-proof { docs, due_days, note }: records the request (the email is composed in the staff's mail app). */
-    public function requestProof(Request $request, int $id): JsonResponse
-    {
-        $b = $request->validate([
-            'docs' => 'required|array|min:1|max:8', 'docs.*' => 'required|string|max:80',
-            'due_days' => 'nullable|integer|between:1,90', 'note' => 'nullable|string|max:500',
-        ]);
-        $this->inScope($request, $id);
-        DB::transaction(fn () => $this->alumni->requestProof($id, array_map('trim', $b['docs']), (int) ($b['due_days'] ?? 14), isset($b['note']) ? trim($b['note']) : null, $this->user($request)));
 
         return response()->json(AlumniService::row($this->alumni->find($id)));
     }

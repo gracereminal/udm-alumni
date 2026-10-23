@@ -45,17 +45,13 @@ export default function RecordsView(v) {
     recActCancel,
     recActClose,
     recActDesc,
-    recActDocs,
-    recActDue,
     recActDupList,
     recActHasPrimary,
     recActIsDup,
     recActIsEmail,
     recActIsHistory,
-    recActIsProof,
     recActIsReassign,
     recActLog,
-    recActNote,
     recActOn,
     recActPrimary,
     recActPrimaryBg,
@@ -68,7 +64,6 @@ export default function RecordsView(v) {
     recActReasonLabel,
     recActReasonPh,
     recActSetBody,
-    recActSetNote,
     recActSetReason,
     recActSetSubject,
     recActShowReason,
@@ -105,7 +100,6 @@ export default function RecordsView(v) {
     recDrawerApprove,
     recDrawerCanApprove,
     recDrawerApproveLabel,
-    recDrawerProof,
     recDrawerClose,
     recDrawerDelete,
     recDrawerEdit,
@@ -1615,54 +1609,6 @@ export default function RecordsView(v) {
                       ) : null}
                       <div style={{ flex: 'none' }}>
                         <div style={{ fontSize: '10.5px', fontWeight: '700', letterSpacing: '.6px', color: '#A7B0BC', marginBottom: '8px' }}>
-                          UPLOADED PROOF
-                        </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                          {(recDrawerProof || []).map((p, _i) => (
-                            <React.Fragment key={_i}>
-                              <div
-                                style={{
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  gap: '11px',
-                                  background: '#F7FAF8',
-                                  border: '1px solid #EDF2EF',
-                                  borderRadius: '14px',
-                                  padding: '10px 12px',
-                                }}
-                              >
-                                <div
-                                  style={{
-                                    width: '28px',
-                                    height: '28px',
-                                    borderRadius: '8px',
-                                    background: '#F1F3F5',
-                                    color: '#5A6572',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    fontSize: '12px',
-                                    flex: 'none',
-                                  }}
-                                >
-                                  ▤
-                                </div>
-                                <div style={{ minWidth: '0', flex: '1' }}>
-                                  <div style={{ fontSize: '12.5px', fontWeight: '700', color: '#0B1220' }}>{p.name}</div>
-                                  <div style={{ fontSize: '11.5px', color: '#94A3B8' }}>{p.meta}</div>
-                                </div>
-                                {p.ok ? (
-                                  <>
-                                    <a href={p.url} target="_blank" rel="noopener noreferrer" style={{ fontSize: '11.5px', fontWeight: '700', color: '#0F6B4F', flex: 'none', textDecoration: 'none' }}>View</a>
-                                  </>
-                                ) : null}
-                              </div>
-                            </React.Fragment>
-                          ))}
-                        </div>
-                      </div>
-                      <div style={{ flex: 'none' }}>
-                        <div style={{ fontSize: '10.5px', fontWeight: '700', letterSpacing: '.6px', color: '#A7B0BC', marginBottom: '8px' }}>
                           ADMIN NOTES
                         </div>
                         <textarea
@@ -2497,113 +2443,6 @@ export default function RecordsView(v) {
                                   fontFamily: 'inherit',
                                   fontSize: '12.5px',
                                   lineHeight: '1.55',
-                                  color: '#0B1220',
-                                  outline: 'none',
-                                }}
-                              />
-                            </div>
-                          </div>
-                        </>
-                      ) : null}
-                      {recActIsProof ? (
-                        <>
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                            <div>
-                              <div style={{ fontSize: '10.5px', fontWeight: '700', letterSpacing: '.6px', color: '#A7B0BC', marginBottom: '8px' }}>
-                                DOCUMENTS TO REQUEST
-                              </div>
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                {(recActDocs || []).map((d, _i) => (
-                                  <React.Fragment key={_i}>
-                                    <div onKeyDown={onActivate(d.toggle)}
-                                      onClick={d.toggle}
-                                      role="checkbox"
-                                      aria-checked={!!d.mark}
-                                      tabIndex={0}
-                                      style={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '11px',
-                                        padding: '9px 12px',
-                                        border: `1px solid ${d.border}`,
-                                        background: d.bg,
-                                        borderRadius: '10px',
-                                        cursor: 'pointer',
-                                      }}
-                                    >
-                                      <div
-                                        style={{
-                                          width: '16px',
-                                          height: '16px',
-                                          borderRadius: '5px',
-                                          border: `1.5px solid ${d.markBorder}`,
-                                          background: d.markBg,
-                                          color: '#fff',
-                                          fontSize: '10px',
-                                          display: 'flex',
-                                          alignItems: 'center',
-                                          justifyContent: 'center',
-                                          flex: 'none',
-                                        }}
-                                      >
-                                        {d.mark}
-                                      </div>
-                                      <div style={{ minWidth: '0' }}>
-                                        <div style={{ fontSize: '12.5px', fontWeight: '600', color: '#0B1220' }}>{d.label}</div>
-                                        <div style={{ fontSize: '11.5px', color: '#94A3B8' }}>{d.hint}</div>
-                                      </div>
-                                    </div>
-                                  </React.Fragment>
-                                ))}
-                              </div>
-                            </div>
-                            <div>
-                              <div style={{ fontSize: '10.5px', fontWeight: '700', letterSpacing: '.6px', color: '#A7B0BC', marginBottom: '8px' }}>
-                                DUE IN
-                              </div>
-                              <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                                {(recActDue || []).map((c, _i) => (
-                                  <React.Fragment key={_i}>
-                                    <div onKeyDown={onActivate(c.onClick)}
-                                      onClick={c.onClick}
-                                      role="button"
-                                      tabIndex={0}
-                                      style={{
-                                        padding: '7px 13px',
-                                        borderRadius: '99px',
-                                        border: `1px solid ${c.border}`,
-                                        background: c.bg,
-                                        color: c.color,
-                                        fontSize: '12px',
-                                        fontWeight: '600',
-                                        cursor: 'pointer',
-                                      }}
-                                    >
-                                      {c.label}
-                                    </div>
-                                  </React.Fragment>
-                                ))}
-                              </div>
-                            </div>
-                            <div>
-                              <div style={{ fontSize: '10.5px', fontWeight: '700', letterSpacing: '.6px', color: '#A7B0BC', marginBottom: '6px' }}>
-                                NOTE TO ALUMNUS (OPTIONAL)
-                              </div>
-                              <textarea
-                                value={recActNote}
-                                onChange={recActSetNote}
-                                placeholder="e.g. A clear phone photo is fine."
-                                style={{
-                                  width: '100%',
-                                  boxSizing: 'border-box',
-                                  minHeight: '64px',
-                                  resize: 'vertical',
-                                  border: '1px solid #E2E5EA',
-                                  borderRadius: '10px',
-                                  padding: '9px 12px',
-                                  fontFamily: 'inherit',
-                                  fontSize: '12.5px',
-                                  lineHeight: '1.5',
                                   color: '#0B1220',
                                   outline: 'none',
                                 }}

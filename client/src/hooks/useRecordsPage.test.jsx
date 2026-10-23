@@ -110,10 +110,9 @@ describe('Alumni Records actions', () => {
   // A record the Alumni Office flagged for follow-up.
   const FLAGGED = { ...ROW, id: 8, membershipId: 'AM-2026-00001', name: 'Paolo Mendoza', status: 'flagged', note: 'Check the batch year.' };
   const detail = (r) => ['GET', new RegExp(`^/alumni/${r.id}$`), { ...r, history: [] }];
-  const proofs = (r) => ['GET', new RegExp(`^/alumni/${r.id}/proofs$`), listOf([])];
 
   it('clears a flag and marks the record verified', async () => {
-    const { api, vals } = setup('admin', [detail(FLAGGED), proofs(FLAGGED), ['POST', '/alumni/8/status', { ...FLAGGED, status: 'verified' }]], [FLAGGED]);
+    const { api, vals } = setup('admin', [detail(FLAGGED), ['POST', '/alumni/8/status', { ...FLAGGED, status: 'verified' }]], [FLAGGED]);
     await waitFor(() => expect(vals().recRowsView).toHaveLength(1));
     act(() => vals().recRowsView[0].onView());
     await waitFor(() => expect(vals().recDrawerApproveLabel).toBe('Clear flag & mark verified'));
@@ -124,7 +123,7 @@ describe('Alumni Records actions', () => {
   });
 
   it('a verified record has nothing to approve', async () => {
-    const { vals } = setup('dept', [detail(ROW), proofs(ROW)]);
+    const { vals } = setup('dept', [detail(ROW)]);
     await waitFor(() => expect(vals().recRowsView).toHaveLength(1));
     act(() => vals().recRowsView[0].onView());
     await waitFor(() => expect(vals().recDrawerStatusNote).toMatch(/^Verified/));

@@ -16,7 +16,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
-/** /me: the signed-in alumnus' profile, privacy, skills, survey, photo, proof documents and data export (role:alumni). */
+/** /me: the signed-in alumnus' profile, privacy, skills, survey, photo and data export (role:alumni). */
 class MeController extends Controller
 {
     public function __construct(
@@ -79,32 +79,6 @@ class MeController extends Controller
     public function deletePhoto(Request $request): JsonResponse
     {
         return response()->json($this->profiles->setPhoto($this->alumniId($request), null, $this->actorId($request)));
-    }
-
-    /** GET /me/proofs: own proof documents and open requests, with short-lived links. */
-    public function proofs(Request $request): JsonResponse
-    {
-        $rows = DB::select(
-            'SELECT document_id AS id, storage_key, mime, size_bytes AS size, requested_at AS "requestedAt", uploaded_at AS "uploadedAt"
-               FROM proof_document WHERE alumni_id = ? ORDER BY document_id DESC',
-            [$this->alumniId($request)],
-        );
-
-        return response()->json(['data' => array_map(function ($d) {
-            $key = $d->storage_key;
-            unset($d->storage_key);
-
-            return (array) $d + ['url' => $key ? $this->storage->signedUrl($key) : null];
-        }, $rows)]);
-    }
-
-    /** POST /me/proofs (multipart `file`, PDF/JPG/PNG up to 5 MB). */
-    public function uploadProof(Request $request): JsonResponse
-    {
-        $file = $this->storage->store($request->file('file'), 'proof');
-        $id = $this->profiles->addProof($this->alumniId($request), $file, $this->actorId($request));
-
-        return response()->json(['id' => $id, 'mime' => $file['mime'], 'size' => $file['size']], 201);
     }
 
     /**

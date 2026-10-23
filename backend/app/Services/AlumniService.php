@@ -194,24 +194,6 @@ class AlumniService
         );
     }
 
-    /** @return list<array<string, mixed>> */
-    public function proofs(int $alumniId, StorageService $storage): array
-    {
-        $docs = DB::select(
-            'SELECT document_id AS id, storage_key, mime, size_bytes AS size, requested_at AS "requestedAt", uploaded_at AS "uploadedAt"
-               FROM proof_document WHERE alumni_id = ? ORDER BY COALESCE(uploaded_at, requested_at) DESC NULLS LAST, document_id DESC',
-            [$alumniId],
-        );
-        DB::transaction(fn () => $this->audit->log('read_proofs', 'alumnus', $alumniId));
-
-        return array_map(function ($d) use ($storage) {
-            $key = $d->storage_key;
-            unset($d->storage_key);
-
-            return (array) $d + ['url' => $key ? $storage->signedUrl($key) : null];
-        }, $docs);
-    }
-
     // --- Status, merge, mapping ------------------------------------------------------------------------
 
     /**
@@ -319,26 +301,7 @@ class AlumniService
         $this->audit->log('map_program', 'alumnus', $alumniId, $actor->user_id, ['program_id' => $programId]);
     }
 
-    // --- Proof requests and composed emails (the portal sends nothing; it records the hand-off) --------
-
-    /** @param  list<string>  $docs */
-    public function requestProof(int $alumniId, array $docs, int $dueDays, ?string $note, UserAccount $actor): void
-    {
-        $r = $this->find($alumniId);
-        $list = implode(', ', $docs);
-        $flagNote = "Awaiting proof: {$list} — due in {$dueDays} days.".($note ? " {$note}" : '');
-        DB::update('UPDATE alumnus SET flag_note = ? WHERE alumni_id = ?', [$flagNote, $alumniId]);
-        DB::table('proof_document')->insert(['alumni_id' => $alumniId, 'requested_by' => $actor->user_id, 'requested_at' => now()]);
-        DB::table('record_review')->insert([
-            'alumni_id' => $alumniId, 'reviewer_id' => $actor->user_id, 'action' => 'edit',
-            'note' => "Proof requested ({$list}) · due in {$dueDays} days", 'diff' => json_encode(['kind' => 'request_proof', 'docs' => $docs, 'due_days' => $dueDays]),
-        ]);
-        $this->audit->log('request_proof', 'alumnus', $alumniId, $actor->user_id, ['docs' => $docs, 'due_days' => $dueDays]);
-        if ($r->user_id !== null) {
-            $this->notifications->notify([(int) $r->user_id], 'record_status', 'Please upload proof for your alumni record',
-                "{$list} — due in {$dueDays} days. Upload it from your profile.", 'profile');
-        }
-    }
+    // --- Composed emails (the portal sends nothing; it records the hand-off) ---------------------------
 
     /** Records "Email composed" (the client opened the staff member's mail app with the message). */
     public function emailComposed(int $alumniId, string $subject, UserAccount $actor): void
@@ -411,6 +374,11 @@ class AlumniService
         $has = fn (string $k) => array_key_exists($k, $input);
 
         if ($names !== null && ! isset($errors['name'])) {
+            // The form edits the list's "First M. Last": the middle initial is not part of the first name.
+            $initial = $before->middle_name ? preg_quote(mb_substr($before->middle_name, 0, 1), '/') : null;
+            if ($initial !== null) {
+                $names['first'] = (string) preg_replace("/\\s+{$initial}\\.\$/iu", '', $names['first']);
+            }
             $set['first_name'] = $names['first'];
             $set['last_name'] = $names['last'];
         }
