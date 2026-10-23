@@ -1,0 +1,13 @@
+Your sign-in code
+
+Hi {{ first_name }},
+
+Use this code to finish signing in to the UDM Alumni portal: {{ code }}
+
+The code expires in {{ expires_minutes }} minutes and works only once.
+
+If you didn't try to sign in, someone may know your password. Don't share this code, and change your password from the sign-in page ("Forgot password?").
+
+--
+UDM Alumni Relations Office · Universidad de Manila, Cecilia Muñoz-Palma St., Ermita, Manila
+This is an automated message. Please do not reply.

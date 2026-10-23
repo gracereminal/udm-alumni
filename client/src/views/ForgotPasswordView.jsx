@@ -26,12 +26,14 @@ export default function ForgotPasswordView(v) {
     finish, backSignin, viaLink, linkEmail, requestNew, pwErr,
     // Change Password (a one-time password on first sign-in) reuses step 3, with a current-password field.
     change, current, setCurrent, currentErr,
+    // Two-step verification at sign-in (UDM Alumni.dc.html "MFA Verification") reuses the layout with its own card.
+    mfa, expiresMinutes, codeBorder, trust, toggleTrust,
   } = v;
   const backLabel = change ? 'Sign out' : 'Back to Sign In';
   const btnHover = hv({ background: '#0B3D2E' });
   return (
     <div
-      data-screen-label={change ? 'Change Password' : 'Forgot Password'}
+      data-screen-label={mfa ? 'MFA Verification' : change ? 'Change Password' : 'Forgot Password'}
       data-auth="1"
       data-m="si-root"
       style={{ display: 'grid', gridTemplateColumns: 'minmax(0,11fr) minmax(min(400px,100%),9fr)', minHeight: '100vh' }}
@@ -83,20 +85,22 @@ export default function ForgotPasswordView(v) {
             }}
           >
             <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#D9B45A' }} />
-            <div style={{ whiteSpace: 'nowrap', fontWeight: '700', letterSpacing: '.1em', textTransform: 'uppercase', color: '#8FD9B6' }}>{change ? 'Account Security' : 'Account Recovery'}</div>
+            <div style={{ whiteSpace: 'nowrap', fontWeight: '700', letterSpacing: '.1em', textTransform: 'uppercase', color: '#8FD9B6' }}>{mfa ? 'Two-Step Verification' : change ? 'Account Security' : 'Account Recovery'}</div>
           </div>
           <div
             data-m="si-title"
             style={{ fontWeight: '800', fontSize: 'clamp(40px,min(5.4vw,8.8dvh),104px)', lineHeight: '1', letterSpacing: '-.035em', marginBottom: 'clamp(14px,2.8dvh,32px)' }}
           >
-            {change ? 'Welcome.' : 'Locked out?'}
+            {mfa ? 'One more' : change ? 'Welcome.' : 'Locked out?'}
             <br />
             <span style={{ fontFamily: "'Playfair Display',serif", fontStyle: 'italic', fontWeight: '600', letterSpacing: '-.008em', color: '#D9B45A' }}>
-              {change ? 'Make it yours.' : "We've got you."}
+              {mfa ? 'step to safety.' : change ? 'Make it yours.' : "We've got you."}
             </span>
           </div>
           <div data-m="si-desc" style={{ fontSize: 'clamp(15px,min(1.2vw,2.1dvh),21px)', lineHeight: '1.6', color: 'rgba(214,234,225,.72)', maxWidth: '34em', textWrap: 'pretty' }}>
-            {change
+            {mfa
+              ? 'Your alumni record holds personal data. A one-time code keeps it yours even if your password is compromised.'
+              : change
               ? 'Your account was set up with a one-time password. Choose your own password before you continue.'
               : 'Verify the email linked to your alumni record and set a new password in three quick steps.'}
           </div>
@@ -164,6 +168,37 @@ export default function ForgotPasswordView(v) {
               <div style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: '6px 16px', fontSize: '13px', color: 'rgba(0,0,0,.6)', marginBottom: '22px' }}>
                 <div>Didn&apos;t get it? <button type="button" className="link-btn" onClick={resend} style={{ fontWeight: '700', textDecoration: 'none' }}>Resend code</button></div>
                 <button type="button" className="link-btn" onClick={changeEmail} style={{ fontWeight: '600', textDecoration: 'none' }}>Use a different email</button>
+              </div>
+            </>
+          ) : null}
+
+          {step === 'mfa' ? (
+            <>
+              <div style={{ width: '52px', height: '52px', borderRadius: '14px', background: '#E3F1EA', color: '#0B5A40', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '20px' }}>
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M12 3l7 3v5c0 4.5-3 8.2-7 10-4-1.8-7-5.5-7-10V6z" />
+                  <path d="M9 12l2 2 4-4" />
+                </svg>
+              </div>
+              <div data-m="f-title" style={{ ...titleStyle, marginBottom: '14px' }}>Verify it&apos;s <span style={italic}>you</span></div>
+              <div data-m="f-desc" style={{ ...descStyle, marginBottom: '22px' }}>
+                We sent a 6-digit code to <strong style={{ color: '#0A1F18' }}>{masked}</strong>. It expires in {expiresMinutes} minutes.
+              </div>
+              <label htmlFor="mfa-code" style={{ ...labelStyle, display: 'block' }}>6-digit code</label>
+              <input
+                id="mfa-code" data-m="f-input" type="text" inputMode="numeric" maxLength={6} autoComplete="one-time-code" value={code} onChange={setCode} onKeyDown={codeKey} placeholder="••••••" autoFocus
+                aria-invalid={codeMsgColor === '#B3261E' && !!codeMsg}
+                style={inputStyle(codeBorder, { fontFamily: "'JetBrains Mono',ui-monospace,monospace", fontSize: '22px', letterSpacing: '.6em', textAlign: 'center' })} {...fv(FOCUS)}
+              />
+              <div role="alert" style={msgStyle(codeMsgColor)}>{codeMsg}</div>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', marginBottom: '20px', fontSize: '13px', color: '#0A1F18' }}>
+                <input type="checkbox" checked={trust} onChange={toggleTrust} style={{ width: '18px', height: '18px', margin: 0, accentColor: '#0B5A40', cursor: 'pointer' }} />
+                Trust this device for 30 days
+              </label>
+              <div tabIndex={0} onKeyDown={onActivate(verify)} data-m="f-btn" role="button" onClick={verify} style={btnStyle(verifyBg, verifyColor, verifyCursor, { marginBottom: '18px' })}>Verify &amp; Sign In</div>
+              <div style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: '6px 16px', fontSize: '13px', color: 'rgba(0,0,0,.6)' }}>
+                <div>Didn&apos;t get it? <button type="button" className="link-btn" onClick={resend} style={{ fontWeight: '700', textDecoration: 'none' }}>Resend code</button></div>
+                <button type="button" className="link-btn" onClick={backSignin} style={{ fontWeight: '600', textDecoration: 'none' }}>Back to Sign In</button>
               </div>
             </>
           ) : null}
