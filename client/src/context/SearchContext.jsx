@@ -7,7 +7,7 @@ import { employmentLabel } from '../data/records';
 import { CATALOG } from '../data/colleges';
 import { initials } from '../lib/format';
 import useNarrow from '../hooks/useNarrow';
-import { page } from '../lib/api';
+import { get, qs } from '../lib/api';
 import SearchOverlayView from '../views/SearchOverlayView';
 import AlumniCardView from '../views/AlumniCardView';
 import ContactModalView from '../views/ContactModalView';
@@ -100,19 +100,25 @@ export function SearchProvider({ children }) {
   // college accounts. Staff also get the verified records in their scope, which open in Alumni Records.
   const staff = role !== 'alumni';
   const [index, setIndex] = useState([]);
+  // true from the keystroke until this query's answers arrive, so a slow API shows "Searching…", never "No results"
+  const [fetching, setFetching] = useState(false);
   const collegeOfProgram = (abbr, collegeName) => collegeName || (CATALOG.programs.find((p) => p.abbr === abbr) || {}).collegeName || '';
   useEffect(() => {
     if (!open || !user) return undefined;
     let live = true;
     const term = query.trim();
     const none = { data: [] };
+    const ctl = new AbortController();
+    const fetchPage = (path, params) => get(`${path}${qs(params)}`, { signal: ctl.signal }).catch(() => none);
+    setFetching(true);
     const t = setTimeout(() => {
       Promise.all([
-        staff ? page('/alumni', { status: 'verified', q: term, per_page: 50, sort: 'name' }).catch(() => none) : none,
-        page('/directory', { q: term, per_page: 50 }).catch(() => none),
-        term ? page('/directory/accounts', { q: term }).catch(() => none) : none,
+        staff ? fetchPage('/alumni', { status: 'verified', q: term, per_page: 50, sort: 'name' }) : none,
+        fetchPage('/directory', { q: term, per_page: 50 }),
+        term ? fetchPage('/directory/accounts', { q: term }) : none,
       ]).then(([records, directory, accounts]) => {
         if (!live) return;
+        setFetching(false);
         const recordIds = new Set(records.data.map((r) => Number(r.id)));
         const fromRecords = records.data.map((r) => {
           const emp = employmentLabel(r.employmentStatus);
@@ -136,7 +142,7 @@ export function SearchProvider({ children }) {
         setIndex([...fromAccounts, ...fromRecords, ...fromDirectory]);
       });
     }, term ? 250 : 0);
-    return () => { live = false; clearTimeout(t); };
+    return () => { live = false; clearTimeout(t); ctl.abort(); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, query, staff, role, user]);
 
@@ -150,7 +156,7 @@ export function SearchProvider({ children }) {
     results = results.map((r) => { const n = r.name.toLowerCase(); return { r, s: n.indexOf(q) === 0 ? 3 : n.indexOf(q) > -1 ? 2 : 1 }; })
       .sort((x, y) => y.s - x.s).map((x) => x.r).slice(0, 30);
   } else if (!nF) results = results.slice(0, 8);
-  const isLoading = loading && (!!q || nF > 0);
+  const isLoading = (loading && (!!q || nF > 0)) || fetching;
   if (isLoading) results = [];
   resultsRef.current = results;
 
