@@ -267,7 +267,6 @@ View Notifications · Send/Read Messages · Search Alumni Directory.
 - View Dashboard · View Profile
 - Update Profile & Tracer Survey (`<<include>>` Upload Photo; `<<extend>>` Answer Employment Sections, when employed / self-employed)
 - Manage Privacy & Download My Data
-- Upload Proof of Employment (`<<extend>>` of Update Profile, when proof is requested)
 - Browse Jobs · Save Job · Apply to Job · Post a Job
 - Browse Events · Register for Event (`<<include>>` Receive Entry Pass) · Cancel Registration
 

@@ -5,7 +5,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 /*
-| /me (profile, privacy, skills, photo, proofs) and /directory: one alumnus row behind every screen (sync rule 1),
+| /me (profile, privacy, skills, photo) and /directory: one alumnus row behind every screen (sync rule 1),
 | privacy masking, and private files behind signed links.
 */
 
@@ -130,26 +130,18 @@ it('refuses files that are not images or are too large', function () {
         ->assertUnprocessable()->assertJsonPath('fields.photo', 'File is too large (max 2 MB).');
 });
 
-it('keeps proof documents private behind short-lived signed links', function () {
-    Storage::fake();
-    $maria = signIn('maria.delacruz@udmalumni.edu');
+it('no longer offers proof uploads or proof requests', function () {
     $id = mariaId();
-
-    withSession(signIn('admin@udmalumni.edu'))->postJson("/api/v1/alumni/{$id}/request-proof", ['docs' => ['Certificate of Employment']])->assertOk();
     $pdf = UploadedFile::fake()->createWithContent('coe.pdf', "%PDF-1.4\n1 0 obj<<>>endobj\ntrailer<<>>\n%%EOF");
-    withSession($maria)->post('/api/v1/me/proofs', ['file' => $pdf])->assertCreated()->assertJsonPath('mime', 'application/pdf');
-    expect(DB::table('proof_document')->where('alumni_id', $id)->whereNotNull('uploaded_at')->count())->toBe(1);
 
-    // The dean of another college cannot list them; the admin gets a signed link.
-    $dean = DB::table('user_account')->insertGetId(['email' => 'chs.dean@example.com', 'password_hash' => Hash::make('demoPass123'), 'role' => 'dept', 'college_id' => DB::table('college')->where('code', 'CHS')->value('college_id'), 'display_name' => 'CHS Dean'], 'user_id');
-    withSession(signIn('chs.dean@example.com'))->getJson("/api/v1/alumni/{$id}/proofs")->assertForbidden();
-
-    $url = withSession(signIn('admin@udmalumni.edu'))->getJson("/api/v1/alumni/{$id}/proofs")->assertOk()->json('data.0.url');
-    expect($url)->toStartWith('/api/v1/files/private/');
-    $this->get($url)->assertOk()->assertHeader('Cache-Control', 'no-store, private');
-    $this->get(preg_replace('/signature=[0-9a-f]+/', 'signature=deadbeef', $url))->assertForbidden();
-    $this->get(strtok($url, '?'))->assertForbidden();
-    expect($dean)->toBeInt();
+    // Unknown POST paths answer 405 (the SPA fallback route is GET-only); unknown GET API paths answer 404.
+    $maria = signIn('maria.delacruz@udmalumni.edu');
+    withSession($maria)->post('/api/v1/me/proofs', ['file' => $pdf])->assertStatus(405);
+    withSession($maria)->getJson('/api/v1/me/proofs')->assertNotFound();
+    $admin = signIn('admin@udmalumni.edu');
+    withSession($admin)->postJson("/api/v1/alumni/{$id}/request-proof", ['docs' => ['Certificate of Employment']])->assertStatus(405);
+    withSession($admin)->getJson("/api/v1/alumni/{$id}/proofs")->assertNotFound();
+    expect(DB::table('proof_document')->where('alumni_id', $id)->exists())->toBeFalse();
 });
 
 it('exports everything held about the alumnus as a JSON download, audited', function () {

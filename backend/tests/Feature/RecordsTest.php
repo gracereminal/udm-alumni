@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 
 /*
-| Alumni Records (/alumni): scope, CRUD, status (incl. account approval), merge, program mapping, proof requests,
+| Alumni Records (/alumni): scope, CRUD, status (incl. account approval), merge, program mapping,
 | composed emails, import and activity. Plan-backend "Scope tests" and the Records part of "Feature tests".
 */
 
@@ -121,6 +121,22 @@ it('edits a record, keeping the login email with the alumnus', function () {
     expect(DB::table('record_review')->where(['alumni_id' => $maria, 'action' => 'edit', 'note' => 'Updated by phone'])->exists())->toBeTrue();
 });
 
+it('saves the form’s "First M. Last" name without adding the middle initial to the first name', function () {
+    $token = signIn('admin@udmalumni.edu');
+    $maria = alumniIdOf('maria.delacruz@udmalumni.edu');
+    DB::table('alumnus')->where('alumni_id', $maria)->update(['middle_name' => 'Santos']);
+    $name = withSession($token)->getJson("/api/v1/alumni/{$maria}")->json('name');
+    expect($name)->toBe('Maria S. Dela Cruz');
+
+    foreach ([1, 2] as $_) {
+        withSession($token)->patchJson("/api/v1/alumni/{$maria}", ['name' => $name])->assertOk()->assertJsonPath('name', 'Maria S. Dela Cruz');
+    }
+    withSession($token)->patchJson("/api/v1/alumni/{$maria}", ['name' => 'Maria Clara S. Dela Cruz'])->assertOk();
+
+    expect((array) DB::table('alumnus')->where('alumni_id', $maria)->first(['first_name', 'middle_name', 'last_name']))
+        ->toBe(['first_name' => 'Maria Clara', 'middle_name' => 'Santos', 'last_name' => 'Dela Cruz']);
+});
+
 it('flags with a note, notifies the alumnus, and archive removes the record from every count', function () {
     $token = signIn('admin@udmalumni.edu');
     $maria = alumniIdOf('maria.delacruz@udmalumni.edu');
@@ -191,17 +207,14 @@ it('maps an unmapped program to a catalog program of the same college', function
         ->assertUnprocessable();
 });
 
-it('records a proof request and a composed email without sending anything', function () {
+it('records a composed email without sending anything', function () {
     Mail::fake();
     $token = signIn('ccs.dean@udmalumni.edu');
     $maria = alumniIdOf('maria.delacruz@udmalumni.edu');
 
-    withSession($token)->postJson("/api/v1/alumni/{$maria}/request-proof", ['docs' => ['Certificate of Employment'], 'due_days' => 10])
-        ->assertOk()->assertJsonPath('note', 'Awaiting proof: Certificate of Employment — due in 10 days.');
     withSession($token)->postJson("/api/v1/alumni/{$maria}/emails", ['subject' => 'Please update your survey'])->assertOk();
 
-    expect(DB::table('proof_document')->where('alumni_id', $maria)->whereNull('uploaded_at')->count())->toBe(1)
-        ->and(DB::table('record_review')->where('alumni_id', $maria)->where('note', 'Email composed: Please update your survey')->exists())->toBeTrue();
+    expect(DB::table('record_review')->where('alumni_id', $maria)->where('note', 'Email composed: Please update your survey')->exists())->toBeTrue();
     Mail::assertNothingOutgoing();
 });
 

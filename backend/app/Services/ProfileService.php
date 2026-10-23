@@ -202,26 +202,6 @@ class ProfileService
         return ['photoUrl' => StorageService::publicUrl($key)];
     }
 
-    /**
-     * Employment proof upload: fills the oldest open request from the Alumni Office, or adds a new document.
-     *
-     * @param  array{key: string, mime: string, size: int}  $file
-     */
-    public function addProof(int $alumniId, array $file, int $actorId): int
-    {
-        return DB::transaction(function () use ($alumniId, $file, $actorId) {
-            $open = DB::selectOne('SELECT document_id FROM proof_document WHERE alumni_id = ? AND uploaded_at IS NULL ORDER BY requested_at, document_id LIMIT 1 FOR UPDATE', [$alumniId]);
-            $values = ['storage_key' => $file['key'], 'mime' => $file['mime'], 'size_bytes' => $file['size'], 'uploaded_at' => now()];
-            $id = $open !== null
-                ? tap((int) $open->document_id, fn ($id) => DB::table('proof_document')->where('document_id', $id)->update($values))
-                : (int) DB::table('proof_document')->insertGetId($values + ['alumni_id' => $alumniId], 'document_id');
-            DB::table('record_review')->insert(['alumni_id' => $alumniId, 'reviewer_id' => $actorId, 'action' => 'edit', 'note' => 'Proof document uploaded', 'diff' => json_encode(['kind' => 'proof_upload'])]);
-            $this->audit->log('proof_upload', 'proof_document', $id, $actorId);
-
-            return $id;
-        });
-    }
-
     private static function bool(mixed $v, string $field): bool
     {
         if (! is_bool($v)) {
