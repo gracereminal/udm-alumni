@@ -62,7 +62,7 @@ export default function SearchOverlayView(v) {
         <div
           role="dialog"
           aria-modal="true"
-          aria-label="Search fellow UDM alumni"
+          aria-label="Search UDM alumni and accounts"
           style={{
             width: '100%',
             maxWidth: '680px',
@@ -126,7 +126,7 @@ export default function SearchOverlayView(v) {
               aria-controls="alumni-results"
               aria-activedescendant={searchActiveId}
               aria-autocomplete="list"
-              aria-label="Search alumni by name, program, batch, skill, or company"
+              aria-label="Search alumni of any course or college, and admin and college accounts"
               placeholder={srPlaceholder}
               style={{
                 flex: '1',
@@ -503,7 +503,7 @@ export default function SearchOverlayView(v) {
                     >
                       {srDesktop ? (
                         <>
-                          <span>View profile</span>
+                          <span>{r.cta}</span>
                         </>
                       ) : null}
                     </div>
@@ -541,8 +541,8 @@ export default function SearchOverlayView(v) {
                       <path d="M20 20l-3.5-3.5" />
                     </svg>
                   </div>
-                  <div style={{ fontSize: '15px', fontWeight: '600', color: '#0B1220' }}>No alumni found</div>
-                  <div style={{ fontSize: '13px', color: '#64748B', textWrap: 'pretty' }}>Try another name, program, batch, or skill.</div>
+                  <div style={{ fontSize: '15px', fontWeight: '600', color: '#0B1220' }}>No results found</div>
+                  <div style={{ fontSize: '13px', color: '#64748B', textWrap: 'pretty' }}>Try another name, course, college, batch, skill, or account.</div>
                 </div>
               </>
             ) : null}
@@ -668,7 +668,7 @@ export default function SearchOverlayView(v) {
                     >
                       ↵
                     </span>
-                    View profile
+                    Open
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                     <span

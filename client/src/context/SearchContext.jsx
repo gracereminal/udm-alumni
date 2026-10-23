@@ -16,9 +16,9 @@ const SearchContext = createContext({ openSearch: () => {} });
 export const useSearch = () => useContext(SearchContext);
 
 /**
- * Global "Search for an Alumni" experience: overlay (Ctrl+K or "/"), alumni profile card and contact sheet.
- * Alumni search the opt-in directory (GET /directory: visible contacts only); staff search verified records in
- * their scope (GET /alumni) and open the record quick view.
+ * Global search experience: overlay (Ctrl+K or "/"), profile card and contact sheet. Everyone searches the opt-in
+ * directory across every course and college (GET /directory: visible contacts only) and the admin / college accounts
+ * (GET /directory/accounts); staff also search verified records in their scope (GET /alumni) and open the record quick view.
  */
 export function SearchProvider({ children }) {
   const { user, role } = useAuth();
@@ -96,6 +96,8 @@ export function SearchProvider({ children }) {
   }, [user, openSearch, closeSearch]);
 
   // --- the searchable index: fetched from the API for the typed query ---
+  // Everyone searches the whole opt-in directory (every course and college) plus, once they type, the admin and
+  // college accounts. Staff also get the verified records in their scope, which open in Alumni Records.
   const staff = role !== 'alumni';
   const [index, setIndex] = useState([]);
   const collegeOfProgram = (abbr, collegeName) => collegeName || (CATALOG.programs.find((p) => p.abbr === abbr) || {}).collegeName || '';
@@ -103,48 +105,50 @@ export function SearchProvider({ children }) {
     if (!open || !user) return undefined;
     let live = true;
     const term = query.trim();
+    const none = { data: [] };
     const t = setTimeout(() => {
-      const req = staff ? page('/alumni', { status: 'verified', q: term, per_page: 50, sort: 'name' }) : page('/directory', { q: term, per_page: 50 });
-      req.then((res) => {
+      Promise.all([
+        staff ? page('/alumni', { status: 'verified', q: term, per_page: 50, sort: 'name' }).catch(() => none) : none,
+        page('/directory', { q: term, per_page: 50 }).catch(() => none),
+        term ? page('/directory/accounts', { q: term }).catch(() => none) : none,
+      ]).then(([records, directory, accounts]) => {
         if (!live) return;
-        if (staff) {
-          setIndex(res.data.map((r) => {
-            const college = r.college || '';
-            const emp = employmentLabel(r.employmentStatus);
-            return {
-              name: r.name, initials: initials(r.name), role: [r.jobTitle || (r.employmentStatus ? emp : ''), r.company].filter(Boolean).join(' · '), program: r.program, batch: String(r.batch || ''), college, industry: '', skills: [],
-              text: [r.name, r.membershipId, r.jobTitle, emp, r.company, r.program, r.batch, college].join(' ').toLowerCase(),
-              go: () => { setOpen(false); navigate(`${ROLE_BASE[role]}/records`, { state: { openId: r.id } }); },
-            };
-          }));
-        } else {
-          setIndex(res.data.filter((p) => Number(p.id) !== Number(user.alumniId)).map((p) => {
-            const college = collegeOfProgram(p.degree, '');
-            return {
-              p, name: p.name, initials: initials(p.name), role: [p.title, p.company].filter(Boolean).join(' · '), program: p.degree, batch: String(p.batch || ''), college, industry: p.profile.industry || '', skills: p.allSkills || [],
-              text: [p.name, p.title, p.company, p.degree, p.batch, college, p.profile.industry, (p.allSkills || []).join(' ')].join(' ').toLowerCase(),
-              go: () => openCard(p),
-            };
-          }));
-        }
-      }).catch(() => { if (live) setIndex([]); });
+        const recordIds = new Set(records.data.map((r) => Number(r.id)));
+        const fromRecords = records.data.map((r) => {
+          const emp = employmentLabel(r.employmentStatus);
+          return {
+            key: `a${r.id}`, name: r.name, initials: initials(r.name), role: [r.jobTitle || (r.employmentStatus ? emp : ''), r.company].filter(Boolean).join(' · '), program: r.program, batch: String(r.batch || ''), college: r.college || '', industry: '', skills: [],
+            cta: 'Open record', go: () => { setOpen(false); navigate(`${ROLE_BASE[role]}/records`, { state: { openId: r.id } }); },
+          };
+        });
+        const fromDirectory = directory.data.filter((p) => Number(p.id) !== Number(user.alumniId) && !recordIds.has(Number(p.id))).map((p) => ({
+          key: `a${p.id}`, p, name: p.name, initials: initials(p.name), role: [p.title, p.company].filter(Boolean).join(' · '), program: p.degree, batch: String(p.batch || ''), college: collegeOfProgram(p.degree, p.college), industry: p.profile.industry || '', skills: p.allSkills || [],
+          cta: 'View profile', go: () => openCard(p),
+        }));
+        const fromAccounts = accounts.data.filter((u) => Number(u.id) !== Number(user.id)).map((u) => {
+          const office = u.role === 'admin' ? 'UDM Alumni Office' : u.college || 'College';
+          const card = { name: u.name, title: u.roleLabel || (u.role === 'admin' ? 'Administrator' : 'College account'), company: office, degree: '', batch: '', profile: { contacts: { email: u.email } } };
+          return {
+            key: `u${u.id}`, name: u.name, initials: initials(u.name), role: [u.roleLabel, office].filter(Boolean).join(' · '), program: '', batch: '', college: u.college || '', industry: '', skills: [],
+            badge: u.role === 'admin' ? 'Admin account' : 'College account', cta: 'Contact', go: () => openCard(card),
+          };
+        });
+        setIndex([...fromAccounts, ...fromRecords, ...fromDirectory]);
+      });
     }, term ? 250 : 0);
     return () => { live = false; clearTimeout(t); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, query, staff, role, user]);
 
   const q = query.trim().toLowerCase();
-  const FK = staff
-    ? [['program', 'Program'], ['batch', 'Batch'], ['college', 'College']]
-    : [['program', 'Program'], ['batch', 'Batch'], ['college', 'College'], ['skill', 'Skills'], ['industry', 'Industry']];
+  const FK = [['program', 'Program'], ['batch', 'Batch'], ['college', 'College'], ['skill', 'Skills'], ['industry', 'Industry']];
   const nF = FK.filter(([k]) => filters[k]).length;
   const has = (r, k, v) => (k === 'skill' ? r.skills.indexOf(v) > -1 : r[k] === v);
+  // the API already matched every word (name, course, college, batch, employer, skills, account role); here we only rank
   let results = index.filter((r) => FK.every(([k]) => !filters[k] || has(r, k, filters[k])));
   if (q) {
-    const terms = q.split(/\s+/);
-    results = results.filter((r) => terms.every((w) => r.text.indexOf(w) > -1))
-      .map((r) => { const n = r.name.toLowerCase(); return { r, s: n.indexOf(q) === 0 ? 3 : n.indexOf(q) > -1 ? 2 : 1 }; })
-      .sort((x, y) => y.s - x.s).map((x) => x.r).slice(0, 20);
+    results = results.map((r) => { const n = r.name.toLowerCase(); return { r, s: n.indexOf(q) === 0 ? 3 : n.indexOf(q) > -1 ? 2 : 1 }; })
+      .sort((x, y) => y.s - x.s).map((x) => x.r).slice(0, 30);
   } else if (!nF) results = results.slice(0, 8);
   const isLoading = loading && (!!q || nF > 0);
   if (isLoading) results = [];
@@ -184,10 +188,12 @@ export function SearchProvider({ children }) {
     const sk = r.skills.map((s) => ({ s, m: filters.skill === s || terms.some((w) => s.toLowerCase().indexOf(w) > -1) })).sort((x, y) => y.m - x.m);
     const shown = sk.slice(0, 3);
     const extra = sk.length - shown.length;
+    const tags = shown.map((t) => ({ s: t.s, bg: t.m ? '#FEF6DC' : '#F1F5F3', color: t.m ? '#92680B' : '#475569' }));
+    if (r.badge) tags.unshift({ s: r.badge, bg: '#E8F1FE', color: '#1D4ED8' });
     return {
-      domId: `alum-opt-${i}`, selected: on ? 'true' : 'false', aria: `${r.name}, ${r.role || ''}, ${r.program} batch ${r.batch}. View profile`,
-      name: r.name, initials: r.initials, role: r.role || 'Role not shared', meta: [r.program, r.batch ? `Batch ${r.batch}` : ''].filter(Boolean).join(' · '),
-      hasTags: shown.length > 0, tags: shown.map((t) => ({ s: t.s, bg: t.m ? '#FEF6DC' : '#F1F5F3', color: t.m ? '#92680B' : '#475569' })), hasMore: extra > 0, more: `+${extra}`,
+      domId: `alum-opt-${i}`, selected: on ? 'true' : 'false', aria: `${r.name}, ${r.role || ''}${r.program ? `, ${r.program} batch ${r.batch}` : ''}. ${r.cta}`,
+      name: r.name, initials: r.initials, role: r.role || 'Role not shared', meta: r.badge ? '' : [r.program, r.college, r.batch ? `Batch ${r.batch}` : ''].filter(Boolean).join(' · '), cta: r.cta,
+      hasTags: tags.length > 0, tags, hasMore: extra > 0, more: `+${extra}`,
       bg: on ? '#F5FAF7' : '#fff', border: on ? '#C3DACE' : '#EEF0F3', ring: isKbd ? '0 0 0 3px rgba(15,107,79,.18)' : 'none',
       ctaColor: on ? '#0F3D2E' : '#64748B', ctaBg: on ? '#E6F0EB' : 'transparent', kbd: isKbd, go: r.go,
       keyOpen: (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); r.go(); } },
@@ -213,7 +219,7 @@ export function SearchProvider({ children }) {
     srListRef: listRef,
     searchQuery: query,
     setSearchQuery: (e) => { const v = e.target.value; setQuery(v); setIdx(0); setKbd(false); if (v.trim()) pulse(); },
-    srPlaceholder: narrow ? 'Name, program, batch, college…' : staff ? 'Search verified alumni records by name, Membership ID, program or employer…' : 'Search alumni by name, program, batch, skill, or company…',
+    srPlaceholder: narrow ? 'Name, course, college, account…' : 'Search alumni of any course or college, admin and college accounts…',
     srHasQuery: !!query,
     srClearQuery: () => { setQuery(''); setIdx(0); focusSoon(inputRef); },
     srMobile: narrow,
@@ -231,7 +237,7 @@ export function SearchProvider({ children }) {
     srMenuOn: !!menu,
     srMenuLabel: menu ? `Filter by ${FK.find(([k]) => k === menu)[1].toLowerCase()}` : '',
     srMenuOpts: menuOpts,
-    srHeading: q || nF ? 'Results' : staff ? 'Verified alumni records' : 'Fellow UDM alumni',
+    srHeading: q || nF ? 'Results' : 'UDM alumni',
     srLoading: isLoading,
     srBusy: isLoading ? 'true' : 'false',
     srSkeletons: [1, 2, 3],
@@ -253,7 +259,7 @@ export function SearchProvider({ children }) {
     searchEmpty: !isLoading && results.length === 0 && !!q && !nF,
     srNoMatch: !isLoading && results.length === 0 && nF > 0,
     srNoMatchSub: `Nothing matches ${fNames.join(' + ')}${q ? ` for “${query.trim()}”` : ''}. Remove a filter or broaden your search.`,
-    searchCountLabel: isLoading ? 'Searching…' : q || nF ? results.length + (results.length === 1 ? ' alumnus' : ' alumni') : staff ? 'From Alumni Records' : 'Suggested for you',
+    searchCountLabel: isLoading ? 'Searching…' : q || nF ? results.length + (results.length === 1 ? ' result' : ' results') : 'Suggested for you',
   };
 
   // --- alumni profile card + contact sheet (alumni role only) ---
