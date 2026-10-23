@@ -79,15 +79,18 @@ class ScheduledJobs
     }
 
     /**
-     * Expired or used password resets, and expired / revoked / long-idle sessions.
+     * Expired or used password resets and login codes, expired / revoked / long-idle sessions, and expired or revoked
+     * trusted devices.
      *
-     * @return array{resets: int, sessions: int}
+     * @return array{resets: int, sessions: int, challenges: int, devices: int}
      */
     public function tokenCleanup(): array
     {
         return [
             'resets' => DB::delete("DELETE FROM password_reset WHERE expires_at < now() - interval '1 day' OR used_at < now() - interval '1 day'"),
             'sessions' => DB::delete("DELETE FROM auth_session WHERE expires_at < now() OR revoked_at < now() - interval '1 day' OR last_seen_at < now() - interval '30 days'"),
+            'challenges' => DB::delete("DELETE FROM login_challenge WHERE expires_at < now() - interval '1 day' OR used_at < now() - interval '1 day'"),
+            'devices' => DB::delete("DELETE FROM trusted_device WHERE expires_at < now() OR revoked_at < now() - interval '1 day'"),
         ];
     }
 }

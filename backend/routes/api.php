@@ -40,6 +40,8 @@ Route::prefix('auth')->name('auth.')->group(function () {
     Route::middleware('throttle:auth')->group(function () {
         Route::post('/register', [AuthController::class, 'register'])->name('register');
         Route::post('/login', [AuthController::class, 'login'])->name('login');
+        Route::post('/mfa/verify', [AuthController::class, 'verifyMfa'])->name('mfa.verify');
+        Route::post('/mfa/resend', [AuthController::class, 'resendMfa'])->name('mfa.resend');
         Route::post('/forgot-password', [PasswordResetController::class, 'forgot'])->name('forgot');
         Route::post('/reset-password/verify-code', [PasswordResetController::class, 'verifyCode'])->name('reset.verify-code');
         Route::post('/reset-password', [PasswordResetController::class, 'reset'])->name('reset');

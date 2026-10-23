@@ -55,4 +55,19 @@ return [
         'max_per_window' => 3,
     ],
 
+    // Two-step verification: a 6-digit code emailed after the password. Off unless MFA_ENABLED=true, because every
+    // account must then have a real inbox (the built-in admin included) or it can no longer sign in.
+    'mfa' => [
+        'enabled' => (bool) env('MFA_ENABLED', false),
+        'ttl_minutes' => 10,
+        'max_code_attempts' => 5,
+        'max_resends' => 3,
+        'resend_cooldown_seconds' => 30,
+        // Codes per account per 15 minutes (sign-ins that reach the code step).
+        'max_per_window' => 5,
+        // "Trust this device": the udm_tdev cookie skips the code on this browser for this many days.
+        'trust_cookie' => 'udm_tdev',
+        'trust_days' => 30,
+    ],
+
 ];

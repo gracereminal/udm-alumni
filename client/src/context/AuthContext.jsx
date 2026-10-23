@@ -28,7 +28,8 @@ export function AuthProvider({ children }) {
   }, [setUser]);
 
   /**
-   * Email or Alumni ID (membership ID / student number) + password.
+   * Email or Alumni ID (membership ID / student number) + password. With two-step verification on, the API emails a
+   * code instead of signing in: the result is { ok, mfa: { challenge, sentTo, expiresMinutes } } and Verify follows.
    */
   const signIn = useCallback(async (identifier, password) => {
     const id = String(identifier || '').trim();
@@ -36,11 +37,19 @@ export function AuthProvider({ children }) {
     if (!password) return { ok: false, field: 'password', error: 'Enter your password.' };
     try {
       const r = await post('/auth/login', { identifier: id, password });
+      if (r.mfaRequired) return { ok: true, mfa: { challenge: r.challenge, sentTo: r.sentTo, expiresMinutes: r.expiresMinutes } };
       setUser(r.user);
       return { ok: true, user: r.user };
     } catch (err) {
       return { ok: false, field: err.status === 401 ? 'password' : '', error: err.message };
     }
+  }, [setUser]);
+
+  /** The second sign-in step: the emailed 6-digit code. Throws ApiError (422 wrong code, 400 `mfa_expired`). */
+  const verifyMfa = useCallback(async (challenge, code, trust) => {
+    const r = await post('/auth/mfa/verify', { challenge, code, trust: !!trust });
+    setUser(r.user);
+    return r.user;
   }, [setUser]);
 
   /**
@@ -60,8 +69,8 @@ export function AuthProvider({ children }) {
   }, [setUser]);
 
   const value = useMemo(
-    () => ({ user, role: user ? user.role : null, ready, signIn, registerAlumni, refresh, signOut }),
-    [user, ready, signIn, registerAlumni, refresh, signOut],
+    () => ({ user, role: user ? user.role : null, ready, signIn, verifyMfa, registerAlumni, refresh, signOut }),
+    [user, ready, signIn, verifyMfa, registerAlumni, refresh, signOut],
   );
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
