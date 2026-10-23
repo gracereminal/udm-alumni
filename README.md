@@ -4,9 +4,9 @@ Alumni tracer for Universidad de Manila. Alumni register and answer the tracer s
 
 - **Frontend:** React 18 + React Router 6 + Vite 5 in `client/`.
 - **Backend:** a Laravel (PHP 8.4) REST API on PostgreSQL 16 in `backend/`, served under `/api/v1`. The spec is [docs/plan-backend.md](docs/plan-backend.md).
-- **Deploy:** one Docker image (root `Dockerfile`). Laravel serves both the API and the built client from the same origin. It runs on Railway with Neon PostgreSQL. The runbook is [docs/deploy-notes.md](docs/deploy-notes.md).
+- **Deploy:** one Docker image (root `Dockerfile`). Laravel serves both the API and the built client from the same origin. It runs on Render with Neon PostgreSQL. The runbook is [docs/deploy-notes.md](docs/deploy-notes.md).
 
-Status and the decision log are in [track-progress.md](track-progress.md). Backend phases 1–6 are done and the client runs on the API. Staging on Railway is in progress (phase 7). The product scope is in [docs/product-req-document.md](docs/product-req-document.md).
+Status and the decision log are in [track-progress.md](track-progress.md). Backend phases 1–6 are done and the client runs on the API. Staging on Render is in progress (phase 7). The product scope is in [docs/product-req-document.md](docs/product-req-document.md).
 
 ## Requirements
 
@@ -111,15 +111,15 @@ Lists return `{ data, meta: { page, per_page, total } }`. Errors return `{ error
 
 ## Deployment
 
-The app deploys as one Docker image on Railway, with Neon PostgreSQL in Singapore. On each start, the container caches the config, then migrates using the direct database URL. It then seeds the lookups and creates the built-in admin if it is missing (`app:ensure-admin` from `ADMIN_PASSWORD`). Finally it serves on `$PORT`. If any step fails, the deploy fails and the previous one keeps running. In production, the app refuses to boot when required variables are missing or unsafe. Variables, the post-deploy checklist, accounts, rollback and monitoring are all in [docs/deploy-notes.md](docs/deploy-notes.md).
+The app deploys as one Docker image on Render, with Neon PostgreSQL in Singapore. On each start, the container caches the config, then migrates using the direct database URL. It then seeds the lookups and creates the built-in admin if it is missing (`app:ensure-admin` from `ADMIN_PASSWORD`). Finally it serves on `$PORT`. If any step fails, the deploy fails and the previous one keeps running. In production, the app refuses to boot when required variables are missing or unsafe. Variables, the post-deploy checklist, accounts, rollback and monitoring are all in [docs/deploy-notes.md](docs/deploy-notes.md).
 
 ```bash
-docker build -t udm-alumni .   # same image Railway builds from the repo root
+docker build -t udm-alumni .   # same image Render builds from the repo root
 ```
 
 Email goes through the Gmail API as `udm.alumni.mailer@gmail.com`. To get the OAuth refresh token, run `php artisan app:google-oauth-token`. To test sending, run `php artisan app:mail-test <address>`.
 
-The old Vercel site (`udm-alumni-demo.vercel.app`) is still the frontend-only prototype that keeps data in the browser. The root `vercel.json` and `client/vercel.json` exist only for it. It should be taken down or redirected once the Railway service is live.
+The old Vercel site (`udm-alumni-demo.vercel.app`) is still the frontend-only prototype that keeps data in the browser. The root `vercel.json` and `client/vercel.json` exist only for it. It should be taken down or redirected once the Render service is live.
 
 The Git remote is `origin` → `github.com/gracereminal/udm-alumni`, a personal account. It moves to the university's GitHub org before production.
 
