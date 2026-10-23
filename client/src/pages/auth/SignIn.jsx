@@ -47,6 +47,7 @@ export default function SignIn() {
     const res = await signIn(identifier, password);
     setBusy(false);
     if (!res.ok) { setErr({ error: res.error, field: res.field }); return; }
+    if (res.mfa) { navigate('/signin/verify', { state: res.mfa }); return; }
     navigate(homeFor(res.user), { replace: true });
   };
 

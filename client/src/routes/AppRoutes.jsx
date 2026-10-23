@@ -6,6 +6,7 @@ import SignIn from '../pages/auth/SignIn';
 import ForgotPassword, { ResetPasswordLink } from '../pages/auth/ForgotPassword';
 import PrivacyConsent from '../pages/auth/PrivacyConsent';
 import ChangePassword from '../pages/auth/ChangePassword';
+import VerifySignIn from '../pages/auth/VerifySignIn';
 
 // Registration and signed-in pages load on demand (the Suspense in App.jsx) so sign-in ships a small first bundle.
 const SampleInbox = lazy(() => import('../pages/auth/SampleInbox'));
@@ -38,6 +39,7 @@ export default function AppRoutes() {
       <Route path="/" element={<Home />} />
       <Route element={<PublicOnly />}>
         <Route path="/signin" element={<SignIn />} />
+        <Route path="/signin/verify" element={<VerifySignIn />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
       </Route>
       <Route element={<RequirePasswordChange />}>

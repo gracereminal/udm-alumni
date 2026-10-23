@@ -36,7 +36,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->api(append: [RequireXhr::class, RequirePasswordChange::class]);
         $middleware->alias(['role' => RequireRole::class]);
         // The session cookie is an opaque random id; it is hashed server-side, not encrypted.
-        $middleware->encryptCookies(except: ['udm_sid']); // config('auth.session.cookie')
+        $middleware->encryptCookies(except: ['udm_sid', 'udm_tdev']); // config('auth.session.cookie'), config('auth.mfa.trust_cookie')
         // An API: signed-out requests get 401 JSON, never a redirect to a login page.
         $middleware->redirectGuestsTo(null);
     })

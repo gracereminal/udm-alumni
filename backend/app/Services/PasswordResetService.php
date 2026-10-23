@@ -26,6 +26,7 @@ class PasswordResetService
         private readonly AccountService $accounts,
         private readonly SessionService $sessions,
         private readonly AuditService $audit,
+        private readonly MfaService $mfa,
     ) {}
 
     /** The code is bound to its reset row, so a code from one email never verifies another. */
@@ -134,6 +135,7 @@ class PasswordResetService
                 [$hash, $r->user_id],
             );
             $this->sessions->revokeAll((int) $r->user_id);
+            $this->mfa->forgetDevices((int) $r->user_id);
             $this->audit->log('password_reset', 'user', (int) $r->user_id, (int) $r->user_id);
 
             return true;
