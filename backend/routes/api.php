@@ -80,6 +80,7 @@ Route::prefix('me')->middleware('role:alumni')->group(function () {
 // Directory (any signed-in user; masked by v_directory).
 Route::prefix('directory')->middleware('role:alumni,dept,admin')->group(function () {
     Route::get('/', [DirectoryController::class, 'index']);
+    Route::get('/accounts', [DirectoryController::class, 'accounts']);
     Route::get('/{id}', [DirectoryController::class, 'show']);
 });
 

@@ -90,6 +90,28 @@ it('applies privacy to the directory and the contact card', function () {
     withSession($token)->patchJson('/api/v1/me', ['privacy' => ['showEmail' => 'yes']])->assertUnprocessable();
 });
 
+it('searches the directory across every course and college, word by word', function () {
+    $dean = signIn('ccs.dean@udmalumni.edu'); // a CCS account finds a CBPM alumnus
+    $names = fn (string $q) => collect(withSession($dean)->getJson('/api/v1/directory?q='.urlencode($q))->assertOk()->json('data'))->pluck('name');
+
+    expect($names('Globe'))->toContain('Patricia Anne Lim')
+        ->and($names('Lim 2020'))->toContain('Patricia Anne Lim')
+        ->and($names('Lim 2023'))->not->toContain('Patricia Anne Lim')
+        ->and($names('Computing Santos'))->toContain('Maria Santos');
+    expect(withSession($dean)->getJson('/api/v1/directory?q=Globe')->json('data.0.college'))->not->toBe('');
+});
+
+it('lets any signed-in user find admin and college accounts', function () {
+    $r = withSession(signIn('maria.delacruz@udmalumni.edu'))->getJson('/api/v1/directory/accounts?q=dean')->assertOk();
+    expect(collect($r->json('data'))->pluck('email'))->toContain('ccs.dean@udmalumni.edu')
+        ->and($r->json('data.0'))->toHaveKeys(['id', 'name', 'role', 'roleLabel', 'email', 'college'])->not->toHaveKey('lastLoginAt');
+
+    $admins = withSession(signIn('ccs.dean@udmalumni.edu'))->getJson('/api/v1/directory/accounts?q=admin')->assertOk()->json('data');
+    expect(collect($admins)->pluck('email'))->toContain('admin@udmalumni.edu')
+        ->and(collect($admins)->pluck('role'))->not->toContain('alumni');
+    withSession('')->getJson('/api/v1/directory/accounts')->assertUnauthorized();
+});
+
 it('lists only opted-in alumni, for any signed-in user', function () {
     $r = withSession(signIn('maria.delacruz@udmalumni.edu'))->getJson('/api/v1/directory?per_page=100')->assertOk();
 
