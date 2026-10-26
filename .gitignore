@@ -13,3 +13,5 @@ coverage
 
 # Local list of real accounts and one-time passwords. Never commit or ship it.
 backend/account.md
+# Dummy data passwords (backend/dummy_data.sql and backend/wipe_data.sql have none and are committed).
+backend/dummy_data_pass.sql

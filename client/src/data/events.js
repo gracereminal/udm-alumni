@@ -8,8 +8,10 @@ export const EVENT_KIND_STYLE = { EVENT: ['#0F3D2E', '#E6F0EB'], CAREER: ['#8A6D
 
 export const NOTICE_KINDS = { Notice: ['#475569', '#EEF2F6'], Reminder: ['#8A4B08', '#FDEFD9'], Update: ['#1E4E79', '#E6EEF6'] };
 
-export const EVENT_HOSTS = [
-  'UDM Alumni Relations Office', 'Office of the President', 'Office of Student Affairs', 'Career Development Office',
+export const DEFAULT_HOST = 'UDM Alumni Relations Office';
+/** Organizer choices: the offices, then every college (read when called: the catalog loads after this module). */
+export const eventHosts = () => [
+  DEFAULT_HOST, 'Office of the President', 'Office of Student Affairs', 'Career Development Office',
   ...Object.keys(COLLEGES).filter((k) => k !== 'Others'),
 ];
 
@@ -50,7 +52,7 @@ export function evToForm(e) {
   if (!iso) { const ts = Date.parse(e.date); if (!Number.isNaN(ts)) { const x = new Date(ts); iso = `${x.getFullYear()}-${evPad(x.getMonth() + 1)}-${evPad(x.getDate())}`; } }
   const tm = [];
   String(e.time || '').replace(/(\d{1,2}):(\d{2})\s*([AP])\.?M/gi, (_, h, mi, ap) => { tm.push(`${evPad((+h % 12) + (ap.toUpperCase() === 'P' ? 12 : 0))}:${mi}`); return _; });
-  return { id: e.id, title: e.title || '', dateISO: iso, timeStart: e.timeStart || tm[0] || '', timeEnd: e.timeEnd || tm[1] || '', venue: e.venue || '', organizer: e.organizer || EVENT_HOSTS[0], body: (e.body || []).join('\n\n'), status: e.statusKey || 'open' };
+  return { id: e.id, title: e.title || '', dateISO: iso, timeStart: e.timeStart || tm[0] || '', timeEnd: e.timeEnd || tm[1] || '', venue: e.venue || '', organizer: e.organizer || DEFAULT_HOST, body: (e.body || []).join('\n\n'), status: e.statusKey || 'open' };
 }
 /**
  * Google Calendar "create event" link, prefilled with the event (opened in a new tab by Add to Calendar).
@@ -98,7 +100,7 @@ export function evFromForm(f) {
   const body = String(f.body).trim();
   return {
     iso, month: EV_MONTHS_SHORT[p[1] - 1], day: evPad(p[2]), title: f.title.trim(), date: evFmtDate(iso), time, venue,
-    organizer: f.organizer || EVENT_HOSTS[0], meta: [time.split(' – ')[0], venue.split(',')[0]].filter(Boolean).join(' · '),
+    organizer: f.organizer || DEFAULT_HOST, meta: [time.split(' – ')[0], venue.split(',')[0]].filter(Boolean).join(' · '),
     teaser: body.slice(0, 150), body: body.split(/\n\s*\n/).map((s) => s.trim()).filter(Boolean),
   };
 }

@@ -4,7 +4,8 @@ import { setCatalog } from '../data/colleges';
 /**
  * Stubs `fetch` with a tiny router for /api/v1. Each route is [method, path, reply]: `path` is a string (exact
  * path, query string ignored) or a RegExp tested against path + query; `reply` is a value (200 JSON body) or a
- * function (req) -> value | { status, body }. Unmatched calls answer 404. `calls` records every request.
+ * function (req) -> value | { status, body }. The start-up lookups (/lookups, /tracer/questions) answer with the test
+ * catalog unless a route overrides them; other unmatched calls answer 404. `calls` records every request.
  */
 export function mockApi(routes = []) {
   const calls = [];
@@ -16,7 +17,7 @@ export function mockApi(routes = []) {
     if (typeof body === 'string') { try { body = JSON.parse(body); } catch { /* keep text */ } }
     const req = { method, path, query: Object.fromEntries(u.searchParams), search: u.search, body };
     calls.push(req);
-    const hit = routes.find(([m, p]) => m === method && (p instanceof RegExp ? p.test(path + u.search) : p === path));
+    const hit = [...routes, ...STARTUP_ROUTES].find(([m, p]) => m === method && (p instanceof RegExp ? p.test(path + u.search) : p === path));
     let out = { status: 404, body: { error: 'Not found' } };
     if (hit) {
       const r = typeof hit[2] === 'function' ? await hit[2](req) : hit[2];
@@ -46,13 +47,21 @@ export const USERS = {
 export const session = (role) => ['GET', '/auth/session', role ? { user: USERS[role] } : { status: 401, body: { error: 'Not signed in' } }];
 
 /** A small two-college catalog (BSIT repeats across colleges, as in the real data). */
-export function loadTestCatalog() {
-  setCatalog({
+const TEST_CATALOG = {
     colleges: [
       { id: 1, code: 'CCS', name: 'College of Computer Studies', programs: [{ id: 10, abbr: 'BSIT', name: 'BS Information Technology', collegeId: 1 }, { id: 11, abbr: 'BSCS', name: 'BS Computer Science', collegeId: 1 }] },
       { id: 2, code: 'CET', name: 'College of Engineering and Technology', programs: [{ id: 20, abbr: 'BSIT', name: 'BS Information Technology', collegeId: 2 }, { id: 21, abbr: 'BSCE', name: 'BS Civil Engineering', collegeId: 2 }] },
       { id: 9, code: 'OTH', name: 'Others', programs: [] },
     ],
     targets: { employment: 80, coverage: 60 },
-  });
+};
+
+export function loadTestCatalog() {
+  setCatalog(TEST_CATALOG);
 }
+
+/** Lazy pages wait for these (lib/startup.js). */
+const STARTUP_ROUTES = [
+  ['GET', '/lookups', () => TEST_CATALOG],
+  ['GET', '/tracer/questions', () => ({ ov: {}, custom: [], order: {} })],
+];

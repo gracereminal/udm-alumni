@@ -145,6 +145,28 @@ describe('Alumni Records actions', () => {
     click.mockRestore();
   });
 
+  it('Save changes sends once, says Saving…, and shows the saved row without waiting for the list', async () => {
+    let reply;
+    let lists = 0;
+    const { api, vals } = setup('admin', [
+      ['PATCH', '/alumni/7', () => new Promise((r) => { reply = r; })],
+      // Only the first list load answers, so the saved row can only come from the PATCH reply.
+      ['GET', '/alumni', () => (lists++ ? new Promise(() => {}) : listOf([ROW]))],
+    ]);
+    await waitFor(() => expect(vals().recRowsView).toHaveLength(1));
+    act(() => vals().recRowsView[0].onEdit());
+    act(() => vals().recFSetCompany(ev('Globe Telecom')));
+    act(() => { vals().recFormSubmit(); });
+    await waitFor(() => expect(vals().recFormSave).toBe('Saving…'));
+    expect(vals().recFormBusy).toBe(true);
+    act(() => { vals().recFormSubmit(); });
+    expect(api.find('PATCH', '/alumni/7')).toHaveLength(1);
+    await act(async () => reply({ ...ROW, company: 'Globe Telecom' }));
+    await waitFor(() => expect(vals().recFormOn).toBe(false));
+    expect(JSON.stringify(vals().recRowsView[0])).toContain('Globe Telecom');
+    expect(vals().repToast).toBe('Saved changes to Ana Cruz');
+  });
+
   it('flagging or archiving from the edit form needs a note', async () => {
     const { vals } = setup('admin');
     await waitFor(() => expect(vals().recRowsView).toHaveLength(1));

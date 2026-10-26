@@ -6,7 +6,9 @@ Alumni tracer for Universidad de Manila. Alumni register and answer the tracer s
 - **Backend:** a Laravel (PHP 8.4) REST API on PostgreSQL 16 in `backend/`, served under `/api/v1`. The spec is [docs/plan-backend.md](docs/plan-backend.md).
 - **Deploy:** one Docker image (root `Dockerfile`). Laravel serves both the API and the built client from the same origin. It runs on Render with Neon PostgreSQL. The runbook is [docs/deploy-notes.md](docs/deploy-notes.md).
 
-Status and the decision log are in [track-progress.md](track-progress.md). Backend phases 1–6 are done and the client runs on the API. Staging on Render is in progress (phase 7). The product scope is in [docs/product-req-document.md](docs/product-req-document.md).
+Status and the decision log are in [track-progress.md](track-progress.md). Backend phases 1–6 are done and the client runs on the API. The product scope is in [docs/product-req-document.md](docs/product-req-document.md).
+
+> **Production runs in demo mode.** The Render deployment is a working demo of the system, not a live service for UDM alumni. It holds **dummy data only** (`backend/dummy_data.sql`: 4,000 fictional alumni from every college, 2019–2025, an admin and 10 college accounts, 2 events, 5 jobs, all on `@example.com`). No real alumni data, registrar masterlists or personal information go into it. See [Demo mode](#demo-mode-production).
 
 ## Requirements
 
@@ -48,7 +50,7 @@ Staff accounts are created with `php artisan app:create-user --role=admin --emai
 
 ## Demo accounts (password `demoPass123`)
 
-These accounts exist only where `DemoSeeder` ran: local and staging, never production. The demo buttons on Sign In appear only in dev or when the build has `VITE_DEMO=true`.
+These accounts exist only where `DemoSeeder` ran (local). Production uses the dummy data in `backend/dummy_data.sql` instead (see [Demo mode](#demo-mode-production)). The demo buttons on Sign In appear only in dev or when the build has `VITE_DEMO=true`.
 
 | Role | Email | Lands on |
 |---|---|---|
@@ -109,6 +111,18 @@ Lists return `{ data, meta: { page, per_page, total } }`. Errors return `{ error
 - **College / Department:** Dashboard, Alumni Records and Reports for its own college only, Outreach (contact by Messenger or email). The API sets the scope from the account.
 - **Admin:** Dashboard, Alumni Records (including approving pending registrations), Reports (5 types including CHED Form A), and Alumni Tracer (edit registration and survey questions). Jobs management: post, edit, deactivate and delete, and approve alumni submissions. Events management: create, edit, duplicate and delete, set status, registrations, announcements.
 
+## Demo mode (production)
+
+Production is a demonstration environment. It runs the real production build and configuration, but every person, account, event and job in it is made up.
+
+- **Data:** loaded once from `backend/dummy_data.sql` (about 3 MB, so run it with `psql "<DB_URL_DIRECT>" -v ON_ERROR_STOP=1 -f backend/dummy_data.sql`; it refuses to run if alumni already exist). It creates 4,000 alumni across all 10 colleges (CAS 520, CBA 560, CBPM 400, CCS 480, CCJ 520, COED 520, CET 480, CHS 320, CLAW 80, GS 120; batches 2019–2025), each with an alumni account, with survey answers and employment, so every dashboard and report has realistic numbers.
+- **Accounts:** alumni sign in as `firstname.lastname.N@example.com`, the admin as `admin@example.com`, and each college as `<code>.dean@example.com` (e.g. `ccs.dean@example.com`). The committed file stores **no passwords**, so none of these can sign in. To give them the shared test passwords, run `backend/dummy_data_pass.sql` after it. That file holds only the password updates, stays local and is git-ignored. Never commit it.
+- **What gets committed:** only `backend/dummy_data.sql` and `backend/wipe_data.sql`. `backend/dummy_data_pass.sql` never is.
+- **No real data:** don't register real alumni, import real masterlists or upload real documents. The `@example.com` addresses have no inbox, so reset, invite and RSVP emails to them go nowhere. Keep `MFA_ENABLED=false` for the same reason.
+- **Reset:** run `backend/wipe_data.sql` in the Neon SQL Editor, then load `dummy_data.sql` again. The wipe deletes every alumni record and account, the `@example.com` accounts, the dummy events and jobs, alumni job submissions and import batches. It keeps the lookups, the built-in admin, other staff and the audit log.
+
+Going live with real alumni would need the steps in [docs/deploy-notes.md](docs/deploy-notes.md) and the Data Protection Officer's sign-off first. That is not planned for this deployment.
+
 ## Deployment
 
 The app deploys as one Docker image on Render, with Neon PostgreSQL in Singapore. On each start, the container caches the config, then migrates using the direct database URL. It then seeds the lookups and creates the built-in admin if it is missing (`app:ensure-admin` from `ADMIN_PASSWORD`). Finally it serves on `$PORT`. If any step fails, the deploy fails and the previous one keeps running. In production, the app refuses to boot when required variables are missing or unsafe. Variables, the post-deploy checklist, accounts, rollback and monitoring are all in [docs/deploy-notes.md](docs/deploy-notes.md).
@@ -121,6 +135,6 @@ Email goes through the Gmail API as `udm.alumni.mailer@gmail.com`. To get the OA
 
 The old Vercel site (`udm-alumni-demo.vercel.app`) is still the frontend-only prototype that keeps data in the browser. The root `vercel.json` and `client/vercel.json` exist only for it. It should be taken down or redirected once the Render service is live.
 
-The Git remote is `origin` → `github.com/gracereminal/udm-alumni`, a personal account. It moves to the university's GitHub org before production.
+The Git remote is `origin` → `github.com/gracereminal/udm-alumni`, a personal account. It would move to the university's GitHub org only if the system ever goes live with real data.
 
 Never commit `backend/.env` or `backend/account.md` (a local list of real accounts; it is git- and docker-ignored). `.env.local` at the root holds a Vercel OIDC token. It is git-ignored too, but should be moved out of the project folder.

@@ -3,6 +3,13 @@ import { get, post, UNAUTHORIZED_EVENT } from '../lib/api';
 
 const AuthContext = createContext(null);
 
+let prefetched = null;
+/** Starts the session check before React mounts (main.jsx); the first AuthProvider uses its answer. */
+export function prefetchSession() {
+  prefetched = get('/auth/session');
+  prefetched.catch(() => {});
+}
+
 /**
  * The signed-in user, backed by the API's server-side session (httpOnly cookie). `ready` is false until the
  * session check on load has finished, so guards don't redirect a signed-in user to Sign In by mistake.
@@ -18,7 +25,9 @@ export function AuthProvider({ children }) {
     let live = true;
     const at = version.current;
     const apply = (u) => { if (live && version.current === at) setUserState(u); };
-    get('/auth/session')
+    const check = prefetched || get('/auth/session');
+    prefetched = null;
+    check
       .then((r) => apply(r.user))
       .catch(() => apply(null))
       .finally(() => { if (live) setReady(true); });

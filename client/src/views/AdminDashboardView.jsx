@@ -6,6 +6,7 @@ import SearchPill from '../components/topbar/SearchPill';
 import NotificationBell from '../components/topbar/NotificationBell';
 import UserChip from '../components/topbar/UserChip';
 import { onActivate } from '../lib/a11y';
+import ForecastPanel from '../components/ForecastPanel';
 
 /* View layer for the "AdminDashboard" screen — converted from "Alumni Tracer Mockups.dc.html". */
 export default function AdminDashboardView(v) {
@@ -36,9 +37,12 @@ export default function AdminDashboardView(v) {
     batchBars,
     batchSub,
     chartsRef,
+    closeForecast,
     donutTotal,
     exportHover,
     filterHover,
+    forecast,
+    forecastOpen,
     goRecords,
     goReports,
     goReportsIncl,
@@ -65,6 +69,7 @@ export default function AdminDashboardView(v) {
     tipValue,
     tipX,
     tipY,
+    toggleForecast,
   } = v;
   return (
     <>
@@ -231,6 +236,25 @@ export default function AdminDashboardView(v) {
                     </React.Fragment>
                   ))}
                 </select>
+                <div role="button" tabIndex={0} aria-pressed={!!forecastOpen} onKeyDown={onActivate(toggleForecast)}
+                  onClick={toggleForecast}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    background: forecastOpen ? '#E8EEF5' : '#fff',
+                    color: forecastOpen ? '#1F4E79' : '#0F3D2E',
+                    border: `1px solid ${forecastOpen ? '#B9CCE0' : '#CFD8D3'}`,
+                    borderRadius: '12px',
+                    padding: '11px 16px',
+                    fontSize: '13px',
+                    fontWeight: '700',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <span style={{ fontSize: '12px' }}>↗</span>
+                  <span>Forecast</span>
+                </div>
                 <div role="button" tabIndex={0} onKeyDown={onActivate(goReports)}
                   onClick={goReports}
                   style={{
@@ -252,6 +276,7 @@ export default function AdminDashboardView(v) {
                 </div>
               </div>
             </div>
+            {forecastOpen && forecast ? <ForecastPanel forecast={forecast} scopeLabel={admScopeLabel} onClose={closeForecast} /> : null}
             <div data-m="kpi-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(5,minmax(0,1fr))', gap: '14px' }}>
               <div
                 style={{
