@@ -163,6 +163,7 @@ export default function RecordsView(v) {
     recFormDesc,
     recFormOn,
     recFormSave,
+    recFormBusy,
     recFormSid,
     recFormSidNote,
     recFormSubmit,
@@ -2112,6 +2113,8 @@ export default function RecordsView(v) {
                           onClick={recFormSubmit}
                           role="button"
                           tabIndex={0}
+                          aria-disabled={recFormBusy ? 'true' : undefined}
+                          aria-busy={recFormBusy ? 'true' : undefined}
                           style={{
                             background: '#0F3D2E',
                             color: '#fff',
@@ -2119,7 +2122,8 @@ export default function RecordsView(v) {
                             padding: '10px 18px',
                             fontSize: '13px',
                             fontWeight: '700',
-                            cursor: 'pointer',
+                            cursor: recFormBusy ? 'progress' : 'pointer',
+                            opacity: recFormBusy ? 0.7 : 1,
                           }}
                           {...hv({ background: '#0B2F23' })}
                         >

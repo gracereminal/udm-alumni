@@ -74,6 +74,7 @@ export default function useRecordsPage(role) {
   const [recF, setRecF] = useState({});
   const [formTried, setFormTried] = useState(false);
   const [formErrs, setFormErrs] = useState({});
+  const [formBusy, setFormBusy] = useState(false);
   const [del, setDel] = useState(null);
   const [hi, setHi] = useState(null);
   const [toastMsg, setToastMsg] = useState(null);
@@ -293,6 +294,7 @@ export default function useRecordsPage(role) {
     };
     const ok = !errs.Name && !errs.Email && !errs.Company && !errs.Note && !!f.programId;
     const save = async () => {
+      if (formBusy) return; // a second click would save (and log) the change twice
       if (!ok) { setFormTried(true); return; }
       const p = programById(f.programId);
       const body = {
@@ -300,15 +302,24 @@ export default function useRecordsPage(role) {
         employment: code, company: needsCo ? f.company.trim() : '', source: f.source, status: f.status, note: (f.note || '').trim(),
       };
       if (editing && f.hasAccount) delete body.email; // the alumnus owns their sign-in email
+      setFormBusy(true);
       try {
         const out = editing ? await patch(`/alumni/${form.id}`, body) : await post('/alumni', body);
         setForm(null);
+        if (editing) {
+          // Show the saved row now; the reload in done() refreshes the counts (and the row's tab) behind it.
+          const row = toRow(out);
+          seen.current[row.id] = row;
+          setList((l) => ({ ...l, rows: l.rows.map((x) => (x.id === row.id ? row : x)) }));
+        }
         if (!editing) { setTab((t) => (t === out.status ? t : 'all')); setQuery(''); setProgram('all'); setSortK('updated'); resetPage(); }
         flash(out.id);
         done(editing ? `Saved changes to ${out.name}` : `${out.name} added · ${out.membershipId}`);
       } catch (err) {
         if (err.fields) { setFormErrs(err.fields); setFormTried(true); }
         fail(err);
+      } finally {
+        setFormBusy(false);
       }
     };
     const border = (k) => (formTried && errs[k] ? '#E8A3B1' : '#E2E5EA');
@@ -325,7 +336,8 @@ export default function useRecordsPage(role) {
       recFormOn: !!form,
       recFormTitle: editing ? 'Edit alumni record' : 'Add alumni record',
       recFormDesc: editing ? 'Update the details on file. Every change is saved to the audit trail.' : 'Encode a record manually — for alumni who submitted on paper or by email.',
-      recFormSave: editing ? 'Save changes' : 'Create record',
+      recFormSave: formBusy ? 'Saving…' : editing ? 'Save changes' : 'Create record',
+      recFormBusy: formBusy,
       recFormSid: editing ? form.sid : 'Assigned on save',
       recFormSidNote: editing ? 'Can’t be changed' : 'Auto-assigned',
       recFormClose: () => setForm(null), recFormStop: (e) => e.stopPropagation(), recFormSubmit: save,

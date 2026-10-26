@@ -4,6 +4,8 @@ import AdminDashboardView from '../../views/AdminDashboardView';
 import useChartTip from '../../hooks/useChartTip';
 import { ADMIN_YEARS, adminRequests, adminScope, buildAdminDash, buildKpis, emptyAdminData } from '../../lib/adminDash';
 import { get } from '../../lib/api';
+import { buildForecast } from '../../lib/forecast';
+import { CATALOG } from '../../data/colleges';
 import { useToast } from '../../context/ToastContext';
 
 /** Admin Dashboard — system-wide KPIs, employability, coverage, outcomes and recent registrations (GET /stats/*). */
@@ -14,6 +16,7 @@ export default function AdminDashboard() {
   const [sel, setSel] = useState({ college: 'all', course: 'all', from: ADMIN_YEARS[0], to: ADMIN_YEARS[ADMIN_YEARS.length - 1], status: 'all' });
   const [hover, setHover] = useState(null);
   const [data, setData] = useState(emptyAdminData);
+  const [forecastOpen, setForecastOpen] = useState(false);
 
   const reqs = adminRequests(adminScope(sel));
   const reqKey = JSON.stringify(reqs);
@@ -45,6 +48,11 @@ export default function AdminDashboard() {
     // Hand the dashboard's scope to Reports so the export matches what is on screen.
     goReports: () => navigate('/admin/reports', { state: reportScope }),
     goReportsIncl: () => navigate('/admin/reports', { state: { ...reportScope, repType: 'inclusion' } }),
+    // Forecast panel: projected from the per-batch rows already loaded (lib/forecast.js).
+    forecastOpen,
+    forecast: forecastOpen ? buildForecast(data.byBatch.data, CATALOG.targets) : null,
+    toggleForecast: () => setForecastOpen((o) => !o),
+    closeForecast: () => setForecastOpen(false),
     filterHover: { borderColor: '#CBD5E1' },
     exportHover: { background: '#0B3123' },
     rowHover: { background: '#FBFCFC' },

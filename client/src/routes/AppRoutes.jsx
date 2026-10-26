@@ -1,7 +1,8 @@
-import { lazy } from 'react';
+import { lazy, useEffect } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { PublicOnly, RequireConsent, RequirePasswordChange, RequireRegistered, RequireRole, homeFor } from './guards';
 import { useAuth } from '../context/AuthContext';
+import { startupData } from '../lib/startup';
 import SignIn from '../pages/auth/SignIn';
 import ForgotPassword, { ResetPasswordLink } from '../pages/auth/ForgotPassword';
 import PrivacyConsent from '../pages/auth/PrivacyConsent';
@@ -9,23 +10,32 @@ import ChangePassword from '../pages/auth/ChangePassword';
 import VerifySignIn from '../pages/auth/VerifySignIn';
 
 // Registration and signed-in pages load on demand (the Suspense in App.jsx) so sign-in ships a small first bundle.
-const SampleInbox = lazy(() => import('../pages/auth/SampleInbox'));
-const AlumniRegistration = lazy(() => import('../pages/auth/AlumniRegistration'));
-const RegistrationSuccess = lazy(() => import('../pages/auth/RegistrationSuccess'));
-const AlumniDashboard = lazy(() => import('../pages/alumni/AlumniDashboard'));
-const AlumniProfile = lazy(() => import('../pages/alumni/AlumniProfile'));
-const AlumniProfileEdit = lazy(() => import('../pages/alumni/AlumniProfileEdit'));
-const AlumniPrivacy = lazy(() => import('../pages/alumni/AlumniPrivacy'));
-const AlumniJobs = lazy(() => import('../pages/alumni/AlumniJobs'));
-const AlumniEvents = lazy(() => import('../pages/alumni/AlumniEvents'));
-const AdminDashboard = lazy(() => import('../pages/admin/AdminDashboard'));
-const AlumniRecords = lazy(() => import('../pages/admin/AlumniRecords'));
-const Reports = lazy(() => import('../pages/admin/Reports'));
-const AdminJobs = lazy(() => import('../pages/admin/AdminJobs'));
-const AdminEvents = lazy(() => import('../pages/admin/AdminEvents'));
-const AlumniTracer = lazy(() => import('../pages/admin/AlumniTracer'));
-const AiDataManagement = lazy(() => import('../pages/admin/AiDataManagement'));
-const CollegeDashboard = lazy(() => import('../pages/college/CollegeDashboard'));
+// Each also waits for the start-up catalog its forms read, fetched in parallel with its code.
+const page = (load) => lazy(() => Promise.all([load(), startupData()]).then(([m]) => m));
+
+const loadAlumniDashboard = () => import('../pages/alumni/AlumniDashboard');
+const loadAdminDashboard = () => import('../pages/admin/AdminDashboard');
+const loadCollegeDashboard = () => import('../pages/college/CollegeDashboard');
+/** Each role's home page, fetched as soon as the user is known so it's ready by the time the redirect lands. */
+const PRELOAD_HOME = { alumni: loadAlumniDashboard, admin: loadAdminDashboard, dept: loadCollegeDashboard };
+
+const SampleInbox = page(() => import('../pages/auth/SampleInbox'));
+const AlumniRegistration = page(() => import('../pages/auth/AlumniRegistration'));
+const RegistrationSuccess = page(() => import('../pages/auth/RegistrationSuccess'));
+const AlumniDashboard = page(loadAlumniDashboard);
+const AlumniProfile = page(() => import('../pages/alumni/AlumniProfile'));
+const AlumniProfileEdit = page(() => import('../pages/alumni/AlumniProfileEdit'));
+const AlumniPrivacy = page(() => import('../pages/alumni/AlumniPrivacy'));
+const AlumniJobs = page(() => import('../pages/alumni/AlumniJobs'));
+const AlumniEvents = page(() => import('../pages/alumni/AlumniEvents'));
+const AdminDashboard = page(loadAdminDashboard);
+const AlumniRecords = page(() => import('../pages/admin/AlumniRecords'));
+const Reports = page(() => import('../pages/admin/Reports'));
+const AdminJobs = page(() => import('../pages/admin/AdminJobs'));
+const AdminEvents = page(() => import('../pages/admin/AdminEvents'));
+const AlumniTracer = page(() => import('../pages/admin/AlumniTracer'));
+const AiDataManagement = page(() => import('../pages/admin/AiDataManagement'));
+const CollegeDashboard = page(loadCollegeDashboard);
 
 function Home() {
   const { user, ready } = useAuth();
@@ -34,6 +44,12 @@ function Home() {
 }
 
 export default function AppRoutes() {
+  const { user } = useAuth();
+  const role = user ? user.role : null;
+  useEffect(() => {
+    if (PRELOAD_HOME[role]) PRELOAD_HOME[role]().catch(() => { /* the route retries and reports it */ });
+  }, [role]);
+
   return (
     <Routes>
       <Route path="/" element={<Home />} />

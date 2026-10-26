@@ -4,7 +4,7 @@ import Modal, { modalBtn } from '../../components/Modal';
 import useConfirmToast from '../../hooks/useConfirmToast';
 import { useEvents } from '../../context/EventsContext';
 import {
-  EVENT_HOSTS, EV_STATUS_META, NOTICE_KINDS, evCount, evStatusKey, evToForm, evTs, evValidate, photoCss,
+  DEFAULT_HOST, EV_STATUS_META, NOTICE_KINDS, evCount, evStatusKey, evToForm, evTs, evValidate, eventHosts, photoCss,
 } from '../../data/events';
 import { readImage } from '../../lib/files';
 
@@ -90,7 +90,7 @@ export default function AdminEvents() {
     setForm(f); setFormOrig(JSON.stringify(f)); setFormTried(false); setFormErr(''); setMenu(null); setManage(null);
     setTimeout(() => { const el = document.getElementById('fd-title-in'); if (el) el.focus({ preventScroll: true }); }, 60);
   };
-  const evCreate = () => openForm({ mode: 'create', title: '', dateISO: '', timeStart: '09:00', timeEnd: '12:00', venue: '', organizer: EVENT_HOSTS[0], body: '', photo: null, photoName: '' });
+  const evCreate = () => openForm({ mode: 'create', title: '', dateISO: '', timeStart: '09:00', timeEnd: '12:00', venue: '', organizer: DEFAULT_HOST, body: '', photo: null, photoName: '' });
   const evEdit = (e) => openForm({ ...evToForm(e), mode: 'edit', photo: e.photo || null, photoName: '' });
   const evDup = (e) => openForm({ ...evToForm(e), mode: 'create', id: null, title: `${e.title} (copy)`, dateISO: '', photo: e.photo || null, photoName: '', coverFrom: e.photo ? e.id : null });
   const setStatus = (e, k) => {
@@ -171,9 +171,10 @@ export default function AdminEvents() {
     if (createDirty) ct.askConfirm({ title: 'Discard changes?', body: 'What you entered will be lost.', cancelLabel: 'Keep editing', okLabel: 'Discard', danger: true, onOk: () => setForm(null) });
     else setForm(null);
   };
-  const fdHosts = form && form.organizer && EVENT_HOSTS.indexOf(form.organizer) < 0 ? [form.organizer, ...EVENT_HOSTS] : EVENT_HOSTS;
+  const hosts = eventHosts();
+  const fdHosts = form && form.organizer && hosts.indexOf(form.organizer) < 0 ? [form.organizer, ...hosts] : hosts;
   const fd = form ? {
-    busy: busyEv, title: form.title || '', dateISO: form.dateISO || '', timeStart: form.timeStart || '', timeEnd: form.timeEnd || '', venue: form.venue || '', organizer: form.organizer || EVENT_HOSTS[0], body: form.body || '', hosts: fdHosts,
+    busy: busyEv, title: form.title || '', dateISO: form.dateISO || '', timeStart: form.timeStart || '', timeEnd: form.timeEnd || '', venue: form.venue || '', organizer: form.organizer || DEFAULT_HOST, body: form.body || '', hosts: fdHosts,
     on_title: setF('title'), on_dateISO: setF('dateISO'), on_timeStart: setF('timeStart'), on_timeEnd: setF('timeEnd'), on_venue: setF('venue'), on_organizer: setF('organizer'), on_body: setF('body'),
     cursor: busyEv ? 'progress' : 'pointer', opacity: busyEv ? 0.7 : 1,
   } : { hosts: [] };
@@ -201,7 +202,7 @@ export default function AdminEvents() {
       when: String(me.date || '').replace(/^(\w{3})\w*,\s*(\w{3})\w*\s+(\d+).*$/, '$1, $2 $3') + (me.time ? ` · ${me.time}` : ''), venue: me.venue || '', cta: 'View details', hasThumb: true, isEvent: true, typeLabel: 'Event', subLabel: '', typeColor: '#0F3D2E',
     };
     md = {
-      mdOn: true, mdClose: () => setManage(null), mdTitle: me.title, mdWhen: shortDate(me) + (me.time ? ` · ${me.time}` : ''), mdVenue: me.venue || '—', mdHost: me.organizer || EVENT_HOSTS[0],
+      mdOn: true, mdClose: () => setManage(null), mdTitle: me.title, mdWhen: shortDate(me) + (me.time ? ` · ${me.time}` : ''), mdVenue: me.venue || '—', mdHost: me.organizer || DEFAULT_HOST,
       mdPhotoCss: photoCss(me), mdSt: EV_STATUS_META[k],
       mdCanEdit: b === 'upcoming', mdEdit: () => evEdit(me), mdToggleLabel: k === 'closed' ? 'Reopen registration' : 'Close registration', mdToggle: () => setStatus(me, k === 'closed' ? 'open' : 'closed'),
       mdCount: n.toLocaleString() + (n === 1 ? ' response' : ' responses'), mdHasPeople: regRows.length > 0, mdNoPeople: regRows.length === 0, mdExport: () => exportRegistrations(me, regRows),
