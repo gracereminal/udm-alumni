@@ -11,7 +11,20 @@ import VerifySignIn from '../pages/auth/VerifySignIn';
 
 // Registration and signed-in pages load on demand (the Suspense in App.jsx) so sign-in ships a small first bundle.
 // Each also waits for the start-up catalog its forms read, fetched in parallel with its code.
-const page = (load) => lazy(() => Promise.all([load(), startupData()]).then(([m]) => m));
+// A tab opened before a deploy still asks for the old chunk names, which no longer exist (the server answers with
+// index.html), and the failed import blanks the app. Reload once to pick up the new build; a second failure within
+// a minute is a real error and is thrown.
+const RELOADED = 'chunkReloadAt';
+const reloadOnce = (err) => {
+  let last = 0;
+  try { last = Number(sessionStorage.getItem(RELOADED)) || 0; } catch { /* storage blocked */ }
+  if (Date.now() - last < 60000) throw err;
+  try { sessionStorage.setItem(RELOADED, String(Date.now())); } catch { /* storage blocked */ }
+  window.location.reload();
+  return new Promise(() => {});
+};
+if (typeof window !== 'undefined') window.addEventListener('vite:preloadError', (e) => { e.preventDefault(); reloadOnce(e.payload); });
+const page = (load) => lazy(() => Promise.all([load().catch(reloadOnce), startupData()]).then(([m]) => m));
 
 const loadAlumniDashboard = () => import('../pages/alumni/AlumniDashboard');
 const loadAdminDashboard = () => import('../pages/admin/AdminDashboard');

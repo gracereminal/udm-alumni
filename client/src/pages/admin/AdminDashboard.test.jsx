@@ -50,6 +50,24 @@ describe('Admin Dashboard', () => {
     expect(screen.getByRole('img', { name: 'Total Registered Alumni' })).toBeInTheDocument();
   });
 
+  it('resets every filter with the Reset button', async () => {
+    const user = userEvent.setup();
+    setup();
+
+    const college = await screen.findByRole('combobox', { name: 'College' });
+    const status = screen.getByRole('combobox', { name: 'Record status' });
+    expect(screen.queryByRole('button', { name: /Reset/ })).toBeNull();
+
+    await user.selectOptions(college, college.options[1].value);
+    await user.selectOptions(status, status.options[1].value);
+    expect(college.value).not.toBe('all');
+
+    await user.click(screen.getByRole('button', { name: /Reset/ }));
+    expect(college.value).toBe('all');
+    expect(status.value).toBe('all');
+    expect(screen.queryByRole('button', { name: /Reset/ })).toBeNull();
+  });
+
   it('shows a KPI breakdown by college in the stat detail dialog', async () => {
     const user = userEvent.setup();
     setup();

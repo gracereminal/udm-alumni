@@ -20,6 +20,9 @@ const fetchAll = (reqs) => {
   return Promise.all(keys.map((k) => get(reqs[k]))).then((res) => Object.fromEntries(keys.map((k, i) => [k, res[i]])));
 };
 
+/** The unfiltered scope: every college and course, the whole batch range, all statuses. */
+const DEFAULT_SEL = { college: 'all', course: 'all', from: ADMIN_YEARS[0], to: ADMIN_YEARS[ADMIN_YEARS.length - 1], status: 'all' };
+
 /** Matches the desktop grid layout in prototype.css (the outcomes chart is drawn wider and shorter there). */
 const WIDE = '(min-width:1181px) and (min-height:620px)';
 function useWide() {
@@ -61,7 +64,7 @@ export default function AdminDashboard() {
   const wide = useWide() && !narrow;
   const [chartBox, chartBoxRef] = useBoxSize();
   const { tipH, vals: tipVals } = useChartTip();
-  const [sel, setSel] = useState({ college: 'all', course: 'all', from: ADMIN_YEARS[0], to: ADMIN_YEARS[ADMIN_YEARS.length - 1], status: 'all' });
+  const [sel, setSel] = useState(DEFAULT_SEL);
   const [data, setData] = useState(emptyAdminData);
   const [forecastOpen, setForecastOpen] = useState(false);
   const [det, setDet] = useState(null);
@@ -135,6 +138,9 @@ export default function AdminDashboard() {
     admOnTo: onYear('to'),
     rangeError,
     admOnStatus: (e) => setSel((s) => ({ ...s, status: e.target.value })),
+    // Reset shows once any filter differs from the unfiltered scope.
+    admFiltered: Object.keys(DEFAULT_SEL).some((k) => String(sel[k]) !== String(DEFAULT_SEL[k])),
+    admOnReset: () => { setChartHover(null); setRangeError(''); setSel(DEFAULT_SEL); },
     // Outcomes chart (per-batch rows, unaffected by the batch range) and the overview panels.
     // On the desktop layout the chart is drawn at the size of its box, so the page fits the window.
     chart: buildOutcomeChart(data.byBatch.data, chartTab, chartHover, CATALOG.targets.employment, wide ? chartBox : null),

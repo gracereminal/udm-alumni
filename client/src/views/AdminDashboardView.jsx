@@ -181,7 +181,7 @@ function OutcomeChart({ c, onHover, boxRef }) {
 export default function AdminDashboardView(v) {
   const {
     admFromOpts, admFromVal, admCollegeOpts, admCollegeVal, admCourseDisabled, admCourseOpacity, admCourseOpts, admCourseVal,
-    admOnFrom, admOnTo, admOnCollege, admOnCourse, admOnStatus, admScopeLabel, admStatusOpts, admStatusVal, admToOpts, admToVal, rangeError,
+    admFiltered, admOnFrom, admOnTo, admOnCollege, admOnCourse, admOnReset, admOnStatus, admScopeLabel, admStatusOpts, admStatusVal, admToOpts, admToVal, rangeError,
     adDetBarTitle, adDetBars, adDetBig, adDetChips, adDetClose, adDetGo, adDetHasBars, adDetHasRing, adDetOpen, adDetRingBg, adDetRingLabel,
     adDetRingText, adDetRows, adDetSub, adDetTitle, avgMonths, chart, chartTab, chartsRef, chartBoxRef, closeForecast, engagement, exportHover,
     forecast, forecastOpen, goEvents, goRecords, goReports, insCount, insOpen, insTop, insights, kpiCards,
@@ -241,6 +241,16 @@ export default function AdminDashboardView(v) {
                 <select aria-label="Record status" value={admStatusVal} onChange={admOnStatus} style={bareSelect}>
                   {(admStatusOpts || []).map((o) => <option key={o.value} value={o.value}>{o.label.replace(/^Status: /, '')}</option>)}
                 </select>
+                {admFiltered ? (
+                  <>
+                    <span style={{ width: '1px', height: '18px', background: '#E7E9ED', margin: '0 4px' }} />
+                    <button type="button" onClick={admOnReset} title="Clear the college, course, batch and status filters"
+                      style={{ border: 'none', background: 'transparent', padding: '0 2px', font: 'inherit', fontSize: '12.5px', fontWeight: '700', color: '#0F6B4F', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                    >
+                      ↺ Reset
+                    </button>
+                  </>
+                ) : null}
               </div>
               <SearchPill />
               <NotificationBell />
