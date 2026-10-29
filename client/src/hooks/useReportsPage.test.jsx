@@ -3,6 +3,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { AuthProvider } from '../context/AuthContext';
 import useReportsPage from './useReportsPage';
 import { REPORT_TYPES } from '../lib/analytics';
+import { RANGE_ERROR } from '../lib/batchRange';
 import { listOf, loadTestCatalog, mockApi, session } from '../test/mockApi';
 
 const report = (id) => ({
@@ -65,13 +66,22 @@ describe('Reports', () => {
     expect(vals().repCourseVal).toBe('all');
   });
 
-  it('sends the chosen batch range, in either order, as low / high years', async () => {
+  it('sends the chosen batch range and refuses a From year later than To', async () => {
     const { api, vals } = setup('admin');
     await waitFor(() => expect(vals().repRecords).toBe('120'));
-    act(() => vals().repOnFrom({ target: { value: String(Y - 1) } }));
-    act(() => vals().repOnTo({ target: { value: String(Y - 3) } }));
+    act(() => vals().repOnFrom({ target: { value: String(Y - 3) } }));
+    act(() => vals().repOnTo({ target: { value: String(Y - 1) } }));
     await waitFor(() => expect(reportCalls(api).filter((c) => c.query.batch_from === String(Y - 3) && c.query.batch_to === String(Y - 1))).toHaveLength(REPORT_TYPES.length));
     expect(vals().repYearsLabel).toBe(`Batches ${Y - 3}–${Y - 1}`);
+    expect(vals().rangeError).toBe('');
+
+    act(() => vals().repOnFrom({ target: { value: String(Y) } }));
+    expect(vals().rangeError).toBe(RANGE_ERROR);
+    expect(vals().repFromVal).toBe(String(Y - 3));
+    expect(vals().repYearsLabel).toBe(`Batches ${Y - 3}–${Y - 1}`);
+
+    act(() => vals().repOnTo({ target: { value: String(Y) } }));
+    expect(vals().rangeError).toBe('');
   });
 
   it('opens with the scope a dashboard handed over', async () => {

@@ -8,7 +8,7 @@ Alumni tracer for Universidad de Manila. Alumni register and answer the tracer s
 
 Status and the decision log are in [track-progress.md](track-progress.md). Backend phases 1–6 are done and the client runs on the API. The product scope is in [docs/product-req-document.md](docs/product-req-document.md).
 
-> **Production runs in demo mode.** The Render deployment is a working demo of the system, not a live service for UDM alumni. It holds **dummy data only** (`backend/dummy_data.sql`: 4,000 fictional alumni from every college, 2019–2025, an admin and 10 college accounts, 2 events, 5 jobs, all on `@example.com`). No real alumni data, registrar masterlists or personal information go into it. See [Demo mode](#demo-mode-production).
+> **Production runs in demo mode.** The Render deployment is a working demo of the system, not a live service for UDM alumni. It holds **dummy data only** (`backend/dummy_data.sql`: 4,000 fictional alumni from every college, 2022–2026, an admin and 10 college accounts, 2 events, 5 jobs, all on `@example.com`). No real alumni data, registrar masterlists or personal information go into it. See [Demo mode](#demo-mode-production).
 
 ## Requirements
 
@@ -115,7 +115,7 @@ Lists return `{ data, meta: { page, per_page, total } }`. Errors return `{ error
 
 Production is a demonstration environment. It runs the real production build and configuration, but every person, account, event and job in it is made up.
 
-- **Data:** loaded once from `backend/dummy_data.sql` (about 3 MB, so run it with `psql "<DB_URL_DIRECT>" -v ON_ERROR_STOP=1 -f backend/dummy_data.sql`; it refuses to run if alumni already exist). It creates 4,000 alumni across all 10 colleges (CAS 520, CBA 560, CBPM 400, CCS 480, CCJ 520, COED 520, CET 480, CHS 320, CLAW 80, GS 120; batches 2019–2025), each with an alumni account, with survey answers and employment, so every dashboard and report has realistic numbers.
+- **Data:** loaded once from `backend/dummy_data.sql` (about 3 MB, so run it with `psql "<DB_URL_DIRECT>" -v ON_ERROR_STOP=1 -f backend/dummy_data.sql`; it refuses to run if alumni already exist). It creates 4,000 alumni across all 10 colleges (CAS 520, CBA 560, CBPM 400, CCS 480, CCJ 520, COED 520, CET 480, CHS 320, CLAW 80, GS 120; batches 2022–2026), each with an alumni account, with survey answers and employment, so every dashboard and report has realistic numbers.
 - **Accounts:** alumni sign in as `firstname.lastname.N@example.com`, the admin as `admin@example.com`, and each college as `<code>.dean@example.com` (e.g. `ccs.dean@example.com`). The committed file stores **no passwords**, so none of these can sign in. To give them the shared test passwords, run `backend/dummy_data_pass.sql` after it. That file holds only the password updates, stays local and is git-ignored. Never commit it.
 - **What gets committed:** only `backend/dummy_data.sql` and `backend/wipe_data.sql`. `backend/dummy_data_pass.sql` never is.
 - **No real data:** don't register real alumni, import real masterlists or upload real documents. The `@example.com` addresses have no inbox, so reset, invite and RSVP emails to them go nowhere. Keep `MFA_ENABLED=false` for the same reason.

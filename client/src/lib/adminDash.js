@@ -1,22 +1,15 @@
 // Admin dashboard view-model: shapes API statistics (GET /stats/*) into the props AdminDashboardView renders.
 // No numbers are computed here beyond formatting and chart geometry — every count comes from the server.
 import { CATALOG, collegeById, programById } from '../data/colleges';
-import { employmentLabel } from '../data/records';
 import { qs } from './api';
 
 export const STATUS_FILTER_LABELS = { all: 'All statuses', verified: 'Verified only', flagged: 'Flagged' };
-const ST = {
-  verified: ['Verified', '#0F6B4F', '#E1F3EA', 'Details', '#64748B'],
-  flagged: ['Flagged', '#B3213C', '#FDE7EC', 'Review', '#0F6B4F'],
-  archived: ['Archived', '#5A6572', '#EDEFF2', 'Details', '#64748B'],
-};
-const dotOf = (code) => (code === 'employed' ? '#12A36F' : code === 'self_employed' ? '#F0C428' : code === 'further_studies' ? '#4FA383' : code === 'not_employed' ? '#E5484D' : '#A7B0BC');
 const N = (n) => Math.round(n || 0).toLocaleString('en-US');
 const P1 = (n) => (n == null ? '—' : Number(n).toFixed(1));
 const pct = (n, d) => (d ? (n / d) * 100 : 0);
 const thisYear = () => new Date().getFullYear();
-/** Graduating batches the filters offer, newest first (registration accepts 1999 to the current year). */
-export const ADMIN_YEARS = (() => { const AY = []; for (let y = thisYear(); y >= 1999; y--) AY.push(y); return AY; })();
+/** Graduating batches the filters offer, oldest first (registration accepts 1999 to the current year). */
+export const ADMIN_YEARS = (() => { const AY = []; for (let y = 1999; y <= thisYear(); y++) AY.push(y); return AY; })();
 
 /**
  * Normalized selection + the API filter / grouping it implies. `from` / `to` are batch years in either order;
@@ -31,7 +24,7 @@ export function adminScope(sel) {
   const to = AY.includes(Number(sel.to)) ? Number(sel.to) : AY[AY.length - 1];
   const lo = Math.min(from, to);
   const hi = Math.max(from, to);
-  const years = AY.filter((y) => y >= lo && y <= hi).reverse();
+  const years = AY.filter((y) => y >= lo && y <= hi);
   const batch = years.length === AY.length ? 'all' : years.length === 1 ? years[0] : null;
   const batchLabel = batch === 'all' ? '' : years.length === 1 ? `Batch ${lo}` : `Batches ${lo}–${hi}`;
   const status = ['verified', 'flagged'].includes(sel.status) ? sel.status : 'all';
@@ -50,8 +43,8 @@ export const emptyMetrics = () => ({
   laborForce: 0, employmentRate: null, aligned: 0, alignedRate: null, firstGen: 0, firstGenRate: null, ip: 0, pwd: 0, monthsAvg: null, timeToJob: {}, pending: 0, verified: 0, flagged: 0,
 });
 export const emptyAdminData = () => ({
-  summary: emptyMetrics(), now: emptyMetrics(), prev: emptyMetrics(), unitsNow: { data: [] }, unitsPrev: { data: [] }, byBatch: { data: [] },
-  inclusion: { traced: 0, ip: 0, pwd: 0, indigenousGroups: [], pwdTypes: [] }, recent: { data: [], meta: { total: 0 } },
+  summary: emptyMetrics(), now: emptyMetrics(), prev: emptyMetrics(), units: { data: [] }, unitsNow: { data: [] }, unitsPrev: { data: [] }, byBatch: { data: [] },
+  inclusion: { traced: 0, ip: 0, pwd: 0, indigenousGroups: [], pwdTypes: [] },
 });
 
 /** Every request the dashboard needs, as API paths. */
@@ -64,11 +57,12 @@ export function adminRequests(sc) {
     summary: `/stats/summary${qs({ ...base, ...range })}`,
     now: `/stats/summary${qs({ ...base, batches: sc.now })}`,
     prev: `/stats/summary${qs({ ...base, batches: sc.prev })}`,
+    // Same scope as the summary, split by college / program / batch: the breakdown in the stat detail dialog.
+    units: `/stats/by-program${qs({ ...base, ...range, group: sc.group })}`,
     unitsNow: `/stats/by-program${qs({ ...base, group: sc.group, batches: sc.level === 'batch' ? batchRows : sc.now })}`,
     unitsPrev: `/stats/by-program${qs({ ...base, group: sc.group, batches: sc.level === 'batch' ? batchRows.map((y) => y - 1) : sc.prev })}`,
     byBatch: `/stats/by-batch${qs(base)}`,
     inclusion: `/stats/inclusion${qs({ ...base, ...range })}`,
-    recent: `/alumni${qs({ ...base, ...range, status: sc.status, sort: 'created_at', dir: 'desc', per_page: 5 })}`,
   };
 }
 
@@ -95,20 +89,10 @@ export function buildAdminDash(sel, data, tipH) {
   }).sort((a, b) => (sc.level === 'batch' ? 0 : b.v - a.v));
   const programRates = rows.map(({ program, full, v, d }) => ({
     program, full, pct: `${v.toFixed(1)}%`,
-    delta: d == null ? 'new' : `${d >= 0 ? '+' : '−'}${Math.abs(d).toFixed(1)} pts`, arrow: d == null ? '' : d >= 0 ? '↑' : '↓',
+    delta: d == null ? 'new' : `${d >= 0 ? '+' : '−'}${Math.abs(d).toFixed(1)}%`, arrow: d == null ? '' : d >= 0 ? '↑' : '↓',
     deltaColor: d == null || d >= 0 ? '#0F6B4F' : d < -1 ? '#B3213C' : '#8A6D1F', deltaBg: d == null || d >= 0 ? '#E1F3EA' : d < -1 ? '#FDE7EC' : '#FBF0D8',
-    ...tipH(full, `${v.toFixed(1)}% employed${d == null ? '' : ` · ${d >= 0 ? '+' : '−'}${Math.abs(d).toFixed(1)} pts vs the previous batches`}`),
+    ...tipH(full, `${v.toFixed(1)}% employed${d == null ? '' : ` · ${d >= 0 ? '+' : '−'}${Math.abs(d).toFixed(1)}% from last year`}`),
   }));
-
-  const recent = data.recent.data || [];
-  const registrations = recent.map((r) => {
-    const s = ST[r.status] || ST.verified;
-    return {
-      name: r.name, program: r.program, full: r.course ? `${r.course} · ${r.college}` : '', batch: String(r.batch), employment: employmentLabel(r.employmentStatus), dot: dotOf(r.employmentStatus),
-      date: new Date(r.createdAt).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
-      status: s[0], statusColor: s[1], statusBg: s[2], action: s[3], actionColor: s[4], id: r.id,
-    };
-  });
 
   const dash = admDash(sc, S, data, rows, tipH, target);
   const colleges = CATALOG.colleges.filter((c) => c.programs.length || c.code === 'OTH');
@@ -127,12 +111,11 @@ export function buildAdminDash(sel, data, tipH) {
       admFromVal: String(sc.from), admFromOpts: ADMIN_YEARS.map((y) => ({ value: String(y), label: `From ${y}` })),
       admToVal: String(sc.to), admToOpts: ADMIN_YEARS.map((y) => ({ value: String(y), label: `To ${y}` })),
       admStatusVal: sc.status, admStatusOpts: Object.keys(STATUS_FILTER_LABELS).map((k) => ({ value: k, label: `Status: ${STATUS_FILTER_LABELS[k]}` })),
-      adminShowFrom: registrations.length ? 1 : 0, adminShowTo: registrations.length,
       ...dash.vals,
       programRatesTitle: sc.level === 'college' ? 'Employability by college' : sc.level === 'course' ? 'Employability by course' : 'Employability by batch',
       programRatesSub: sc.level === 'batch' ? `${prog.abbr} · employment rate of traced graduates in the labour force, per batch` : `Employment rate, ${sc.now.length === 1 ? `batch ${sc.now[0]}` : `batches ${sc.now[0]}–${sc.now[sc.now.length - 1]}`}${col ? ` · ${col.name}` : ''}`,
-      programRates, registrations, registrationsEmpty: !registrations.length,
-      adminTotalEntries: N(data.recent.meta ? data.recent.meta.total : 0),
+      programRates,
+      breakdownTitle: sc.level === 'college' ? 'By college' : sc.level === 'course' ? 'By program' : 'By batch',
     },
   };
 }
@@ -184,7 +167,7 @@ function admDash(sc, S, data, rows, tipH, target) {
   if (rows.length) {
     const falling = rows.filter((r) => r.d != null).sort((a, b) => a.d - b.d)[0];
     const low = rows.reduce((a, b) => (b.v < a.v ? b : a));
-    if (falling && falling.d < -0.5) ins.push([`${falling.program} employability fell ${Math.abs(falling.d).toFixed(1)} pts`, `— now ${falling.v.toFixed(1)}% against the previous batches.`, 'r']);
+    if (falling && falling.d < -0.5) ins.push([`${falling.program} employability fell ${Math.abs(falling.d).toFixed(1)}% from last year`, `— now ${falling.v.toFixed(1)}%.`, 'r']);
     else ins.push([`${low.program} trails at ${low.v.toFixed(1)}% employability`, `— the lowest in this view (target ${target.employment}%).`, low.v < target.employment ? 'r' : 'y']);
   }
   const counted = bars.filter((b) => b.total > 0);
@@ -196,12 +179,6 @@ function admDash(sc, S, data, rows, tipH, target) {
   if (fast) ins.push([`${fast.program} graduates`, `reach first employment in about ${fast.m.toFixed(1)} months (bucket midpoints).`, 'g']);
   if (!ins.length) ins.push(['No survey responses in this view yet.', 'Insights appear once alumni in this scope answer the survey.', 'y']);
 
-  // Median of the time-to-job buckets.
-  const midOrder = [['lt_1m', 0.5], ['m1_6', 3.5], ['m7_11', 9], ['y1_2', 18], ['y2_3', 30], ['y3_4', 42], ['gt_4y', 54]];
-  let cum = 0;
-  const half = ttjN / 2;
-  const med = ttjN ? (midOrder.find(([k]) => { cum += t[k] || 0; return cum >= half; }) || [null, null])[1] : null;
-
   return {
     slices,
     admK: {
@@ -210,6 +187,7 @@ function admDash(sc, S, data, rows, tipH, target) {
       comp: S.completion, completed: S.completed, compD: null,
       fg: S.firstGen, fgP: S.firstGenRate, al: S.alignedRate, alN: S.aligned, alD: delta(Sn.alignedRate, Sp.alignedRate),
       fs: S.furtherStudies, fsP: pct(S.furtherStudies, traced), sk: S.notEmployed, skP: pct(S.notEmployed, traced),
+      verified: S.verified, flagged: S.flagged,
     },
     vals: {
       batchSub: `${N(S.traced)} of ${N(S.total)} alumni records reached`,
@@ -223,10 +201,9 @@ function admDash(sc, S, data, rows, tipH, target) {
       }),
       statusMix: mix.map(([lbl, n, color], i) => ({ label: lbl, count: `${N(n)} graduates`, pct: `${P1(pct(n, traced))}%`, pctColor: i === 3 ? '#B4500A' : '#0B1220', color })),
       statusDonut,
-      donutTotal: N(traced), activeLabor: `${P1(traced ? 100 - pct(S.notEmployed, traced) : 0)}%`, medianMonths: med == null ? '—' : P1(med),
+      donutTotal: N(traced), activeLabor: `${P1(traced ? 100 - pct(S.notEmployed, traced) : 0)}%`, avgMonths: S.monthsAvg == null ? '—' : P1(S.monthsAvg),
       timeToJob: groups.map(([lb, , color, text], i) => ({ label: lb, pct: `${tt[i]}%`, grow: tt[i] || 0, color, text, ...tipH(lb, `${tt[i]}% of employed graduates`) })),
       insights: ins.slice(0, 3).map(([lead, text, k]) => ({ lead, text, color: tone[k][0], leadColor: tone[k][1], bg: tone[k][2], border: tone[k][3] })),
-      adminAwaiting: sc.status === 'verified' ? 'Showing verified submissions only' : `${N(S.flagged)} flagged for follow-up`,
       ...inclusionProfile(data.inclusion),
     },
   };
@@ -254,26 +231,167 @@ function inclusionProfile(inc) {
   };
 }
 
-/** KPI cards (hero + side + mini stats) for the admin dashboard. */
-export function buildKpis(d, hoverId, setHover, goRecords) {
-  const hv = hoverId;
-  const sg = (n) => (n == null ? '' : `${n >= 0 ? '↑ ' : '↓ '}${Math.abs(n).toFixed(1)}`);
-  const sgn = (n) => `${n >= 0 ? '+' : '−'}${Math.abs(n).toFixed(1)}`;
-  const wire = (id, o, noArrow) => ({
-    ...o, onEnter: () => setHover(id), onLeave: () => setHover((h) => (h === id ? null : h)),
-    arrowOp: hv === id && !noArrow ? 1 : 0, arrowX: hv === id ? 'translateX(0)' : 'translateX(-4px)',
-  });
+const R = (label, value) => ({ label, value });
+
+/**
+ * One metric across the GET /stats/by-program rows of the dashboard scope, highest first: the bars, highest /
+ * lowest chips and spread (rates) or top share (counts) in the stat detail dialog. Null when no row has the metric.
+ */
+export function breakdown(units, metric, title, isPct) {
+  const rows = (units || [])
+    .filter((u) => u.total > 0 && u[metric] != null)
+    .map((u) => ({ code: String(u.label ?? u.key), full: u.full || String(u.label ?? u.key), raw: Number(u[metric]) }))
+    .sort((a, b) => b.raw - a.raw);
+  if (!rows.length) return null;
+  const fmt = (x) => (isPct ? `${x.toFixed(1)}%` : N(x));
+  const mx = Math.max(...rows.map((r) => r.raw)) || 1;
+  const tot = rows.reduce((a, r) => a + r.raw, 0);
+  const hi = rows[0];
+  const lo = rows[rows.length - 1];
+  const last = rows.length - 1;
   return {
-    kpiHero: wire('emp', { label: 'Employability rate', value: P1(d.emp), unit: '%', subLead: N(d.employed), sub: `employed of ${N(d.lf)} in the labour force`, pct: `${Math.round(d.emp || 0)}%`, context: d.empD == null ? 'Latest survey cycle' : `${sg(d.empD)} pts vs the previous batches` }),
-    kpiSide: [
-      wire('traced', { label: 'Graduates traced', value: N(d.traced), unit: `/ ${N(d.total)} total`, subLead: `${P1(d.covP)}%`, sub: 'of alumni records reached this cycle', hasBar: true, isDelta: false, pct: `${P1(d.goalP)}%`, context: `Goal: ${N(d.goal)}` }),
-      wire('survey', { label: 'Survey completion', value: P1(d.comp), unit: '%', subLead: N(d.completed), sub: 'fully completed survey forms', hasBar: false, isDelta: d.compD != null, context: d.compD == null ? 'Average answered share of submitted surveys' : `${sg(d.compD)} pts` }),
-      wire('firstgen', { label: 'First-generation graduates', caption: 'Are you the first in your family to graduate college?', value: N(d.fg), unit: 'respondents', subLead: `${P1(d.fgP)}%`, sub: 'answered “Yes”', hasBar: false, isDelta: false }),
+    barTitle: title,
+    chips: [
+      { k: 'Highest', v: hi.code, s: fmt(hi.raw), c: '#0F3D2E' },
+      { k: 'Lowest', v: lo.code, s: fmt(lo.raw), c: '#8A6D1F' },
+      isPct ? { k: 'Spread', v: (hi.raw - lo.raw).toFixed(1), s: 'pts high–low', c: '#475569' } : { k: 'Top share', v: `${tot ? Math.round((hi.raw / tot) * 100) : 0}%`, s: 'of total', c: '#475569' },
     ],
-    miniStats: [
-      wire('m1', { label: 'Degree-aligned jobs', value: `${P1(d.al)}%`, sub: `${N(d.alN)} working in their field`, icon: 'M4 8h16v11H4z M9 8V6a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2 M9 13.5l2 2 4-4', iconBg: '#E7F6EE', iconColor: '#0E7A5A', pill: d.alD == null ? 'Course-related jobs' : `${sgn(d.alD)}% field alignment`, pillBg: '#E1F3EA', pillColor: '#0F6B4F', isPill: true, isLink: false, cardBg: '#fff', cardBorder: '#E7E9ED' }),
-      wire('m2', { label: 'Pursuing further studies', value: N(d.fs), sub: `${P1(d.fsP)}% of respondents`, icon: 'M2 9l10-5 10 5-10 5-10-5z M6 11v5c0 1.5 3 3 6 3s6-1.5 6-3v-5', iconBg: '#E8EEF5', iconColor: '#3E5C7A', pill: 'Graduate & Professional', pillBg: '#EEF2F7', pillColor: '#334E68', isPill: true, isLink: false, cardBg: '#fff', cardBorder: '#E7E9ED' }),
-      wire('m3', { label: 'Still seeking work', value: N(d.sk), sub: `${P1(d.skP)}% of survey responses`, icon: 'M10.5 4a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13z M15.5 15.5L20 20', iconBg: '#FBEBC4', iconColor: '#9A6400', pill: 'View records →', isPill: false, isLink: true, cardBg: '#FFFAEE', cardBorder: '#F0D9A0', onClick: goRecords }, true),
-    ],
+    bars: rows.map((r, i) => ({ code: r.code, full: r.full, val: fmt(r.raw), w: `${(isPct ? r.raw : (r.raw / mx) * 100).toFixed(1)}%`, color: i === 0 ? '#0F3D2E' : i === last ? '#E0A915' : '#4FA383' })),
+  };
+}
+
+/**
+ * The seven KPI cards, plus click handlers on every chart that open the stat detail dialog.
+ * @param d      admK from buildAdminDash
+ * @param vals   buildAdminDash(...).vals
+ * @param units  rows of GET /stats/by-program for the dashboard scope
+ * @param h      { hoverId, setHover, openDetail(det), openPopulation, openForecast, goRecords }
+ */
+export function buildKpiCards(d, vals, units, h) {
+  const sg = (n) => `${n >= 0 ? '↑ ' : '↓ '}${Math.abs(n).toFixed(1)}`;
+  const sgn = (n) => `${n >= 0 ? '+' : '−'}${Math.abs(n).toFixed(1)}`;
+  const bd = (metric, isPct) => breakdown(units, metric, vals.breakdownTitle, isPct);
+  const open = (det) => () => h.openDetail(det);
+  const empCtx = d.empD == null ? 'Latest survey cycle' : `${sg(d.empD)}% from last year`;
+  const compCtx = d.compD == null ? 'Average answered share of submitted surveys' : `${sg(d.compD)}% from last year`;
+  const alCtx = d.alD == null ? 'Course-related jobs' : `${sgn(d.alD)}% from last year`;
+  const card = (id, ico, label, value, sub, subColor, onClick) => ({
+    id, ico, label, value, sub, subColor, onClick,
+    onEnter: () => h.setHover(id), onLeave: () => h.setHover((x) => (x === id ? null : x)),
+    arrowOp: h.hoverId === id ? 1 : 0, arrowX: h.hoverId === id ? 'translateX(0)' : 'translateX(-4px)',
+    acc: '#0F3D2E', chip: '#EEF6F2', bg: '#fff', border: '#E7E9ED',
+  });
+  const sub = vals.admScopeLabel;
+  const kpiCards = [
+    card('total', '☰', 'Total alumni', N(d.total), `${N(d.traced)} traced · ${N(d.verified)} verified`, '#475569', h.openPopulation),
+    card('emp', '↗', 'Employability rate', `${P1(d.emp)}%`, empCtx, '#0F6B4F', h.openForecast),
+    card('traced', '⌖', 'Graduates traced', N(d.traced), `${P1(d.covP)}% of records · Goal: ${N(d.goal)}`, '#475569', open({
+      title: 'Graduates traced', sub, big: `${N(d.traced)} / ${N(d.total)}`,
+      rows: [R('Traced alumni', N(d.traced)), R('Total records', N(d.total)), R('Coverage', `${P1(d.covP)}%`), R('Collection goal', N(d.goal))],
+      x: { ring: d.covP, ringLabel: 'coverage', ...bd('traced', false) },
+    })),
+    card('survey', '✓', 'Survey completion', `${P1(d.comp)}%`, compCtx, '#0F6B4F', open({
+      title: 'Survey completion', sub, big: `${P1(d.comp)}%`,
+      rows: [R('Completed forms', N(d.completed)), R('Average answered share', `${P1(d.comp)}%`)],
+      x: { ring: d.comp, ringLabel: 'complete', ...bd('completion', true) },
+    })),
+    card('aligned', '◆', 'Degree-aligned jobs', `${P1(d.al)}%`, alCtx, '#0F6B4F', open({
+      title: 'Degree-aligned jobs', sub, big: `${P1(d.al)}%`,
+      rows: [R('Working in their field', N(d.alN)), R('Change', alCtx)],
+      x: { ring: d.al, ringLabel: 'aligned', ...bd('alignedRate', true) },
+    })),
+    card('fs', '✦', 'Further studies', N(d.fs), `${P1(d.fsP)}% of respondents`, '#475569', open({
+      title: 'Pursuing further studies', sub: 'Graduate & professional studies', big: N(d.fs),
+      rows: [R('Graduates enrolled', N(d.fs)), R('Share of respondents', `${P1(d.fsP)}%`)],
+      x: { ring: d.fsP, ringLabel: 'of respondents', ...bd('furtherStudies', false) },
+    })),
+    { ...card('seeking', '⚑', 'Still seeking work', N(d.sk), 'View records →', '#7A4E00', h.goRecords), acc: '#7A4E00', chip: '#FBEFD0', bg: '#FFFAEE', border: '#F0D9A0' },
+  ];
+
+  const bRows = vals.batchBars.map((b) => R(`Batch ${b.label}`, `${b.pct} traced`));
+  const sRows = vals.statusMix.map((s) => R(s.label, `${s.count} · ${s.pct}`));
+  const pRows = vals.programRates.map((p) => R(p.full, `${p.pct} (${p.arrow} ${p.delta})`));
+  const tRows = vals.timeToJob.map((t) => R(t.label, `${t.pct} of employed`));
+  return {
+    kpiCards,
+    batchBars: vals.batchBars.map((b) => ({ ...b, onClick: open({ title: `Graduates traced · Batch ${b.label}`, sub: vals.batchSub, big: b.pct, rows: bRows, hl: `Batch ${b.label}` }) })),
+    statusMix: vals.statusMix.map((s) => ({ ...s, onClick: open({ title: s.label, sub: 'Employment status mix', big: s.pct, rows: sRows, hl: s.label }) })),
+    statusOpen: open({ title: 'Employment status mix', sub: `${vals.donutTotal} respondents · active labor force`, big: vals.activeLabor, rows: sRows }),
+    programRates: vals.programRates.map((p) => ({ ...p, onClick: open({ title: p.full, sub: 'Employed graduates in the labour force', big: p.pct, rows: pRows, hl: p.full }) })),
+    timeToJob: vals.timeToJob.map((t) => ({ ...t, onClick: open({ title: 'Months before first job', sub: `Average ${vals.avgMonths} months`, big: t.pct, rows: tRows, hl: t.label }) })),
+    insTop: vals.insights[0] || { lead: '', text: '' },
+    insCount: `${vals.insights.length} signal${vals.insights.length === 1 ? '' : 's'}`,
+    insOpen: open({ title: 'Signals worth acting on', sub: 'Recommended follow-ups', big: String(vals.insights.length), rows: vals.insights.map((i) => R(i.lead, i.text)) }),
+    inclGroups: vals.inclGroups.map((g) => ({ ...g, onClick: open({ title: g.title, sub: vals.inclSub, big: g.yesPct, rows: g.rows.map((r) => R(r.label, r.n)) }) })),
+  };
+}
+
+/** Values for the stat detail dialog (null = closed). */
+export function detailVals(det) {
+  const x = det && det.x;
+  const ring = x && x.ring != null && !Number.isNaN(Number(x.ring)) ? Number(x.ring) : null;
+  return {
+    adDetOpen: !!det,
+    adDetTitle: det ? det.title : '', adDetSub: det ? det.sub : '', adDetBig: det ? det.big : '',
+    adDetRows: det ? det.rows.map((r) => ({ ...r, bg: r.label === det.hl ? '#EEF6F2' : '#fff', w: r.label === det.hl ? 700 : 500 })) : [],
+    adDetHasRing: ring != null,
+    adDetRingBg: ring != null ? `conic-gradient(#0F3D2E ${Math.min(100, ring) * 3.6}deg,#E6EEEA 0)` : '',
+    adDetRingText: ring != null ? `${ring.toFixed(1)}%` : '', adDetRingLabel: x ? x.ringLabel : '',
+    adDetHasBars: !!(x && x.bars), adDetChips: (x && x.chips) || [], adDetBars: (x && x.bars) || [], adDetBarTitle: (x && x.barTitle) || '',
+  };
+}
+
+/** Requests behind the Alumni population dialog: totals by college and program, and per program for each charted batch. */
+export function populationRequests(sc, years) {
+  const base = { college_id: sc.college, program_id: sc.course, status: sc.status };
+  const range = sc.batch === 'all' ? {} : { batch_from: sc.lo, batch_to: sc.hi };
+  const r = {
+    cols: `/stats/by-program${qs({ ...base, ...range, group: 'college' })}`,
+    progs: `/stats/by-program${qs({ ...base, ...range, group: 'program' })}`,
+  };
+  years.forEach((y) => { r[`y${y}`] = `/stats/by-program${qs({ ...base, batches: [y], group: 'program' })}`; });
+  return r;
+}
+
+/**
+ * Alumni population dialog: records by batch, college and program, and a batch × program heatmap of the ten
+ * largest programs (cells under 55% of the average are marked thin).
+ * @param res  responses keyed like populationRequests(); null while loading
+ */
+export function buildPopulation(d, byBatch, years, res) {
+  const grand = d.total || 0;
+  const share = (n) => `${grand ? ((n / grand) * 100).toFixed(1) : '0.0'}%`;
+  const bars = (items, color) => {
+    const mx = Math.max(1, ...items.map((x) => x[1]));
+    return items.map(([label, n, full]) => ({ label, full: full || label, n: N(n), pct: share(n), w: `${((n / mx) * 100).toFixed(1)}%`, color }));
+  };
+  const totals = new Map((byBatch || []).map((r) => [r.key, r.total]));
+  const base = { popTotal: N(grand), popTraced: N(d.traced), popVer: N(d.verified), popYears: years.map(String), popBatch: bars(years.map((y) => [String(y), totals.get(y) || 0]), '#0F3D2E') };
+  if (!res) return { ...base, popLoading: true, popCol: [], popProg: [], popHeat: [], popThin: '', popMean: '0' };
+
+  const rowsOf = (k) => ((res[k] && res[k].data) || []).filter((r) => r.total > 0).sort((a, b) => b.total - a.total);
+  const progs = rowsOf('progs');
+  const top = progs.slice(0, 10).map((p) => ({
+    p, cells: years.map((y) => { const row = ((res[`y${y}`] && res[`y${y}`].data) || []).find((r) => String(r.key) === String(p.key)); return row ? row.total : 0; }),
+  }));
+  const flat = top.flatMap((t) => t.cells);
+  const mean = flat.length ? flat.reduce((a, b) => a + b, 0) / flat.length : 0;
+  const mx = Math.max(1, ...flat);
+  const mix = (t) => { const a = [230, 240, 235]; const b = [15, 61, 46]; return `rgb(${a.map((x, i) => Math.round(x + (b[i] - x) * t)).join(',')})`; };
+  let thin = 0;
+  const popHeat = top.map(({ p, cells }) => ({
+    label: p.label, full: p.full || p.label, total: N(cells.reduce((a, b) => a + b, 0)),
+    cells: cells.map((n) => {
+      const isThin = n < mean * 0.55;
+      if (isThin) thin += 1;
+      const t = Math.min(1, n / (mx * 0.9));
+      return { n: N(n), bg: isThin ? '#FBF0D8' : mix(0.12 + t * 0.88), color: isThin ? '#8A6D1F' : t > 0.45 ? '#fff' : '#0B1220', ring: isThin ? '1px solid #E3C97E' : '1px solid transparent' };
+    }),
+  }));
+  return {
+    ...base, popLoading: false,
+    popCol: bars(rowsOf('cols').map((r) => [r.full || r.label, r.total]), '#0F6B4F'),
+    popProg: bars(progs.slice(0, 8).map((r) => [r.label, r.total, r.full]), '#4FA383'),
+    popHeat, popThin: `${thin} thin cohort${thin === 1 ? '' : 's'}`, popMean: N(mean),
   };
 }

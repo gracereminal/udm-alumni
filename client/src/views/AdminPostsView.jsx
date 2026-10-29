@@ -5,6 +5,10 @@ import SearchPill from '../components/topbar/SearchPill';
 import NotificationBell from '../components/topbar/NotificationBell';
 import UserChip from '../components/topbar/UserChip';
 import { onActivate, onBackdrop } from '../lib/a11y';
+import JobComposerDialog from '../components/JobComposerDialog';
+
+const jobCard = { background: '#fff', border: '1px solid #E7E9ED', borderRadius: '16px', boxShadow: '0 1px 2px rgba(16,24,40,.04),0 8px 24px -12px rgba(16,24,40,.08)', minWidth: '0' };
+const menuItem = (color) => ({ background: '#fff', border: 'none', borderRadius: '8px', padding: '9px 12px', fontFamily: 'inherit', fontSize: '12.5px', fontWeight: '700', textAlign: 'left', cursor: 'pointer', width: '100%', color });
 
 /* View layer for the "AdminPosts" screen — converted from "Alumni Tracer Mockups.dc.html". */
 export default function AdminPostsView(v) {
@@ -33,7 +37,6 @@ export default function AdminPostsView(v) {
     cfOn,
     cfOpacity,
     cfTitle,
-    clearJobDraft,
     evClearSearch,
     evCreate,
     evEmptyBody,
@@ -70,21 +73,10 @@ export default function AdminPostsView(v) {
     fdSubmit,
     fdSubmitLabel,
     inputFocus,
-    jobDraftDesc,
-    jobDraftHasPhoto,
-    jobDraftNoPhoto,
-    jobDraftPhotoCss,
-    jobDraftPhotoName,
-    jobDraftTags,
-    jobFormFields,
-    jobFormRef,
+    jobApps,
+    jobComposer,
     jobLiveCount,
-    jobFormHead,
-    jobSubmitLabel,
-    jobClearLabel,
-    jobFormError,
     jobPendingCount,
-    jobPhotoRef,
     jobQueueRows,
     jq,
     jqApprove,
@@ -142,16 +134,10 @@ export default function AdminPostsView(v) {
     ntTitle,
     onEvQ,
     onEvStatusF,
-    onJobDraftDesc,
-    onJobDraftTags,
-    onJobPhotoFile,
     onNtBody,
     onNtTitle,
-    openJobPhoto,
     postsPreviewGo,
     postsSubtitle,
-    publishJob,
-    removeJobPhoto,
     rowHover,
     tabEvents,
     tabJobs,
@@ -606,7 +592,7 @@ export default function AdminPostsView(v) {
                         color: '#0B1220',
                       }}
                     >
-                      Jobs
+                      Job Management
                     </div>
                   </>
                 ) : null}
@@ -628,7 +614,7 @@ export default function AdminPostsView(v) {
                 ) : null}
                 {tabJobs ? (
                   <>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '7px', fontSize: '13.5px', color: '#64748B' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13.5px', color: '#64748B' }}>
                       <span style={{ width: '13px', height: '13px', borderRadius: '50%', border: '1.5px solid #A7B0BC', flex: 'none' }} />
                       <span>{postsSubtitle}</span>
                     </div>
@@ -643,40 +629,6 @@ export default function AdminPostsView(v) {
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
                 {tabJobs ? (
                   <>
-                    <div
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        background: '#fff',
-                        border: '1px solid #E2E5EA',
-                        borderRadius: '12px',
-                        padding: '11px 14px',
-                        fontSize: '13px',
-                        fontWeight: '600',
-                        color: '#0F172A',
-                      }}
-                    >
-                      <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#0F8A5F', flex: 'none' }} />
-                      <span>{jobLiveCount} jobs live</span>
-                    </div>
-                    <div
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        background: '#fff',
-                        border: '1px solid #E2E5EA',
-                        borderRadius: '12px',
-                        padding: '11px 14px',
-                        fontSize: '13px',
-                        fontWeight: '600',
-                        color: '#0F172A',
-                      }}
-                    >
-                      <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#F0C428', flex: 'none' }} />
-                      <span>{jobPendingCount} alumni jobs pending</span>
-                    </div>
                     <div role="button" tabIndex={0} onKeyDown={onActivate(postsPreviewGo)}
                       onClick={postsPreviewGo}
                       style={{
@@ -751,500 +703,120 @@ export default function AdminPostsView(v) {
             </div>
             {tabJobs ? (
               <>
-                <div
-                  style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(100%,420px),1fr))', gap: '14px', alignItems: 'start' }}
-                >
-                  <div
-                    ref={jobFormRef}
-                    style={{
-                      background: '#fff',
-                      border: '1px solid #E7E9ED',
-                      borderRadius: '16px',
-                      boxShadow: '0 1px 2px rgba(16,24,40,.04),0 8px 24px -12px rgba(16,24,40,.08)',
-                      padding: '24px 26px',
-                    }}
+                {jobComposer ? <JobComposerDialog {...jobComposer} /> : null}
+                {jobApps ? (
+                  <div onClick={onBackdrop(jobApps.onClose)} role="presentation"
+                    style={{ position: 'fixed', inset: '0', zIndex: '80', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px', boxSizing: 'border-box', background: 'rgba(11,18,32,.45)' }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', marginBottom: '4px' }}>
-                      <div style={{ fontFamily: 'Inter,sans-serif', fontWeight: '600', fontSize: '16px', color: '#0B1220' }}>{jobFormHead}</div>
-                      <div
-                        style={{
-                          fontSize: '10.5px',
-                          fontWeight: '700',
-                          letterSpacing: '.5px',
-                          color: '#0F3D2E',
-                          background: '#E6F0EB',
-                          padding: '4px 10px',
-                          borderRadius: '8px',
-                        }}
-                      >
-                        PUBLISHES INSTANTLY
-                      </div>
-                    </div>
-                    <div style={{ fontSize: '12.5px', color: '#64748B', marginBottom: '14px' }}>
-                      Admin postings skip review. Alumni-submitted jobs land in the queue on the right for approval.
-                    </div>
-                    <div role="button" tabIndex={0} onKeyDown={onActivate(openJobPhoto)}
-                      onClick={openJobPhoto}
-                      title="Upload company photo"
-                      style={{
-                        width: '100%',
-                        height: '170px',
-                        borderRadius: '14px',
-                        position: 'relative',
-                        cursor: 'pointer',
-                        overflow: 'hidden',
-                        border: '1px solid #E2E5EA',
-                        background: jobDraftPhotoCss,
-                      }}
+                    <div role="dialog" aria-modal="true" aria-label="Applicants"
+                      style={{ position: 'relative', width: '100%', maxWidth: '520px', maxHeight: 'calc(100vh - 48px)', overflowY: 'auto', background: '#fff', borderRadius: '20px', boxShadow: '0 24px 60px rgba(16,24,40,.25)', padding: '24px 26px', boxSizing: 'border-box' }}
                     >
-                      {jobDraftNoPhoto ? (
-                        <>
-                          <div
-                            style={{
-                              position: 'absolute',
-                              inset: '0',
-                              display: 'flex',
-                              flexDirection: 'column',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              gap: '6px',
-                              fontFamily: 'ui-monospace,SFMono-Regular,Menlo,monospace',
-                              fontSize: '11.5px',
-                              color: '#94A3B8',
-                              textAlign: 'center',
-                              padding: '10px',
-                            }}
-                          >
-                            <span style={{ fontSize: '20px', lineHeight: '1' }}>+</span>
-                            <span>company photo / logo — 1200×800</span>
-                          </div>
-                        </>
-                      ) : null}
-                    </div>
-                    <input type="file" accept="image/*" ref={jobPhotoRef} onChange={onJobPhotoFile} style={{ display: 'none' }} />
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '10px' }}>
-                      <button
-                        type="button"
-                        onClick={openJobPhoto}
-                        style={{
-                          background: '#fff',
-                          border: '1px solid #E2E5EA',
-                          borderRadius: '8px',
-                          padding: '8px 13px',
-                          fontFamily: 'inherit',
-                          fontSize: '12px',
-                          fontWeight: '700',
-                          color: '#0B1220',
-                          cursor: 'pointer',
-                        }}
-                      >
-                        Upload photo
-                      </button>
-                      {jobDraftHasPhoto ? (
-                        <>
-                          <button
-                            type="button"
-                            onClick={removeJobPhoto}
-                            style={{
-                              background: 'none',
-                              border: 'none',
-                              padding: '4px 2px',
-                              fontFamily: 'inherit',
-                              fontSize: '12px',
-                              fontWeight: '700',
-                              color: '#9F1239',
-                              cursor: 'pointer',
-                            }}
-                          >
-                            Remove
-                          </button>
-                        </>
-                      ) : null}
-                      <div style={{ fontSize: '11.5px', color: '#94A3B8', minWidth: '0', wordBreak: 'break-all' }}>{jobDraftPhotoName}</div>
-                    </div>
-                    <div
-                      style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(100%,190px),1fr))', gap: '14px', marginTop: '20px' }}
-                    >
-                      {(jobFormFields || []).map((jf, _i) => (
-                        <React.Fragment key={_i}>
-                          <div style={{ minWidth: '0', gridColumn: jf.span }}>
-                            <div
-                              style={{
-                                fontSize: '11px',
-                                fontWeight: '700',
-                                letterSpacing: '.4px',
-                                textTransform: 'uppercase',
-                                color: '#94A3B8',
-                                marginBottom: '6px',
-                              }}
-                            >
-                              {jf.label}
-                            </div>
-                            <input
-                              type="text"
-                              value={jf.value}
-                              onChange={jf.onChange}
-                              placeholder={jf.placeholder}
-                              style={{
-                                width: '100%',
-                                boxSizing: 'border-box',
-                                border: '1px solid #E2E5EA',
-                                borderRadius: '10px',
-                                padding: '11px 13px',
-                                fontFamily: 'inherit',
-                                fontSize: '13px',
-                                color: '#0B1220',
-                                background: '#fff',
-                                outline: 'none',
-                              }}
-                              {...fv(inputFocus)}
-                            />
-                          </div>
-                        </React.Fragment>
-                      ))}
-                      <div style={{ minWidth: '0', gridColumn: '1 / -1' }}>
-                        <div
-                          style={{
-                            fontSize: '11px',
-                            fontWeight: '700',
-                            letterSpacing: '.4px',
-                            textTransform: 'uppercase',
-                            color: '#94A3B8',
-                            marginBottom: '6px',
-                          }}
-                        >
-                          Skills / tags
+                      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px', marginBottom: '12px' }}>
+                        <div>
+                          <div style={{ fontFamily: 'Inter,sans-serif', fontWeight: '600', fontSize: '16px', color: '#0B1220' }}>{jobApps.label}</div>
+                          <div style={{ fontSize: '12.5px', color: '#64748B', marginTop: '3px' }}>{jobApps.title}</div>
                         </div>
-                        <input
-                          type="text"
-                          value={jobDraftTags}
-                          onChange={onJobDraftTags}
-                          placeholder="Comma separated — e.g. React, Figma, SQL"
-                          style={{
-                            width: '100%',
-                            boxSizing: 'border-box',
-                            border: '1px solid #E2E5EA',
-                            borderRadius: '10px',
-                            padding: '11px 13px',
-                            fontFamily: 'inherit',
-                            fontSize: '13px',
-                            color: '#0B1220',
-                            background: '#fff',
-                            outline: 'none',
-                          }}
-                          {...fv(inputFocus)}
-                        />
-                      </div>
-                      <div style={{ minWidth: '0', gridColumn: '1 / -1' }}>
-                        <div
-                          style={{
-                            fontSize: '11px',
-                            fontWeight: '700',
-                            letterSpacing: '.4px',
-                            textTransform: 'uppercase',
-                            color: '#94A3B8',
-                            marginBottom: '6px',
-                          }}
+                        <button type="button" aria-label="Close" onClick={jobApps.onClose}
+                          style={{ width: '34px', height: '34px', flex: 'none', border: 'none', borderRadius: '50%', background: '#F1F3F5', color: '#0B1220', fontSize: '18px', lineHeight: '1', cursor: 'pointer' }}
+                          {...hv({ background: '#E2E5EA' })}
                         >
-                          Description
-                        </div>
-                        <textarea
-                          value={jobDraftDesc}
-                          onChange={onJobDraftDesc}
-                          rows={4}
-                          placeholder="Role summary, requirements, how to apply…"
-                          style={{
-                            width: '100%',
-                            boxSizing: 'border-box',
-                            border: '1px solid #E2E5EA',
-                            borderRadius: '10px',
-                            padding: '12px 13px',
-                            fontFamily: 'inherit',
-                            fontSize: '13px',
-                            lineHeight: '1.6',
-                            color: '#0B1220',
-                            background: '#fff',
-                            outline: 'none',
-                            resize: 'vertical',
-                          }}
-                          {...fv(inputFocus)}
-                        />
+                          ×
+                        </button>
                       </div>
-                    </div>
-                    {jobFormError ? (
-                      <div role="alert" style={{ fontSize: '12.5px', color: '#B3261E', fontWeight: '600', marginTop: '14px' }}>
-                        {jobFormError}
+                      <div style={{ padding: '4px 14px', background: '#F7F8FA', border: '1px solid #E7E9ED', borderRadius: '12px' }}>
+                        {jobApps.rows.map((r) => (
+                          <div key={r.label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', padding: '10px 0', fontSize: '13px', borderBottom: '1px solid #EEF0F3' }}>
+                            <span style={{ color: '#64748B' }}>{r.label}</span>
+                            <span style={{ fontWeight: '700', color: '#0B1220' }}>{r.value}</span>
+                          </div>
+                        ))}
                       </div>
-                    ) : null}
-                    <div
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '14px',
-                        flexWrap: 'wrap',
-                        marginTop: '20px',
-                        paddingTop: '18px',
-                        borderTop: '1px solid #E7E9ED',
-                      }}
-                    >
-                      <button
-                        type="button"
-                        onClick={publishJob}
-                        style={{
-                          background: '#0F3D2E',
-                          color: '#fff',
-                          fontFamily: 'inherit',
-                          fontWeight: '700',
-                          fontSize: '13.5px',
-                          padding: '13px 24px',
-                          minHeight: '44px',
-                          border: 'none',
-                          borderRadius: '10px',
-                          cursor: 'pointer',
-                        }}
-                      >
-                        {jobSubmitLabel}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={clearJobDraft}
-                        style={{
-                          background: '#fff',
-                          color: '#0B1220',
-                          fontFamily: 'inherit',
-                          fontWeight: '600',
-                          fontSize: '13.5px',
-                          padding: '13px 20px',
-                          minHeight: '44px',
-                          border: '1px solid #E2E5EA',
-                          borderRadius: '10px',
-                          cursor: 'pointer',
-                        }}
-                      >
-                        {jobClearLabel}
-                      </button>
+                      <div style={{ fontSize: '12px', color: '#94A3B8', lineHeight: '1.5', marginTop: '12px' }}>{jobApps.note}</div>
                     </div>
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '18px', minWidth: '0' }}>
-                    <div
-                      style={{
-                        background: '#fff',
-                        border: '1px solid #E7E9ED',
-                        borderRadius: '16px',
-                        boxShadow: '0 1px 2px rgba(16,24,40,.04),0 8px 24px -12px rgba(16,24,40,.08)',
-                        padding: '22px 0 8px',
-                      }}
-                    >
-                      <div style={{ padding: '0 24px 16px' }}>
-                        <div style={{ fontFamily: 'Inter,sans-serif', fontWeight: '600', fontSize: '16px', color: '#0B1220' }}>
-                          Alumni submissions
-                        </div>
-                        <div style={{ fontSize: '13px', color: '#8A6D1F', marginTop: '4px', fontWeight: '600' }}>
-                          {jobPendingCount} awaiting approval before they appear on the board
-                        </div>
-                      </div>
-                      {(jobQueueRows || []).map((q, _i) => (
-                        <React.Fragment key={_i}>
-                          <div role="button" tabIndex={0} onKeyDown={onActivate(q.open)}
-                            onClick={q.open}
-                            style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '14px',
-                              padding: '14px 24px',
-                              borderTop: '1px solid #F2F4F5',
-                              cursor: 'pointer',
-                            }}
-                            {...hv(rowHover)}
-                          >
-                            <div
-                              style={{
-                                flex: 'none',
-                                width: '64px',
-                                height: '52px',
-                                borderRadius: '12px',
-                                overflow: 'hidden',
-                                position: 'relative',
-                                background: q.photoCss,
-                                border: '1px solid #E7E9ED',
-                              }}
+                ) : null}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(100%,420px),1fr))', gap: '18px', minWidth: '0', alignItems: 'start' }}>
+                  <div style={{ ...jobCard, padding: '22px 0 8px' }}>
+                    <div style={{ padding: '0 24px 16px' }}>
+                      <div style={{ fontFamily: 'Inter,sans-serif', fontWeight: '600', fontSize: '16px', color: '#0B1220' }}>Alumni submissions</div>
+                      <div style={{ fontSize: '13px', color: '#64748B', marginTop: '4px' }}>Awaiting approval before they appear on the board</div>
+                    </div>
+                    <div style={{ margin: '0 24px 16px', display: 'flex', alignItems: 'center', gap: '14px', background: '#FBF0D8', borderRadius: '14px', padding: '14px 18px' }}>
+                      <div style={{ fontFamily: 'Inter,sans-serif', fontWeight: '700', fontSize: '32px', lineHeight: '1', letterSpacing: '-1px', color: '#6B4E00' }}>{jobPendingCount}</div>
+                      <div style={{ fontSize: '12.5px', fontWeight: '700', color: '#6B4E00' }}>Alumni jobs pending</div>
+                    </div>
+                    {(jobQueueRows || []).map((q, _i) => (
+                      <React.Fragment key={_i}>
+                        <div role="button" tabIndex={0} onKeyDown={onActivate(q.open)} onClick={q.open}
+                          style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '14px 24px', borderTop: '1px solid #F2F4F5', cursor: 'pointer' }}
+                          {...hv(rowHover)}
+                        >
+                          <div style={{ flex: 'none', width: '64px', height: '52px', borderRadius: '12px', overflow: 'hidden', position: 'relative', background: q.photoCss, border: '1px solid #E7E9ED' }}>
+                            {q.noPhoto ? (
+                              <div style={{ position: 'absolute', inset: '0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'ui-monospace,SFMono-Regular,Menlo,monospace', fontSize: '8px', color: '#94A3B8' }}>
+                                no photo
+                              </div>
+                            ) : null}
+                          </div>
+                          <div style={{ minWidth: '0', flex: '1' }}>
+                            <div style={{ fontSize: '13.5px', fontWeight: '700', color: '#0B1220', lineHeight: '1.35' }}>{q.title}</div>
+                            <div style={{ fontSize: '12px', color: '#64748B', marginTop: '3px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{q.meta}</div>
+                          </div>
+                          <div style={{ flex: 'none', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <button type="button" onClick={q.open}
+                              style={{ background: '#0F3D2E', color: '#fff', fontFamily: 'inherit', fontSize: '12px', fontWeight: '700', padding: '8px 14px', border: 'none', borderRadius: '8px', cursor: 'pointer' }}
                             >
-                              {q.noPhoto ? (
+                              Review
+                            </button>
+                          </div>
+                        </div>
+                      </React.Fragment>
+                    ))}
+                  </div>
+                  <div style={{ ...jobCard, padding: '22px 0 8px' }}>
+                    <div style={{ padding: '0 24px 16px' }}>
+                      <div style={{ fontFamily: 'Inter,sans-serif', fontWeight: '600', fontSize: '16px', color: '#0B1220' }}>Live job postings</div>
+                      <div style={{ fontSize: '13px', color: '#64748B', marginTop: '4px' }}>Visible to all alumni on the Job Board</div>
+                    </div>
+                    <div style={{ margin: '0 24px 16px', display: 'flex', alignItems: 'center', gap: '14px', background: '#E1F3EA', borderRadius: '14px', padding: '14px 18px' }}>
+                      <div style={{ fontFamily: 'Inter,sans-serif', fontWeight: '700', fontSize: '32px', lineHeight: '1', letterSpacing: '-1px', color: '#0F6B4F' }}>{jobLiveCount}</div>
+                      <div style={{ fontSize: '12.5px', fontWeight: '700', color: '#0F6B4F' }}>Jobs live</div>
+                    </div>
+                    {(adminJobRows || []).map((jr) => (
+                      <div key={jr.key} style={{ padding: '14px 24px', borderTop: '1px solid #F2F4F5' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                          <div style={{ minWidth: '0', flex: '1', opacity: jr.dim }}>
+                            <div style={{ fontSize: '13.5px', fontWeight: '700', color: '#0B1220', lineHeight: '1.35' }}>{jr.title}</div>
+                            <div style={{ fontSize: '12px', color: '#64748B', marginTop: '3px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{jr.meta}</div>
+                          </div>
+                          <div style={{ flex: 'none', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
+                            <div style={{ fontSize: '11.5px', fontWeight: '700', color: jr.sourceColor, background: jr.sourceBg, padding: '5px 11px', borderRadius: '99px', whiteSpace: 'nowrap', opacity: jr.dim }}>{jr.source}</div>
+                            <div style={{ position: 'relative', display: 'flex' }}>
+                              <button type="button" aria-haspopup="menu" aria-expanded={jr.menuOpen} aria-label={`Review ${jr.title}`} onClick={jr.onMenu}
+                                style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: '#0F3D2E', color: '#fff', border: 'none', borderRadius: '8px', padding: '6px 13px', fontFamily: 'inherit', fontSize: '12px', fontWeight: '700', cursor: 'pointer' }}
+                                {...hv({ background: '#0B3125' })}
+                              >
+                                Review <span aria-hidden="true" style={{ fontSize: '9px' }}>▾</span>
+                              </button>
+                              {jr.menuOpen ? (
                                 <>
-                                  <div
-                                    style={{
-                                      position: 'absolute',
-                                      inset: '0',
-                                      display: 'flex',
-                                      alignItems: 'center',
-                                      justifyContent: 'center',
-                                      fontFamily: 'ui-monospace,SFMono-Regular,Menlo,monospace',
-                                      fontSize: '8px',
-                                      color: '#94A3B8',
-                                    }}
+                                  <div onClick={jr.onMenu} role="presentation" style={{ position: 'fixed', inset: '0', zIndex: '40' }} />
+                                  <div role="menu" aria-label={`Actions for ${jr.title}`}
+                                    style={{ position: 'absolute', right: '0', top: '36px', zIndex: '41', minWidth: '210px', background: '#fff', border: '1px solid #E7E9ED', borderRadius: '12px', boxShadow: '0 12px 32px rgba(16,24,40,.16)', padding: '6px', display: 'flex', flexDirection: 'column', gap: '2px' }}
                                   >
-                                    no photo
+                                    <button type="button" role="menuitem" onClick={jr.onEdit} style={menuItem('#0B1220')} {...hv({ background: '#F3F6F4' })}>Edit listing</button>
+                                    <button type="button" role="menuitem" onClick={jr.onApps} style={menuItem('#0B1220')} {...hv({ background: '#F3F6F4' })}>View {jr.appLabel}</button>
+                                    <div style={{ height: '1px', background: '#EEF0F3', margin: '2px 0' }} />
+                                    <button type="button" role="menuitem" onClick={jr.onToggle} style={menuItem(jr.toggleColor)} {...hv({ background: '#F8F8F8' })}>{jr.toggleLabel}</button>
+                                    <button type="button" role="menuitem" onClick={jr.onDelete} style={menuItem('#B3213C')} {...hv({ background: '#FEF0F2' })}>Delete listing</button>
                                   </div>
                                 </>
                               ) : null}
                             </div>
-                            <div style={{ minWidth: '0', flex: '1' }}>
-                              <div style={{ fontSize: '13.5px', fontWeight: '700', color: '#0B1220', lineHeight: '1.35' }}>{q.title}</div>
-                              <div
-                                style={{
-                                  fontSize: '12px',
-                                  color: '#64748B',
-                                  marginTop: '3px',
-                                  whiteSpace: 'nowrap',
-                                  overflow: 'hidden',
-                                  textOverflow: 'ellipsis',
-                                }}
-                              >
-                                {q.meta}
-                              </div>
-                            </div>
-                            <div style={{ flex: 'none', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                              <button
-                                type="button"
-                                onClick={q.open}
-                                style={{
-                                  background: '#0F3D2E',
-                                  color: '#fff',
-                                  fontFamily: 'inherit',
-                                  fontSize: '12px',
-                                  fontWeight: '700',
-                                  padding: '8px 14px',
-                                  border: 'none',
-                                  borderRadius: '8px',
-                                  cursor: 'pointer',
-                                }}
-                              >
-                                Review
-                              </button>
-                            </div>
                           </div>
-                        </React.Fragment>
-                      ))}
-                    </div>
-                    <div
-                      style={{
-                        background: '#fff',
-                        border: '1px solid #E7E9ED',
-                        borderRadius: '16px',
-                        boxShadow: '0 1px 2px rgba(16,24,40,.04),0 8px 24px -12px rgba(16,24,40,.08)',
-                        padding: '22px 0 8px',
-                      }}
-                    >
-                      <div style={{ padding: '0 24px 16px' }}>
-                        <div style={{ fontFamily: 'Inter,sans-serif', fontWeight: '600', fontSize: '16px', color: '#0B1220' }}>Live job postings</div>
-                        <div style={{ fontSize: '13px', color: '#64748B', marginTop: '4px' }}>Visible to all alumni on the Job Board</div>
+                        </div>
                       </div>
-                      {(adminJobRows || []).map((jr, _i) => (
-                        <React.Fragment key={_i}>
-                          <div
-                            style={{ display: 'flex', alignItems: 'center', gap: '10px 14px', padding: '14px 24px', borderTop: '1px solid #F2F4F5', flexWrap: 'wrap' }}
-                            {...hv(rowHover)}
-                          >
-                            <div style={{ minWidth: '0', flex: '1 1 200px' }}>
-                              <div style={{ fontSize: '13.5px', fontWeight: '700', color: '#0B1220', lineHeight: '1.35' }}>{jr.title}</div>
-                              <div
-                                style={{
-                                  fontSize: '12px',
-                                  color: '#64748B',
-                                  marginTop: '3px',
-                                  whiteSpace: 'nowrap',
-                                  overflow: 'hidden',
-                                  textOverflow: 'ellipsis',
-                                }}
-                              >
-                                {jr.meta}
-                              </div>
-                            </div>
-                            <div
-                              style={{
-                                flex: 'none',
-                                fontSize: '11.5px',
-                                fontWeight: '700',
-                                color: jr.sourceColor,
-                                background: jr.sourceBg,
-                                padding: '5px 11px',
-                                borderRadius: '99px',
-                                whiteSpace: 'nowrap',
-                              }}
-                            >
-                              {jr.source}
-                            </div>
-                            <div
-                              style={{
-                                flex: 'none',
-                                fontSize: '11.5px',
-                                fontWeight: '700',
-                                color: jr.statusColor,
-                                background: jr.statusBg,
-                                padding: '5px 11px',
-                                borderRadius: '99px',
-                                whiteSpace: 'nowrap',
-                              }}
-                            >
-                              {jr.statusLabel}
-                            </div>
-                            <div style={{ flex: 'none', display: 'flex', gap: '6px' }}>
-                              <button
-                                type="button"
-                                onClick={jr.onEdit}
-                                style={{
-                                  background: '#fff',
-                                  border: '1px solid #E2E5EA',
-                                  borderRadius: '8px',
-                                  padding: '7px 12px',
-                                  fontFamily: 'inherit',
-                                  fontSize: '12px',
-                                  fontWeight: '700',
-                                  color: '#0B1220',
-                                  cursor: 'pointer',
-                                }}
-                              >
-                                Edit
-                              </button>
-                              <button
-                                type="button"
-                                onClick={jr.onToggle}
-                                style={{
-                                  background: '#fff',
-                                  border: '1px solid #E2E5EA',
-                                  borderRadius: '8px',
-                                  padding: '7px 12px',
-                                  fontFamily: 'inherit',
-                                  fontSize: '12px',
-                                  fontWeight: '700',
-                                  color: '#8A6D1F',
-                                  cursor: 'pointer',
-                                }}
-                              >
-                                {jr.toggleLabel}
-                              </button>
-                              <button
-                                type="button"
-                                onClick={jr.onDelete}
-                                style={{
-                                  background: '#fff',
-                                  border: '1px solid #F6CFD8',
-                                  borderRadius: '8px',
-                                  padding: '7px 12px',
-                                  fontFamily: 'inherit',
-                                  fontSize: '12px',
-                                  fontWeight: '700',
-                                  color: '#B3213C',
-                                  cursor: 'pointer',
-                                }}
-                              >
-                                Delete
-                              </button>
-                            </div>
-                          </div>
-                        </React.Fragment>
-                      ))}
-                    </div>
+                    ))}
                   </div>
                 </div>
               </>

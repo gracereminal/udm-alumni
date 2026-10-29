@@ -1,41 +1,28 @@
-import React, { useEffect, useRef } from 'react';
+import React from 'react';
 import useChartTip from '../hooks/useChartTip';
-import { onActivate } from '../lib/a11y';
 
-const card = {
-  background: '#fff',
-  border: '1px solid #E7E9ED',
-  borderRadius: '16px',
-  boxShadow: '0 1px 2px rgba(16,24,40,.04),0 8px 24px -12px rgba(16,24,40,.08)',
-  padding: '22px 24px',
-};
-
-/** Admin dashboard forecast (lib/forecast.js): projected tiles, the employment rate trend chart and forward-looking signals. */
+/** Admin dashboard forecast dialog body (lib/forecast.js): projected tiles, the employment rate trend chart and forward-looking signals. */
 export default function ForecastPanel({ forecast, scopeLabel, onClose }) {
   const { tipH, vals: { chartsRef, hideTip, tipShow, tipTitle, tipValue, tipX, tipY } } = useChartTip();
-  const self = useRef(null);
-  useEffect(() => {
-    if (self.current && self.current.scrollIntoView) self.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }, []);
   const { tiles, chart, insights } = forecast;
 
   return (
-    <section ref={self} aria-label="Forecast" style={{ ...card, display: 'flex', flexDirection: 'column', gap: '18px', scrollMarginTop: '12px' }}>
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
+    <section aria-label="Forecast" style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px' }}>
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
-            <span style={{ fontFamily: 'Inter,sans-serif', fontWeight: '600', fontSize: '16px', color: '#0B1220' }}>Forecast · next 3 batches</span>
-            <span style={{ fontSize: '11px', fontWeight: '700', color: '#3E5C7A', background: '#E8EEF5', borderRadius: '999px', padding: '3px 8px' }}>Projection</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '9px', flexWrap: 'wrap' }}>
+            <span style={{ fontFamily: 'Inter,sans-serif', fontWeight: '700', fontSize: '20px', letterSpacing: '-.4px', color: '#0B1220' }}>Employability forecast</span>
+            <span style={{ fontSize: '11px', fontWeight: '700', color: '#3E5C7A', background: '#E8EEF5', borderRadius: '999px', padding: '3px 8px' }}>Next 3 batches</span>
           </div>
           <div style={{ fontSize: '13px', color: '#64748B', marginTop: '4px' }}>
             Linear trend of each batch&rsquo;s results · {scopeLabel}
           </div>
         </div>
-        <div role="button" tabIndex={0} aria-label="Close forecast" onKeyDown={onActivate(onClose)} onClick={onClose}
-          style={{ fontSize: '13px', fontWeight: '700', color: '#64748B', cursor: 'pointer', padding: '4px 6px' }}
+        <button type="button" aria-label="Close forecast" title="Close" onClick={onClose}
+          style={{ flex: 'none', width: '34px', height: '34px', borderRadius: '50%', border: '1px solid #E7E9ED', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#475569', fontSize: '18px', fontFamily: 'inherit' }}
         >
-          Close ✕
-        </div>
+          ×
+        </button>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(100%,200px),1fr))', gap: '12px' }}>

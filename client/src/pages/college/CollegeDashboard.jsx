@@ -7,6 +7,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { OUTREACH_METHOD, buildCollegeDash, contactedLabel, deptRange, deptRequests, emptyDeptData } from '../../lib/collegeDash';
 import { del, get, post } from '../../lib/api';
+import { RANGE_ERROR, pickYear } from '../../lib/batchRange';
 import { copyText, isEmail, mailtoUrl, messengerLabel, messengerUrl } from '../../lib/contact';
 
 const PAGES = {
@@ -33,6 +34,7 @@ export default function CollegeDashboard({ section = 'dashboard' }) {
   const { tipH, donutMove, vals: tipVals } = useChartTip();
   const [course, setCourse] = useState('all');
   const [range, setRange] = useState(() => { const r = deptRange({}); return { from: r.from, to: r.to }; });
+  const [rangeError, setRangeError] = useState('');
   const [hover, setHover] = useState(null);
   const [data, setData] = useState(emptyDeptData);
   const [reloadKey, setReloadKey] = useState(0);
@@ -67,6 +69,11 @@ export default function CollegeDashboard({ section = 'dashboard' }) {
   const close = () => setTarget(null);
   const done = (msg) => { close(); toast(msg); setReloadKey((k) => k + 1); };
   const failed = (err) => toast(err.message || 'Something went wrong. Please try again.', false);
+  const onYear = (key) => (e) => {
+    const next = pickYear(range, key, e.target.value);
+    setRangeError(next ? '' : RANGE_ERROR);
+    if (next) setRange(next);
+  };
 
   const { vals, slices } = buildCollegeDash({ course, from: range.from, to: range.to }, data, {
     user, setHover, hoverId: hover, tipH,
@@ -111,8 +118,9 @@ export default function CollegeDashboard({ section = 'dashboard' }) {
     showInsights: page.insights,
     showOutreach: page.outreach,
     onDeptCourseChange: (e) => { setCourse(e.target.value); setHover(null); },
-    onDeptFromChange: (e) => setRange((r) => ({ ...r, from: e.target.value })),
-    onDeptToChange: (e) => setRange((r) => ({ ...r, to: e.target.value })),
+    onDeptFromChange: onYear('from'),
+    onDeptToChange: onYear('to'),
+    rangeError,
     onDeptStatusMove: donutMove(slices, 'edge'),
     goRecords: () => navigate('/college/records'),
     goReports: () => navigate('/college/reports', { state: { course, from: range.from, to: range.to } }),

@@ -15,8 +15,8 @@ const YRS = () => [0, 1, 2, 3, 4, 5].map((i) => thisYear() - 5 + i);
  */
 export function deptRange(st) {
   const years = YRS();
-  const f = years.includes(Number(st.from)) ? Number(st.from) : years[years.length - 1];
-  const t = years.includes(Number(st.to)) ? Number(st.to) : years[0];
+  const f = years.includes(Number(st.from)) ? Number(st.from) : years[0];
+  const t = years.includes(Number(st.to)) ? Number(st.to) : years[years.length - 1];
   const lo = Math.min(f, t);
   const hi = Math.max(f, t);
   const all = lo === years[0] && hi === years[years.length - 1];
@@ -154,8 +154,8 @@ export function buildCollegeDash(st, data, fn) {
       wire('d-traced', { label: 'Graduates traced', value: N(S.traced), unit: `/ ${N(S.total)} total`, hasBar: true, isText: false, pct: `${fx(S.coverage ?? 0)}%`, context: `${fx(S.coverage ?? 0)}% of records reached` }),
     ],
     deptFromVal: String(rg.from), deptToVal: String(rg.to),
-    deptFromOpts: [...years].reverse().map((y) => ({ value: String(y), label: `From ${y}` })),
-    deptToOpts: [...years].reverse().map((y) => ({ value: String(y), label: `To ${y}` })),
+    deptFromOpts: years.map((y) => ({ value: String(y), label: `From ${y}` })),
+    deptToOpts: years.map((y) => ({ value: String(y), label: `To ${y}` })),
     deptBatchNote: `${bl} · ${code} · change the batch range in the filter bar above`,
     deptOutcome: [
       out('Unemployed', S.notEmployed, lab, '#D9620B', '#FFF8F1', 'Still seeking work · % of labor force', '#B4500A'),

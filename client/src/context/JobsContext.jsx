@@ -40,6 +40,8 @@ function toJob(j) {
     publishedAt: j.publishedAt || j.createdAt, tags: j.tags || [], note: j.note || (j.source === 'alumni' && j.by ? `Referred by ${j.by}${j.batch ? ` · ${j.batch}` : ''}` : ''),
     desc: j.desc || '', deadline: fmtDate(j.deadline), deadlineIso: j.deadline, applyVia: j.applyVia || '', messenger: j.messenger || '', status: j.status, photo: j.photo, source: j.source,
     by: j.by, batch: j.batch, email: j.email || '', when: ago(j.createdAt, 'Submitted'), approvalStatus: j.approvalStatus, saved: j.saved, applied: toApplication(j.applied), mine: j.mine,
+    // Staff only: how many alumni saved the posting / marked an application as sent.
+    saves: j.saves || 0, applications: j.applications || 0,
   };
 }
 

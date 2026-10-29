@@ -1,11 +1,12 @@
 import React from 'react';
 import Pager from '../components/Pager';
-import { hv, fv } from '../lib/stateStyle';
+import { hv } from '../lib/stateStyle';
 import NavSidebar from '../components/NavSidebar';
 import SearchPill from '../components/topbar/SearchPill';
 import NotificationBell from '../components/topbar/NotificationBell';
 import UserChip from '../components/topbar/UserChip';
 import { onActivate } from '../lib/a11y';
+import JobComposerDialog from '../components/JobComposerDialog';
 
 /* View layer for the "Jobs" screen — converted from "Alumni Tracer Mockups.dc.html". */
 export default function JobsView(v) {
@@ -13,31 +14,17 @@ export default function JobsView(v) {
     bookmarkHover,
     filtersActive,
     goldHover,
-    inputFocus,
-    jobDraftHasPhoto,
-    jobDraftNoPhoto,
-    jobDraftPhotoCss,
-    jobDraftPhotoName,
-    jobDraftTags,
+    jobComposer,
     jobFilters,
     jobFormButtonLabel,
-    jobFormFields,
-    jobPhotoRef,
     jobQuery,
     jobSelects,
     jobStats,
     jobsCountLabel,
     jobsList,
-    jobsPagingLabel,
     jobPage,
     jobPages,
     setJobPage,
-    jobFormError,
-    onJobDraftTags,
-    onJobPhotoFile,
-    openJobPhoto,
-    publishJob,
-    removeJobPhoto,
     resetFilters,
     resetHover,
     savedCount,
@@ -45,7 +32,6 @@ export default function JobsView(v) {
     savedFilterBorder,
     savedFilterFill,
     setJobQuery,
-    showJobForm,
     toggleJobForm,
     toggleSavedOnly,
   } = v;
@@ -223,256 +209,7 @@ export default function JobsView(v) {
                   </button>
                 </div>
               </div>
-              {showJobForm ? (
-                <>
-                  <div
-                    style={{
-                      background: '#fff',
-                      border: '1px solid #E7E9ED',
-                      borderRadius: '16px',
-                      boxShadow: '0 1px 2px rgba(16,24,40,.04),0 8px 24px -12px rgba(16,24,40,.08)',
-                      padding: '24px 26px',
-                      marginBottom: '14px',
-                    }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', marginBottom: '4px' }}>
-                      <div style={{ fontFamily: 'Inter,sans-serif', fontWeight: '600', fontSize: '16px', color: '#0B1220' }}>Post a job opening</div>
-                      <div
-                        style={{
-                          fontSize: '10.5px',
-                          fontWeight: '700',
-                          letterSpacing: '.5px',
-                          color: '#475569',
-                          background: '#EEF2F6',
-                          padding: '4px 10px',
-                          borderRadius: '8px',
-                        }}
-                      >
-                        GOES TO ALUMNI AFFAIRS FOR REVIEW
-                      </div>
-                    </div>
-                    <div style={{ fontSize: '12.5px', color: '#64748B', marginBottom: '14px' }}>
-                      Attach a company photo or logo so your posting stands out on the board.
-                    </div>
-                    <div style={{ display: 'flex', gap: '22px', flexWrap: 'wrap', alignItems: 'flex-start', marginBottom: '14px' }}>
-                      <div style={{ flex: 'none', width: '210px' }}>
-                        <div role="button" tabIndex={0} onKeyDown={onActivate(openJobPhoto)}
-                          onClick={openJobPhoto}
-                          title="Upload job photo"
-                          style={{
-                            width: '210px',
-                            height: '140px',
-                            borderRadius: '14px',
-                            position: 'relative',
-                            cursor: 'pointer',
-                            overflow: 'hidden',
-                            border: '1px solid #E2E5EA',
-                            background: jobDraftPhotoCss,
-                          }}
-                        >
-                          {jobDraftNoPhoto ? (
-                            <>
-                              <div
-                                style={{
-                                  position: 'absolute',
-                                  inset: '0',
-                                  display: 'flex',
-                                  flexDirection: 'column',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                  gap: '6px',
-                                  fontFamily: 'ui-monospace,SFMono-Regular,Menlo,monospace',
-                                  fontSize: '11px',
-                                  color: '#94A3B8',
-                                  textAlign: 'center',
-                                  padding: '10px',
-                                }}
-                              >
-                                <span style={{ fontSize: '18px', lineHeight: '1' }}>+</span>
-                                <span>job photo — 1200×800</span>
-                              </div>
-                            </>
-                          ) : null}
-                        </div>
-                        <input type="file" accept="image/*" ref={jobPhotoRef} onChange={onJobPhotoFile} style={{ display: 'none' }} />
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '9px' }}>
-                          <button
-                            type="button"
-                            onClick={openJobPhoto}
-                            style={{
-                              background: '#fff',
-                              border: '1px solid #E2E5EA',
-                              borderRadius: '8px',
-                              padding: '7px 12px',
-                              fontFamily: 'inherit',
-                              fontSize: '12px',
-                              fontWeight: '700',
-                              color: '#0B1220',
-                              cursor: 'pointer',
-                            }}
-                          >
-                            Upload photo
-                          </button>
-                          {jobDraftHasPhoto ? (
-                            <>
-                              <button
-                                type="button"
-                                onClick={removeJobPhoto}
-                                style={{
-                                  background: 'none',
-                                  border: 'none',
-                                  padding: '4px 2px',
-                                  fontFamily: 'inherit',
-                                  fontSize: '12px',
-                                  fontWeight: '700',
-                                  color: '#9F1239',
-                                  cursor: 'pointer',
-                                }}
-                              >
-                                Remove
-                              </button>
-                            </>
-                          ) : null}
-                        </div>
-                        <div style={{ fontSize: '11.5px', color: '#94A3B8', marginTop: '6px', wordBreak: 'break-all' }}>{jobDraftPhotoName}</div>
-                      </div>
-                      <div
-                        style={{
-                          flex: '1',
-                          minWidth: '280px',
-                          display: 'grid',
-                          gridTemplateColumns: 'repeat(auto-fit,minmax(min(100%,200px),1fr))',
-                          gap: '14px',
-                        }}
-                      >
-                        {(jobFormFields || []).map((fl, _i) => (
-                          <React.Fragment key={_i}>
-                            <div style={{ minWidth: '0', gridColumn: fl.span }}>
-                              <div
-                                style={{
-                                  fontSize: '11px',
-                                  fontWeight: '700',
-                                  letterSpacing: '.4px',
-                                  textTransform: 'uppercase',
-                                  color: '#94A3B8',
-                                  marginBottom: '6px',
-                                }}
-                              >
-                                {fl.label}
-                              </div>
-                              <input
-                                type="text"
-                                value={fl.value}
-                                onChange={fl.onChange}
-                                placeholder={fl.placeholder}
-                                style={{
-                                  width: '100%',
-                                  boxSizing: 'border-box',
-                                  border: '1px solid #E2E5EA',
-                                  borderRadius: '10px',
-                                  padding: '11px 13px',
-                                  fontFamily: 'inherit',
-                                  fontSize: '13px',
-                                  color: '#0B1220',
-                                  background: '#fff',
-                                  outline: 'none',
-                                }}
-                                {...fv(inputFocus)}
-                              />
-                            </div>
-                          </React.Fragment>
-                        ))}
-                        <div style={{ minWidth: '0', gridColumn: '1 / -1' }}>
-                          <div
-                            style={{
-                              fontSize: '11px',
-                              fontWeight: '700',
-                              letterSpacing: '.4px',
-                              textTransform: 'uppercase',
-                              color: '#94A3B8',
-                              marginBottom: '6px',
-                            }}
-                          >
-                            Skills / tags
-                          </div>
-                          <input
-                            type="text"
-                            value={jobDraftTags}
-                            onChange={onJobDraftTags}
-                            placeholder="Comma separated — e.g. React, Figma, SQL"
-                            style={{
-                              width: '100%',
-                              boxSizing: 'border-box',
-                              border: '1px solid #E2E5EA',
-                              borderRadius: '10px',
-                              padding: '11px 13px',
-                              fontFamily: 'inherit',
-                              fontSize: '13px',
-                              color: '#0B1220',
-                              background: '#fff',
-                              outline: 'none',
-                            }}
-                            {...fv(inputFocus)}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                    <div
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '14px',
-                        flexWrap: 'wrap',
-                        paddingTop: '18px',
-                        borderTop: '1px solid #E7E9ED',
-                      }}
-                    >
-                      <button
-                        type="button"
-                        onClick={publishJob}
-                        style={{
-                          background: '#0F3D2E',
-                          color: '#fff',
-                          fontFamily: 'inherit',
-                          fontWeight: '700',
-                          fontSize: '13.5px',
-                          padding: '13px 24px',
-                          minHeight: '44px',
-                          border: 'none',
-                          borderRadius: '10px',
-                          cursor: 'pointer',
-                        }}
-                      >
-                        Submit for review
-                      </button>
-                      <button
-                        type="button"
-                        onClick={toggleJobForm}
-                        style={{
-                          background: '#fff',
-                          color: '#0B1220',
-                          fontFamily: 'inherit',
-                          fontWeight: '600',
-                          fontSize: '13.5px',
-                          padding: '13px 20px',
-                          minHeight: '44px',
-                          border: '1px solid #E2E5EA',
-                          borderRadius: '10px',
-                          cursor: 'pointer',
-                        }}
-                      >
-                        Cancel
-                      </button>
-                      <div style={{ fontSize: '12px', color: '#94A3B8' }}>Alumni Affairs reviews every posting before it goes live on the board.</div>
-                      {jobFormError ? (
-                        <div role="alert" style={{ fontSize: '12.5px', color: '#B3261E', fontWeight: '600' }}>
-                          {jobFormError}
-                        </div>
-                      ) : null}
-                    </div>
-                  </div>
-                </>
-              ) : null}
+              {jobComposer ? <JobComposerDialog {...jobComposer} /> : null}
               <div
                 style={{
                   background: '#fff',
@@ -488,7 +225,25 @@ export default function JobsView(v) {
               >
                 {(jobStats || []).map((st, _i) => (
                   <React.Fragment key={_i}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: '0' }}>
+                    <div
+                      onMouseEnter={st.onEnter}
+                      onMouseLeave={st.onLeave}
+                      aria-describedby={st.hint ? `job-stat-hint-${_i}` : undefined}
+                      style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: '4px', minWidth: '0', cursor: st.hint ? 'help' : 'default' }}
+                    >
+                      {st.hint ? (
+                        <div
+                          id={`job-stat-hint-${_i}`}
+                          role="tooltip"
+                          style={{
+                            display: st.showHint ? 'block' : 'none',
+                            position: 'absolute', left: '0', bottom: 'calc(100% + 10px)', zIndex: '20', width: '240px', background: '#0B1220', color: '#fff',
+                            fontSize: '12px', lineHeight: '1.5', fontWeight: '500', padding: '10px 12px', borderRadius: '10px', boxShadow: '0 8px 24px rgba(16,24,40,.25)', pointerEvents: 'none',
+                          }}
+                        >
+                          {st.hint}
+                        </div>
+                      ) : null}
                       <div style={{ fontSize: '11px', fontWeight: '700', letterSpacing: '.5px', textTransform: 'uppercase', color: '#94A3B8' }}>
                         {st.label}
                       </div>
@@ -619,7 +374,10 @@ export default function JobsView(v) {
                     background: '#F1F5F3',
                     border: '1px solid #E7E9ED',
                     borderRadius: '999px',
-                    flexWrap: 'wrap',
+                    flexWrap: 'nowrap',
+                    overflowX: 'auto',
+                    scrollbarWidth: 'none',
+                    minWidth: '0',
                     maxWidth: '100%',
                     boxSizing: 'border-box',
                   }}
@@ -753,20 +511,27 @@ export default function JobsView(v) {
                           >
                             {job.type}
                           </div>
-                          <div
-                            style={{
-                              fontSize: '11px',
-                              fontWeight: '700',
-                              padding: '3px 9px',
-                              borderRadius: '8px',
-                              whiteSpace: 'nowrap',
-                              color: job.badgeColor,
-                              background: job.badgeBg,
-                              border: `1px solid ${job.badgeBorder}`,
-                            }}
-                          >
-                            {job.badge}
-                          </div>
+                          {job.closes ? (
+                            <div style={{ fontSize: '11px', fontWeight: '700', padding: '3px 9px', borderRadius: '8px', whiteSpace: 'nowrap', color: job.closes.color, background: job.closes.bg }}>
+                              {job.closes.label}
+                            </div>
+                          ) : null}
+                          {job.isUrgent ? (
+                            <div
+                              style={{
+                                fontSize: '11px',
+                                fontWeight: '700',
+                                padding: '3px 9px',
+                                borderRadius: '8px',
+                                whiteSpace: 'nowrap',
+                                color: job.badgeColor,
+                                background: job.badgeBg,
+                                border: `1px solid ${job.badgeBorder}`,
+                              }}
+                            >
+                              {job.badge}
+                            </div>
+                          ) : null}
                         </div>
                         <div style={{ fontSize: '13px', color: '#64748B', marginBottom: '10px' }}>
                           {job.company} · {job.location} · {job.posted}
@@ -886,7 +651,7 @@ export default function JobsView(v) {
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'space-between',
+                  justifyContent: 'flex-end',
                   gap: '16px',
                   flexWrap: 'wrap',
                   marginTop: '22px',
@@ -894,7 +659,6 @@ export default function JobsView(v) {
                   borderTop: '1px solid #E7E9ED',
                 }}
               >
-                <div style={{ fontSize: '12.5px', color: '#64748B' }}>{jobsPagingLabel}</div>
                 <Pager page={jobPage} pages={jobPages} onPage={setJobPage} />
               </div>
             </div>

@@ -6,6 +6,13 @@ import NotificationBell from '../components/topbar/NotificationBell';
 import UserChip from '../components/topbar/UserChip';
 import { onActivate } from '../lib/a11y';
 
+/* Dark green icon chip in front of the card titles, and the lifted shadow on feed / job rows. */
+const sectionIcon = {
+  width: '34px', height: '34px', borderRadius: '11px', background: '#0F3D2E', color: '#F0C428',
+  display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none',
+};
+const liftShadow = '0 1px 2px rgba(16,24,40,.04),0 8px 20px -14px rgba(0,40,33,.25)';
+
 /* View layer for the "AlumniDashboard" screen — converted from "Alumni Tracer Mockups.dc.html". */
 export default function AlumniDashboardView(v) {
   const {
@@ -20,7 +27,6 @@ export default function AlumniDashboardView(v) {
     avatarInitials,
     dashBatch,
     dashJobs,
-    dashJobsOpen,
     dashJobsBrowseLabel,
     dashMetrics,
     dashStatus,
@@ -35,7 +41,6 @@ export default function AlumniDashboardView(v) {
     hasAvatar,
     jobsCardShadow,
     jobsOrder,
-    jobsTitleSize,
     noAvatar,
     showSurveyBanner,
     showSurveyGhostCta,
@@ -249,28 +254,6 @@ export default function AlumniDashboardView(v) {
                     flexWrap: 'wrap',
                   }}
                 >
-                  <div role="button" tabIndex={0} onKeyDown={onActivate(dismissSurveyBanner)}
-                    onClick={dismissSurveyBanner}
-                    title="Remind me later"
-                    style={{
-                      position: 'absolute',
-                      top: '12px',
-                      right: '14px',
-                      width: '26px',
-                      height: '26px',
-                      borderRadius: '8px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: '15px',
-                      fontWeight: '700',
-                      color: 'rgba(61,47,8,.5)',
-                      cursor: 'pointer',
-                    }}
-                    {...hv({ background: 'rgba(138,109,31,.14)' })}
-                  >
-                    ×
-                  </div>
                   <div style={{ minWidth: '240px', flex: '1' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
                       <div
@@ -339,35 +322,38 @@ export default function AlumniDashboardView(v) {
                 <React.Fragment key={_i}>
                   <div
                     style={{
-                      background: '#fff',
+                      position: 'relative',
+                      overflow: 'hidden',
+                      background: `radial-gradient(160px 120px at 100% 0%,${m.tagBg},rgba(255,255,255,0) 72%),#fff`,
                       border: '1px solid #E7E9ED',
-                      borderRadius: '16px',
-                      boxShadow: '0 1px 2px rgba(16,24,40,.04),0 8px 24px -12px rgba(16,24,40,.08)',
-                      padding: '24px',
+                      borderRadius: '20px',
+                      boxShadow: '0 1px 2px rgba(16,24,40,.04),0 14px 30px -16px rgba(0,40,33,.22)',
+                      padding: '14px 16px',
                       minWidth: '0',
+                      display: 'flex',
+                      flexDirection: 'column',
                     }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', marginBottom: '10px' }}>
-                      <div style={{ fontSize: '13.5px', fontWeight: '600', color: '#0B1220' }}>{m.label}</div>
-                      <div
-                        title="More options"
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
+                      <span
                         style={{
-                          width: '28px',
-                          height: '28px',
-                          borderRadius: '8px',
+                          width: '34px',
+                          height: '34px',
+                          borderRadius: '11px',
+                          background: m.tagBg,
+                          color: m.tagColor,
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          color: '#94A3B8',
-                          cursor: 'pointer',
                           flex: 'none',
-                          fontSize: '17px',
-                          lineHeight: '1',
-                          fontWeight: '700',
                         }}
-                        {...hv({ background: '#F1F5F3', color: '#0B1220' })}
                       >
-                        ⋮
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ width: '17px', height: '17px' }}>
+                          <path d={m.icon} />
+                        </svg>
+                      </span>
+                      <div style={{ fontSize: '11px', fontWeight: '700', letterSpacing: '.7px', textTransform: 'uppercase', color: '#64748B', lineHeight: '1.3' }}>
+                        {m.label}
                       </div>
                     </div>
                     <div
@@ -375,29 +361,39 @@ export default function AlumniDashboardView(v) {
                       style={{
                         fontFamily: 'Inter,sans-serif',
                         fontWeight: '700',
-                        fontSize: '24px',
-                        lineHeight: '1.15',
+                        fontSize: '22px',
+                        lineHeight: '1.2',
                         letterSpacing: '-.5px',
                         color: m.valueColor,
-                        marginBottom: '4px',
+                        marginBottom: '3px',
+                        textWrap: 'balance',
                       }}
                     >
                       {m.value}
                     </div>
-                    <div style={{ fontSize: '12px', color: '#64748B', marginBottom: '10px' }}>{m.sub}</div>
-                    <div
-                      style={{
-                        fontSize: '11px',
-                        fontWeight: '700',
-                        color: m.tagColor,
-                        background: m.tagBg,
-                        padding: '4px 10px',
-                        borderRadius: '999px',
-                        width: 'fit-content',
-                      }}
-                    >
-                      {m.tag}
-                    </div>
+                    <div style={{ fontSize: '12px', lineHeight: '1.4', color: '#64748B', textWrap: 'pretty', flex: '1' }}>{m.sub}</div>
+                    {m.tag ? (
+                      <div
+                        style={{
+                          fontSize: '10.5px',
+                          fontWeight: '700',
+                          letterSpacing: '.4px',
+                          color: m.tagColor,
+                          background: m.tagBg,
+                          padding: '4px 10px',
+                          borderRadius: '999px',
+                          width: 'fit-content',
+                          maxWidth: '100%',
+                          boxSizing: 'border-box',
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          marginTop: '10px',
+                        }}
+                      >
+                        {m.tag}
+                      </div>
+                    ) : null}
                   </div>
                 </React.Fragment>
               ))}
@@ -413,8 +409,15 @@ export default function AlumniDashboardView(v) {
                     padding: '24px',
                   }}
                 >
-                  <div style={{ fontFamily: 'Inter,sans-serif', fontWeight: '700', fontSize: '15px', color: '#0B1220', marginBottom: '10px' }}>
-                    Announcements & Events
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '14px' }}>
+                    <span style={sectionIcon}>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ width: '17px', height: '17px' }}>
+                        <path d="M3 5h18v14H3z M3 9h18 M8 3v4 M16 3v4" />
+                      </svg>
+                    </span>
+                    <div style={{ fontFamily: 'Inter,sans-serif', fontWeight: '700', fontSize: '16px', letterSpacing: '-.2px', color: '#0B1220' }}>
+                      Announcements & Events
+                    </div>
                   </div>
                   <div
                     role="tablist"
@@ -485,9 +488,10 @@ export default function AlumniDashboardView(v) {
                         <div role="button" tabIndex={0} onKeyDown={onActivate(an.onOpen)}
                           onClick={an.onOpen}
                           style={{
-                            background: '#F7FAF8',
-                            border: '1px solid #EDF2EF',
-                            borderRadius: '14px',
+                            background: '#fff',
+                            border: '1px solid #E3ECE7',
+                            boxShadow: liftShadow,
+                            borderRadius: '16px',
                             padding: '14px 16px',
                             display: 'flex',
                             gap: '14px',
@@ -502,9 +506,9 @@ export default function AlumniDashboardView(v) {
                               flex: 'none',
                               width: '52px',
                               height: '56px',
-                              borderRadius: '11px',
-                              background: '#fff',
-                              border: '1px solid #E3ECE7',
+                              borderRadius: '12px',
+                              background: '#0F3D2E',
+                              border: '0',
                               boxSizing: 'border-box',
                               display: 'flex',
                               flexDirection: 'column',
@@ -514,11 +518,11 @@ export default function AlumniDashboardView(v) {
                             }}
                           >
                             <div
-                              style={{ fontSize: '10.5px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', letterSpacing: '.8px' }}
+                              style={{ fontSize: '10.5px', fontWeight: '700', color: '#F0C428', textTransform: 'uppercase', letterSpacing: '.8px' }}
                             >
                               {an.month}
                             </div>
-                            <div style={{ fontFamily: 'Inter,sans-serif', fontSize: '21px', fontWeight: '700', color: '#0F3D2E', lineHeight: '1' }}>
+                            <div style={{ fontFamily: 'Inter,sans-serif', fontSize: '21px', fontWeight: '700', color: '#fff', lineHeight: '1' }}>
                               {an.day}
                             </div>
                           </div>
@@ -655,7 +659,7 @@ export default function AlumniDashboardView(v) {
                           cursor: 'pointer',
                         }}
                       >
-                        View all events →
+                        View all →
                       </div>
                     </>
                   ) : null}
@@ -683,19 +687,13 @@ export default function AlumniDashboardView(v) {
                     </>
                   ) : null}
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', gap: '12px' }}>
-                    <div style={{ fontFamily: 'Inter,sans-serif', fontWeight: '700', fontSize: jobsTitleSize, color: '#0B1220' }}>Job Board</div>
-                    <div
-                      style={{
-                        fontSize: '10px',
-                        fontWeight: '700',
-                        color: '#0F3D2E',
-                        background: '#E6F0EB',
-                        padding: '4px 9px',
-                        borderRadius: '6px',
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      {dashJobsOpen} OPEN
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <span style={sectionIcon}>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ width: '17px', height: '17px' }}>
+                          <path d="M3 8h18v11H3z M8 8V6a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2 M3 13h18" />
+                        </svg>
+                      </span>
+                      <div style={{ fontFamily: 'Inter,sans-serif', fontWeight: '700', fontSize: '16px', letterSpacing: '-.2px', color: '#0B1220' }}>Job Board</div>
                     </div>
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '14px' }}>
@@ -708,9 +706,10 @@ export default function AlumniDashboardView(v) {
                       <React.Fragment key={_i}>
                         <div
                           style={{
-                            background: '#F7FAF8',
-                            border: '1px solid #EDF2EF',
-                            borderRadius: '14px',
+                            background: '#fff',
+                            border: '1px solid #E3ECE7',
+                            boxShadow: liftShadow,
+                            borderRadius: '16px',
                             padding: '13px 14px',
                             display: 'flex',
                             alignItems: 'center',
@@ -730,6 +729,7 @@ export default function AlumniDashboardView(v) {
                                 alignItems: 'center',
                                 justifyContent: 'center',
                                 flex: 'none',
+                                border: '1px solid #CFE3DA',
                               }}
                             >
                               <svg

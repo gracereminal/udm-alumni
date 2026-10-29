@@ -2,13 +2,22 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AdminDashboardView from '../../views/AdminDashboardView';
 import useChartTip from '../../hooks/useChartTip';
-import { ADMIN_YEARS, adminRequests, adminScope, buildAdminDash, buildKpis, emptyAdminData } from '../../lib/adminDash';
+import {
+  ADMIN_YEARS, adminRequests, adminScope, buildAdminDash, buildKpiCards, buildPopulation, detailVals, emptyAdminData, populationRequests,
+} from '../../lib/adminDash';
 import { get } from '../../lib/api';
 import { buildForecast } from '../../lib/forecast';
+import { RANGE_ERROR, pickYear } from '../../lib/batchRange';
 import { CATALOG } from '../../data/colleges';
 import { useToast } from '../../context/ToastContext';
 
-/** Admin Dashboard — system-wide KPIs, employability, coverage, outcomes and recent registrations (GET /stats/*). */
+/** Fetches every path of `reqs` (an object of API paths) and returns the responses under the same keys. */
+const fetchAll = (reqs) => {
+  const keys = Object.keys(reqs);
+  return Promise.all(keys.map((k) => get(reqs[k]))).then((res) => Object.fromEntries(keys.map((k, i) => [k, res[i]])));
+};
+
+/** Admin Dashboard — system-wide KPIs, employability, coverage, outcomes and inclusion (GET /stats/*), on one screen. */
 export default function AdminDashboard() {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -17,45 +26,75 @@ export default function AdminDashboard() {
   const [hover, setHover] = useState(null);
   const [data, setData] = useState(emptyAdminData);
   const [forecastOpen, setForecastOpen] = useState(false);
+  const [det, setDet] = useState(null);
+  const [popOpen, setPopOpen] = useState(false);
+  const [pop, setPop] = useState(null);
+  const [rangeError, setRangeError] = useState('');
+  const onYear = (key) => (e) => {
+    const next = pickYear(sel, key, e.target.value);
+    setRangeError(next ? '' : RANGE_ERROR);
+    if (next) setSel(next);
+  };
 
   const reqs = adminRequests(adminScope(sel));
   const reqKey = JSON.stringify(reqs);
   useEffect(() => {
     let live = true;
-    const r = JSON.parse(reqKey);
-    const keys = Object.keys(r);
-    Promise.all(keys.map((k) => get(r[k])))
-      .then((res) => { if (live) setData(Object.fromEntries(keys.map((k, i) => [k, res[i]]))); })
+    fetchAll(JSON.parse(reqKey))
+      .then((res) => { if (live) setData(res); })
       .catch((err) => { if (live) toast(err.message, false); });
     return () => { live = false; };
   }, [reqKey, toast]);
 
   const d = buildAdminDash(sel, data, tipH);
+  const years = d.vals.batchBars.map((b) => Number(b.label));
+
+  // The population dialog's breakdowns load only while it is open.
+  const popKey = popOpen ? JSON.stringify(populationRequests(d.scope, years)) : null;
+  useEffect(() => {
+    if (!popKey) return undefined;
+    let live = true;
+    setPop(null);
+    fetchAll(JSON.parse(popKey))
+      .then((res) => { if (live) setPop(res); })
+      .catch((err) => { if (live) toast(err.message, false); });
+    return () => { live = false; };
+  }, [popKey, toast]);
+
   const goRecords = () => navigate('/admin/records');
   const reportScope = { college: d.scope.college, course: d.scope.course, from: d.scope.from, to: d.scope.to };
+  const goReports = () => navigate('/admin/reports', { state: reportScope });
 
   const v = {
     ...d.vals,
-    ...buildKpis(d.admK, hover, setHover, goRecords),
+    ...buildKpiCards(d.admK, d.vals, data.units.data, {
+      hoverId: hover, setHover, goRecords,
+      openDetail: setDet,
+      openPopulation: () => setPopOpen(true),
+      openForecast: () => setForecastOpen(true),
+    }),
+    ...detailVals(det),
+    adDetClose: () => setDet(null),
+    adDetGo: () => { setDet(null); goReports(); },
+    popOpen,
+    ...(popOpen ? buildPopulation(d.admK, data.byBatch.data, years, pop) : {}),
+    popClose: () => setPopOpen(false),
     ...tipVals,
     admOnCollege: (e) => setSel((s) => ({ ...s, college: e.target.value, course: 'all' })),
     admOnCourse: (e) => setSel((s) => ({ ...s, course: e.target.value })),
-    admOnFrom: (e) => setSel((s) => ({ ...s, from: e.target.value })),
-    admOnTo: (e) => setSel((s) => ({ ...s, to: e.target.value })),
+    admOnFrom: onYear('from'),
+    admOnTo: onYear('to'),
+    rangeError,
     admOnStatus: (e) => setSel((s) => ({ ...s, status: e.target.value })),
     onStatusMove: donutMove(d.slices, 'ring'),
-    goRecords,
     // Hand the dashboard's scope to Reports so the export matches what is on screen.
-    goReports: () => navigate('/admin/reports', { state: reportScope }),
+    goReports,
     goReportsIncl: () => navigate('/admin/reports', { state: { ...reportScope, repType: 'inclusion' } }),
-    // Forecast panel: projected from the per-batch rows already loaded (lib/forecast.js).
+    // Forecast dialog: projected from the per-batch rows already loaded (lib/forecast.js).
     forecastOpen,
     forecast: forecastOpen ? buildForecast(data.byBatch.data, CATALOG.targets) : null,
-    toggleForecast: () => setForecastOpen((o) => !o),
     closeForecast: () => setForecastOpen(false),
-    filterHover: { borderColor: '#CBD5E1' },
     exportHover: { background: '#0B3123' },
-    rowHover: { background: '#FBFCFC' },
   };
   return <AdminDashboardView {...v} />;
 }
