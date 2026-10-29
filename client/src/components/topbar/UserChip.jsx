@@ -4,12 +4,15 @@ import { ROLE_LABEL } from '../../data/navigation';
 
 const initialsOf = (n) => String(n || '').split(' ').filter(Boolean).map((w) => w[0]).slice(0, 2).join('').toUpperCase();
 
-/** Avatar initials + name + role label at the right end of every topbar. */
-export default function UserChip() {
+/** Avatar initials + name + role label at the right end of every topbar (`compact`: the avatar alone, named by its tooltip). */
+export default function UserChip({ compact = false }) {
   const { user, role } = useAuth();
   const { alumniName } = useProfile();
   const name = role === 'alumni' ? alumniName : user?.name || '';
   const initials = role === 'alumni' ? initialsOf(name) : user?.initials || initialsOf(name);
+  if (compact) {
+    return <div title={`${name} · ${ROLE_LABEL[role]}`} style={{ width: 40, height: 40, borderRadius: '50%', background: '#F0C428', color: '#0F3D2E', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 12.5, flex: 'none' }}>{initials}</div>;
+  }
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10, paddingLeft: 4, minWidth: 0 }}>
       <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#F0C428', color: '#0F3D2E', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 12.5, flex: 'none' }}>{initials}</div>

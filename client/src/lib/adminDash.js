@@ -44,7 +44,7 @@ export const emptyMetrics = () => ({
 });
 export const emptyAdminData = () => ({
   summary: emptyMetrics(), now: emptyMetrics(), prev: emptyMetrics(), units: { data: [] }, unitsNow: { data: [] }, unitsPrev: { data: [] }, byBatch: { data: [] },
-  inclusion: { traced: 0, ip: 0, pwd: 0, indigenousGroups: [], pwdTypes: [] },
+  recent: { data: [] },
 });
 
 /** Every request the dashboard needs, as API paths. */
@@ -62,7 +62,8 @@ export function adminRequests(sc) {
     unitsNow: `/stats/by-program${qs({ ...base, group: sc.group, batches: sc.level === 'batch' ? batchRows : sc.now })}`,
     unitsPrev: `/stats/by-program${qs({ ...base, group: sc.group, batches: sc.level === 'batch' ? batchRows.map((y) => y - 1) : sc.prev })}`,
     byBatch: `/stats/by-batch${qs(base)}`,
-    inclusion: `/stats/inclusion${qs({ ...base, ...range })}`,
+    // Recent Alumni Registrations: the newest records in the college / program scope.
+    recent: `/alumni${qs({ college_id: sc.college, program_id: sc.course, sort: 'created_at', dir: 'desc', per_page: 10 })}`,
   };
 }
 
@@ -99,7 +100,6 @@ export function buildAdminDash(sel, data, tipH) {
   const courses = col ? col.programs : [];
   return {
     scope: sc,
-    slices: dash.slices,
     admK: dash.admK,
     vals: {
       admCollegeVal: String(sc.college),
@@ -124,6 +124,7 @@ function admDash(sc, S, data, rows, tipH, target) {
   const Sn = data.now;
   const Sp = data.prev;
   const delta = (a, b) => (a == null || b == null ? null : a - b);
+  const change = (a, b) => (b ? ((a - b) / b) * 100 : null);
   // Coverage by batch: all years / one batch show six batches ending at the latest (or around the selected) batch;
   // a range shows its own batches, up to the latest twelve.
   const one = typeof sc.batch === 'number';
@@ -133,30 +134,13 @@ function admDash(sc, S, data, rows, tipH, target) {
   const bars = barYears.map((y) => { const r = byBatch.get(y); return { y, v: r && r.total ? Math.round(r.coverage) : 0, total: r ? r.total : 0, traced: r ? r.traced : 0 }; });
   const goal = Math.ceil((S.total * target.coverage) / 100);
 
-  const mix = [
-    ['Employed', S.wageEmployed, '#0F3D2E'],
-    ['Self-employed / Entrepreneurship', S.selfEmployed, '#F0C428'],
-    ['Further studies / Academics', S.furtherStudies, '#2F7FC1'],
-    ['Not yet employed (Seeking opportunities)', S.notEmployed, '#D9620B'],
-  ];
   const traced = S.traced || 0;
-  const r1 = (x) => +x.toFixed(1);
-  let acc = 0;
-  const stops = [];
-  const slices = [];
-  mix.forEach(([lbl, n, color], i) => {
-    const v = pct(n, traced);
-    const a = r1(acc); const b = i === mix.length - 1 ? 100 : r1(acc + v); acc += v;
-    stops.push(`${color} ${a}% ${r1(Math.max(a, b - 0.5))}%`, `#fff ${r1(Math.max(a, b - 0.5))}% ${b}%`);
-    slices.push({ end: b, title: lbl.replace(/ \(.*\)$/, ''), value: `${N(n)} graduates · ${P1(v)}%` });
-  });
-  const statusDonut = traced ? `conic-gradient(${stops.join(', ')})` : 'conic-gradient(#E7E9ED 0% 100%)';
 
   // Months to first job: survey buckets (no invented averages beyond the bucket midpoints).
   const t = S.timeToJob || {};
   const groups = [
-    ['Under 1 month', t.lt_1m || 0, '#CFE8DA', '#0B3A2B'], ['1 – 6 months', t.m1_6 || 0, '#7CC4A0', '#0B3A2B'],
-    ['7 – 11 months', t.m7_11 || 0, '#1F7A57', '#fff'], ['1 year or more', (t.y1_2 || 0) + (t.y2_3 || 0) + (t.y3_4 || 0) + (t.gt_4y || 0), '#0B3A2B', '#fff'],
+    ['Under 1 month', t.lt_1m || 0, '#0F3D2E'], ['1 – 6 months', t.m1_6 || 0, '#2F6B50'],
+    ['7 – 11 months', t.m7_11 || 0, '#6FA088'], ['1 year or more', (t.y1_2 || 0) + (t.y2_3 || 0) + (t.y3_4 || 0) + (t.gt_4y || 0), '#B7CBBF'],
   ];
   const ttjN = groups.reduce((a, g) => a + g[1], 0);
   const tt = groups.map((g) => Math.round(pct(g[1], ttjN)));
@@ -180,58 +164,34 @@ function admDash(sc, S, data, rows, tipH, target) {
   if (!ins.length) ins.push(['No survey responses in this view yet.', 'Insights appear once alumni in this scope answer the survey.', 'y']);
 
   return {
-    slices,
     admK: {
       emp: S.employmentRate, employed: S.employed, lf: S.laborForce, empD: delta(Sn.employmentRate, Sp.employmentRate),
       traced, total: S.total, covP: S.coverage || 0, goal, goalP: goal ? Math.min(100, pct(traced, goal)) : 0,
-      comp: S.completion, completed: S.completed, compD: null,
       fg: S.firstGen, fgP: S.firstGenRate, al: S.alignedRate, alN: S.aligned, alD: delta(Sn.alignedRate, Sp.alignedRate),
-      fs: S.furtherStudies, fsP: pct(S.furtherStudies, traced), sk: S.notEmployed, skP: pct(S.notEmployed, traced),
       verified: S.verified, flagged: S.flagged,
+      // Change of the counts: the latest batches against the batches a year earlier (percent).
+      totalD: change(Sn.total, Sp.total), tracedD: change(Sn.traced, Sp.traced), employedD: change(Sn.employed, Sp.employed),
     },
     vals: {
-      batchSub: `${N(S.traced)} of ${N(S.total)} alumni records reached`,
-      batchBars: bars.map(({ y, v }) => {
-        const muted = one && y !== sc.batch;
-        const ok = v >= target.coverage;
-        return {
-          label: String(y), pct: `${v}%`, pctColor: muted ? '#94A3B8' : ok ? '#0B1220' : '#8A6D1F', color: muted ? '#D5DED9' : ok ? '#0F3D2E' : '#E0A915',
-          ...tipH(`Batch ${y}`, `${v}% traced · ${ok ? 'meets' : 'below'} ${target.coverage}% target`),
-        };
-      }),
-      statusMix: mix.map(([lbl, n, color], i) => ({ label: lbl, count: `${N(n)} graduates`, pct: `${P1(pct(n, traced))}%`, pctColor: i === 3 ? '#B4500A' : '#0B1220', color })),
-      statusDonut,
-      donutTotal: N(traced), activeLabor: `${P1(traced ? 100 - pct(S.notEmployed, traced) : 0)}%`, avgMonths: S.monthsAvg == null ? '—' : P1(S.monthsAvg),
-      timeToJob: groups.map(([lb, , color, text], i) => ({ label: lb, pct: `${tt[i]}%`, grow: tt[i] || 0, color, text, ...tipH(lb, `${tt[i]}% of employed graduates`) })),
+      // Batches shown in the population dialog.
+      batchYears: barYears,
+      avgMonths: S.monthsAvg == null ? '—' : P1(S.monthsAvg),
+      timeToJob: groups.map(([lb, , color], i) => ({ label: lb, pct: `${tt[i]}%`, grow: tt[i] || 0, color, ...tipH(lb, `${tt[i]}% of employed graduates`) })),
+      ttjHas: ttjN > 0, ttjWithin6: `${ttjN ? tt[0] + tt[1] : 0}%`,
       insights: ins.slice(0, 3).map(([lead, text, k]) => ({ lead, text, color: tone[k][0], leadColor: tone[k][1], bg: tone[k][2], border: tone[k][3] })),
-      ...inclusionProfile(data.inclusion),
     },
-  };
-}
-
-/** Inclusion profile (IP & PWD self-declared on registration) — aggregated counts for the traced respondents. */
-const PWD_LABEL = { visual: 'Visual', hearing: 'Hearing', speech_language: 'Speech and Language', physical: 'Physical / Orthopedic', intellectual: 'Intellectual', learning: 'Learning', psychosocial: 'Psychosocial', mental: 'Mental', chronic_illness: 'Chronic Illness', others: 'Others' };
-function inclusionProfile(inc) {
-  const t = inc ? inc.traced : 0;
-  const P2 = (n) => `${t ? ((n / t) * 100).toFixed(1) : '0.0'}%`;
-  const mk = (title, yes, color, rowsTitle, list, labelOf) => {
-    const top = list.slice(0, 5);
-    const m = Math.max(1, ...top.map((x) => x.n));
-    return {
-      title, yes: N(yes), yesPct: P2(yes), no: N(t - yes), noPct: P2(t - yes), color, rowsTitle,
-      rows: top.length ? top.map((x) => ({ label: labelOf(x.key), n: N(x.n), w: `${Math.round((x.n / m) * 100)}%`, color })) : [{ label: 'None recorded', n: '0', w: '0%', color }],
-    };
-  };
-  return {
-    inclSub: `Self-declared on registration · ${N(t)} respondents`,
-    inclGroups: inc ? [
-      mk('Indigenous Peoples (IP)', inc.ip, '#0F6B4F', 'By Indigenous group', inc.indigenousGroups || [], (k) => k),
-      mk('Persons with Disability (PWD)', inc.pwd, '#2F7FC1', 'By type of disability', inc.pwdTypes || [], (k) => PWD_LABEL[k] || k),
-    ] : [],
   };
 }
 
 const R = (label, value) => ({ label, value });
+
+/** KPI card icons (24×24 stroke paths, from the reference design). */
+const ICONS = {
+  users: 'M16 20v-1.5a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4V20M9.5 10.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7M17 4.2a3.5 3.5 0 0 1 0 6.6M21 20v-1.5a4 4 0 0 0-3-3.8',
+  user: 'M12 11.5a4 4 0 1 0 0-8 4 4 0 0 0 0 8M5 20.5v-1a4.5 4.5 0 0 1 4.5-4.5h5a4.5 4.5 0 0 1 4.5 4.5v1',
+  bag: 'M3 8.5h18v11a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 19.5zM8.5 8.5V5.5A1.5 1.5 0 0 1 10 4h4a1.5 1.5 0 0 1 1.5 1.5v3M3 13h18',
+  target: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 16.5a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9zM12 12.5a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z',
+};
 
 /**
  * One metric across the GET /stats/by-program rows of the dashboard scope, highest first: the bars, highest /
@@ -261,68 +221,49 @@ export function breakdown(units, metric, title, isPct) {
 }
 
 /**
- * The seven KPI cards, plus click handlers on every chart that open the stat detail dialog.
+ * The four KPI cards, plus click handlers on every chart that open the stat detail dialog.
  * @param d      admK from buildAdminDash
  * @param vals   buildAdminDash(...).vals
  * @param units  rows of GET /stats/by-program for the dashboard scope
- * @param h      { hoverId, setHover, openDetail(det), openPopulation, openForecast, goRecords }
+ * @param h      { openDetail(det), openPopulation, openForecast }
  */
 export function buildKpiCards(d, vals, units, h) {
-  const sg = (n) => `${n >= 0 ? '↑ ' : '↓ '}${Math.abs(n).toFixed(1)}`;
   const sgn = (n) => `${n >= 0 ? '+' : '−'}${Math.abs(n).toFixed(1)}`;
   const bd = (metric, isPct) => breakdown(units, metric, vals.breakdownTitle, isPct);
   const open = (det) => () => h.openDetail(det);
-  const empCtx = d.empD == null ? 'Latest survey cycle' : `${sg(d.empD)}% from last year`;
-  const compCtx = d.compD == null ? 'Average answered share of submitted surveys' : `${sg(d.compD)}% from last year`;
   const alCtx = d.alD == null ? 'Course-related jobs' : `${sgn(d.alD)}% from last year`;
-  const card = (id, ico, label, value, sub, subColor, onClick) => ({
-    id, ico, label, value, sub, subColor, onClick,
-    onEnter: () => h.setHover(id), onLeave: () => h.setHover((x) => (x === id ? null : x)),
-    arrowOp: h.hoverId === id ? 1 : 0, arrowX: h.hoverId === id ? 'translateX(0)' : 'translateX(-4px)',
-    acc: '#0F3D2E', chip: '#EEF6F2', bg: '#fff', border: '#E7E9ED',
+  /* A change chip: "↑ 8.6%" (percent change of a count) or "↑ 1.2 pts" (rate), or null when there is nothing to compare. */
+  const chg = (n, unit = '%') => (n == null ? null : { text: `${n >= 0 ? '↑' : '↓'} ${Math.abs(n).toFixed(1)}${unit}`, color: n >= 0 ? '#0F6B4F' : '#B3213C' });
+  const card = (id, icon, chip, acc, label, value, delta, note, onClick) => ({
+    id, icon, chip, acc, label, value, onClick,
+    delta: delta ? delta.text : '', deltaColor: delta ? delta.color : '#64748B', note: delta ? 'vs last year' : note,
   });
   const sub = vals.admScopeLabel;
   const kpiCards = [
-    card('total', '☰', 'Total alumni', N(d.total), `${N(d.traced)} traced · ${N(d.verified)} verified`, '#475569', h.openPopulation),
-    card('emp', '↗', 'Employability rate', `${P1(d.emp)}%`, empCtx, '#0F6B4F', h.openForecast),
-    card('traced', '⌖', 'Graduates traced', N(d.traced), `${P1(d.covP)}% of records · Goal: ${N(d.goal)}`, '#475569', open({
+    card('total', ICONS.users, '#E6F0EB', '#0F6B4F', 'Total Alumni', N(d.total), chg(d.totalD), `${N(d.verified)} verified`, h.openPopulation),
+    card('traced', ICONS.user, '#FDF6DD', '#8A6D0B', 'Alumni Traced', N(d.traced), chg(d.tracedD), `${P1(d.covP)}% of records`, open({
       title: 'Graduates traced', sub, big: `${N(d.traced)} / ${N(d.total)}`,
       rows: [R('Traced alumni', N(d.traced)), R('Total records', N(d.total)), R('Coverage', `${P1(d.covP)}%`), R('Collection goal', N(d.goal))],
       x: { ring: d.covP, ringLabel: 'coverage', ...bd('traced', false) },
     })),
-    card('survey', '✓', 'Survey completion', `${P1(d.comp)}%`, compCtx, '#0F6B4F', open({
-      title: 'Survey completion', sub, big: `${P1(d.comp)}%`,
-      rows: [R('Completed forms', N(d.completed)), R('Average answered share', `${P1(d.comp)}%`)],
-      x: { ring: d.comp, ringLabel: 'complete', ...bd('completion', true) },
-    })),
-    card('aligned', '◆', 'Degree-aligned jobs', `${P1(d.al)}%`, alCtx, '#0F6B4F', open({
+    // The employability card opens the forecast; the change is in rate points.
+    { ...card('emp', ICONS.bag, '#E6F0EB', '#0F6B4F', 'Alumni Employed', N(d.employed), chg(d.empD, ' pts'), '', h.openForecast), note: `${P1(d.emp)}% employed` },
+    card('aligned', ICONS.target, '#DDEFE7', '#0F3D2E', 'Degree-aligned Jobs', `${P1(d.al)}%`, chg(d.alD, ' pts'), alCtx, open({
       title: 'Degree-aligned jobs', sub, big: `${P1(d.al)}%`,
       rows: [R('Working in their field', N(d.alN)), R('Change', alCtx)],
       x: { ring: d.al, ringLabel: 'aligned', ...bd('alignedRate', true) },
     })),
-    card('fs', '✦', 'Further studies', N(d.fs), `${P1(d.fsP)}% of respondents`, '#475569', open({
-      title: 'Pursuing further studies', sub: 'Graduate & professional studies', big: N(d.fs),
-      rows: [R('Graduates enrolled', N(d.fs)), R('Share of respondents', `${P1(d.fsP)}%`)],
-      x: { ring: d.fsP, ringLabel: 'of respondents', ...bd('furtherStudies', false) },
-    })),
-    { ...card('seeking', '⚑', 'Still seeking work', N(d.sk), 'View records →', '#7A4E00', h.goRecords), acc: '#7A4E00', chip: '#FBEFD0', bg: '#FFFAEE', border: '#F0D9A0' },
   ];
 
-  const bRows = vals.batchBars.map((b) => R(`Batch ${b.label}`, `${b.pct} traced`));
-  const sRows = vals.statusMix.map((s) => R(s.label, `${s.count} · ${s.pct}`));
   const pRows = vals.programRates.map((p) => R(p.full, `${p.pct} (${p.arrow} ${p.delta})`));
   const tRows = vals.timeToJob.map((t) => R(t.label, `${t.pct} of employed`));
   return {
     kpiCards,
-    batchBars: vals.batchBars.map((b) => ({ ...b, onClick: open({ title: `Graduates traced · Batch ${b.label}`, sub: vals.batchSub, big: b.pct, rows: bRows, hl: `Batch ${b.label}` }) })),
-    statusMix: vals.statusMix.map((s) => ({ ...s, onClick: open({ title: s.label, sub: 'Employment status mix', big: s.pct, rows: sRows, hl: s.label }) })),
-    statusOpen: open({ title: 'Employment status mix', sub: `${vals.donutTotal} respondents · active labor force`, big: vals.activeLabor, rows: sRows }),
     programRates: vals.programRates.map((p) => ({ ...p, onClick: open({ title: p.full, sub: 'Employed graduates in the labour force', big: p.pct, rows: pRows, hl: p.full }) })),
     timeToJob: vals.timeToJob.map((t) => ({ ...t, onClick: open({ title: 'Months before first job', sub: `Average ${vals.avgMonths} months`, big: t.pct, rows: tRows, hl: t.label }) })),
     insTop: vals.insights[0] || { lead: '', text: '' },
     insCount: `${vals.insights.length} signal${vals.insights.length === 1 ? '' : 's'}`,
     insOpen: open({ title: 'Signals worth acting on', sub: 'Recommended follow-ups', big: String(vals.insights.length), rows: vals.insights.map((i) => R(i.lead, i.text)) }),
-    inclGroups: vals.inclGroups.map((g) => ({ ...g, onClick: open({ title: g.title, sub: vals.inclSub, big: g.yesPct, rows: g.rows.map((r) => R(r.label, r.n)) }) })),
   };
 }
 
