@@ -8,9 +8,11 @@ const Y = new Date().getFullYear();
 const batch = (key, employmentRate) => ({ key, total: 100, traced: 60, coverage: 60, laborForce: 50, employed: 40, alignedRate: 70, employmentRate });
 const unit = (key, label, alignedRate) => ({ key, label, full: `College ${label}`, total: 100, traced: 60, alignedRate });
 
+const recent = [{ id: 7, name: 'Rafael Dizon', course: 'BS Computer Science', program: 'BSCS', batch: 2024, createdAt: '2026-05-24T09:00:00+08:00' }];
+
 function setup() {
   mockApi([
-    session('admin'), ['GET', /^\/(jobs|notifications|events|announcements|alumni)(\?|$)/, listOf([])],
+    session('admin'), ['GET', /^\/alumni\?/, listOf(recent)], ['GET', /^\/(jobs|notifications|events|announcements|alumni)(\?|$)/, listOf([])],
     ['GET', '/stats/by-batch', { data: [0, 1, 2, 3, 4].map((i) => batch(Y - 5 + i, 60 + i * 4)) }],
     ['GET', '/stats/by-program', { data: [unit(1, 'CCS', 82.5), unit(2, 'CBA', 61)] }],
     ['GET', /^\/stats\//, {}],
@@ -23,7 +25,7 @@ describe('Admin Dashboard', () => {
     const user = userEvent.setup();
     setup();
 
-    const cardBtn = await screen.findByRole('button', { name: /Employability rate/ });
+    const cardBtn = await screen.findByRole('button', { name: /Alumni Employed/ });
     expect(screen.queryByRole('region', { name: 'Forecast' })).toBeNull();
     await user.click(cardBtn);
 
@@ -36,11 +38,23 @@ describe('Admin Dashboard', () => {
     expect(screen.queryByRole('region', { name: 'Forecast' })).toBeNull();
   });
 
+  it('lists recent registrations and switches the outcomes chart', async () => {
+    const user = userEvent.setup();
+    setup();
+
+    expect(await screen.findByText('Rafael Dizon')).toBeInTheDocument();
+    expect(screen.getByText('BS Computer Science · 2024')).toBeInTheDocument();
+
+    expect(screen.getByRole('img', { name: 'Employability Rate by Batch' })).toBeInTheDocument();
+    await user.click(screen.getByRole('tab', { name: 'Total Alumni' }));
+    expect(screen.getByRole('img', { name: 'Total Registered Alumni' })).toBeInTheDocument();
+  });
+
   it('shows a KPI breakdown by college in the stat detail dialog', async () => {
     const user = userEvent.setup();
     setup();
 
-    await user.click(await screen.findByRole('button', { name: /Degree-aligned jobs/ }));
+    await user.click(await screen.findByRole('button', { name: /Degree-aligned Jobs/ }));
     const dialog = await screen.findByRole('dialog', { name: 'Degree-aligned jobs' });
     expect(within(dialog).getByText('By college')).toBeInTheDocument();
     expect(within(dialog).getAllByText('82.5%')).toHaveLength(2); // "Highest" chip and its bar

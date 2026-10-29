@@ -10,7 +10,7 @@ export default function useChartTip() {
     if (!el) return;
     const r = el.getBoundingClientRect();
     const s = r.width / el.offsetWidth || 1;
-    setTip({ title, value, x: (e.clientX - r.left) / s, y: (e.clientY - r.top) / s });
+    setTip({ title, value, x: (e.clientX - r.left) / s, y: (e.clientY - r.top) / s, w: el.offsetWidth });
   }, []);
   const hideTip = useCallback(() => setTip((t) => (t ? null : t)), []);
   const tipH = useCallback((title, value) => ({ onTipMove: (e) => showTip(e, title, value), onTipLeave: hideTip }), [showTip, hideTip]);
@@ -37,6 +37,9 @@ export default function useChartTip() {
     chartsRef, hideTip,
     tipShow: !!tip, tipTitle: tip ? tip.title : '', tipValue: tip ? tip.value : '',
     tipX: tip ? `${tip.x}px` : '0px', tipY: tip ? `${tip.y}px` : '0px',
+    // Above the cursor, centred, but kept inside the chart box near its left and right edges.
+    tipTf: !tip || (tip.x >= 140 && tip.x <= tip.w - 140) ? 'translate(-50%,calc(-100% - 14px))'
+      : tip.x < 140 ? 'translate(-16px,calc(-100% - 14px))' : 'translate(calc(-100% + 16px),calc(-100% - 14px))',
   };
   return { tipH, donutMove, vals };
 }

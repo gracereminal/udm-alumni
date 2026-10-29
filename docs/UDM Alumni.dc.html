@@ -10,7 +10,9 @@
 <helmet data-dc-atomics="">
 <title>UDM Alumni</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&amp;display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;family=Plus+Jakarta+Sans:wght@500;600;700;800&amp;family=Playfair+Display:ital,wght@1,600;1,700&amp;family=JetBrains+Mono:wght@500;600&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
 <style>@media (max-width:760px){body{-webkit-text-size-adjust:100%}}
 [data-mobile="1"] [data-screen-label]{flex-direction:column!important}
 [data-mobile="1"] [data-m=ev-admin-side]{position:static!important}
@@ -295,6 +297,8 @@ body:has([data-auth]){overflow:hidden}
 [data-mobile="1"] [data-screen-label="Manage Records"] [data-m=tscroll] > [data-m=trow] > :first-child{flex:none}
 [data-mobile="1"] [data-screen-label="Manage Records"] [data-m=tscroll] > [data-m=trow] > :nth-child(2){flex:1 1 0;order:0;font-size:inherit!important;color:inherit}
 [data-mobile="1"] [data-screen-label="Manage Records"] [data-m=tscroll] > [data-m=trow] > :first-child{align-self:center;flex:none;width:20px!important;height:20px!important;min-width:20px!important}[data-mobile="1"] [data-screen-label="Manage Records"] [data-m=tscroll] > [data-m=trow] > :first-child > *{width:20px!important;height:20px!important;min-width:20px;flex:none;box-sizing:border-box}
+@media (min-width:1181px) and (min-height:620px){[data-m=ov-body]{overflow-y:auto!important;padding:8px 12px 12px!important;gap:8px!important}[data-m=ov-grid]{display:grid!important;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) minmax(0,1fr);grid-template-rows:minmax(400px,1.3fr) minmax(0,1fr);flex:1;min-height:660px;gap:8px!important}[data-m=ov-grid]>[data-m=ov-row]{display:contents!important}[data-m~=ov-chart]{grid-column:span 2}[data-m~=ov-card]{min-height:0;overflow:hidden;padding:10px 14px!important;gap:6px!important}[data-m=ov-svg]{flex:1;min-height:0}[data-m=ov-svg] svg{height:100%!important}[data-m=ov-events]{flex:1;min-height:0;grid-template-columns:minmax(0,1fr)!important;grid-auto-rows:minmax(0,1fr);gap:6px!important}[data-m=ov-body] [data-m=kpi-grid]{gap:8px!important}}
+@media (max-width:1180px){[data-m=ov-row]{grid-template-columns:minmax(0,1fr)!important}}
 @media (max-height:760px){[data-screen-label="Admin Dashboard"] [data-m=ad-bottom]{display:none!important}}
 @media (max-height:620px){[data-screen-label="Admin Dashboard"] [data-m2=ad-kpi] > div > div:nth-child(4){display:none!important}[data-screen-label="Admin Dashboard"] [data-m=ws-head] > div:first-child > div:nth-child(2){display:none}}
 [data-mobile="1"] [data-m=ev-admin-layout]{flex-direction:column!important;flex-wrap:nowrap!important}
@@ -1289,7 +1293,7 @@ body{margin:0;background:#F3F6F4}a{color:#004D40}a:hover{color:#F0C428}</style>
           <div style="font-size:11px;color:rgba(0,0,0,.45);font-weight:600;letter-spacing:.3px">UDM ALUMNI RELATIONS OFFICE · ALUMNI</div>
         </div>
         <div style="display:flex;align-items:center;gap:12px">
-          <div data-m="tb-search" onClick="{{ openSearch }}" title="Search (Ctrl+K)" style="width:280px;height:40px;border-radius:999px;background:#fff;border:1px solid #E7E9ED;box-sizing:border-box;display:flex;align-items:center;gap:10px;padding:0 8px 0 14px;color:#64748B;cursor:text;flex:none" style-hover="border-color:#CFE3DA;color:#0B1220"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" style="width:17px;height:17px;flex:none"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg><span style="flex:1;min-width:0;font-size:13px;color:#94A3B8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Search for an Alumni</span><span style="flex:none;font-size:10.5px;font-weight:700;color:#94A3B8;border:1px solid #E7E9ED;border-radius:6px;padding:2px 6px">Ctrl K</span></div>
+          <div data-m="tb-search" onClick="{{ openSearch }}" title="Search (Ctrl+K)" style="width:280px;height:40px;border-radius:999px;background:#fff;border:1px solid #E7E9ED;box-sizing:border-box;display:flex;align-items:center;gap:10px;padding:0 8px 0 14px;color:#64748B;cursor:text;flex:none" style-hover="border-color:#CFE3DA;color:#0B1220"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" style="width:17px;height:17px;flex:none"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg><span style="flex:1;min-width:0;font-size:13px;color:#94A3B8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Search for an Alumni</span></div>
           <div style="position:relative;flex:none">
             <div onClick="{{ toggleNotif }}" title="Notifications" style="width:40px;height:40px;border-radius:50%;background:#fff;border:1px solid #E7E9ED;box-sizing:border-box;display:flex;align-items:center;justify-content:center;color:#64748B;cursor:pointer;position:relative;transition:background .15s" style-hover="{{ bellHover }}">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:17px;height:17px"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg>
@@ -2026,7 +2030,7 @@ body{margin:0;background:#F3F6F4}a{color:#004D40}a:hover{color:#F0C428}</style>
 <sc-if value="{{ jf.err }}" hint-placeholder-val="{{ false }}"><div style="font-size:11.5px;color:#B3213C;margin-top:5px">{{ jf.err }}</div></sc-if>
                     </div>
                   </sc-for>
-                  <label style="grid-column:1 / -1;display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;font-weight:600;color:#0B1220;padding:10px 12px;border:1px solid #E2E5EA;border-radius:10px;min-height:44px"><input type="checkbox" checked="{{ jobDraftUrgent }}" onChange="{{ onJobDraftUrgent }}" style="width:18px;height:18px;accent-color:#B3213C;margin:0" /><span>Urgent hiring<span style="font-weight:500;color:#64748B"> — shows an “Urgent Hiring” tag on the job card</span></span></label>
+                  <label style="grid-column:1 / -1;display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;font-weight:600;color:#0B1220;padding:10px 12px;border:1px solid #E2E5EA;border-radius:10px;min-height:44px"><input type="checkbox" checked="{{ jobDraftUrgent }}" onChange="{{ onJobDraftUrgent }}" style="width:18px;height:18px;accent-color:#B3213C;margin:0"><span>Urgent hiring<span style="font-weight:500;color:#64748B"> — shows an “Urgent Hiring” tag on the job card</span></span></label>
                   <div style="min-width:0;grid-column:1 / -1">
                     <div style="font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:#94A3B8;margin-bottom:6px">Skills / tags</div>
                     <input type="text" value="{{ jobDraftTags }}" onChange="{{ onJobDraftTags }}" placeholder="Comma separated — e.g. React, Figma, SQL" style="width:100%;box-sizing:border-box;border:1px solid #E2E5EA;border-radius:10px;padding:11px 13px;font-family:inherit;font-size:13px;color:#0B1220;background:#fff;outline:none" style-focus="{{ inputFocus }}">
@@ -2585,7 +2589,7 @@ body{margin:0;background:#F3F6F4}a{color:#004D40}a:hover{color:#F0C428}</style>
 <sc-if value="{{ jf.err }}" hint-placeholder-val="{{ false }}"><div style="font-size:11.5px;color:#B3213C;margin-top:5px">{{ jf.err }}</div></sc-if>
                     </div>
                   </sc-for>
-                  <label style="grid-column:1 / -1;display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;font-weight:600;color:#0B1220;padding:10px 12px;border:1px solid #E2E5EA;border-radius:10px;min-height:44px"><input type="checkbox" checked="{{ jobDraftUrgent }}" onChange="{{ onJobDraftUrgent }}" style="width:18px;height:18px;accent-color:#B3213C;margin:0" /><span>Urgent hiring<span style="font-weight:500;color:#64748B"> — shows an “Urgent Hiring” tag on the job card</span></span></label>
+                  <label style="grid-column:1 / -1;display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;font-weight:600;color:#0B1220;padding:10px 12px;border:1px solid #E2E5EA;border-radius:10px;min-height:44px"><input type="checkbox" checked="{{ jobDraftUrgent }}" onChange="{{ onJobDraftUrgent }}" style="width:18px;height:18px;accent-color:#B3213C;margin:0"><span>Urgent hiring<span style="font-weight:500;color:#64748B"> — shows an “Urgent Hiring” tag on the job card</span></span></label>
                   <div style="min-width:0;grid-column:1 / -1">
                     <div style="font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:#94A3B8;margin-bottom:6px">Skills / tags</div>
                     <input type="text" value="{{ jobDraftTags }}" onChange="{{ onJobDraftTags }}" placeholder="Comma separated — e.g. React, Figma, SQL" style="width:100%;box-sizing:border-box;border:1px solid #E2E5EA;border-radius:10px;padding:11px 13px;font-family:inherit;font-size:13px;color:#0B1220;background:#fff;outline:none" style-focus="{{ inputFocus }}">
@@ -3037,14 +3041,245 @@ body{margin:0;background:#F3F6F4}a{color:#004D40}a:hover{color:#F0C428}</style>
     </div>
   </sc-if>
 
-  <sc-if value="{{ isAdminDash }}" hint-placeholder-val="{{ false }}">
-    <div data-screen-label="Admin Dashboard" style="display:flex;height:calc(100vh - 45px);overflow:hidden;background:radial-gradient(900px 520px at 0% 0%,#FBF1D3 0%,rgba(251,241,211,0) 70%),radial-gradient(800px 500px at 100% 100%,#F8F1DE 0%,rgba(248,241,222,0) 70%),#F7F6F1">
-      <dc-import name="NavSidebar" items="{{ adminNavItems }}" role-label="Administrator" user-name="System Admin" on-sign-out="{{ signOut }}" hint-size="240px,100%" style="display:flex;align-self:flex-start;flex:none;position:sticky;top:var(--sw-h,45px);height:calc(100dvh - var(--sw-h,45px));z-index:5"></dc-import>
+
+  <sc-if value="{{ isAdminOv }}" hint-placeholder-val="{{ false }}">
+    <div data-screen-label="Admin Dashboard Overview" style="display:flex;height:calc(100dvh - var(--sw-h,45px));overflow:hidden;font-family:Outfit,system-ui,sans-serif;background:radial-gradient(900px 520px at 0% 0%,#FBF1D3 0%,rgba(251,241,211,0) 70%),radial-gradient(800px 500px at 100% 100%,#F8F1DE 0%,rgba(248,241,222,0) 70%),#F7F6F1">
+      <dc-import name="NavSidebar" items="{{ adminNavItems }}" role-label="Administrator" user-name="System Admin" on-sign-out="{{ signOut }}" hint-size="240px,100%" style="display:flex;align-self:flex-start;flex:none;position:sticky;top:0;height:100%;z-index:5"></dc-import>
+      <div style="flex:1;min-width:0;display:flex;flex-direction:column;overflow:hidden">
+        <div data-m="topbar" style="background:#fff;border:1px solid #E7E9ED;display:flex;align-items:center;justify-content:space-between;padding:8px 16px 8px 24px;margin:12px 12px 0;border-radius:16px;box-shadow:0 1px 2px rgba(16,24,40,.04),0 8px 24px -12px rgba(16,24,40,.08);flex:none;min-height:60px;box-sizing:border-box;gap:16px;min-width:0">
+          <div style="min-width:0"><div style="font-weight:700;font-size:26px;line-height:1.15;letter-spacing:-.6px;color:#0B1220">Admin Dashboard</div><div style="font-size:11px;color:rgba(0,0,0,.45);font-weight:600;letter-spacing:.3px;margin-top:4px">UDM Alumni Relations Office</div></div>
+          <div style="display:flex;align-items:center;gap:12px">
+            <div style="display:flex;align-items:center;gap:8px;height:40px;padding:0 12px 0 14px;border-radius:999px;border:1px solid #E7E9ED;background:#fff;font-size:12.5px;color:#64748B;flex:none"><span>Academic Year</span><select style="border:0;outline:none;background:transparent;font-family:inherit;font-size:13px;font-weight:700;color:#0B1220;cursor:pointer"><option>2025 - 26</option><option>2024 - 25</option><option>2023 - 24</option></select></div>
+            <div data-m="tb-search" onClick="{{ openSearch }}" title="Search (Ctrl+K)" style="width:260px;height:40px;border-radius:999px;background:#fff;border:1px solid #E7E9ED;box-sizing:border-box;display:flex;align-items:center;gap:10px;padding:0 8px 0 14px;color:#64748B;cursor:text;flex:none" style-hover="border-color:#CFE3DA;color:#0B1220"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" style="width:17px;height:17px;flex:none"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg><span style="flex:1;min-width:0;font-size:13px;color:#94A3B8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Search alumni, events…</span><span style="flex:none;font-size:10.5px;font-weight:700;color:#94A3B8;border:1px solid #E7E9ED;border-radius:6px;padding:2px 6px">Ctrl K</span></div>
+            <div style="position:relative;flex:none;width:40px;height:40px;border-radius:50%;background:#fff;border:1px solid #E7E9ED;box-sizing:border-box;display:flex;align-items:center;justify-content:center;color:rgba(0,0,0,.55)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:17px;height:17px"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg><div style="position:absolute;top:-4px;right:-4px;min-width:17px;height:17px;padding:0 4px;box-sizing:border-box;border-radius:999px;background:#C0392B;border:2px solid #fff;color:#fff;font-size:9.5px;font-weight:700;display:flex;align-items:center;justify-content:center;line-height:1">3</div></div>
+            <div title="System Admin" style="width:40px;height:40px;border-radius:50%;background:#F0C428;color:#0F3D2E;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12.5px;flex:none">SA</div>
+          </div>
+        </div>
+        <div data-m="ov-body" style="flex:1;min-height:0;overflow-y:auto;padding:10px 12px 16px;display:flex;flex-direction:column;gap:10px">
+          <div data-m="kpi-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,190px),1fr));gap:12px">
+            <sc-for list="{{ ovKpis }}" as="k" hint-placeholder-count="5">
+              <div style="background:#fff;border:1px solid #E7E9ED;border-radius:16px;box-shadow:0 1px 2px rgba(16,24,40,.04),0 10px 26px -14px rgba(16,24,40,.14);padding:12px 14px;box-sizing:border-box;min-width:0;display:flex;align-items:center;gap:10px;padding:10px 14px">
+                <div style="width:38px;height:38px;border-radius:12px;flex:none;background:{{ k.chip }};color:{{ k.acc }};display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px"><path d="{{ k.icon }}"></path></svg></div>
+                <div style="min-width:0;display:flex;flex-direction:column;gap:3px"><div style="font-size:12.5px;color:#475569;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ k.label }}</div><div data-m="kpi-val" style="font-weight:700;font-size:22px;line-height:1.05;letter-spacing:-.8px;color:#0B1220">{{ k.value }}</div><div style="font-size:11.5px;color:#64748B"><span style="color:#0F6B4F;font-weight:700">↑ {{ k.delta }}</span> vs last year</div></div>
+              </div>
+            </sc-for>
+          </div>
+<div data-m="ov-grid" style="display:flex;flex-direction:column;gap:10px">
+          <div data-m="ov-row" style="display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:10px;align-items:stretch">
+            <div data-m="ov-chart ov-card" style="background:#fff;border:1px solid #E7E9ED;border-radius:16px;box-shadow:0 1px 2px rgba(16,24,40,.04),0 10px 26px -14px rgba(16,24,40,.14);padding:16px 18px;box-sizing:border-box;min-width:0;display:flex;flex-direction:column;gap:10px">
+              <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap">
+                <div style="min-width:0"><div style="font-weight:700;font-size:16px;letter-spacing:-.2px;color:#0B1220">{{ ocTitle }}</div><div style="font-size:12px;color:#64748B;margin-top:3px">{{ ocSub }}</div></div>
+                <div style="display:flex;align-items:center;gap:8px;flex:none">
+                  <select value="{{ ovColKey }}" onChange="{{ ovSetCol }}" style="border:1px solid #E7E9ED;border-radius:999px;background:#fff;padding:5px 10px;font-family:inherit;font-size:12px;font-weight:700;color:#0B1220;cursor:pointer;outline:none"><sc-for list="{{ ovColOpts }}" as="o" hint-placeholder-count="5"><option value="{{ o.k }}">{{ o.k }}</option></sc-for></select>
+                  <div style="display:flex;gap:2px;padding:3px;background:#F1F4F2;border-radius:99px">
+                    <div onClick="{{ ocTab1 }}" style="padding:5px 12px;border-radius:99px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;background:{{ ocT1Bg }};color:{{ ocT1C }};box-shadow:{{ ocT1S }}">Employment Rate</div>
+                    <div onClick="{{ ocTab2 }}" style="padding:5px 12px;border-radius:99px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;background:{{ ocT2Bg }};color:{{ ocT2C }};box-shadow:{{ ocT2S }}">Total Alumni</div>
+                  </div>
+                </div>
+              </div>
+              <sc-if value="{{ ocRate }}" hint-placeholder-val="{{ true }}">
+                <div style="display:flex;gap:16px;font-size:11.5px;color:#475569;font-weight:600;flex-wrap:wrap">
+                  <span style="display:flex;align-items:center;gap:6px"><span style="width:9px;height:9px;border-radius:50%;background:#0F3D2E"></span>Employment Rate <span style="font-weight:400;color:#94A3B8">(% of traced)</span></span>
+                  <span style="display:flex;align-items:center;gap:6px"><span style="width:9px;height:9px;border-radius:50%;background:#E3A91B"></span>Tracer Response Rate <span style="font-weight:400;color:#94A3B8">(% of graduates)</span></span>
+                  <span style="display:flex;align-items:center;gap:6px;font-weight:400;color:#94A3B8"><span style="width:14px;border-top:2px dashed #C99A12"></span>CHED target 70%</span>
+                  <span style="display:flex;align-items:center;gap:6px;font-weight:400;color:#94A3B8"><span style="width:14px;border-top:2px dashed #64748B"></span>Solid = historical · Dashed = forecast*</span>
+                </div>
+              </sc-if>
+              <div data-m="ov-svg" style="position:relative;display:flex;align-items:center">
+                <svg viewBox="{{ ocVB }}" style="width:100%;height:auto;display:block">
+                  <defs><linearGradient id="ocArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0F3D2E" stop-opacity=".22"></stop><stop offset="1" stop-color="#0F3D2E" stop-opacity="0"></stop></linearGradient></defs>
+                  <sc-if value="{{ ocRate }}" hint-placeholder-val="{{ true }}">
+                    <g>
+                      <sc-for list="{{ ocGridA }}" as="g" hint-placeholder-count="5"><g><line x1="{{ ocX1 }}" x2="{{ ocX2 }}" y1="{{ g.y }}" y2="{{ g.y }}" stroke="#EEF0F3"></line><text x="{{ ocYx }}" y="{{ g.y }}" text-anchor="end" dominant-baseline="middle" font-size="15" font-weight="500" fill="#334155">{{ g.l }}</text></g></sc-for>
+                      <rect x="{{ ocFx }}" y="{{ ocFy }}" width="{{ ocFw }}" height="{{ ocFh }}" rx="8" fill="#F4F7F5" stroke="#E3EAE6" stroke-dasharray="4 4"></rect>
+                      <text x="{{ ocFlx }}" y="{{ ocFly }}" text-anchor="middle" font-size="13" font-weight="600" fill="#64748B">Forecast estimates* (2027–2029)</text>
+                      <line x1="{{ ocX1 }}" x2="{{ ocX2 }}" y1="{{ ocTy }}" y2="{{ ocTy }}" stroke="#C99A12" stroke-width="1.4" stroke-dasharray="6 5"></line>
+                      <text x="{{ ocCx }}" y="{{ ocCy }}" text-anchor="start" font-size="13" font-weight="700" fill="#8A6D1F">CHED target: 70%</text>
+                      <line x1="{{ ocVx }}" x2="{{ ocVx }}" y1="{{ ocVt }}" y2="{{ ocVb }}" stroke="#D5DBE0" stroke-dasharray="3 3"></line>
+                      <path d="{{ ocFcR }}" fill="none" stroke="#E3A91B" stroke-width="2.2" stroke-dasharray="5 4" stroke-linecap="round"></path>
+                      <path d="{{ ocFcE }}" fill="none" stroke="#0F3D2E" stroke-width="2.2" stroke-dasharray="5 4" stroke-linecap="round"></path>
+                      <path d="{{ ocLineR }}" fill="none" stroke="#E3A91B" stroke-width="2.5" stroke-linecap="round"></path>
+                      <path d="{{ ocLineE }}" fill="none" stroke="#0F3D2E" stroke-width="2.5" stroke-linecap="round"></path>
+                      <sc-for list="{{ ocDotsR }}" as="d" hint-placeholder-count="9"><circle cx="{{ d.cx }}" cy="{{ d.cy }}" r="{{ d.r }}" fill="{{ d.f }}" stroke="{{ d.s }}" stroke-width="2"></circle></sc-for>
+                      <sc-for list="{{ ocDotsE }}" as="d" hint-placeholder-count="9"><circle cx="{{ d.cx }}" cy="{{ d.cy }}" r="{{ d.r }}" fill="{{ d.f }}" stroke="{{ d.s }}" stroke-width="2"></circle></sc-for>
+                    </g>
+                  </sc-if>
+                  <sc-if value="{{ ocTotal }}" hint-placeholder-val="{{ false }}">
+                    <g>
+                      <sc-for list="{{ ocGridB }}" as="g" hint-placeholder-count="4"><g><line x1="{{ ocX1 }}" x2="{{ ocX2 }}" y1="{{ g.y }}" y2="{{ g.y }}" stroke="#EEF0F3"></line><text x="{{ ocYx }}" y="{{ g.y }}" text-anchor="end" dominant-baseline="middle" font-size="15" font-weight="500" fill="#334155">{{ g.l }}</text></g></sc-for>
+                      <path d="{{ ocAreaC }}" fill="url(#ocArea)"></path>
+                      <path d="{{ ocFcC }}" fill="none" stroke="#0F3D2E" stroke-width="2.2" stroke-dasharray="5 4" stroke-linecap="round"></path>
+                      <path d="{{ ocLineC }}" fill="none" stroke="#0F3D2E" stroke-width="2.5" stroke-linecap="round"></path>
+                      <sc-for list="{{ ocDotsC }}" as="d" hint-placeholder-count="9"><circle cx="{{ d.cx }}" cy="{{ d.cy }}" r="{{ d.r }}" fill="{{ d.f }}" stroke="{{ d.s }}" stroke-width="2"></circle></sc-for>
+                    </g>
+                  </sc-if>
+                  <line x1="{{ ocAx }}" x2="{{ ocX2 }}" y1="{{ ocAy }}" y2="{{ ocAy }}" stroke="#94A3B8" stroke-width="1.2"></line>
+                  <line x1="{{ ocAx }}" x2="{{ ocAx }}" y1="{{ ocAy0 }}" y2="{{ ocAy }}" stroke="#94A3B8" stroke-width="1.2"></line>
+                  <text x="{{ ocYtx }}" y="{{ ocYty }}" text-anchor="middle" font-size="14" font-weight="600" fill="#334155" transform="rotate(-90 {{ ocYtx }} {{ ocYty }})">{{ ocYTitle }}</text>
+                  <text x="{{ ocXtx }}" y="{{ ocXty }}" text-anchor="middle" font-size="14" font-weight="600" fill="#334155">Graduation Year</text>
+                  <sc-for list="{{ ocXs }}" as="x" hint-placeholder-count="9"><text x="{{ x.x }}" y="{{ x.y }}" text-anchor="middle" font-size="15" font-weight="{{ x.w }}" fill="{{ x.c }}">{{ x.t }}</text></sc-for>
+                  <sc-if value="{{ ocRate }}" hint-placeholder-val="{{ true }}">
+                    <g onMouseLeave="{{ ocHitOff }}"><sc-for list="{{ ocHit }}" as="h" hint-placeholder-count="9"><rect x="{{ h.x }}" y="{{ h.y }}" width="{{ h.w }}" height="{{ h.h }}" fill="transparent" style="cursor:pointer" onMouseEnter="{{ h.on }}"></rect></sc-for></g>
+                  </sc-if>
+                </svg>
+                <sc-if value="{{ ocTipShow }}" hint-placeholder-val="{{ false }}">
+                  <div style="position:absolute;left:{{ ocTipX }};top:{{ ocTipY }};transform:{{ ocTipTf }};pointer-events:none;background:#fff;border:1px solid #E7E9ED;border-radius:10px;box-shadow:0 8px 22px -8px rgba(16,24,40,.25);padding:8px 11px;white-space:nowrap;display:flex;flex-direction:column;gap:3px;z-index:3">
+                    <div style="font-size:11px;font-weight:700;color:#64748B">{{ ocTipYear }}</div>
+                    <div style="font-size:12px;color:#0B1220"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#0F3D2E;margin-right:6px"></span><b>{{ ocTipEmp }}</b> {{ ocTipEmpLbl }}<span style="color:#64748B">{{ ocTipEmpN }}</span></div>
+                    <div style="font-size:12px;color:#0B1220"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#E3A91B;margin-right:6px"></span><b>{{ ocTipResp }}</b> {{ ocTipRespLbl }}<span style="color:#64748B">{{ ocTipRespN }}</span></div>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ ocTotal }}" hint-placeholder-val="{{ false }}">
+                  <div style="position:absolute;left:{{ ocTipCX }};top:{{ ocTipCY }};transform:translate(-100%,calc(-100% - 12px));pointer-events:none;background:#fff;border:1px solid #E7E9ED;border-radius:10px;box-shadow:0 8px 22px -8px rgba(16,24,40,.25);padding:7px 11px;white-space:nowrap;z-index:3">
+                    <div style="font-size:15px;font-weight:700;color:#0B1220">{{ ocTipTot }}</div><div style="font-size:11px;color:#64748B">Registered alumni</div>
+                  </div>
+                </sc-if>
+              </div>
+              <div style="border-top:1px solid #EEF0F3;padding-top:10px;display:flex;flex-direction:column;gap:8px">
+                <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px">
+                  <div style="min-width:0"><div style="font-weight:700;font-size:13px;color:#0B1220">Time to First Job</div><div style="font-size:11.5px;color:#64748B;margin-top:2px">Most graduates (68%) land a job within 6 months</div></div>
+                  <div style="flex:none;background:#E8F1EC;color:#0F3D2E;font-weight:700;font-size:12px;padding:4px 10px;border-radius:99px;white-space:nowrap">Average: ~5 Months</div>
+                </div>
+                <div style="display:flex;gap:2px;height:10px;border-radius:99px;overflow:hidden"><div style="flex:41 1 0;background:#0F3D2E"></div><div style="flex:27 1 0;background:#2F6B50"></div><div style="flex:19 1 0;background:#6FA088"></div><div style="flex:13 1 0;background:#B7CBBF"></div></div>
+                <div style="display:flex;flex-wrap:wrap;gap:3px 14px;font-size:11.5px;color:#475569">
+                  <span style="display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;background:#0F3D2E"></span>&lt; 3 months <b style="color:#0B1220">(41%)</b></span>
+                  <span style="display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;background:#2F6B50"></span>3–6 months <b style="color:#0B1220">(27%)</b></span>
+                  <span style="display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;background:#6FA088"></span>6–12 months <b style="color:#0B1220">(19%)</b></span>
+                  <span style="display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;background:#B7CBBF"></span>Over 1 year <b style="color:#0B1220">(13%)</b></span>
+                </div>
+              </div>
+            </div>
+            <div data-m="ov-card" style="background:#fff;border:1px solid #E7E9ED;border-radius:16px;box-shadow:0 1px 2px rgba(16,24,40,.04),0 10px 26px -14px rgba(16,24,40,.14);padding:12px 14px;box-sizing:border-box;min-width:0;display:flex;flex-direction:column;gap:10px"><div style="display:flex;align-items:center;justify-content:space-between;gap:10px"><div style="font-weight:700;font-size:15px;letter-spacing:-.2px;color:#0B1220">Recent Alumni Registrations</div><div onClick="{{ goRecords }}" style="font-size:12px;font-weight:700;color:#0F6B4F;cursor:pointer;white-space:nowrap" style-hover="text-decoration:underline">View all →</div></div>
+              <sc-for list="{{ ovRegs }}" as="r" hint-placeholder-count="5"><div style="display:flex;align-items:center;gap:10px;padding:4px 0;flex:1 1 0;border-bottom:1px solid #F1F2F4"><div style="width:30px;height:30px;border-radius:50%;flex:none;background:{{ r.bg }};color:#0F3D2E;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12.5px">{{ r.ini }}</div><div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:700;color:#0B1220;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.name }}</div><div style="font-size:11.5px;color:#64748B;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.prog }}</div></div><div style="font-size:11.5px;color:#94A3B8;white-space:nowrap">{{ r.date }}</div></div></sc-for></div>
+          </div>
+          <div data-m="ov-row" style="display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:10px;align-items:stretch">
+            <div data-m="ov-trend ov-card" style="background:#fff;border:1px solid #E7E9ED;border-radius:16px;box-shadow:0 1px 2px rgba(16,24,40,.04),0 10px 26px -14px rgba(16,24,40,.14);padding:12px 14px;box-sizing:border-box;min-width:0;display:flex;flex-direction:column;gap:10px"><div style="display:flex;align-items:center;justify-content:space-between;gap:10px"><div style="font-weight:700;font-size:15px;letter-spacing:-.2px;color:#0B1220">Alumni Engagement Trend</div></div>
+              <div style="display:flex;align-items:center;gap:6px;font-size:11.5px;color:#64748B"><span style="width:9px;height:9px;border-radius:2px;background:#0F6B4F"></span>Engaged alumni</div>
+              <div style="display:flex;gap:8px;flex:1;min-height:0"><div style="display:flex;flex-direction:column;justify-content:space-between;align-self:stretch;margin-bottom:18px;min-height:60px;font-size:10.5px;line-height:12px;color:#94A3B8;text-align:right;margin-top:-6px;padding-bottom:0"><span>4K</span><span>3K</span><span>2K</span><span>1K</span><span>0</span></div>
+<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:4px"><div style="position:relative;flex:1;min-height:60px;border-bottom:1px solid #D9DEDB;background:linear-gradient(#EEF1EF,#EEF1EF) 0 0/100% 1px no-repeat,linear-gradient(#EEF1EF,#EEF1EF) 0 25%/100% 1px no-repeat,linear-gradient(#EEF1EF,#EEF1EF) 0 50%/100% 1px no-repeat,linear-gradient(#EEF1EF,#EEF1EF) 0 75%/100% 1px no-repeat;display:flex;align-items:flex-end;gap:8px;padding:0 4px;box-sizing:border-box">
+<sc-for list="{{ ovBars }}" as="b" hint-placeholder-count="12"><div style="flex:1;min-width:0;height:100%;display:flex;align-items:flex-end;justify-content:center"><div title="{{ b.val }}" style="width:100%;max-width:14px;height:{{ b.h }};border-radius:6px 6px 2px 2px;background:#0F6B4F" style-hover="background:#F0C428"></div></div></sc-for></div>
+<div style="display:flex;gap:8px;padding:0 4px"><sc-for list="{{ ovBars }}" as="b" hint-placeholder-count="12"><div style="flex:1;min-width:0;text-align:center;font-size:10.5px;color:#64748B">{{ b.m }}</div></sc-for></div></div></div>
+<div onClick="{{ goReports }}" style="align-self:flex-end;font-size:12px;font-weight:700;color:#0F6B4F;cursor:pointer" style-hover="text-decoration:underline">View analytics →</div></div>
+            <div data-m="ov-card" style="background:#fff;border:1px solid #E7E9ED;border-radius:16px;box-shadow:0 1px 2px rgba(16,24,40,.04),0 10px 26px -14px rgba(16,24,40,.14);padding:12px 14px;box-sizing:border-box;min-width:0;display:flex;flex-direction:column;gap:12px"><div style="display:flex;align-items:center;justify-content:space-between;gap:10px"><div style="font-weight:700;font-size:15px;letter-spacing:-.2px;color:#0B1220">Top Colleges by Alumni</div><div onClick="{{ goRecords }}" style="font-size:12px;font-weight:700;color:#0F6B4F;cursor:pointer;white-space:nowrap" style-hover="text-decoration:underline">View all →</div></div>
+              <sc-for list="{{ ovCols }}" as="c" hint-placeholder-count="5"><div style="display:flex;align-items:center;gap:12px;flex:1 1 0"><div style="width:30px;height:30px;border-radius:50%;flex:none;background:#DDEFE7;color:#0F3D2E;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11.5px">{{ c.code }}</div><div style="flex:1;min-width:0"><div style="display:flex;justify-content:space-between;gap:8px;font-size:13px"><span style="font-weight:700;color:#0B1220;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.name }}</span><span style="color:#64748B;white-space:nowrap">{{ c.n }}</span></div><div style="height:6px;border-radius:99px;background:#EEF4F1;margin-top:4px;overflow:hidden"><div style="height:100%;width:{{ c.w }};background:#0F6B4F;border-radius:99px"></div></div></div></div></sc-for></div>
+          </div>
+          <div data-m="ov-row" style="display:grid;grid-template-columns:minmax(0,1fr);gap:10px;align-items:stretch">
+            <div data-m="ov-card" style="background:#fff;border:1px solid #E7E9ED;border-radius:16px;box-shadow:0 1px 2px rgba(16,24,40,.04),0 10px 26px -14px rgba(16,24,40,.14);padding:12px 14px;box-sizing:border-box;min-width:0;display:flex;flex-direction:column;gap:10px"><div style="display:flex;align-items:center;justify-content:space-between;gap:10px"><div style="font-weight:700;font-size:15px;letter-spacing:-.2px;color:#0B1220">Upcoming Events</div><div onClick="{{ ovGoEvents }}" style="font-size:12px;font-weight:700;color:#0F6B4F;cursor:pointer;white-space:nowrap" style-hover="text-decoration:underline">View all →</div></div>
+              <div data-m="ov-events" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,190px),1fr));gap:12px">
+                <sc-for list="{{ ovEvents }}" as="e" hint-placeholder-count="4"><div style="border:1px solid #E7E9ED;border-radius:12px;padding:9px 10px;background:#FBFCFB;display:flex;flex-direction:column;gap:6px;min-width:0"><div style="display:flex;gap:10px;align-items:center"><div style="flex:none;width:44px;border-radius:10px;background:#FDF6DD;border:1px solid #EFDFA6;text-align:center;padding:5px 0;color:#5C4A12"><div style="font-weight:700;font-size:18px;line-height:1">{{ e.d }}</div><div style="font-size:9.5px;font-weight:700;letter-spacing:.6px;margin-top:2px">{{ e.m }}</div></div><div style="min-width:0"><div style="font-size:13px;font-weight:700;color:#0B1220;line-height:1.25">{{ e.title }}</div><div style="font-size:11.5px;color:#64748B;margin-top:2px">{{ e.type }}</div></div></div><div style="display:flex;flex-direction:column;gap:5px;font-size:11.5px;color:#475569"><span>📍 {{ e.where }}</span><span>🕐 {{ e.time }}</span></div></div></sc-for></div></div>
+          </div>
+        </div>
+      </div>
+</div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isAdminDash2 }}" hint-placeholder-val="{{ false }}">
+    <div data-screen-label="Admin Dashboard" style="display:flex;height:calc(100dvh - var(--sw-h,45px));overflow:hidden;background:radial-gradient(900px 520px at 0% 0%,#FBF1D3 0%,rgba(251,241,211,0) 70%),radial-gradient(800px 500px at 100% 100%,#F8F1DE 0%,rgba(248,241,222,0) 70%),#F7F6F1">
+      <dc-import name="NavSidebar" items="{{ adminNavItems }}" role-label="Administrator" user-name="System Admin" on-sign-out="{{ signOut }}" hint-size="240px,100%" style="display:flex;align-self:flex-start;flex:none;position:sticky;top:0;height:100%;z-index:5"></dc-import>
+      <div style="flex:1;min-width:0;display:flex;flex-direction:column;background-color:transparent">
+      <div data-m="topbar" style="background:#fff;border:1px solid #E7E9ED;display:flex;align-items:center;justify-content:space-between;padding:8px 16px 8px 24px;margin:12px 12px 0;border-radius:16px;box-shadow:0 1px 2px rgba(16,24,40,.04),0 8px 24px -12px rgba(16,24,40,.08);flex:none;min-height:60px;box-sizing:border-box;gap:16px;min-width:0;flex-wrap:nowrap">
+        <div style="min-width:0;flex:1 1 auto">
+          <div style="font-family:Inter,sans-serif;font-weight:700;font-size:26px;line-height:1.15;letter-spacing:-.6px;color:#0B1220;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Admin Dashboard</div>
+          <div style="margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11.5px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:#64748B">UDM Alumni Relations Office</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;flex:0 1 auto;min-width:0">
+          <div data-m="tb-search" onClick="{{ openSearch }}" title="Search (Ctrl+K)" style="width:280px;flex:0 1 280px;min-width:120px;height:40px;border-radius:999px;background:#fff;border:1px solid #E7E9ED;box-sizing:border-box;display:flex;align-items:center;gap:10px;padding:0 8px 0 14px;color:#64748B;cursor:text" style-hover="border-color:#CFE3DA;color:#0B1220"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" style="width:17px;height:17px;flex:none"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg><span style="flex:1;min-width:0;font-size:13px;color:#94A3B8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Search for an Alumni</span><span style="flex:none;font-size:10.5px;font-weight:700;color:#94A3B8;border:1px solid #E7E9ED;border-radius:6px;padding:2px 6px">Ctrl K</span></div>
+          <div style="position:relative;flex:none">
+            <div onClick="{{ toggleNotif }}" title="Notifications" style="width:40px;height:40px;border-radius:50%;background:#fff;border:1px solid #E7E9ED;box-sizing:border-box;display:flex;align-items:center;justify-content:center;color:rgba(0,0,0,.55);cursor:pointer;position:relative;transition:background .15s" style-hover="{{ bellHover }}">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:17px;height:17px"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg>
+              <sc-if value="{{ hasUnread }}" hint-placeholder-val="{{ false }}">
+                <div style="position:absolute;top:-4px;right:-4px;min-width:17px;height:17px;padding:0 4px;box-sizing:border-box;border-radius:999px;background:#C0392B;border:2px solid #fff;color:#fff;font-size:9.5px;font-weight:700;display:flex;align-items:center;justify-content:center;line-height:1">{{ unreadCount }}</div>
+              </sc-if>
+            </div>
+            <sc-if value="{{ notifOpen }}" hint-placeholder-val="{{ false }}">
+              <div onClick="{{ closeNotif }}" style="position:fixed;inset:0;z-index:60"></div>
+              <div style="position:absolute;right:0;top:50px;width:370px;max-width:calc(100vw - 32px);z-index:61;background:#fff;border:1px solid #E7E9ED;border-radius:14px;box-shadow:0 12px 32px rgba(16,24,40,.14);overflow:hidden;font-family:Inter,system-ui,sans-serif">
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #EEF0F3">
+                  <div style="display:flex;align-items:center;gap:8px">
+                    <div style="font-family:Inter,sans-serif;font-weight:600;font-size:14px;color:#0B1220">Notifications</div>
+                    <sc-if value="{{ hasUnread }}" hint-placeholder-val="{{ false }}">
+                      <div style="font-size:10.5px;font-weight:700;color:#0F3D2E;background:#E6F0EB;padding:2px 8px;border-radius:999px">{{ unreadCount }} new</div>
+                    </sc-if>
+                  </div>
+                  <sc-if value="{{ hasUnread }}" hint-placeholder-val="{{ false }}">
+                    <div onClick="{{ markAllRead }}" style="font-size:12px;font-weight:600;color:#004D40;cursor:pointer" style-hover="{{ linkHover }}">Mark all as read</div>
+                  </sc-if>
+                </div>
+                <div style="max-height:380px;overflow-y:auto">
+                  <sc-for list="{{ notifItems }}" as="n" hint-placeholder-count="3">
+                    <div onClick="{{ n.onClick }}" style="display:flex;gap:12px;padding:13px 16px;border-bottom:1px solid #F1F2F4;cursor:pointer;background:{{ n.bg }}" style-hover="{{ n.hover }}">
+                      <div style="width:32px;height:32px;border-radius:10px;flex:none;background:{{ n.iconBg }};color:{{ n.iconColor }};display:flex;align-items:center;justify-content:center">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><path d="{{ n.icon }}"></path></svg>
+                      </div>
+                      <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px">
+                        <div style="font-size:13px;font-weight:{{ n.weight }};color:#0B1220;line-height:1.35">{{ n.title }}</div>
+                        <div style="font-size:12px;color:#64748B;line-height:1.45;text-wrap:pretty">{{ n.body }}</div>
+                        <div style="font-size:11px;color:#94A3B8;font-weight:600">{{ n.time }}</div>
+                      </div>
+                      <div style="width:8px;height:8px;border-radius:50%;flex:none;margin-top:5px;background:{{ n.dot }}"></div>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-if>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;padding-left:4px;min-width:0"><div style="width:40px;height:40px;border-radius:50%;background:#F0C428;color:#0F3D2E;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12.5px;flex:none">SA</div><div data-m="tb-user" style="display:flex;flex-direction:column;gap:2px;min-width:0"><div style="font-size:13.5px;font-weight:700;color:#0B1220;white-space:nowrap">System Admin</div><div style="font-size:11.5px;color:#64748B;white-space:nowrap">Administrator</div></div></div>
+        </div>
+      </div>
+
+      <div data-m="ws" style="flex:1;min-height:0;margin:12px;padding:24px;box-sizing:border-box;min-width:0;overflow-y:auto;display:flex;flex-direction:column;gap:20px;font-family:Satoshi,Inter,system-ui,sans-serif;background:#F7F8F6;border:1px solid #E3E8E5;border-radius:16px" aria-busy="{{ gdBusy }}">
+<div role="group" aria-label="Filters" style="background:#fff;border:1px solid #E3E8E5;border-radius:12px;padding:20px;min-width:0;box-sizing:border-box;padding:16px 20px;display:flex;flex-wrap:wrap;gap:16px 24px;align-items:flex-end">
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;flex:3 1 560px;min-width:0"><label style="display:flex;flex-direction:column;gap:5px;font-size:11.5px;font-weight:600;color:#475569;min-width:0">College<select value="{{ gdColVal }}" onChange="{{ gdOnCol }}" style="height:38px;box-sizing:border-box;padding:0 10px;border:1px solid #CBD5CF;border-radius:8px;background:#fff;font:inherit;font-size:13px;font-weight:500;color:#0B1220;min-width:0;width:100%"><sc-for list="{{ gdColOpts }}" as="o" hint-placeholder-count="4"><option value="{{ o.value }}">{{ o.label }}</option></sc-for></select></label><label style="display:flex;flex-direction:column;gap:5px;font-size:11.5px;font-weight:600;color:#475569;min-width:0">Program<select value="{{ gdProgVal }}" onChange="{{ gdOnProg }}" disabled="{{ gdProgDisabled }}" style="height:38px;box-sizing:border-box;padding:0 10px;border:1px solid #CBD5CF;border-radius:8px;background:#fff;font:inherit;font-size:13px;font-weight:500;color:#0B1220;min-width:0;width:100%"><sc-for list="{{ gdProgOpts }}" as="o" hint-placeholder-count="2"><option value="{{ o.value }}">{{ o.label }}</option></sc-for></select></label><label style="display:flex;flex-direction:column;gap:5px;font-size:11.5px;font-weight:600;color:#475569;min-width:0">Graduation Batch<select value="{{ gdBatchVal }}" onChange="{{ gdOnBatch }}" style="height:38px;box-sizing:border-box;padding:0 10px;border:1px solid #CBD5CF;border-radius:8px;background:#fff;font:inherit;font-size:13px;font-weight:500;color:#0B1220;min-width:0;width:100%"><sc-for list="{{ gdBatchOpts }}" as="o" hint-placeholder-count="4"><option value="{{ o.value }}">{{ o.label }}</option></sc-for></select></label></div>
+<div style="display:flex;flex-direction:column;gap:5px;flex:1 1 300px;min-width:0;padding-left:24px;border-left:1px solid #E3E8E5"><div style="font-size:11.5px;font-weight:600;color:#475569">Activity Period <span style="font-weight:500;color:#64748B">(Alumni Engagement chart only)</span></div><div style="display:flex;gap:8px;align-items:center"><input type="month" aria-label="Activity period start" value="{{ gdFrom }}" onChange="{{ gdOnFrom }}" style="height:38px;box-sizing:border-box;padding:0 10px;border:1px solid #CBD5CF;border-radius:8px;background:#fff;font:inherit;font-size:13px;font-weight:500;color:#0B1220;min-width:0;width:100%"><span style="color:#64748B;font-size:12.5px">to</span><input type="month" aria-label="Activity period end" value="{{ gdTo }}" onChange="{{ gdOnTo }}" style="height:38px;box-sizing:border-box;padding:0 10px;border:1px solid #CBD5CF;border-radius:8px;background:#fff;font:inherit;font-size:13px;font-weight:500;color:#0B1220;min-width:0;width:100%"></div></div>
+</div>
+<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:-8px;font-size:12.5px;color:#475569"><span aria-live="polite">{{ gdScope }}</span><sc-if value="{{ gdFiltered }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ gdClear }}" style="border:0;background:none;padding:2px 0;font:inherit;font-weight:600;color:#0F6B4F;cursor:pointer;text-decoration:underline">Clear filters</button></sc-if></div>
+<sc-if value="{{ gdIsError }}" hint-placeholder-val="{{ false }}"><div role="alert" style="background:#fff;border:1px solid #E3E8E5;border-radius:12px;padding:20px;min-width:0;box-sizing:border-box;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;border-color:#E8B4A8;background:#FDF6F3"><div><div style="font-weight:700;font-size:14.5px;color:#7A2B18">Dashboard data could not be loaded</div><div style="font-size:13px;color:#7A2B18;margin-top:3px">The server did not respond. No figures are shown rather than risk showing outdated ones.</div></div><button type="button" onClick="{{ gdRetry }}" style="height:36px;padding:0 14px;border:1px solid #7A2B18;border-radius:8px;background:#fff;color:#7A2B18;font:inherit;font-size:13px;font-weight:600;cursor:pointer">Retry</button></div></sc-if>
+<sc-if value="{{ gdIsEmpty }}" hint-placeholder-val="{{ false }}"><div style="background:#fff;border:1px solid #E3E8E5;border-radius:12px;padding:20px;min-width:0;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;gap:6px;padding:56px 20px;text-align:center"><div style="font-weight:700;font-size:16px;color:#0B1220">No alumni records match these filters</div><div style="font-size:13px;color:#64748B;max-width:380px;text-wrap:pretty">Archived and deleted records are excluded. Try a different college, program, or batch.</div><sc-if value="{{ gdFiltered }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ gdClear }}" style="margin-top:10px;height:36px;padding:0 14px;border:1px solid #0F3D2E;border-radius:8px;background:#fff;color:#0F3D2E;font:inherit;font-size:13px;font-weight:600;cursor:pointer">Clear filters</button></sc-if></div></sc-if>
+<sc-if value="{{ gdIsLoading }}" hint-placeholder-val="{{ false }}"><div role="status" aria-label="Loading dashboard" style="display:flex;flex-direction:column;gap:20px"><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:16px"><div style="background:#fff;border:1px solid #E3E8E5;border-radius:12px;padding:20px;height:150px;box-sizing:border-box;display:flex;flex-direction:column;gap:12px"><div style="height:14px;width:45%;background:#EEF2EF;border-radius:4px"></div><div style="flex:1;background:#F4F7F5;border-radius:8px"></div></div><div style="background:#fff;border:1px solid #E3E8E5;border-radius:12px;padding:20px;height:150px;box-sizing:border-box;display:flex;flex-direction:column;gap:12px"><div style="height:14px;width:45%;background:#EEF2EF;border-radius:4px"></div><div style="flex:1;background:#F4F7F5;border-radius:8px"></div></div><div style="background:#fff;border:1px solid #E3E8E5;border-radius:12px;padding:20px;height:150px;box-sizing:border-box;display:flex;flex-direction:column;gap:12px"><div style="height:14px;width:45%;background:#EEF2EF;border-radius:4px"></div><div style="flex:1;background:#F4F7F5;border-radius:8px"></div></div><div style="background:#fff;border:1px solid #E3E8E5;border-radius:12px;padding:20px;height:150px;box-sizing:border-box;display:flex;flex-direction:column;gap:12px"><div style="height:14px;width:45%;background:#EEF2EF;border-radius:4px"></div><div style="flex:1;background:#F4F7F5;border-radius:8px"></div></div></div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,440px),1fr));gap:16px"><div style="background:#fff;border:1px solid #E3E8E5;border-radius:12px;padding:20px;height:330px;box-sizing:border-box;display:flex;flex-direction:column;gap:12px"><div style="height:14px;width:45%;background:#EEF2EF;border-radius:4px"></div><div style="flex:1;background:#F4F7F5;border-radius:8px"></div></div><div style="background:#fff;border:1px solid #E3E8E5;border-radius:12px;padding:20px;height:330px;box-sizing:border-box;display:flex;flex-direction:column;gap:12px"><div style="height:14px;width:45%;background:#EEF2EF;border-radius:4px"></div><div style="flex:1;background:#F4F7F5;border-radius:8px"></div></div><div style="background:#fff;border:1px solid #E3E8E5;border-radius:12px;padding:20px;height:330px;box-sizing:border-box;display:flex;flex-direction:column;gap:12px"><div style="height:14px;width:45%;background:#EEF2EF;border-radius:4px"></div><div style="flex:1;background:#F4F7F5;border-radius:8px"></div></div><div style="background:#fff;border:1px solid #E3E8E5;border-radius:12px;padding:20px;height:330px;box-sizing:border-box;display:flex;flex-direction:column;gap:12px"><div style="height:14px;width:45%;background:#EEF2EF;border-radius:4px"></div><div style="flex:1;background:#F4F7F5;border-radius:8px"></div></div></div><div style="background:#fff;border:1px solid #E3E8E5;border-radius:12px;padding:20px;height:260px;box-sizing:border-box;display:flex;flex-direction:column;gap:12px"><div style="height:14px;width:45%;background:#EEF2EF;border-radius:4px"></div><div style="flex:1;background:#F4F7F5;border-radius:8px"></div></div></div></sc-if>
+<sc-if value="{{ gdIsReady }}" hint-placeholder-val="{{ false }}"><div style="display:flex;flex-direction:column;gap:20px;min-width:0">
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:16px">
+<div style="background:#fff;border:1px solid #E3E8E5;border-radius:12px;padding:20px;min-width:0;box-sizing:border-box;display:flex;flex-direction:column;gap:6px"><div style="font-size:13px;font-weight:600;color:#475569;display:flex;align-items:center"><svg viewBox="0 0 24 24" fill="none" stroke="#0F6B4F" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;flex:none;margin-right:8px" aria-hidden="true"><path d="M18 21a8 8 0 0 0-16 0"></path><circle cx="10" cy="8" r="5"></circle><path d="M22 20c0-3.37-2-6.5-4-8a5 5 0 0 0-.45-8.3"></path></svg>Total Alumni<span role="img" tabindex="0" aria-label="Counts each active alumni record once. Archived and deleted records are not included." title="Counts each active alumni record once. Archived and deleted records are not included." style="flex:none;display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border:1.3px solid #94A3B8;border-radius:50%;box-sizing:border-box;font-size:10px;font-weight:700;font-style:normal;line-height:1;color:#64748B;cursor:help;margin-left:6px;vertical-align:middle" style-hover="color:#0F6B4F;border-color:#0F6B4F" style-focus="color:#0F6B4F;border-color:#0F6B4F;outline:none">i</span></div><div style="font-weight:700;font-size:32px;line-height:1.1;letter-spacing:-1px;color:#0B1220">{{ gdK1 }}</div><div style="font-size:12.5px;color:#0B1220;font-weight:500">{{ gdK1s }}</div></div>
+<div style="background:#fff;border:1px solid #E3E8E5;border-radius:12px;padding:20px;min-width:0;box-sizing:border-box;display:flex;flex-direction:column;gap:6px"><div style="font-size:13px;font-weight:600;color:#475569;display:flex;align-items:center"><svg viewBox="0 0 24 24" fill="none" stroke="#0F6B4F" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;flex:none;margin-right:8px" aria-hidden="true"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"></rect><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><path d="m9 14 2 2 4-4"></path></svg>Tracer Survey Completion<span role="img" tabindex="0" aria-label="Eligible alumni who completed the required tracer survey questions ÷ all eligible alumni." title="Eligible alumni who completed the required tracer survey questions ÷ all eligible alumni." style="flex:none;display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border:1.3px solid #94A3B8;border-radius:50%;box-sizing:border-box;font-size:10px;font-weight:700;font-style:normal;line-height:1;color:#64748B;cursor:help;margin-left:6px;vertical-align:middle" style-hover="color:#0F6B4F;border-color:#0F6B4F" style-focus="color:#0F6B4F;border-color:#0F6B4F;outline:none">i</span></div><div style="font-weight:700;font-size:32px;line-height:1.1;letter-spacing:-1px;color:#0B1220">{{ gdK2 }}</div><div style="font-size:12.5px;color:#0B1220;font-weight:500">{{ gdK2s }}</div></div>
+<div style="background:#fff;border:1px solid #E3E8E5;border-radius:12px;padding:20px;min-width:0;box-sizing:border-box;display:flex;flex-direction:column;gap:6px"><div style="font-size:13px;font-weight:600;color:#475569;display:flex;align-items:center"><svg viewBox="0 0 24 24" fill="none" stroke="#0F6B4F" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;flex:none;margin-right:8px" aria-hidden="true"><path d="M12 12h.01"></path><path d="M16 6V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"></path><path d="M22 13a18.15 18.15 0 0 1-20 0"></path><rect width="20" height="14" x="2" y="6" rx="2"></rect></svg>Employment Rate<span role="img" tabindex="0" aria-label="Employed respondents ÷ respondents with a known employment status. Respondents whose status is unknown are not counted." title="Employed respondents ÷ respondents with a known employment status. Respondents whose status is unknown are not counted." style="flex:none;display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border:1.3px solid #94A3B8;border-radius:50%;box-sizing:border-box;font-size:10px;font-weight:700;font-style:normal;line-height:1;color:#64748B;cursor:help;margin-left:6px;vertical-align:middle" style-hover="color:#0F6B4F;border-color:#0F6B4F" style-focus="color:#0F6B4F;border-color:#0F6B4F;outline:none">i</span></div><div style="font-weight:700;font-size:32px;line-height:1.1;letter-spacing:-1px;color:#0B1220">{{ gdK3 }}</div><div style="font-size:12.5px;color:#0B1220;font-weight:500">{{ gdK3s }}</div></div>
+<div style="background:#fff;border:1px solid #E3E8E5;border-radius:12px;padding:20px;min-width:0;box-sizing:border-box;display:flex;flex-direction:column;gap:6px"><div style="font-size:13px;font-weight:600;color:#475569;display:flex;align-items:center"><svg viewBox="0 0 24 24" fill="none" stroke="#0F6B4F" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;flex:none;margin-right:8px" aria-hidden="true"><path d="M2 21a8 8 0 0 1 13.292-6"></path><circle cx="10" cy="8" r="5"></circle><path d="m16 19 2 2 4-4"></path></svg>Recently Updated Profiles<span role="img" tabindex="0" aria-label="Active profiles updated in the last 12 months ÷ all active profiles." title="Active profiles updated in the last 12 months ÷ all active profiles." style="flex:none;display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border:1.3px solid #94A3B8;border-radius:50%;box-sizing:border-box;font-size:10px;font-weight:700;font-style:normal;line-height:1;color:#64748B;cursor:help;margin-left:6px;vertical-align:middle" style-hover="color:#0F6B4F;border-color:#0F6B4F" style-focus="color:#0F6B4F;border-color:#0F6B4F;outline:none">i</span></div><div style="font-weight:700;font-size:32px;line-height:1.1;letter-spacing:-1px;color:#0B1220">{{ gdK4 }}</div><div style="font-size:12.5px;color:#0B1220;font-weight:500">{{ gdK4s }}</div></div>
+</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,440px),1fr));gap:16px">
+<section aria-label="Employment Status Distribution" style="background:#fff;border:1px solid #E3E8E5;border-radius:12px;padding:20px;min-width:0;box-sizing:border-box;display:flex;flex-direction:column;gap:16px"><div><div style="font-weight:700;font-size:15px;letter-spacing:-.1px;color:#0B1220;display:flex;align-items:center">Employment Status Distribution<span role="img" tabindex="0" aria-label="Based only on respondents with a known employment status. Respondents who did not give a status are listed separately and are not counted as unemployed." title="Based only on respondents with a known employment status. Respondents who did not give a status are listed separately and are not counted as unemployed." style="flex:none;display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border:1.3px solid #94A3B8;border-radius:50%;box-sizing:border-box;font-size:10px;font-weight:700;font-style:normal;line-height:1;color:#64748B;cursor:help;margin-left:6px;vertical-align:middle" style-hover="color:#0F6B4F;border-color:#0F6B4F" style-focus="color:#0F6B4F;border-color:#0F6B4F;outline:none">i</span></div><div style="font-size:12.5px;color:#64748B;margin-top:3px">{{ gdD1sub }}</div></div>
+<sc-if value="{{ gdD1has }}" hint-placeholder-val="{{ true }}"><div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap"><svg viewBox="0 0 160 160" width="168" height="168" role="img" aria-label="{{ gdD1label }}" style="flex:none"><g transform="rotate(-90 80 80)"><circle cx="80" cy="80" r="58" fill="none" stroke="#EEF2EF" stroke-width="22"></circle><sc-for list="{{ gdSegs }}" as="g" hint-placeholder-count="4"><circle cx="80" cy="80" r="58" fill="none" stroke="{{ g.color }}" stroke-width="22" stroke-dasharray="{{ g.dash }}" stroke-dashoffset="{{ g.off }}"><title>{{ g.tip }}</title></circle></sc-for></g><text x="80" y="78" text-anchor="middle" font-size="22" font-weight="700" fill="#0B1220">{{ gdD1n }}</text><text x="80" y="95" text-anchor="middle" font-size="10.5" fill="#64748B">respondents</text></svg>
+<div style="flex:1;min-width:210px;display:flex;flex-direction:column;gap:9px"><sc-for list="{{ gdSegs }}" as="g" hint-placeholder-count="4"><div style="display:grid;grid-template-columns:10px minmax(0,1fr) auto 52px;gap:10px;align-items:center;font-size:13px"><span style="width:10px;height:10px;border-radius:2px;background:{{ g.color }};flex:none"></span><span style="color:#334155">{{ g.label }}</span><b style="color:#0B1220;text-align:right">{{ g.n }}</b><span style="color:#64748B;text-align:right">{{ g.pct }}</span></div></sc-for><div style="display:grid;grid-template-columns:10px minmax(0,1fr) auto;gap:10px;align-items:center;font-size:12.5px;margin-top:4px;padding-top:10px;border-top:1px solid #EEF2EF;color:#64748B"><span style="width:10px;height:10px;border-radius:2px;border:1.5px dashed #94A3B8;box-sizing:border-box"></span><span>Status not provided<span role="img" tabindex="0" aria-label="These respondents did not give an employment status. They are not counted as unemployed and are not included in the employment percentage." title="These respondents did not give an employment status. They are not counted as unemployed and are not included in the employment percentage." style="flex:none;display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border:1.3px solid #94A3B8;border-radius:50%;box-sizing:border-box;font-size:10px;font-weight:700;font-style:normal;line-height:1;color:#64748B;cursor:help;margin-left:6px;vertical-align:middle" style-hover="color:#0F6B4F;border-color:#0F6B4F" style-focus="color:#0F6B4F;border-color:#0F6B4F;outline:none">i</span></span><b style="color:#334155">{{ gdUnk }}</b></div></div></div></sc-if>
+<sc-if value="{{ gdD1none }}" hint-placeholder-val="{{ false }}"><div style="flex:1;min-height:180px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-align:center;color:#64748B;font-size:13px;padding:12px"><div style="font-weight:600;color:#334155">No data to show</div><div style="max-width:300px;text-wrap:pretty">No respondents with a known employment status for this selection.</div></div></sc-if></section>
+<section aria-label="Employment by Program" style="background:#fff;border:1px solid #E3E8E5;border-radius:12px;padding:20px;min-width:0;box-sizing:border-box;display:flex;flex-direction:column;gap:16px"><div><div style="font-weight:700;font-size:15px;letter-spacing:-.1px;color:#0B1220;display:flex;align-items:center">Employability Rate by Program<span role="img" tabindex="0" aria-label="Employed respondents ÷ respondents with a known status, per program. Programs with 10 or more respondents are ranked first, then by employment rate." title="Employed respondents ÷ respondents with a known status, per program. Programs with 10 or more respondents are ranked first, then by employment rate." data-om-id="63cdaad0:2515" class="scp17 scp18" style="flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; width: 15px; height: 15px; border: 1.3px solid rgb(148, 163, 184); border-radius: 50%; box-sizing: border-box; font-size: 10px; font-weight: 700; font-style: normal; line-height: 1; color: rgb(100, 116, 139); cursor: help; margin-left: 6px; vertical-align: middle;">i</span></div><div style="font-size:12.5px;color:#64748B;margin-top:3px">{{ gdD2sub }}</div></div>
+<sc-if value="{{ gdD2has }}" hint-placeholder-val="{{ true }}"><div style="display:flex;flex-direction:column;gap:11px"><sc-for list="{{ gdRows }}" as="r" hint-placeholder-count="5"><div title="{{ r.tip }}" style="display:grid;grid-template-columns:minmax(70px,150px) minmax(0,1fr) 48px 92px;gap:12px;align-items:center;font-size:12.5px"><span style="color:#334155;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.label }}</span><div role="img" aria-label="{{ r.tip }}" style="height:14px;background:#EEF2EF;border-radius:3px;overflow:hidden"><div style="height:100%;width:{{ r.w }}%;background:{{ r.color }};border-radius:3px"></div></div><b style="color:#0B1220;text-align:right">{{ r.pct }}</b><span style="color:#64748B;text-align:right">{{ r.n }}</span></div></sc-for></div>
+<div style="font-size:11.5px;color:#64748B;display:flex;gap:16px;flex-wrap:wrap;align-items:center;margin-top:auto"><span style="display:flex;gap:6px;align-items:center"><span style="width:10px;height:10px;border-radius:2px;background:#0F6B4F;flex:none"></span>10 or more respondents</span><span style="display:flex;gap:6px;align-items:center"><span style="width:10px;height:10px;border-radius:2px;background:#B9C8C0;flex:none"></span>Fewer than 10 respondents — interpret with caution</span><span>{{ gdMore }}</span></div></sc-if>
+<sc-if value="{{ gdD2none }}" hint-placeholder-val="{{ false }}"><div style="flex:1;min-height:180px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-align:center;color:#64748B;font-size:13px;padding:12px"><div style="font-weight:600;color:#334155">No data to show</div><div style="max-width:300px;text-wrap:pretty">No program has respondents with a known employment status yet.</div></div></sc-if></section>
+<section aria-label="Employment Status by Graduation Year" style="background:#fff;border:1px solid #E3E8E5;border-radius:12px;padding:20px;min-width:0;box-sizing:border-box;display:flex;flex-direction:column;gap:16px"><div><div style="font-weight:700;font-size:15px;letter-spacing:-.1px;color:#0B1220;display:flex;align-items:center">Employment Status by Graduation Year<span role="img" tabindex="0" aria-label="Counts respondents with a known employment status for each graduation year (batch)." title="Counts respondents with a known employment status for each graduation year (batch)." style="flex:none;display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border:1.3px solid #94A3B8;border-radius:50%;box-sizing:border-box;font-size:10px;font-weight:700;font-style:normal;line-height:1;color:#64748B;cursor:help;margin-left:6px;vertical-align:middle" style-hover="color:#0F6B4F;border-color:#0F6B4F" style-focus="color:#0F6B4F;border-color:#0F6B4F;outline:none">i</span></div><div style="font-size:12.5px;color:#64748B;margin-top:3px">Employment status of survey respondents in each graduation year</div></div>
+<sc-if value="{{ gdD3has }}" hint-placeholder-val="{{ true }}"><div style="display:flex;gap:6px 14px;flex-wrap:wrap;font-size:12px;color:#475569"><sc-for list="{{ gdLegend }}" as="l" hint-placeholder-count="5"><span style="display:flex;gap:6px;align-items:center"><span style="width:10px;height:10px;border-radius:2px;background:{{ l.color }};flex:none"></span>{{ l.label }}</span></sc-for></div>
+<div style="display:flex;gap:10px"><div style="display:flex;flex-direction:column-reverse;justify-content:space-between;height:190px;font-size:11px;color:#64748B;text-align:right"><sc-for list="{{ gdYTicks }}" as="y" hint-placeholder-count="3"><span style="line-height:1">{{ y }}</span></sc-for></div><div style="flex:1;min-width:0;display:flex;gap:8px;border-bottom:1px solid #CBD5CF;border-left:1px solid #E3E8E5;padding-left:6px;box-sizing:border-box"><sc-for list="{{ gdCols }}" as="c" hint-placeholder-count="6"><div title="{{ c.tip }}" role="img" aria-label="{{ c.tip }}" style="flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:190px"><div style="font-size:11px;color:#64748B;margin-bottom:3px">{{ c.n }}</div><div style="width:100%;max-width:34px;height:{{ c.h }}%;display:flex;flex-direction:column-reverse;border-radius:3px 3px 0 0;overflow:hidden"><sc-for list="{{ c.segs }}" as="s" hint-placeholder-count="4"><div style="height:{{ s.h }}%;background:{{ s.color }}"></div></sc-for></div></div></sc-for></div></div>
+<div style="display:flex;gap:10px"><div style="width:26px;flex:none"></div><div style="flex:1;min-width:0;display:flex;gap:8px;padding-left:6px;box-sizing:border-box"><sc-for list="{{ gdCols }}" as="c" hint-placeholder-count="6"><div style="flex:1;min-width:0;text-align:center;font-size:11.5px;color:#475569;font-weight:600">{{ c.label }}</div></sc-for></div></div></sc-if>
+<sc-if value="{{ gdD3none }}" hint-placeholder-val="{{ false }}"><div style="flex:1;min-height:180px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-align:center;color:#64748B;font-size:13px;padding:12px"><div style="font-weight:600;color:#334155">No data to show</div><div style="max-width:300px;text-wrap:pretty">No batch has respondents with a known employment status for this selection.</div></div></sc-if></section>
+<section aria-label="Alumni Engagement" style="background:#fff;border:1px solid #E3E8E5;border-radius:12px;padding:20px;min-width:0;box-sizing:border-box;display:flex;flex-direction:column;gap:16px"><div><div style="font-weight:700;font-size:15px;letter-spacing:-.1px;color:#0B1220;display:flex;align-items:center">Alumni Engagement<span role="img" tabindex="0" aria-label="Canceled event registrations and withdrawn job applications are not counted." title="Canceled event registrations and withdrawn job applications are not counted." style="flex:none;display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border:1.3px solid #94A3B8;border-radius:50%;box-sizing:border-box;font-size:10px;font-weight:700;font-style:normal;line-height:1;color:#64748B;cursor:help;margin-left:6px;vertical-align:middle" style-hover="color:#0F6B4F;border-color:#0F6B4F" style-focus="color:#0F6B4F;border-color:#0F6B4F;outline:none">i</span></div><div style="font-size:12.5px;color:#64748B;margin-top:3px">{{ gdD4sub }}</div></div>
+<sc-if value="{{ gdD4bad }}" hint-placeholder-val="{{ false }}"><div style="flex:1;min-height:180px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-align:center;color:#64748B;font-size:13px;padding:12px"><div style="font-weight:600;color:#334155">No data to show</div><div style="max-width:300px;text-wrap:pretty">The start month must be on or before the end month.</div></div></sc-if>
+<sc-if value="{{ gdD4has }}" hint-placeholder-val="{{ true }}"><div style="display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:#475569"><span style="display:flex;gap:6px;align-items:center"><span style="width:10px;height:10px;border-radius:2px;background:#0F6B4F;flex:none"></span>Event registrations <b style="color:#0B1220">{{ gdRegTotal }}</b></span><span style="display:flex;gap:6px;align-items:center"><span style="width:10px;height:10px;border-radius:2px;background:#D9A400;flex:none"></span>Job applications <b style="color:#0B1220">{{ gdAppTotal }}</b></span></div>
+<svg viewBox="0 0 560 230" width="100%" role="img" aria-label="{{ gdD4label }}" style="display:block;height:auto;overflow:visible"><sc-for list="{{ gdGrid }}" as="g" hint-placeholder-count="5"><g><line x1="36" x2="552" y1="{{ g.y }}" y2="{{ g.y }}" stroke="{{ g.stroke }}"></line><text x="30" y="{{ g.ty }}" text-anchor="end" font-size="11" fill="#64748B">{{ g.v }}</text></g></sc-for><polyline points="{{ gdRegPts }}" fill="none" stroke="#0F6B4F" stroke-width="2.25" stroke-linejoin="round" stroke-linecap="round"></polyline><polyline points="{{ gdAppPts }}" fill="none" stroke="#D9A400" stroke-width="2.25" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="1 0"></polyline><sc-for list="{{ gdDots }}" as="d" hint-placeholder-count="12"><circle cx="{{ d.x }}" cy="{{ d.y }}" r="3.5" fill="#fff" stroke="{{ d.color }}" stroke-width="2"><title>{{ d.tip }}</title></circle></sc-for><sc-for list="{{ gdXLabels }}" as="x" hint-placeholder-count="12"><text x="{{ x.x }}" y="222" text-anchor="middle" font-size="11" fill="#475569">{{ x.t }}</text></sc-for></svg></sc-if>
+<sc-if value="{{ gdD4none }}" hint-placeholder-val="{{ false }}"><div style="flex:1;min-height:180px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-align:center;color:#64748B;font-size:13px;padding:12px"><div style="font-weight:600;color:#334155">No data to show</div><div style="max-width:300px;text-wrap:pretty">No event registrations or job applications were recorded in this period.</div></div></sc-if></section>
+</div>
+<section aria-label="Recent Alumni Registrations" style="background:#fff;border:1px solid #E3E8E5;border-radius:12px;padding:20px;min-width:0;box-sizing:border-box;padding:20px 0 8px;display:flex;flex-direction:column;gap:6px"><div style="padding:0 20px;display:flex;justify-content:space-between;align-items:baseline;gap:12px"><div><div style="font-weight:700;font-size:15px;letter-spacing:-.1px;color:#0B1220">Recent Alumni Registrations</div><div style="font-size:12.5px;color:#64748B;margin-top:3px">Most recently registered alumni</div></div></div>
+<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px;min-width:620px"><thead><tr style="text-align:left;color:#64748B;font-size:11.5px;font-weight:600"><th scope="col" style="padding:12px 20px 8px;font-weight:600">Alumni</th><th scope="col" style="padding:12px 12px 8px;font-weight:600">College / Program</th><th scope="col" style="padding:12px 12px 8px;font-weight:600">Graduation</th><th scope="col" style="padding:12px 12px 8px;font-weight:600">Registered</th><th scope="col" style="padding:12px 20px 8px;font-weight:600;text-align:right"><span style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Action</span></th></tr></thead><tbody><sc-for list="{{ gdRecent }}" as="r" hint-placeholder-count="6"><tr style="border-top:1px solid #EEF2EF" style-hover="background:#F7FAF8"><td style="padding:12px 20px;font-weight:600;color:#0B1220;white-space:nowrap">{{ r.name }}</td><td style="padding:12px;color:#334155"><div style="font-weight:500">{{ r.prog }}</div><div style="font-size:12px;color:#64748B">{{ r.college }}</div></td><td style="padding:12px;color:#334155">{{ r.batch }}</td><td style="padding:12px;color:#334155;white-space:nowrap">{{ r.date }}</td><td style="padding:12px 20px;text-align:right;white-space:nowrap"><a href="#" onClick="{{ r.open }}" aria-label="View record for {{ r.name }}" style="color:#0F6B4F;font-weight:600;text-decoration:none" style-hover="text-decoration:underline">View record</a></td></tr></sc-for></tbody></table></div></section>
+</div></sc-if>
+</div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isAdminDashOld }}" hint-placeholder-val="{{ false }}">
+    <div data-screen-label="Admin Dashboard (previous)" style="display:flex;height:calc(100dvh - var(--sw-h,45px));overflow:hidden;background:radial-gradient(900px 520px at 0% 0%,#FBF1D3 0%,rgba(251,241,211,0) 70%),radial-gradient(800px 500px at 100% 100%,#F8F1DE 0%,rgba(248,241,222,0) 70%),#F7F6F1">
+      <dc-import name="NavSidebar" items="{{ adminNavItems }}" role-label="Administrator" user-name="System Admin" on-sign-out="{{ signOut }}" hint-size="240px,100%" style="display:flex;align-self:flex-start;flex:none;position:sticky;top:0;height:100%;z-index:5"></dc-import>
       <div style="flex:1;min-width:0;display:flex;flex-direction:column;background-color:transparent">
       <div data-m="topbar" style="background:#fff;border:1px solid #E7E9ED;display:flex;align-items:center;justify-content:space-between;padding:8px 16px 8px 24px;margin:12px 12px 0;border-radius:16px;box-shadow:0 1px 2px rgba(16,24,40,.04),0 8px 24px -12px rgba(16,24,40,.08);flex:none;min-height:60px;box-sizing:border-box;gap:16px;min-width:0">
         <div style="min-width:0">
           <div style="font-family:Inter,sans-serif;font-weight:700;font-size:26px;line-height:1.15;letter-spacing:-.6px;color:#0B1220">Admin Dashboard</div>
-          <div style="font-size:11px;color:rgba(0,0,0,.45);font-weight:600;letter-spacing:.3px;margin-top:4px">UDM ALUMNI RELATIONS OFFICE · ADMIN</div>
+          
         </div>
         <div style="display:flex;align-items:center;gap:12px">
           <div data-m="tb-search" onClick="{{ openSearch }}" title="Search (Ctrl+K)" style="width:280px;height:40px;border-radius:999px;background:#fff;border:1px solid #E7E9ED;box-sizing:border-box;display:flex;align-items:center;gap:10px;padding:0 8px 0 14px;color:#64748B;cursor:text;flex:none" style-hover="border-color:#CFE3DA;color:#0B1220"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" style="width:17px;height:17px;flex:none"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg><span style="flex:1;min-width:0;font-size:13px;color:#94A3B8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Search for an Alumni</span><span style="flex:none;font-size:10.5px;font-weight:700;color:#94A3B8;border:1px solid #E7E9ED;border-radius:6px;padding:2px 6px">Ctrl K</span></div>
@@ -3095,9 +3330,7 @@ body{margin:0;background:#F3F6F4}a{color:#004D40}a:hover{color:#F0C428}</style>
         <div data-m="ws-head" style="flex:none;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:nowrap;padding:0 0 12px;margin-bottom:0;border-bottom:1px solid #E3E8E5">
           <div style="min-width:0;flex:none">
             <div style="font-family:Inter,sans-serif;font-weight:700;font-size:22px;line-height:1.1;letter-spacing:-.5px;color:#0B1220">Graduate Outcomes</div>
-            <div style="display:flex;align-items:center;gap:8px;margin-top:4px;font-size:12.5px;color:#64748B">
-              <span>Survey cycle 2026 · Synced Sep 16</span>
-            </div>
+            <div style="margin-top:4px;font-size:12.5px;color:#64748B">Survey cycle 2026</div>
           </div>
           <div style="flex:1;min-width:0;display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:nowrap">
             <select value="{{ admBatchVal }}" onChange="{{ admOnBatch }}" style="font-size:12px;font-weight:600;color:#0F172A;max-width:170px;min-width:0;flex:1 1 0;appearance:none;-webkit-appearance:none;min-height:38px;padding:0 28px 0 10px;border-radius:10px;border-width:1px;border-style:solid;border-color:#D5DBE3;background-color:#fff;background-image:url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 12 12%22%3E%3Cpath d=%22M2.5 4.5 6 8l3.5-3.5%22 fill=%22none%22 stroke=%22%2364748B%22 stroke-width=%221.6%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/%3E%3C/svg%3E');background-repeat:no-repeat;background-position:right 9px center;background-size:12px 12px;font-family:inherit;line-height:1.3;text-overflow:ellipsis;cursor:pointer;outline:none;box-shadow:0 1px 2px rgba(16,24,40,.04);transition:border-color .15s, box-shadow .15s" style-hover="border-color:#9AA6B5" style-focus="border-color:#0F3D2E;box-shadow:0 0 0 3px rgba(15,61,46,.15)">
@@ -3223,10 +3456,9 @@ body{margin:0;background:#F3F6F4}a{color:#004D40}a:hover{color:#F0C428}</style>
         </sc-if>
         <div data-m="kpi-grid" data-m2="ad-kpi" style="flex:none;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:10px">
           <sc-for list="{{ kpiCards }}" as="k" hint-placeholder-count="6">
-            <div onClick="{{ k.onClick }}" onMouseEnter="{{ k.onEnter }}" onMouseLeave="{{ k.onLeave }}" style="border:1px solid #E7E9ED;border-radius:16px;box-shadow:0 1px 2px rgba(16,24,40,.04),0 10px 26px -14px rgba(16,24,40,.14);cursor:pointer;transition:transform .18s,box-shadow .18s;min-width:0;padding:12px 14px 13px;display:flex;flex-direction:column;gap:7px;background:{{ k.bg }};border-color:{{ k.border }}" style-hover="transform:translateY(-3px);box-shadow:0 2px 4px rgba(16,24,40,.05),0 18px 30px -12px rgba(16,24,40,.22)">
-              <div style="display:flex;align-items:center;justify-content:space-between;gap:6px"><div style="width:30px;height:30px;border-radius:10px;background:{{ k.chip }};color:{{ k.acc }};display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;flex:none">{{ k.ico }}</div><span style="font-size:14px;font-weight:600;color:{{ k.acc }};flex:none;transition:opacity .18s,transform .18s;opacity:{{ k.arrowOp }};transform:{{ k.arrowX }}">→</span></div>
-              <div style="font-size:11.5px;font-weight:700;color:#475569;line-height:1.25;letter-spacing:.2px;text-transform:uppercase">{{ k.label }}</div>
-              <div data-m="kpi-val" style="font-weight:700;font-size:30px;line-height:1;letter-spacing:-1px;color:#0B1220">{{ k.value }}</div>
+            <div onClick="{{ k.onClick }}" onMouseEnter="{{ k.onEnter }}" onMouseLeave="{{ k.onLeave }}" style="border:1px solid #E7E9ED;border-radius:16px;box-shadow:0 1px 2px rgba(16,24,40,.04),0 10px 26px -14px rgba(16,24,40,.14);cursor:pointer;transition:transform .18s,box-shadow .18s;min-width:0;padding:14px 16px;display:flex;flex-direction:column;gap:8px;background:{{ k.bg }};border-color:{{ k.border }}" style-hover="transform:translateY(-3px);box-shadow:0 2px 4px rgba(16,24,40,.05),0 18px 30px -12px rgba(16,24,40,.22)">
+                            <div style="font-size:13px;font-weight:600;color:#475569;line-height:1.25">{{ k.label }}</div>
+              <div data-m="kpi-val" style="font-weight:700;font-size:32px;line-height:1;letter-spacing:-1px;color:#0B1220">{{ k.value }}</div>
               <div style="font-size:11.5px;font-weight:600;color:{{ k.subColor }};line-height:1.3">{{ k.sub }}</div>
             </div>
           </sc-for>
@@ -3239,17 +3471,17 @@ body{margin:0;background:#F3F6F4}a{color:#004D40}a:hover{color:#F0C428}</style>
               <div style="font-size:13px;font-weight:700">{{ tipValue }}</div>
             </div>
           </sc-if>
-          <div style="flex:1;min-height:170px;display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr) minmax(0,1.2fr);gap:12px">
+          <div style="flex:none;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:minmax(190px,auto) auto;gap:12px">
             <div style="background:#fff;border:1px solid #E7E9ED;border-radius:14px;box-shadow:0 1px 2px rgba(16,24,40,.04),0 8px 24px -12px rgba(16,24,40,.08);padding:14px 16px;display:flex;flex-direction:column;min-height:0;min-width:0;overflow:hidden">
-              <div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px"><div style="font-weight:600;font-size:14px;color:#0B1220">Graduates traced by batch</div><div style="font-size:11px;color:#475569;white-space:nowrap">Dashed = 65% target</div></div>
-              <div style="font-size:12px;color:#64748B;margin-top:2px">{{ batchSub }}</div>
+              <div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px"><div style="font-weight:600;font-size:14px;color:#0B1220">Graduates traced by batch</div></div>
+              
               <div style="flex:1;min-height:0;display:flex;gap:8px;margin-top:10px;position:relative">
                 <div style="position:absolute;left:0;right:0;bottom:calc(65% * .86 + 22px);height:2px;background:repeating-linear-gradient(90deg,#0B1220 0 6px,#fff 6px 10px);z-index:2;pointer-events:none"></div>
                 <sc-for list="{{ batchBars }}" as="b" hint-placeholder-count="6">
                   <div onClick="{{ b.onClick }}" onMouseMove="{{ b.onTipMove }}" onMouseLeave="{{ b.onTipLeave }}" style="flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer">
-                    <div style="flex:1;min-height:0;width:100%;max-width:46px;position:relative;background:#F4F7F5;border-radius:8px;overflow:hidden"><div style="position:absolute;left:0;right:0;bottom:0;height:{{ b.pct }};background:{{ b.color }};border-radius:8px"></div></div>
-                    <div style="font-size:12px;font-weight:700;color:{{ b.pctColor }}">{{ b.pct }}</div>
-                    <div style="font-size:11px;color:#64748B;font-weight:600">{{ b.label }}</div>
+                    <div style="flex:1;min-height:0;width:100%;max-width:46px;position:relative;background:#F4F7F5;border-radius:8px;overflow:hidden"><div style="position:absolute;left:0;right:0;bottom:0;height:{{ b.pct }};background:{{ b.fill }};border:{{ b.edge }};box-sizing:border-box;border-radius:8px"></div></div>
+                    <div style="font-size:12px;font-weight:700;color:{{ b.pctColor }};white-space:nowrap">{{ b.lbl }}</div>
+                    <div style="font-size:11px;color:#64748B;font-weight:600;white-space:nowrap">{{ b.label }}</div>
                   </div>
                 </sc-for>
               </div>
@@ -3258,7 +3490,7 @@ body{margin:0;background:#F3F6F4}a{color:#004D40}a:hover{color:#F0C428}</style>
               <div style="font-weight:600;font-size:14px;color:#0B1220">Employment status mix</div>
               <div style="flex:1;min-height:0;display:flex;align-items:center;gap:14px;margin-top:8px">
                 <div onClick="{{ statusOpen }}" onMouseMove="{{ onStatusMove }}" onMouseLeave="{{ hideTip }}" style="position:relative;width:118px;height:118px;border-radius:50%;background:{{ statusDonut }};flex:none;cursor:pointer">
-                  <div style="position:absolute;inset:18px;background:#fff;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;box-shadow:0 0 0 1px #EEF0F3"><div style="font-weight:700;font-size:18px;line-height:1;letter-spacing:-.4px;color:#0B1220">{{ donutTotal }}</div><div style="font-size:9.5px;font-weight:600;color:#94A3B8">Respondents</div></div>
+                  <div style="position:absolute;inset:18px;background:#fff;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;box-shadow:0 0 0 1px #EEF0F3"><div style="font-weight:700;font-size:18px;line-height:1;letter-spacing:-.4px;color:#0B1220">{{ donutTotal }}</div></div>
                 </div>
                 <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px">
                   <sc-for list="{{ statusMix }}" as="s" hint-placeholder-count="5">
@@ -3270,38 +3502,79 @@ body{margin:0;background:#F3F6F4}a{color:#004D40}a:hover{color:#F0C428}</style>
                   </sc-for>
                 </div>
               </div>
-              <div style="font-size:12px;font-weight:700;color:#0B4A36;padding-top:8px;border-top:1px solid #EEF0F3">Overall Active Labor Force: {{ activeLabor }}</div>
+              <div style="font-size:12.5px;color:#475569;padding-top:8px;border-top:1px solid #EEF0F3">In the workforce: <b style="color:#0B1220">{{ activeLabor }}</b></div>
             </div>
-            <div style="background:#fff;border:1px solid #E7E9ED;border-radius:14px;box-shadow:0 1px 2px rgba(16,24,40,.04),0 8px 24px -12px rgba(16,24,40,.08);padding:14px 16px;display:flex;flex-direction:column;min-height:0;min-width:0;overflow:hidden">
-              <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
-                <div style="min-width:0"><div style="font-weight:600;font-size:14px;color:#0B1220">{{ programRatesTitle }}</div><div style="font-size:12px;color:#64748B;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ programRatesSub }}</div></div>
-                <div onClick="{{ goReports }}" style="font-size:12px;font-weight:700;color:#0F6B4F;cursor:pointer;white-space:nowrap">Drill down ›</div>
+            <div style="background:#fff;border:1px solid #E7E9ED;border-radius:16px;box-shadow:0 1px 2px rgba(16,24,40,.04),0 10px 26px -14px rgba(16,24,40,.14);padding:16px 18px;display:flex;flex-direction:column;gap:10px;min-width:0;grid-column:1/-1">
+              <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap">
+                <div style="min-width:0"><div style="font-weight:700;font-size:16px;letter-spacing:-.2px;color:#0B1220">{{ empTitle }}</div><div style="font-size:12px;color:#64748B;margin-top:3px">{{ empSubtitle }}</div></div>
+                <div style="display:flex;gap:2px;padding:3px;background:#F1F4F2;border-radius:99px;flex:none">
+                  <div onClick="{{ empTab1 }}" style="padding:5px 12px;border-radius:99px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;background:{{ empT1Bg }};color:{{ empT1C }};box-shadow:{{ empT1S }}">Employment Rate</div>
+                  <div onClick="{{ empTab2 }}" style="padding:5px 12px;border-radius:99px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;background:{{ empT2Bg }};color:{{ empT2C }};box-shadow:{{ empT2S }}">Total Alumni</div>
+                </div>
               </div>
-              <div style="flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;justify-content:space-evenly;gap:6px;margin-top:8px">
-                <sc-for list="{{ programRates }}" as="p" hint-placeholder-count="6">
-                  <div onClick="{{ p.onClick }}" onMouseMove="{{ p.onTipMove }}" onMouseLeave="{{ p.onTipLeave }}" style="display:grid;grid-template-columns:96px minmax(30px,1fr) 40px 64px;align-items:center;gap:8px;cursor:pointer;border-radius:6px" style-hover="background:#F4F7F5">
-                    <div title="{{ p.full }}" style="font-size:12px;font-weight:600;color:#0B1220;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ p.program }}</div>
-                    <div style="position:relative"><div style="position:absolute;left:70%;top:-5px;bottom:-5px;width:2px;background:repeating-linear-gradient(180deg,#0B1220 0 3px,transparent 3px 5px);z-index:2"></div><div style="height:7px;border-radius:99px;background:#EEF4F1;overflow:hidden"><div style="height:100%;border-radius:99px;background:#0F6B4F;width:{{ p.pct }}"></div></div></div>
-                    <div style="font-weight:700;font-size:12px;color:#0B1220;text-align:right">{{ p.pct }}</div>
-                    <div style="justify-self:end;font-weight:700;color:{{ p.deltaColor }};background:{{ p.deltaBg }};padding:2px 6px;border-radius:999px;white-space:nowrap;font-size:10.5px">{{ p.arrow }} {{ p.delta }}</div>
+              <sc-if value="{{ empIsRate }}" hint-placeholder-val="{{ true }}">
+                <div style="display:flex;gap:16px;font-size:11.5px;color:#475569;font-weight:600;flex-wrap:wrap">
+                  <span style="display:flex;align-items:center;gap:6px"><span style="width:9px;height:9px;border-radius:50%;background:#0F3D2E"></span>Employment Rate <span style="font-weight:400;color:#94A3B8">(% of traced)</span></span>
+                  <span style="display:flex;align-items:center;gap:6px"><span style="width:9px;height:9px;border-radius:50%;background:#E3A91B"></span>Tracer Response Rate <span style="font-weight:400;color:#94A3B8">(% of graduates)</span></span>
+                </div>
+              </sc-if>
+              <div style="position:relative;flex:1;min-height:160px;display:flex;align-items:center">
+                <svg viewBox="{{ empVB }}" style="width:100%;height:auto;max-height:100%;display:block">
+                  <defs><linearGradient id="empArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0F3D2E" stop-opacity=".22"></stop><stop offset="1" stop-color="#0F3D2E" stop-opacity="0"></stop></linearGradient></defs>
+                  <sc-if value="{{ empIsRate }}" hint-placeholder-val="{{ true }}">
+                    <g>
+                      <sc-for list="{{ empGridA }}" as="g" hint-placeholder-count="4"><g><line x1="{{ g.x1 }}" x2="{{ g.x2 }}" y1="{{ g.y }}" y2="{{ g.y }}" stroke="#EEF0F3"></line><text x="{{ ocYx }}" y="{{ g.y }}" text-anchor="end" dominant-baseline="middle" font-size="15" font-weight="500" fill="#334155">{{ g.label }}</text></g></sc-for>
+                      <line x1="{{ empVLine }}" x2="{{ empVLine }}" y1="{{ empVT }}" y2="{{ empVB2 }}" stroke="#D5DBE0" stroke-dasharray="3 3"></line>
+                      <path d="{{ empLineR }}" fill="none" stroke="#E3A91B" stroke-width="2.5" stroke-linecap="round"></path>
+                      <path d="{{ empLineE }}" fill="none" stroke="#0F3D2E" stroke-width="2.5" stroke-linecap="round"></path>
+                      <sc-for list="{{ empDotsR }}" as="d" hint-placeholder-count="9"><circle cx="{{ d.cx }}" cy="{{ d.cy }}" r="{{ d.r }}" fill="#fff" stroke="#E3A91B" stroke-width="2"></circle></sc-for>
+                      <sc-for list="{{ empDotsE }}" as="d" hint-placeholder-count="9"><circle cx="{{ d.cx }}" cy="{{ d.cy }}" r="{{ d.r }}" fill="#0F3D2E" stroke="#fff" stroke-width="2"></circle></sc-for>
+                    </g>
+                  </sc-if>
+                  <sc-if value="{{ empIsTotal }}" hint-placeholder-val="{{ false }}">
+                    <g>
+                      <sc-for list="{{ empGridB }}" as="g" hint-placeholder-count="4"><g><line x1="{{ g.x1 }}" x2="{{ g.x2 }}" y1="{{ g.y }}" y2="{{ g.y }}" stroke="#EEF0F3"></line><text x="{{ ocYx }}" y="{{ g.y }}" text-anchor="end" dominant-baseline="middle" font-size="15" font-weight="500" fill="#334155">{{ g.label }}</text></g></sc-for>
+                      <path d="{{ empAreaC }}" fill="url(#empArea)"></path>
+                      <path d="{{ empLineC }}" fill="none" stroke="#0F3D2E" stroke-width="2.5" stroke-linecap="round"></path>
+                      <sc-for list="{{ empDotsC }}" as="d" hint-placeholder-count="9"><circle cx="{{ d.cx }}" cy="{{ d.cy }}" r="{{ d.r }}" fill="#0F3D2E" stroke="#fff" stroke-width="2"></circle></sc-for>
+                    </g>
+                  </sc-if>
+                  <sc-for list="{{ empXs }}" as="x" hint-placeholder-count="6"><text x="{{ x.x }}" y="{{ x.y }}" text-anchor="middle" font-size="11" fill="#64748B">{{ x.label }}</text></sc-for>
+                  <sc-if value="{{ empIsRate }}" hint-placeholder-val="{{ true }}">
+                    <g onMouseLeave="{{ empHitOff }}"><sc-for list="{{ empHit }}" as="h" hint-placeholder-count="6"><rect x="{{ h.x }}" y="{{ h.y }}" width="{{ h.w }}" height="{{ h.h }}" fill="transparent" style="cursor:pointer" onMouseEnter="{{ h.on }}"></rect></sc-for></g>
+                  </sc-if>
+                </svg>
+                <sc-if value="{{ empIsRate }}" hint-placeholder-val="{{ true }}">
+                  <div style="position:absolute;left:{{ empTipX }};top:{{ empTipY }};transform:translate(-50%,calc(-100% - 14px));pointer-events:none;background:#fff;border:1px solid #E7E9ED;border-radius:10px;box-shadow:0 8px 22px -8px rgba(16,24,40,.25);padding:8px 11px;white-space:nowrap;display:flex;flex-direction:column;gap:3px;z-index:3">
+                    <div style="font-size:11px;font-weight:700;color:#64748B">{{ empTipYear }}</div>
+                    <div style="font-size:12px;color:#0B1220"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#0F3D2E;margin-right:6px"></span><b>{{ empTipEmp }}</b> employed <span style="color:#64748B">({{ empTipEmpN }})</span></div>
+                    <div style="font-size:12px;color:#0B1220"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#E3A91B;margin-right:6px"></span><b>{{ empTipResp }}</b> responded <span style="color:#64748B">({{ empTipRespN }})</span></div>
                   </div>
-                </sc-for>
+                </sc-if>
+                <sc-if value="{{ empIsTotal }}" hint-placeholder-val="{{ false }}">
+                  <div style="position:absolute;left:{{ empTipCX }};top:{{ empTipCY }};transform:translate(-100%,calc(-100% - 12px));pointer-events:none;background:#fff;border:1px solid #E7E9ED;border-radius:10px;box-shadow:0 8px 22px -8px rgba(16,24,40,.25);padding:7px 11px;white-space:nowrap;z-index:3">
+                    <div style="font-size:15px;font-weight:700;color:#0B1220">{{ empTipTot }}</div><div style="font-size:11px;color:#64748B">Registered alumni</div>
+                  </div>
+                </sc-if>
+              </div>
+              <div style="border-top:1px solid #EEF0F3;padding-top:10px;display:flex;flex-direction:column;gap:8px">
+                <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px">
+                  <div style="min-width:0"><div style="font-weight:700;font-size:13px;color:#0B1220">Time to First Job</div><div style="font-size:11.5px;color:#64748B;margin-top:2px">Most graduates ({{ within6 }}) land a job within 6 months</div></div>
+                  <div style="flex:none;background:#E8F1EC;color:#0F3D2E;font-weight:700;font-size:12px;padding:4px 10px;border-radius:99px;white-space:nowrap">Average: {{ avgRound }}</div>
+                </div>
+                <div style="display:flex;gap:2px;height:10px;border-radius:99px;overflow:hidden">
+                  <sc-for list="{{ timeToJob }}" as="t" hint-placeholder-count="4"><div onClick="{{ t.onClick }}" onMouseMove="{{ t.onTipMove }}" onMouseLeave="{{ t.onTipLeave }}" style="flex:{{ t.grow }} 1 0;min-width:0;background:{{ t.color }};cursor:pointer"></div></sc-for>
+                </div>
+                <div style="display:flex;flex-wrap:wrap;gap:3px 14px">
+                  <sc-for list="{{ timeToJob }}" as="t" hint-placeholder-count="4"><div style="display:flex;align-items:center;gap:6px;font-size:11.5px;color:#475569;white-space:nowrap"><span style="width:8px;height:8px;border-radius:50%;background:{{ t.color }}"></span>{{ t.label }} <b style="color:#0B1220">({{ t.pct }})</b></div></sc-for>
+                </div>
               </div>
             </div>
           </div>
 
-          <div data-m="ad-bottom" style="flex:none;display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr) minmax(0,1.2fr);gap:12px">
-            <div style="background:#fff;border:1px solid #E7E9ED;border-radius:14px;box-shadow:0 1px 2px rgba(16,24,40,.04),0 8px 24px -12px rgba(16,24,40,.08);padding:12px 16px;display:flex;flex-direction:column;gap:8px;min-width:0">
-              <div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><div style="font-weight:600;font-size:14px;color:#0B1220">Months before first job</div><div style="display:flex;align-items:baseline;gap:4px"><span style="font-weight:700;font-size:20px;letter-spacing:-.5px;color:#0B1220">{{ avgMonths }}</span><span style="font-size:11.5px;color:#64748B;font-weight:600">mo avg</span></div></div>
-              <div style="display:flex;gap:2px;height:24px;border-radius:7px;overflow:hidden">
-                <sc-for list="{{ timeToJob }}" as="t" hint-placeholder-count="4"><div onClick="{{ t.onClick }}" onMouseMove="{{ t.onTipMove }}" onMouseLeave="{{ t.onTipLeave }}" style="flex:{{ t.grow }} 1 0;min-width:0;background:{{ t.color }};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:{{ t.text }};cursor:pointer">{{ t.pct }}</div></sc-for>
-              </div>
-              <div style="display:flex;flex-wrap:wrap;gap:2px 12px">
-                <sc-for list="{{ timeToJob }}" as="t" hint-placeholder-count="4"><div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#334155;white-space:nowrap"><span style="width:8px;height:8px;border-radius:2px;background:{{ t.color }}"></span>{{ t.label }}</div></sc-for>
-              </div>
-            </div>
+          <div data-m="ad-bottom" style="flex:none;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:12px">
             <div onClick="{{ insOpen }}" style="background:#fff;border:1px solid #E7E9ED;border-radius:14px;box-shadow:0 1px 2px rgba(16,24,40,.04),0 8px 24px -12px rgba(16,24,40,.08);padding:12px 16px;display:flex;flex-direction:column;gap:6px;min-width:0;cursor:pointer" style-hover="transform:translateY(-2px);box-shadow:0 2px 4px rgba(16,24,40,.05),0 14px 28px -12px rgba(16,24,40,.16);border-color:#D3DAD6">
-              <div style="display:flex;align-items:center;justify-content:space-between"><div style="display:flex;align-items:center;gap:8px"><span style="width:7px;height:7px;border-radius:50%;background:#F0C428"></span><span style="font-size:11.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:#0B1220">Signals worth acting on</span></div><span style="font-size:11.5px;font-weight:700;color:#0F6B4F">{{ insCount }} ›</span></div>
+              <div style="display:flex;align-items:center;justify-content:space-between"><div style="display:flex;align-items:center;gap:8px"><span style="font-weight:600;font-size:14px;color:#0B1220">Signals worth acting on</span></div><span style="font-size:12px;font-weight:700;color:#0F6B4F">View all ›</span></div>
               <div style="font-size:12.5px;line-height:1.45;color:#334155;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden"><span style="font-weight:700;color:#0B1220">{{ insTop.lead }}</span> {{ insTop.text }}</div>
             </div>
             <div style="background:#fff;border:1px solid #E7E9ED;border-radius:14px;box-shadow:0 1px 2px rgba(16,24,40,.04),0 8px 24px -12px rgba(16,24,40,.08);padding:12px 16px;display:flex;flex-direction:column;gap:8px;min-width:0">
@@ -4421,7 +4694,7 @@ body{margin:0;background:#F3F6F4}a{color:#004D40}a:hover{color:#F0C428}</style>
                               <div style="display:flex;flex-direction:column;gap:6px;margin-top:2px">
                                 <div style="font-size:11px;font-weight:700;letter-spacing:.5px;color:#6B4E00">{{ r.editLabel }}</div>
                                 <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-                                  <input value="{{ r.editVal }}" onInput="{{ r.onInput }}" placeholder="{{ r.editHint }}" style="flex:1 1 140px;min-width:0;height:38px;box-sizing:border-box;border:1px solid {{ r.editBorder }};border-radius:8px;padding:0 10px;font-size:13px;font-family:inherit;background:#fff;color:#0B1220;outline:none" />
+                                  <input value="{{ r.editVal }}" onInput="{{ r.onInput }}" placeholder="{{ r.editHint }}" style="flex:1 1 140px;min-width:0;height:38px;box-sizing:border-box;border:1px solid {{ r.editBorder }};border-radius:8px;padding:0 10px;font-size:13px;font-family:inherit;background:#fff;color:#0B1220;outline:none">
                                   <div onClick="{{ r.onSave }}" style="font-size:12px;font-weight:700;color:{{ r.saveColor }};background:{{ r.saveBg }};border-radius:8px;padding:10px 14px;cursor:{{ r.saveCursor }}">Save</div>
                                   <div onClick="{{ r.onCancel }}" style="font-size:12px;font-weight:700;color:#334155;background:#fff;border:1px solid #E7E9ED;border-radius:8px;padding:10px 14px;cursor:pointer">Cancel</div>
                                 </div>
@@ -5137,7 +5410,7 @@ body{margin:0;background:#F3F6F4}a{color:#004D40}a:hover{color:#F0C428}</style>
 </sc-if>
 
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props="{&quot;mobilePreview&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Auto&quot;,&quot;Phone frame&quot;,&quot;Desktop&quot;],&quot;default&quot;:&quot;Auto&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Responsive&quot;},&quot;evDemo&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Normal&quot;,&quot;Loading&quot;,&quot;Empty lists&quot;,&quot;Saves fail&quot;],&quot;default&quot;:&quot;Normal&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Events states&quot;}}">
+<script type="text/x-dc" data-dc-script data-props="{&quot;dashState&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;ready&quot;,&quot;loading&quot;,&quot;error&quot;,&quot;no-records&quot;],&quot;default&quot;:&quot;ready&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;mobilePreview&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Auto&quot;,&quot;Phone frame&quot;,&quot;Desktop&quot;],&quot;default&quot;:&quot;Auto&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Responsive&quot;},&quot;evDemo&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Normal&quot;,&quot;Loading&quot;,&quot;Empty lists&quot;,&quot;Saves fail&quot;],&quot;default&quot;:&quot;Normal&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Events states&quot;}}">
 const DATA = [
   { name: 'Alumni Demo User', studentId: '2022-01234-UDM', degree: 'BSIT', batch: 2024, title: 'Junior Data Engineer', company: 'Maya Philippines', status: 'Employed Full-time', skills: ['Python', 'Spark', 'SQL'], more: 2 },
   { name: 'Angela Mae Dizon', studentId: '2020-00891-UDM', degree: 'BSBA', batch: 2024, title: 'SAP Systems Analyst', company: 'Accenture Philippines', status: 'Employed Full-time', skills: ['SAP ERP', 'SQL', 'Business Process Modeling'], more: 1 },
@@ -5219,8 +5492,8 @@ class Component extends DCLogic {
   hideTip = () => { if (this.state.tip) this.setState({ tip: null }); };
   tipH(title, value) { return { onTipMove: (e) => this.showTip(e, title, value), onTipLeave: this.hideTip }; }
   STATUS_SLICES = [
-    { end: 62.1, title: 'Employed full-time', value: '2,162 graduates · 62.1%' },
-    { end: 71.4, title: 'Employed part-time', value: '324 graduates · 9.3%' },
+    { end: 62.1, title: 'Full-time', value: '2,162 graduates · 62.1%' },
+    { end: 71.4, title: 'Part-time', value: '324 graduates · 9.3%' },
     { end: 78.5, title: 'Self-employed / Entrepreneurship', value: '245 graduates · 7.1%' },
     { end: 86.8, title: 'Further studies / Academics', value: '289 graduates · 8.3%' },
     { end: 100, title: 'Not yet employed', value: '462 graduates · 13.2%' },
@@ -7332,6 +7605,188 @@ class Component extends DCLogic {
       pvReset: () => this.setState({ pvReq: null }),
     };
   }
+  ovNames() { const c = this.colleges(); return Object.keys(c).filter((k) => k !== 'Others' && c[k].length); }
+  ovSeries(colKey) {
+    const AE = [58, 54, 62, 66, 69], AR = [56, 58, 63, 67, 70];
+    if (colKey === 'All Colleges') return { E: AE, R: AR, SC: 1 };
+    const hs = (s) => { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } h ^= h >>> 13; h = Math.imul(h, 1274126177); h ^= h >>> 16; return (h >>> 0) / 4294967296; };
+    const c = this.colleges(), tot = this.ovNames().reduce((a, k) => a + c[k].length, 0) || 1;
+    const oe = (hs(colKey + 'e') - .5) * 14, or = (hs(colKey + 'r') - .5) * 10;
+    const cl = (x) => Math.max(35, Math.min(92, Math.round(x)));
+    return { E: AE.map((v, i) => cl(v + oe + (hs(colKey + 'E' + i) - .5) * 5)), R: AR.map((v, i) => cl(v + or + (hs(colKey + 'R' + i) - .5) * 5)), SC: Math.max(.06, (c[colKey] || []).length / tot) };
+  }
+  ovCard(colKey, selIn) {
+    const yrs = [2022, 2023, 2024, 2025, 2026], fy = [2027, 2028, 2029], A = yrs.length, n = A + fy.length, last = A - 1, tab = this.state.ovTab === 'total' ? 'total' : 'rate';
+    const SS = this.ovSeries(colKey), EMP0 = SS.E;
+    const RESP0 = SS.R;
+    const ext = (v) => { const w = v.slice(-5), mx = 2, my = w.reduce((p, q) => p + q, 0) / 5; let nu = 0, de = 0; w.forEach((y, i) => { nu += (i - mx) * (y - my); de += (i - mx) * (i - mx); }); const k = nu / de; return v.concat([5, 6].map((i) => Math.round(my + k * (i - mx)))).slice(3); };
+    const EMP = EMP0, RESP = RESP0;
+    const SC = SS.SC;
+    const G = [2790, 3040, 3300, 3540, 3780].map((g) => Math.round(g * SC));
+    const CUM = [10050, 11560, 12845, 14250, 15650].map((c) => Math.round(c * SC));
+    const ols = (v) => { const w = v.slice(-5), m = 5, mx = 2, my = w.reduce((p, q) => p + q, 0) / m; let nu = 0, de = 0; w.forEach((y, i) => { nu += (i - mx) * (y - my); de += (i - mx) * (i - mx); }); const k = nu / de; return [5, 6, 7].map((i) => my + k * (i - mx)); };
+    const cl = (x) => Math.max(0, Math.min(100, x));
+    const FE = ols(EMP).map(cl), FR = ols(RESP).map(cl);
+    const inc = (CUM[last] - CUM[last - 3]) / 3, FC = [1, 2, 3].map((i) => Math.round(CUM[last] + inc * i));
+    const hov = selIn != null && selIn < n, idx = hov ? selIn : last, isF = idx > last;
+    const wide = typeof window !== 'undefined' && window.innerWidth >= 1181 && window.innerHeight >= 620;
+    const W = wide ? 980 : 560, H = wide ? 360 : 400, L = 78, R = 28, T = 20, B = 70, pw = W - L - R, ph = H - T - B;
+    const X = (i) => L + pw * i / (n - 1), N = (v) => Math.round(v).toLocaleString('en-US');
+    const sm = (pts) => pts.map((p, i) => { if (!i) return 'M' + p[0].toFixed(1) + ' ' + p[1].toFixed(1); const a = pts[i - 2] || pts[i - 1], b = pts[i - 1], d = pts[i + 1] || p; return 'C' + (b[0] + (p[0] - a[0]) / 6).toFixed(1) + ' ' + (b[1] + (p[1] - a[1]) / 6).toFixed(1) + ',' + (p[0] - (d[0] - b[0]) / 6).toFixed(1) + ' ' + (p[1] - (d[1] - b[1]) / 6).toFixed(1) + ',' + p[0].toFixed(1) + ' ' + p[1].toFixed(1); }).join(' ');
+    const allv = EMP.concat(RESP, FE, FR), lo = Math.max(0, Math.floor((Math.min(70, ...allv) - 4) / 10) * 10), top = Math.min(100, Math.ceil((Math.max(70, ...allv) + 4) / 10) * 10);
+    const YA = (v) => T + ph * (1 - (v - lo) / (top - lo));
+    const tks = []; for (let v = lo; v <= top; v += 10) tks.push(v);
+    const mxv = FC[2], nice = [500, 1000, 2000, 2500, 5000].find((q) => mxv / q <= 4) || 5000, tt = Math.ceil(mxv / nice) * nice;
+    const YB = (v) => T + ph * (1 - v / tt);
+    const tb = []; for (let v = 0; v <= tt; v += nice) tb.push(v);
+    const EA = EMP.concat(FE), RA = RESP.concat(FR), CA = CUM.concat(FC);
+    const pe = EA.map((v, i) => [X(i), YA(v)]), pr = RA.map((v, i) => [X(i), YA(v)]), pc = CA.map((v, i) => [X(i), YB(v)]);
+    const cp = sm(pc.slice(0, A)), bot = (T + ph).toFixed(1), on = tab === 'rate';
+    const px = (p) => (p[0] / W * 100).toFixed(2) + '%', py = (p) => (p[1] / H * 100).toFixed(2) + '%';
+    const trc = Math.round(G[Math.min(idx, last)] * RESP[Math.min(idx, last)] / 100), emp = Math.round(trc * EMP[Math.min(idx, last)] / 100);
+    const tg = (v) => ({ bg: on === v ? '#fff' : 'transparent', c: on === v ? '#0B1220' : '#64748B', sh: on === v ? '0 1px 3px rgba(16,24,40,.12)' : 'none' });
+    const t1 = tg(true), t2 = tg(false);
+    const dot = (p, i, big, c) => ({ cx: p[0].toFixed(1), cy: p[1].toFixed(1), r: i === big ? 5.5 : i > last ? 3 : 3.5, f: i > last ? '#fff' : c, s: i > last ? c : '#fff' });
+    const fx = (X(last) + X(last + 1)) / 2, fw = W - R - fx;
+    return {
+      ocRate: on, ocTotal: !on, ocVB: '0 0 ' + W + ' ' + H, ocTipShow: on && hov,
+      ocTab1: () => this.setState({ ovTab: 'rate' }), ocTab2: () => this.setState({ ovTab: 'total' }),
+      ocT1Bg: t1.bg, ocT1C: t1.c, ocT1S: t1.sh, ocT2Bg: t2.bg, ocT2C: t2.c, ocT2S: t2.sh,
+      ocTitle: on ? 'Employability Rate by Batch' : 'Total Registered Alumni', ocSub: on ? 'Batches 2022\u20132026 + 2027\u20132029 forecast* \u00b7 illustrative figures, not official UDM statistics' : 'Running total of graduates in the alumni directory + 2027\u20132029 forecast*',
+      ocGridA: tks.map((v) => ({ y: YA(v).toFixed(1), l: v + '%' })), ocGridB: tb.map((v) => ({ y: YB(v).toFixed(1), l: v >= 1000 ? (v / 1000) + 'K' : String(v) })),
+      ocYx: L - 12, ocYtx: 16, ocYty: T + ph / 2, ocXtx: L + pw / 2, ocXty: H - 10, ocYTitle: on ? 'Percentage (%)' : 'Registered alumni', ocCx: L + 8, ocCy: (YA(70) - 8).toFixed(1), ocFly: T + 20, ocAx: L, ocAy: T + ph, ocAy0: T, ocX1: L, ocX2: W - R, ocTy: YA(70).toFixed(1), ocFx: fx.toFixed(1), ocFw: fw.toFixed(1), ocFy: T, ocFh: ph, ocFlx: (fx + fw / 2).toFixed(1),
+      ocXs: yrs.concat(fy).map((y, i) => ({ x: X(i).toFixed(1), y: T + ph + 24, t: i > last ? y + '*' : String(y), w: i === idx && on && hov ? 700 : 400, c: i === idx && on && hov ? '#0B1220' : '#334155' })),
+      ocLineE: sm(pe.slice(0, A)), ocLineR: sm(pr.slice(0, A)), ocLineC: cp, ocAreaC: cp + ' L' + X(last).toFixed(1) + ' ' + bot + ' L' + L + ' ' + bot + ' Z',
+      ocFcE: sm(pe.slice(last)), ocFcR: sm(pr.slice(last)), ocFcC: sm(pc.slice(last)),
+      ocDotsE: pe.map((p, i) => dot(p, i, hov ? idx : -1, '#0F3D2E')), ocDotsR: pr.map((p, i) => dot(p, i, hov ? idx : -1, '#E3A91B')), ocDotsC: pc.map((p, i) => dot(p, i, last, '#0F3D2E')),
+      ocHit: pe.map((p, i) => ({ x: (X(i) - pw / (n - 1) / 2).toFixed(1), y: T, w: (pw / (n - 1)).toFixed(1), h: ph + B, on: () => this.setState({ ovSel: i }) })),
+      ocHitOff: () => this.setState({ ovSel: null }), ocVx: X(idx).toFixed(1), ocVt: T, ocVb: hov ? bot : T,
+      ocTipX: px(pe[idx]), ocTipY: py(pe[idx]), ocTipCX: px(pc[last]), ocTipCY: py(pc[last]),
+      ocTipTf: idx >= 6 ? 'translate(calc(-100% + 22px),calc(-100% - 14px))' : idx <= 1 ? 'translate(-22px,calc(-100% - 14px))' : 'translate(-50%,calc(-100% - 14px))',
+      ocTipYear: isF ? 'Batch ' + fy[idx - A] + '* \u00b7 forecast' : 'Batch ' + yrs[idx], ocTipEmp: (isF ? EA[idx].toFixed(1) : Math.round(EA[idx])) + '%', ocTipEmpN: isF ? '' : ' (' + N(emp) + ' of ' + N(trc) + ' traced)', ocTipResp: (isF ? RA[idx].toFixed(1) : Math.round(RA[idx])) + '%', ocTipRespN: isF ? '' : ' (' + N(trc) + ' of ' + N(G[idx]) + ' graduates)', ocTipRespLbl: isF ? 'expected response' : 'responded', ocTipEmpLbl: isF ? 'expected employed' : 'employed', ocTipTot: N(CUM[last]),
+    };
+  }
+
+  gdRnd(seed){ return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let x = Math.imul(seed ^ seed >>> 15, 1 | seed); x = x + Math.imul(x ^ x >>> 7, 61 | x) ^ x; return ((x ^ x >>> 14) >>> 0) / 4294967296; }; }
+  gdData() {
+    if (this._gd) return this._gd;
+    const r = this.gdRnd(20261029), cols = this.colleges(), P = [];
+    Object.keys(cols).filter((k) => k !== 'Others').forEach((c) => cols[c].forEach((p) => P.push({ c, p, w: 0.3 + r() * 1.7 })));
+    const tw = P.reduce((a, x) => a + x.w, 0), pick = () => { let x = r() * tw; for (const q of P) { x -= q.w; if (x <= 0) return q; } return P[0]; };
+    const F = ['Maria','Jose','Angelica','Rafael','Kristine','Miguel','Bianca','Joshua','Patricia','Mark','Andrea','Noel','Carmela','Liza','Paolo','Daniela','Gabriel','Trisha'], L = ['Dizon','Reyes','Santiago','Aquino','Soriano','Cruz','Tan','Lim','Ong','Villanueva','Gomez','Fernandez','Mendoza','Ramos','Bautista','Garcia'];
+    const ST = [['ft', .55], ['pt', .08], ['self', .12], ['study', .1], ['unemp', .15]];
+    const date = (m) => new Date(2026, 9 - m, 1 + Math.floor(r() * 27));
+    const recs = [];
+    for (let i = 0; i < 1100; i++) {
+      const q = pick(), b = 2018 + Math.min(8, Math.floor(Math.pow(r(), 0.85) * 9)), arch = r() < 0.04, el = !arch && b <= 2025, done = el && r() < 0.6;
+      let emp = null; if (done && r() > 0.07) { let x = r(); for (const [k, w] of ST) { x -= w; if (x <= 0) { emp = k; break; } } if (!emp) emp = 'ft'; }
+      recs.push({ id: i, name: F[Math.floor(r() * F.length)] + ' ' + L[Math.floor(r() * L.length)], c: q.c, p: q.p, b, arch, el, done, emp, upd: date(Math.floor(Math.pow(r(), 1.3) * 30)), reg: date(Math.floor(r() * 30)) });
+    }
+    const seen = new Set(), regs = [], apps = [];
+    for (let k = 0; k < 1500; k++) { const i = Math.floor(r() * recs.length), ev = Math.floor(r() * 40); if (seen.has(i + ':' + ev)) continue; seen.add(i + ':' + ev); const d = date(Math.floor(r() * 18)); regs.push({ i, m: d.getFullYear() * 12 + d.getMonth(), st: r() < 0.12 ? 'canceled' : 'registered' }); }
+    const seenA = new Set();
+    for (let k = 0; k < 800; k++) { const i = Math.floor(r() * recs.length), j = Math.floor(r() * 60); if (seenA.has(i + ':' + j)) continue; seenA.add(i + ':' + j); const d = date(Math.floor(r() * 18)); apps.push({ i, m: d.getFullYear() * 12 + d.getMonth(), st: r() < 0.08 ? 'withdrawn' : 'submitted' }); }
+    return (this._gd = { recs, regs, apps });
+  }
+  gdVals() {
+    const s = this.state, D = this.gdData(), cols = this.colleges(), NF = (n) => Math.round(n).toLocaleString('en-US'), PC = (x) => x.toFixed(1) + '%';
+    const mode = s.gdForce === 'ready' ? 'ready' : (['loading', 'error', 'no-records'].includes(s.gdForce) ? s.gdForce : (this.props.dashState || 'ready'));
+    const col = cols[s.gdCollege] ? s.gdCollege : 'all', progs = col === 'all' ? [] : cols[col], prog = progs.includes(s.gdProgram) ? s.gdProgram : 'all';
+    const YS = []; for (let y = 2026; y >= 2018; y--) YS.push(y);
+    const batch = YS.includes(+s.gdBatch) ? +s.gdBatch : 'all';
+    const act = mode === 'no-records' ? [] : D.recs.filter((r) => !r.arch && (col === 'all' || r.c === col) && (prog === 'all' || r.p === prog) && (batch === 'all' || r.b === batch));
+    const elig = act.filter((r) => r.el), done = elig.filter((r) => r.done), known = act.filter((r) => r.emp), unk = done.length - known.length;
+    const EMP = ['ft', 'pt', 'self'], emp = known.filter((r) => EMP.includes(r.emp));
+    const cutoff = new Date(2025, 9, 29), recent = act.filter((r) => r.upd >= cutoff);
+    const CAT = [['ft', 'Full-time', '#0F3D2E'], ['pt', 'Part-time', '#3F8F73'], ['self', 'Self-employed', '#F0C428'], ['study', 'Further studies', '#B9C8C0'], ['unemp', 'Unemployed', '#C2563B']];
+    const dash = '\u2014';
+    // donut
+    const CIRC = 2 * Math.PI * 58; let cum = 0;
+    const segs = CAT.map(([k, label, color]) => { const n = known.filter((r) => r.emp === k).length, len = known.length ? n / known.length * CIRC : 0, g = { color, label, n: NF(n), pct: known.length ? PC(n / known.length * 100) : dash, dash: len + ' ' + (CIRC - len), off: -cum, tip: label + ': ' + NF(n) }; cum += len; return g; });
+    // programs
+    const grp = {}; known.forEach((r) => { const k = r.c + '|' + r.p; (grp[k] = grp[k] || { c: r.c, p: r.p, n: 0, e: 0 }); grp[k].n++; if (EMP.includes(r.emp)) grp[k].e++; });
+    const all = Object.values(grp).sort((a, b) => (b.n >= 10) - (a.n >= 10) || b.e / b.n - a.e / a.n || b.n - a.n), top = all.slice(0, 8);
+    const rows = top.map((g) => { const p = g.e / g.n * 100; return { label: this.repAbbr(g.p), n: g.n + ' respondents', pct: PC(p), w: p.toFixed(1), color: g.n < 10 ? '#B9C8C0' : '#0F6B4F', tip: g.p + ' (' + g.c + '): ' + PC(p) + ' employed, ' + g.e + ' of ' + g.n + ' respondents' }; });
+    // batch
+    const by = {}; known.forEach((r) => { (by[r.b] = by[r.b] || []).push(r); });
+    const yrs = Object.keys(by).map(Number).sort((a, b) => a - b), mx = Math.max(1, ...yrs.map((y) => by[y].length));
+    const step = Math.max(1, Math.ceil(mx / 4)), ymax = step * 4;
+    const bcols = yrs.map((y) => { const arr = by[y], n = arr.length; return { label: String(y), n: NF(n), h: n / ymax * 100, segs: CAT.map(([k, , color]) => ({ color, h: n ? arr.filter((r) => r.emp === k).length / n * 100 : 0 })), tip: 'Batch ' + y + ': ' + CAT.map(([k, l]) => arr.filter((r) => r.emp === k).length + ' ' + l.toLowerCase()).join(', ') + ' (' + n + ' respondents)' }; });
+    // engagement
+    const MN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const fromS = /^\d{4}-\d{2}$/.test(s.gdFrom || '') ? s.gdFrom : '2025-11', toS = /^\d{4}-\d{2}$/.test(s.gdTo || '') ? s.gdTo : '2026-10';
+    let a = +fromS.slice(0, 4) * 12 + (+fromS.slice(5) - 1), b = +toS.slice(0, 4) * 12 + (+toS.slice(5) - 1);
+    const bad = !(a <= b); if (!bad && b - a > 23) a = b - 23;
+    const n = bad ? 0 : b - a + 1, reg = new Array(n).fill(0), app = new Array(n).fill(0), inSc = {}; act.forEach((r) => { inSc[r.id] = 1; });
+    if (!bad) { D.regs.forEach((x) => { if (x.st !== 'canceled' && inSc[x.i] && x.m >= a && x.m <= b) reg[x.m - a]++; }); D.apps.forEach((x) => { if (x.st !== 'withdrawn' && inSc[x.i] && x.m >= a && x.m <= b) app[x.m - a]++; }); }
+    const rT = reg.reduce((p, c) => p + c, 0), aT = app.reduce((p, c) => p + c, 0), mx4 = Math.max(1, ...reg, ...app), st4 = Math.max(1, Math.ceil(mx4 / 4)), y4 = st4 * 4;
+    const X = (i) => 36 + (i + 0.5) * (516 / Math.max(1, n)), Y = (v) => 200 - v / y4 * 188;
+    const mlab = (i) => { const m = (a + i) % 12, yy = Math.floor((a + i) / 12); return { t: (m === 0 || i === 0) ? MN[m] + " '" + String(yy).slice(2) : MN[m], x: X(i) }; };
+    const dots = []; reg.forEach((v, i) => dots.push({ x: X(i), y: Y(v), color: '#0F6B4F', tip: MN[(a + i) % 12] + ' ' + Math.floor((a + i) / 12) + ': ' + v + ' event registrations' })); app.forEach((v, i) => dots.push({ x: X(i), y: Y(v), color: '#D9A400', tip: MN[(a + i) % 12] + ' ' + Math.floor((a + i) / 12) + ': ' + v + ' job applications' }));
+    const pts = (arr) => arr.map((v, i) => X(i).toFixed(1) + ',' + Y(v).toFixed(1)).join(' ');
+    const recentRows = act.slice().sort((p, q) => q.reg - p.reg).slice(0, 6).map((r) => ({ name: r.name, prog: this.repAbbr(r.p), college: r.c, batch: 'Batch ' + r.b, date: r.reg.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }), open: (e) => { e.preventDefault(); this.setState({ screen: 'records' }); } }));
+    const filtered = col !== 'all' || prog !== 'all' || batch !== 'all';
+    const ready = mode === 'ready' && act.length > 0;
+    return {
+      gdIsLoading: mode === 'loading', gdIsError: mode === 'error', gdIsEmpty: (mode === 'ready' || mode === 'no-records') && !act.length, gdIsReady: ready, gdBusy: mode === 'loading' ? 'true' : 'false',
+      gdColVal: col, gdColOpts: [{ value: 'all', label: 'All colleges' }, ...Object.keys(cols).filter((k) => k !== 'Others').map((c) => ({ value: c, label: c }))],
+      gdOnCol: (e) => this.setState({ gdCollege: e.target.value, gdProgram: 'all' }),
+      gdProgVal: prog, gdProgOpts: [{ value: 'all', label: col === 'all' ? 'Select a college first' : 'All programs' }, ...progs.map((p) => ({ value: p, label: p }))], gdProgDisabled: col === 'all', gdOnProg: (e) => this.setState({ gdProgram: e.target.value }),
+      gdBatchVal: String(batch), gdBatchOpts: [{ value: 'all', label: 'All batches' }, ...YS.map((y) => ({ value: String(y), label: 'Batch ' + y }))], gdOnBatch: (e) => this.setState({ gdBatch: e.target.value }),
+      gdFrom: fromS, gdTo: toS, gdOnFrom: (e) => this.setState({ gdFrom: e.target.value }), gdOnTo: (e) => this.setState({ gdTo: e.target.value }),
+      gdFiltered: filtered, gdClear: () => this.setState({ gdCollege: 'all', gdProgram: 'all', gdBatch: 'all' }), gdRetry: () => this.setState({ gdForce: 'ready' }), gdExport: () => this.setState({ screen: 'reports' }),
+      gdScope: mode === 'ready' ? NF(act.length) + ' alumni \u00b7 ' + (col === 'all' ? 'All colleges' : col) + (prog !== 'all' ? ' \u00b7 ' + this.repAbbr(prog) : '') + (batch !== 'all' ? ' \u00b7 Batch ' + batch : '') : '',
+      gdK1: NF(act.length), gdK1s: NF(elig.length) + ' are eligible for the survey',
+      gdK2: elig.length ? PC(done.length / elig.length * 100) : dash, gdK2s: elig.length ? NF(done.length) + ' alumni have completed the survey.' : 'No alumni are eligible for the survey.',
+      gdK3: known.length ? PC(emp.length / known.length * 100) : dash, gdK3s: known.length ? NF(emp.length) + ' of ' + NF(known.length) + ' respondents are employed' : 'No respondents with known status',
+      gdK4: act.length ? PC(recent.length / act.length * 100) : dash, gdK4s: NF(recent.length) + ' alumni updated their profiles in the past year.',
+      gdD1has: known.length > 0, gdD1none: known.length === 0, gdD1sub: 'Current work status of alumni who answered the survey', gdSegs: segs, gdD1n: NF(known.length), gdUnk: NF(unk),
+      gdD1label: 'Donut chart of ' + known.length + ' respondents: ' + segs.map((g) => g.label + ' ' + g.pct).join(', '),
+      gdD2has: rows.length > 0, gdD2none: rows.length === 0, gdRows: rows, gdD2sub: 'Share of respondents who are employed, by program', gdMore: all.length > 8 ? 'Showing 8 of ' + all.length + ' programs' : '',
+      gdD3has: bcols.length > 0, gdD3none: bcols.length === 0, gdCols: bcols, gdLegend: CAT.map(([, label, color]) => ({ label, color })), gdYTicks: [0, 1, 2, 3, 4].map((i) => NF(step * i)),
+      gdD4bad: bad, gdD4has: !bad && rT + aT > 0, gdD4none: !bad && rT + aT === 0, gdD4sub: bad ? 'Choose a valid activity period' : 'Event registrations and job applications, ' + MN[a % 12] + ' ' + Math.floor(a / 12) + ' \u2013 ' + MN[b % 12] + ' ' + Math.floor(b / 12),
+      gdRegTotal: NF(rT), gdAppTotal: NF(aT), gdRegPts: pts(reg), gdAppPts: pts(app), gdDots: dots, gdXLabels: reg.map((v, i) => mlab(i)).filter((x, i) => n <= 12 || i % 2 === 0 || i === n - 1),
+      gdGrid: [0, 1, 2, 3, 4].map((i) => ({ y: Y(st4 * i), ty: Y(st4 * i) + 4, v: NF(st4 * i), stroke: i ? '#EEF2EF' : '#CBD5CF' })),
+      gdD4label: 'Line chart, monthly event registrations (' + rT + ' total) and job applications (' + aT + ' total)',
+      gdRecent: recentRows,
+    };
+  }
+  ovVals() {
+    const P='#0F6B4F';
+    const yrs=['2019','2020','2021','2022','2023','2024'],T=70;
+    const ovN=this.ovNames();
+    const colKey=ovN.includes(this.state.ovCol)?this.state.ovCol:'All Colleges';
+    const v=this.ovSeries(colKey).E;
+    const sel=this.state.ovSel==null?5:this.state.ovSel;
+    const X=i=>80+i*100,Y=n=>150-(n-40)/40*120;
+    const pick=i=>()=>this.setState({ovSel:i});
+    const dots=v.map((n,i)=>({x:X(i),y:Y(n),ly:Y(n)-10,tot:n+'%',yr:'Batch '+yrs[i],hx:X(i)-50,hit:pick(i),r:i===sel?6.5:4.5,fill:i===sel?'#0F6B4F':'#fff',lc:i===sel?'#0F6B4F':'#0B1220'}));
+    const ovYears=yrs.map((yr,i)=>({yr:'Batch '+yr,add:v[i]+'%',g:v[i]>=T?'Meets target':(v[i]-T)+' pts vs target',c:v[i]>=T?'#0F6B4F':'#8A6D1F',pick:pick(i),bg:i===sel?'#E8F3EE':'#FBFCFB',bd:i===sel?'#0F6B4F':'#EEF0F3'}));
+    const sx=X(sel),sy=Y(v[sel]),tx=Math.min(Math.max(sx-66,50),590-132),below=sy-70<4,ty=below?sy+14:sy-70;
+    const dPrev=sel>0?v[sel]-v[sel-1]:null,dT=v[sel]-T;
+    const tip={tx,ty,sx,sy,gx:tx+8,t1:'Batch '+yrs[sel],t2:v[sel]+'% employed within 12 mo',t3:(dPrev==null?'First batch':(dPrev>=0?'+':'')+dPrev+' pts vs '+yrs[sel-1])+' · '+(dT>=0?'+':'')+dT+' vs target'};
+    const ovCols=['All Colleges',...ovN].map(k=>({k,on:k===colKey}));
+    const line=dots.map(d=>d.x+','+d.y).join(' ');
+    const grid=[40,50,60,70,80].map(k=>({y:Y(k),ty:Y(k)+4,t:k+'%'}));
+    const bv=[1450,1900,2300,2100,2700,3300,3000,3500,3100,3800,3600,3900];
+    const mo=['Jun','Jul','Aug','Sep','Oct','Nov','Dec','Jan','Feb','Mar','Apr','May'];
+    const L=(label,n,pct,c)=>({label,n,pct,c});
+    const ic={users:'M16 20v-1.5a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4V20M9.5 10.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7M17 4.2a3.5 3.5 0 0 1 0 6.6M21 20v-1.5a4 4 0 0 0-3-3.8',user:'M12 11.5a4 4 0 1 0 0-8 4 4 0 0 0 0 8M5 20.5v-1a4.5 4.5 0 0 1 4.5-4.5h5a4.5 4.5 0 0 1 4.5 4.5v1',cal:'M4.5 6h15a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1h-15a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1zM8 3.5V6M16 3.5V6M3.5 10.5h17',bag:'M3 8.5h18v11a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 19.5zM8.5 8.5V5.5A1.5 1.5 0 0 1 10 4h4a1.5 1.5 0 0 1 1.5 1.5v3M3 13h18',form:'M7 3h10a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zM9.5 8h5M9.5 12h5M9.5 16h3',mail:'M4 5h16a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1zM3 7l9 6 9-6',chat:'M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z',doc:'M6 3h9l4 4v13a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zM14 3v5h5',eye:'M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12zM12 14.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5'};
+    const K=(label,value,delta,icon,chip,acc)=>({label,value,delta,icon:ic[icon],chip,acc});
+    return {
+      ovKpis:[K('Total Alumni','12,845','8.6%','users','#E6F0EB',P),K('Active Alumni','4,326','11.2%','user','#DDEFE7','#0F3D2E'),K('Alumni Traced','3,482','20.0%','user','#FDF6DD','#8A6D0B'),K('Alumni Employed','1,246','13.4%','bag','#E6F0EB',P),K('Tracer Responses','7,521','17.8%','form','#FDF6DD','#8A6D0B')],
+      ...this.ovCard(colKey, this.state.ovSel),
+      ovGrid:grid, ovYears, ovTy:Y(70), ovTip:tip, ovColKey:colKey, ovColOpts:ovCols, ovSetCol:e=>this.setState({ovCol:e.target.value,ovSel:null}), ovArea:line+' '+X(5)+',150 '+X(0)+',150', ovLine:line, ovDots:dots,
+      ovLoc:[L('Full-time','2,162','62.1%','#0F3D2E'),L('Part-time','324','9.3%',P),L('Self-employed','245','7.1%','#F0C428'),L('Further studies','289','8.3%','#7FB89F'),L('Not yet employed','462','13.2%','#CBD5D1')],
+      ovEng:[L('Highly Engaged','2,530','19.7%',P),L('Engaged','4,997','38.9%','#0F3D2E'),L('Occasionally Engaged','3,006','23.4%','#F0C428'),L('Not Engaged','2,312','18.0%','#CBD5D1')],
+      ovBars:bv.map((n,i)=>({m:mo[i],h:Math.round(n/4000*100)+'%',val:n.toLocaleString()+' engaged'})),
+      ovComm:[{label:'Emails Sent',value:'12,450',icon:ic.mail,chip:'#E6F0EB',acc:P},{label:'SMS Sent',value:'8,230',icon:ic.chat,chip:'#DDEFE7',acc:'#0F3D2E'},{label:'Newsletters',value:'24',icon:ic.doc,chip:'#FDF6DD',acc:'#8A6D0B'},{label:'Open Rate',value:'42.6%',icon:ic.eye,chip:'#F6E4E1',acc:'#C0392B'}],
+      ovRegs:[['Rafael Dizon','BS Computer Science · 2024','24 May 2026','#DDEFE7'],['Angelica Reyes','BS Accountancy · 2023','23 May 2026','#FDF6DD'],['Mark Villanueva','BS Civil Engineering · 2022','23 May 2026','#E6F0EB'],['Katrina Santos','AB Communication · 2024','22 May 2026','#FDF6DD'],['Joshua Bautista','BS Nursing · 2021','21 May 2026','#DDEFE7']].map(a=>({name:a[0],prog:a[1],date:a[2],bg:a[3],ini:a[0].split(' ').map(w=>w[0]).join('')})),
+      ovEvents:[{d:'25',m:'JUN',title:'Alumni Homecoming 2026',type:'Annual Alumni Meet',where:'UDM Main Campus',time:'10:00 AM'},{d:'10',m:'JUL',title:'Industry Talk Series',type:'Career in Data Science',where:'Auditorium',time:'11:00 AM'},{d:'22',m:'JUL',title:'Job Fair 2026',type:'Employer Networking',where:'Gymnasium',time:'09:00 AM'},{d:'05',m:'AUG',title:'Webinar: Careers in Tech',type:'Leadership in Tech',where:'Online',time:'05:00 PM'}],
+      ovCols:[['CCS','College of Computer Studies','1,845',100],['CBA','College of Business Admin','1,632',88],['CE','College of Engineering','1,284',70],['CAS','College of Arts & Sciences','1,102',60],['CON','College of Nursing','987',53]].map(a=>({code:a[0],name:a[1],n:a[2],w:a[3]+'%'})),
+      ovGoEvents:()=>this.navTo('admin-events'),
+    };
+  }
   navFor(role, screen) {
     const ICONS = {
       dashboard: { icon: 'M3 3h7v7H3zM14 3h7v5h-7zM14 12h7v9h-7zM3 14h7v7H3z' },
@@ -7355,7 +7810,8 @@ class Component extends DCLogic {
         ]
       : role === 'admin'
       ? [
-          { id: 'admin-dashboard', label: 'Admin Dashboard', ...ICONS.dashboard },
+          { id: 'admin-overview', label: 'Admin Dashboard', ...ICONS.dashboard },
+          { id: 'admin-dashboard', label: 'Graduate Outcomes', ...ICONS.chart },
           { id: 'admin-jobs', label: 'Jobs', ...ICONS.briefcase, alt: 'manage-events' },
           { id: 'admin-events', label: 'Events', ...ICONS.calendar },
           { id: 'admin-tracer', label: 'Alumni Tracer', ...ICONS.form },
@@ -7575,7 +8031,7 @@ class Component extends DCLogic {
   }
   mfaFinish() {
     const d = this.state.selectedDemo;
-    this.setState({ signinPending: false, screen: d === 'admin' ? 'admin-dashboard' : d === 'dept' ? 'dept-dashboard' : 'alumni-dashboard', deptMode: d === 'dept', mfaCode: '', mfaErr: '' });
+    this.setState({ signinPending: false, screen: d === 'admin' ? 'admin-overview' : d === 'dept' ? 'dept-dashboard' : 'alumni-dashboard', deptMode: d === 'dept', mfaCode: '', mfaErr: '' });
   }
   mfaVals() {
     const st = this.state, m = 'email', code = st.mfaCode || '', ok = code.length === 6;
@@ -7633,7 +8089,7 @@ class Component extends DCLogic {
   }
   viewerRole() {
     const s = this.state.screen;
-    return ((s === 'dept-dashboard' || s === 'dept-outreach') || (this.state.deptMode && ['records','reports','jobs','events'].includes(s))) ? 'dept' : (s === 'admin-dashboard' || s === 'records' || s === 'reports' || s === 'manage-events' || s === 'admin-jobs' || s === 'admin-events' || s === 'admin-tracer' || s === 'admin-ai') ? 'admin' : 'alumni';
+    return ((s === 'dept-dashboard' || s === 'dept-outreach') || (this.state.deptMode && ['records','reports','jobs','events'].includes(s))) ? 'dept' : (s === 'admin-dashboard' || s === 'admin-overview' || s === 'records' || s === 'reports' || s === 'manage-events' || s === 'admin-jobs' || s === 'admin-events' || s === 'admin-tracer' || s === 'admin-ai') ? 'admin' : 'alumni';
   }
   // College Coordinator scope: assigned college (CCS) programs only.
   recInScope(r) { return r.college === 'College of Computing Studies'; }
@@ -8171,14 +8627,14 @@ class Component extends DCLogic {
     const nrSt = nr ? (((this.state.recStatusOv || {})[nr.sid] || {}).status || 'pending') : null;
     const raw = [
       ...(nr ? [{ name: nr.name + ' · NEW', college: nr.college, course: nr.course, batch: String(nr.batch), employment: nr.employment, date: nr.updated, st: nrSt }] : []),
-      { name: 'Liza Fernandez', college: 'College of Computing Studies', course: 'Bachelor of Science in Information Technology', batch: '2023', employment: 'Employed full-time', date: 'Sep 14, 2026', st: 'pending' },
+      { name: 'Liza Fernandez', college: 'College of Computing Studies', course: 'Bachelor of Science in Information Technology', batch: '2023', employment: 'Full-time', date: 'Sep 14, 2026', st: 'pending' },
       { name: 'Noel Santiago', college: 'College of Business and Public Management', course: 'Bachelor of Science in Hospitality Management', batch: '2017', employment: 'Self-employed', date: 'Sep 13, 2026', st: 'verified' },
-      { name: 'Carmela Ong', college: 'College of Health Sciences', course: 'Bachelor of Science in Nursing', batch: '2020', employment: 'Employed full-time', date: 'Sep 12, 2026', st: 'verified' },
+      { name: 'Carmela Ong', college: 'College of Health Sciences', course: 'Bachelor of Science in Nursing', batch: '2020', employment: 'Full-time', date: 'Sep 12, 2026', st: 'verified' },
       { name: 'Rafael Tan', college: 'College of Business and Public Management', course: 'Bachelor of Science in Business Administration Major in Marketing Management', batch: '2015', employment: 'Further studies', date: 'Sep 11, 2026', st: 'pending' },
       { name: 'Bianca Cruz', college: 'College of Engineering and Technology', course: 'Bachelor of Science in Computer Science', batch: '2022', employment: 'Not yet employed', date: 'Sep 10, 2026', st: 'verified' },
-      { name: 'Joshua Reyes', college: 'College of Criminal Justice', course: 'Bachelor of Science in Criminology', batch: '2021', employment: 'Employed full-time', date: 'Sep 09, 2026', st: 'pending' },
-      { name: 'Patricia Lim', college: 'College of Education', course: 'Bachelor of Secondary Education Major in Mathematics', batch: '2019', employment: 'Employed full-time', date: 'Sep 08, 2026', st: 'verified' },
-      { name: 'Mark Villanueva', college: 'College of Arts and Sciences', course: 'Bachelor of Science in Psychology', batch: '2024', employment: 'Employed part-time', date: 'Sep 07, 2026', st: 'pending' },
+      { name: 'Joshua Reyes', college: 'College of Criminal Justice', course: 'Bachelor of Science in Criminology', batch: '2021', employment: 'Full-time', date: 'Sep 09, 2026', st: 'pending' },
+      { name: 'Patricia Lim', college: 'College of Education', course: 'Bachelor of Secondary Education Major in Mathematics', batch: '2019', employment: 'Full-time', date: 'Sep 08, 2026', st: 'verified' },
+      { name: 'Mark Villanueva', college: 'College of Arts and Sciences', course: 'Bachelor of Science in Psychology', batch: '2024', employment: 'Part-time', date: 'Sep 07, 2026', st: 'pending' },
       { name: 'Andrea Gomez', college: 'College of Health Sciences', course: 'Bachelor of Science in Physical Therapy', batch: '2022', employment: 'Further studies', date: 'Sep 06, 2026', st: 'verified' },
     ];
     const inScope = (r) => (college === 'all' || r.college === college) && (course === 'all' || r.course === course) && (batch === 'all' || r.batch === String(batch));
@@ -8202,10 +8658,51 @@ class Component extends DCLogic {
       admStatusVal: status, admStatusOpts: Object.keys(STN).map((k) => ({ value: k, label: 'Status: ' + STN[k] })),
       admOnStatus: (e) => this.setState({ admStatus: e.target.value }),
       adminShowFrom: registrations.length ? 1 : 0, adminShowTo: registrations.length,
+      ...this.empCard(C, SF),
       ...this.admDash({ NOW, C, allC, batch, status, SF, rows, level, regCount: regAll.length, nr: !!nr, nrIn, nrPending: nrIn && nrSt === 'pending' }),
       programRatesTitle: level === 'college' ? 'Employability by college' : level === 'course' ? 'Employability by course' : 'Employability by batch',
       programRatesSub: level === 'batch' ? this.repAbbr(course) + ' \u00b7 employed within 12 months, per graduating batch' : 'Employed within 12 months of graduating' + (college !== 'all' ? ' \u00b7 ' + college : ''),
       programRates, registrations, registrationsEmpty: !registrations.length,
+    };
+  }
+
+  empCard(C, SF) {
+    const YS = [2021, 2022, 2023, 2024, 2025, 2026], hi = this.state.empHi, tab = this.state.empTab === 'total' ? 'total' : 'rate';
+    const W = 560, H = 230, L = 46, R = 20, T = 16, B = 34, pw = W - L - R, ph = H - T - B;
+    const st = YS.map((y) => { const s = this.repSum(C.map((c) => [c, y])); return { y, g: s.g, t: s.t, e: s.e, emp: s.emp + SF[1], resp: s.cov }; });
+    let cum = 0; st.forEach((r) => { cum += r.g; r.cum = cum; });
+    const X = (i) => L + pw * i / (YS.length - 1);
+    const smooth = (pts) => pts.map((p, i) => { if (!i) return 'M' + p[0].toFixed(1) + ' ' + p[1].toFixed(1); const a = pts[i - 2] || pts[i - 1], b = pts[i - 1], d = pts[i + 1] || p; return 'C' + (b[0] + (p[0] - a[0]) / 6).toFixed(1) + ' ' + (b[1] + (p[1] - a[1]) / 6).toFixed(1) + ',' + (p[0] - (d[0] - b[0]) / 6).toFixed(1) + ' ' + (p[1] - (d[1] - b[1]) / 6).toFixed(1) + ',' + p[0].toFixed(1) + ' ' + p[1].toFixed(1); }).join(' ');
+    const last = YS.length - 1, idx = hi == null || hi > last ? last : hi;
+    const mk = (vals, lo, top, fmt, ticks) => { const Y = (v) => T + ph * (1 - (v - lo) / (top - lo)); return { Y, grid: ticks.map((v) => ({ y: Y(v).toFixed(1), label: fmt(v) })) }; };
+    const all = st.flatMap((r) => [r.emp, r.resp]), lo = Math.floor((Math.min(...all) - 3) / 5) * 5, top = Math.min(100, Math.ceil((Math.max(...all) + 2) / 5) * 5), stp = (top - lo) / 3;
+    const A = mk(null, lo, top, (v) => Math.round(v) + '%', [0, 1, 2, 3].map((i) => lo + stp * i));
+    const pe = st.map((r, i) => [X(i), A.Y(r.emp)]), pr = st.map((r, i) => [X(i), A.Y(r.resp)]);
+    const mx = st[last].cum, nice = [500, 1000, 2000, 2500, 5000, 10000, 20000].find((n) => mx / n <= 4) || 20000, tt = Math.ceil(mx / nice) * nice;
+    const Bm = mk(null, 0, tt, (v) => v >= 1000 ? (v / 1000) + 'K' : String(v), Array.from({ length: tt / nice + 1 }, (_, i) => i * nice));
+    const pc = st.map((r, i) => [X(i), Bm.Y(r.cum)]);
+    const bot = (T + ph).toFixed(1), cp = smooth(pc), N = (n) => Math.round(n).toLocaleString('en-US');
+    const px = (p) => (p[0] / W * 100).toFixed(2) + '%', py = (p) => (p[1] / H * 100).toFixed(2) + '%';
+    const set = (i) => () => this.setState({ empHi: i });
+    const on = tab === 'rate';
+    const cur = st[idx];
+    return {
+      empIsRate: on, empIsTotal: !on, empVB: '0 0 ' + W + ' ' + H,
+      empTab1: () => this.setState({ empTab: 'rate', empHi: null }), empTab2: () => this.setState({ empTab: 'total', empHi: null }),
+      empT1Bg: on ? '#fff' : 'transparent', empT1C: on ? '#0B1220' : '#64748B', empT1S: on ? '0 1px 3px rgba(16,24,40,.12)' : 'none',
+      empT2Bg: on ? 'transparent' : '#fff', empT2C: on ? '#64748B' : '#0B1220', empT2S: on ? 'none' : '0 1px 3px rgba(16,24,40,.12)',
+      empTitle: on ? 'Employability rate by batch' : 'Total registered alumni', empSubtitle: on ? 'Batches 2021\u20132026 \u00b7 share of traced graduates who are employed' : 'Running total of graduates in the alumni directory',
+      empGridA: A.grid.map((g) => ({ ...g, x1: L, x2: W - R })), empGridB: Bm.grid.map((g) => ({ ...g, x1: L, x2: W - R })),
+      empXs: st.map((r, i) => ({ x: X(i).toFixed(1), y: H - 10, label: 'Batch ' + r.y, bold: i === idx && on })),
+      empLineE: smooth(pe), empLineR: smooth(pr), empLineC: cp, empAreaC: cp + ' L' + X(last).toFixed(1) + ' ' + bot + ' L' + L + ' ' + bot + ' Z',
+      empDotsE: st.map((r, i) => ({ cx: pe[i][0].toFixed(1), cy: pe[i][1].toFixed(1), r: i === idx ? 5.5 : 3.5 })),
+      empDotsR: st.map((r, i) => ({ cx: pr[i][0].toFixed(1), cy: pr[i][1].toFixed(1), r: i === idx ? 5.5 : 3.5 })),
+      empDotsC: st.map((r, i) => ({ cx: pc[i][0].toFixed(1), cy: pc[i][1].toFixed(1), r: i === last ? 5.5 : 3.5 })),
+      empHit: st.map((r, i) => ({ x: (X(i) - pw / 10).toFixed(1), y: T, w: (pw / 5).toFixed(1), h: ph + B, on: set(i) })),
+      empHitOff: () => this.setState({ empHi: null }),
+      empTipX: px(pe[idx]), empTipY: py(pe[Math.min(idx, last)]), empTipCX: px(pc[last]), empTipCY: py(pc[last]),
+      empTipYear: 'Batch ' + cur.y, empTipEmp: cur.emp.toFixed(1) + '%', empTipEmpN: N(cur.e) + ' of ' + N(cur.t) + ' traced', empTipResp: cur.resp.toFixed(0) + '%', empTipRespN: N(cur.t) + ' of ' + N(cur.g) + ' graduates',
+      empTipTot: N(mx), empVLine: X(idx).toFixed(1), empVT: T, empVB2: bot,
     };
   }
 
@@ -8240,7 +8737,7 @@ class Component extends DCLogic {
     const BS = [62.1, 9.3, 7.1, 8.3, 13.2], BC = [2162, 324, 245, 289, 462];
     const ne = cl(13.2 - dEmp * 0.6, 1, 60), sh = BS.map((v, i) => (i === 4 ? ne : v * (100 - ne) / 86.8));
     const cnt = sh.map((v, i) => Math.round(BC[i] * tr * v / BS[i]));
-    const MIX = [['Employed full-time', '#0F3D2E', 'Employed full-time'], ['Employed part-time', '#7CC4A0', 'Employed part-time'], ['Self-employed / Entrepreneurship', '#F0C428', 'Self-employed / Entrepreneurship'], ['Further studies / Academics', '#2F7FC1', 'Further studies / Academics'], ['Not yet employed (Seeking opportunities)', '#D9620B', 'Not yet employed']];
+    const MIX = [['Full-time', '#0F3D2E', 'Full-time'], ['Part-time', '#7CC4A0', 'Part-time'], ['Self-employed / Entrepreneurship', '#F0C428', 'Self-employed / Entrepreneurship'], ['Further studies / Academics', '#2F7FC1', 'Further studies / Academics'], ['Not yet employed (Seeking opportunities)', '#D9620B', 'Not yet employed']];
     const r1 = (x) => +x.toFixed(1);
     let acc = 0; const stops = [], slices = [];
     sh.forEach((v, i) => { const a = r1(acc), b = i === 4 ? 100 : r1(acc + v); acc += v;
@@ -8252,10 +8749,7 @@ class Component extends DCLogic {
     const tt = [t1, t2, t3, t4].map(Math.round); tt[2] = 100 - tt[0] - tt[1] - tt[3];
     const tone = { r: ['#E5484D', '#C2344F', '#FDF2F4', '#F8DFE4'], y: ['#F0C428', '#8A6D1F', '#FDF9EE', '#F5E9CE'], g: ['#12A36F', '#0F6B4F', '#F0FAF4', '#D8EFE1'] };
     let ins;
-    if (isDef) ins = [['Criminology employability fell 2.3% from last year', '\u2014 63 graduates from 2023\u20132024 remain unplaced in protective/security services.', 'r'],
-      ['Batch 2023 coverage is the weakest at 54%.', '468 records still have no survey response before upcoming audit.', 'y'],
-      ['Information Technology graduates', 'reach first employment in 3.1 months on average, beating historical records.', 'g']];
-    else {
+    {
       ins = [];
       const yl = batch === 'all' ? 'across batches' : 'from Batch ' + batch;
       if (rows.length) {
@@ -8273,18 +8767,25 @@ class Component extends DCLogic {
         ins.push([fast.r.program + ' graduates', 'reach first employment in ' + fast.m.toFixed(1) + ' months on average' + (rows.length > 1 && fast.m < med - 0.05 ? ', ahead of the ' + med.toFixed(1) + '-month median.' : '.'), 'g']);
       }
     }
+    const l3 = bars.slice(-3).map((b) => b.v), pred = Math.round(cl(l3.reduce((a, b) => a + b, 0) / 3 + (l3[2] - l3[0]) / 4, 0, 100)), predBelow = pred < 65;
     const pend = Math.round(12 * kt) + (nrPending ? 1 : 0);
     return {
       admK: { emp, employed, lf, empD: 3.1 + trend, traced, total, covP: total ? traced / total * 100 : 0, goal, goalP: goal ? Math.min(100, traced / goal * 100) : 0,
         comp, completed, compD: 6.4 + trend * 0.5, fg, fgP, al, alN, alD: 4.8 + trendRel, fs: cnt[3], fsP: sh[3], sk: cnt[4], skP: sh[4] },
       batchSub: N(traced) + ' of ' + N(total) + ' alumni records reached',
+      batchWarnOn: predBelow, batchWarn: '\u26A0 Batch 2027 predicted ' + pred + '% \u2014 below 65%',
       batchBars: bars.map(({ y, v }) => { const muted = batch !== 'all' && y !== batch;
-        return { label: String(y), pct: v + '%', pctColor: muted ? '#94A3B8' : v >= 65 ? '#0B1220' : '#8A6D1F', color: muted ? '#D5DED9' : v >= 65 ? '#0F3D2E' : '#E0A915',
-          ...this.tipH('Batch ' + y, v + '% traced \u00b7 ' + (v >= 65 ? 'meets' : 'below') + ' 65% target') }; }),
+        const color = muted ? '#D5DED9' : v >= 65 ? '#0F3D2E' : '#E0A915';
+        return { label: String(y), pct: v + '%', lbl: v + '%', pctColor: muted ? '#94A3B8' : v >= 65 ? '#0B1220' : '#8A6D1F', color, fill: color, edge: '0',
+          ...this.tipH('Batch ' + y, v + '% traced \u00b7 ' + (v >= 65 ? 'meets' : 'below') + ' 65% target') }; })
+        .concat([{ label: '2027 est.', pct: pred + '%', lbl: (predBelow ? '\u26A0' : '') + pred + '%', pctColor: predBelow ? '#8A6D1F' : '#475569', color: predBelow ? '#E0A915' : '#4FA383',
+          fill: 'repeating-linear-gradient(135deg,' + (predBelow ? '#F5DC8A' : '#B7DCCB') + ' 0 5px,#fff 5px 9px)', edge: '1.5px dashed ' + (predBelow ? '#E0A915' : '#4FA383'),
+          ...this.tipH('Batch 2027 \u00b7 predicted', pred + '% traced \u00b7 ' + (predBelow ? '\u26A0 warning: below' : 'meets') + ' 65% target') }]),
       statusMix: MIX.map((m, i) => ({ label: m[0], count: N(cnt[i]) + ' graduates', pct: P1(sh[i]) + '%', pctColor: i === 4 ? '#B4500A' : '#0B1220', color: m[1] })),
       statusDonut: 'conic-gradient(' + stops.join(', ') + ')',
       donutTotal: N(traced), activeLabor: P1(100 - ne) + '%', avgMonths: P1(med),
-      timeToJob: [['Under 3 months', '#CFE8DA', '#0B3A2B'], ['3 \u2013 6 months', '#7CC4A0', '#0B3A2B'], ['6 \u2013 12 months', '#1F7A57', '#fff'], ['Over 12 months', '#0B3A2B', '#fff']]
+      within6: (tt[0] + tt[1]) + '%', avgRound: '~' + Math.round(med) + ' Months',
+      timeToJob: [['< 3 months', '#0F3D2E', '#fff'], ['3\u20136 months', '#2F6B50', '#fff'], ['6\u201312 months', '#6FA088', '#fff'], ['Over 1 year', '#B7CBBF', '#0B3A2B']]
         .map(([label, color, text], i) => ({ label, pct: tt[i] + '%', grow: tt[i], color, text, ...this.tipH(label, tt[i] + '% of employed graduates') })),
       insights: ins.map(([lead, text, t]) => ({ lead, text, color: tone[t][0], leadColor: tone[t][1], bg: tone[t][2], border: tone[t][3] })),
       adminAwaiting: isDef ? (12 + (nr ? 1 : 0)) + ' awaiting administrative verification'
@@ -8670,7 +9171,7 @@ class Component extends DCLogic {
 
   empForecast(d) {
     const cur = d.emp, v25 = cur - d.empD, hist = [v25 - 7.5, v25 - 5.1, v25 - 2.4, v25, cur], yrs = [2022, 2023, 2024, 2025, 2026];
-    const sl = Math.max(0.6, d.empD * 0.55), cl = (n) => Math.min(99, n);
+    const sl = Math.max(0.2, 0.5 + (d.empD - 3.1) * 0.4), cl = (n) => Math.min(99, n);
     const f1 = cl(cur + sl), f2 = cl(f1 + sl * 0.7), f3 = cl(f2 + sl * 0.5), fv = [f1, f2, f3], bw = [0.9, 1.6, 2.3];
     const all = hist.concat(fv), up = fv.map((v, i) => cl(v + bw[i])), lo = fv.map((v, i) => v - bw[i]);
     const mn = Math.floor(Math.min(...hist) - 2), mx = Math.min(100, Math.ceil(Math.max(...up) + 2));
@@ -8709,7 +9210,7 @@ class Component extends DCLogic {
     const hash = (str) => { let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } h ^= h >>> 13; h = Math.imul(h, 1274126177); h ^= h >>> 16; return (h >>> 0) / 4294967296; };
     const cols = this.colleges(), colNames = Object.keys(cols);
     const progs = []; colNames.forEach((c) => (cols[c] || []).forEach((p) => progs.push({ p, c, w: 0.4 + hash(p) * 1.6 })));
-    const years = v.batchBars.map((b) => b.label), yw = years.map((y, i) => 0.6 + hash('batch' + y + i) * 0.9);
+    const years = v.batchBars.filter((b) => !/est/.test(b.label)).map((b) => b.label), yw = years.map((y, i) => 0.6 + hash('batch' + y + i) * 0.9);
     let cells = progs.map((r) => years.map((y, i) => r.w * yw[i] * (0.2 + Math.pow(hash(r.p + '|' + y), 1.6) * 1.8)));
     const sum = cells.flat().reduce((a, b) => a + b, 0), f = A.total / sum;
     cells = cells.map((r) => r.map((x) => Math.round(x * f)));
@@ -8737,7 +9238,7 @@ class Component extends DCLogic {
     const open = (title, sub, big, rows, hl, x) => () => this.setState({ adDet: { title, sub, big, rows, hl: hl || '', go: 'reports', x: x || null } });
     const ana = (key, valStr, ringVal, ringLabel) => { const B = this.kpiBreakdown(valStr, key, v.programRates); if (!B.all.length) return null; const pct = /%/.test(valStr), tot = parseFloat(String(valStr).replace(/,/g, '')), hi = B.all[0], lo = B.all[B.all.length - 1], L = B.all.length - 1; return { ring: ringVal, ringLabel, barTitle: B.bdFull, chips: [{ k: 'Highest', v: hi.code, s: hi.val, c: '#0F3D2E' }, { k: 'Lowest', v: lo.code, s: lo.val, c: '#8A6D1F' }, pct ? { k: 'Spread', v: (hi.raw - lo.raw).toFixed(1), s: 'pts high\u2013low', c: '#475569' } : { k: 'Top share', v: (hi.raw / tot * 100).toFixed(0) + '%', s: 'of total', c: '#475569' }], bars: B.all.map((r, i) => ({ code: r.code, full: r.full, val: r.val, w: r.w, color: i === 0 ? '#0F3D2E' : i === L ? '#E0A915' : '#4FA383' })) }; };
     const withHl = (rows, hl) => rows.map((r) => ({ ...r, bg: r.label === hl ? '#EEF6F2' : '#fff', w: r.label === hl ? 700 : 500 }));
-    const bRows = v.batchBars.map((b) => R('Batch ' + b.label, b.pct + ' traced'));
+    const bRows = v.batchBars.map((b) => R('Batch ' + b.label, b.pct + (/est/.test(b.label) ? ' predicted' : ' traced')));
     const sRows = v.statusMix.map((s) => R(s.label, s.count + ' \u00b7 ' + s.pct));
     const pRows = v.programRates.map((p) => R(p.full, p.pct + ' (' + p.arrow + ' ' + p.delta + ')'));
     const tRows = v.timeToJob.map((t) => R(t.label, t.pct + ' of employed'));
@@ -8745,14 +9246,14 @@ class Component extends DCLogic {
     const sd = k.kpiSide, ms = k.miniStats, H = k.kpiHero;
     const card = (o, label, value, sub, subColor, onClick, bg, border) => ({ label, value, sub, subColor, onClick, onEnter: o.onEnter, onLeave: o.onLeave, arrowOp: o.arrowOp, arrowX: o.arrowX, bg: bg || '#fff', border: border || '#E7E9ED' });
     const A = v.admK, NF = (n) => Math.round(n).toLocaleString('en-US');
-    const alumniCard = { label: 'Total alumni', value: NF(A.total), sub: NF(A.traced) + ' registered \u00b7 ' + NF(A.completed) + ' verified', subColor: '#475569', onClick: () => this.setState({ adPop: true }), onEnter: sd[0].onEnter, onLeave: sd[0].onLeave, arrowOp: sd[0].arrowOp, arrowX: sd[0].arrowX, bg: '#fff', border: '#E7E9ED' };
+    const alumniCard = { label: 'Total alumni', value: NF(A.total), sub: NF(A.traced) + ' registered', subColor: '#475569', onClick: () => this.setState({ adPop: true }), onEnter: sd[0].onEnter, onLeave: sd[0].onLeave, arrowOp: sd[0].arrowOp, arrowX: sd[0].arrowX, bg: '#fff', border: '#E7E9ED' };
     const pop = this.popVals(v);
     const cards = [
       alumniCard,
       card(H, 'Employability rate', H.value + '%', H.context, '#0F6B4F', H.onClick),
-      card(sd[0], 'Graduates traced', sd[0].value, sd[0].subLead + ' of records \u00b7 ' + sd[0].context, '#475569', open('Graduates traced', 'Survey cycle 2026', sd[0].value + ' ' + sd[0].unit, [R('Traced alumni', sd[0].value), R('Total records', sd[0].unit.replace('/ ', '').replace(' total', '')), R('Coverage', sd[0].subLead), R('Collection goal', sd[0].context.replace('Goal: ', ''))], null, ana('Graduates traced', sd[0].value, parseFloat(sd[0].subLead), 'coverage'))),
-      card(sd[1], 'Survey completion', sd[1].value + '%', sd[1].context, '#0F6B4F', open('Survey completion', 'Fully completed survey forms', sd[1].value + '%', [R('Completed forms', sd[1].subLead), R('Change vs 2025 cycle', sd[1].context)], null, ana('Survey completion', sd[1].value + '%', parseFloat(sd[1].value), 'complete'))),
-      card(ms[0], 'Degree-aligned jobs', ms[0].value, ms[0].pill, '#0F6B4F', open('Degree-aligned jobs', ms[0].sub, ms[0].value, [R('Working in their field', ms[0].sub), R('Change', ms[0].pill)], null, ana('Degree-aligned jobs', ms[0].value, parseFloat(ms[0].value), 'aligned'))),
+      card(sd[0], 'Graduates traced', sd[0].value, sd[0].subLead + ' of records', '#475569', open('Graduates traced', 'Survey cycle 2026', sd[0].value + ' ' + sd[0].unit, [R('Traced alumni', sd[0].value), R('Total records', sd[0].unit.replace('/ ', '').replace(' total', '')), R('Coverage', sd[0].subLead), R('Collection goal', sd[0].context.replace('Goal: ', ''))], null, ana('Graduates traced', sd[0].value, parseFloat(sd[0].subLead), 'coverage'))),
+      card(sd[1], 'Alumni Needing Help', sd[1].value, sd[1].context, '#B3213C', open('Alumni needing help', 'Not yet employed \u00b7 seeking opportunities', sd[1].value, [R('Alumni needing help', sd[1].value), R('High risk', sd[1].subLead), R('Share of respondents', ms[2].sub)], null, null)),
+      card(ms[0], 'Work related to course', ms[0].value, '', '#0F6B4F', open('Work related to course', ms[0].sub, ms[0].value, [R('Working in their field', ms[0].sub), R('Prediction', ms[0].pill.replace('Next batch prediction: ', ''))], null, ana('Work Related to Course', ms[0].value, parseFloat(ms[0].value), 'aligned'))),
       card(ms[1], 'Further studies', ms[1].value, ms[1].sub, '#475569', open('Pursuing further studies', ms[1].pill, ms[1].value, [R('Graduates enrolled', ms[1].value), R('Share of respondents', ms[1].sub)], null, ana('Further studies', ms[1].value, parseFloat(ms[1].sub), 'of respondents'))),
       card(ms[2], 'Still seeking work', ms[2].value, 'View outreach list \u2192', '#7A4E00', ms[2].onClick, '#FFFAEE', '#F0D9A0'),
     ];
@@ -8786,14 +9287,14 @@ class Component extends DCLogic {
     const fc = this.empForecast(d);
     return {
       ...fc, fcClose: () => this.setState({ empFc: false }), fcStop: (e) => e && e.stopPropagation && e.stopPropagation(),
-      kpiHero: wire('emp', { onClick: () => this.setState({ empFc: true }), label: 'Employability rate', value: P1(d.emp), unit: '%', subLead: N(d.employed), sub: 'employed of ' + N(d.lf) + ' in the labour force', pct: Math.round(d.emp) + '%', context: sg(d.empD) + '% from last year' }),
+      kpiHero: wire('emp', { onClick: () => this.setState({ empFc: true }), label: 'Employability rate', value: P1(d.emp), unit: '%', subLead: N(d.employed), sub: 'employed of ' + N(d.lf) + ' in the labour force', pct: Math.round(d.emp) + '%', context: 'Next batch prediction: ' + fc.fcCards[0].v + '%' }),
       kpiSide: [
         wire('traced', { label: 'Graduates traced', value: N(d.traced), unit: '/ ' + N(d.total) + ' total', subLead: P1(d.covP) + '%', sub: 'of alumni records reached this cycle', hasBar: true, isDelta: false, pct: P1(d.goalP) + '%', context: 'Goal: ' + N(d.goal) }),
-        wire('survey', { label: 'Survey completion', value: P1(d.comp), unit: '%', subLead: N(d.completed), sub: 'fully completed survey forms', hasBar: false, isDelta: true, context: sg(d.compD) + '% from last year' }),
+        wire('survey', { label: 'Alumni Needing Help', value: N(d.sk), unit: 'alumni', subLead: N(Math.round(d.sk * 0.26)), sub: 'high risk', hasBar: false, isDelta: false, context: 'High risk: ' + N(Math.round(d.sk * 0.26)) }),
         wire('firstgen', { label: 'First-generation graduates', caption: 'Are you the first in your family to graduate college?', value: N(d.fg), unit: 'respondents', subLead: P1(d.fgP) + '%', sub: 'answered “Yes”', hasBar: false, isDelta: false }),
       ],
       miniStats: [
-        wire('m1', { label: 'Degree-aligned jobs', value: P1(d.al) + '%', sub: N(d.alN) + ' working in their field', icon: 'M4 8h16v11H4z M9 8V6a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2 M9 13.5l2 2 4-4', iconBg: '#E7F6EE', iconColor: '#0E7A5A', pill: sgn(d.alD) + '% from last year', pillBg: '#E1F3EA', pillColor: '#0F6B4F', isPill: true, isLink: false, cardBg: '#fff', cardBorder: '#E7E9ED' }),
+        wire('m1', { label: 'Work Related to Course', value: P1(d.al) + '%', sub: N(d.alN) + ' working in their field', icon: 'M4 8h16v11H4z M9 8V6a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2 M9 13.5l2 2 4-4', iconBg: '#E7F6EE', iconColor: '#0E7A5A', pill: 'Next batch prediction: ' + P1(Math.min(99, d.al + d.alD * 0.15)) + '%', pillBg: '#E1F3EA', pillColor: '#0F6B4F', isPill: true, isLink: false, cardBg: '#fff', cardBorder: '#E7E9ED' }),
         wire('m2', { label: 'Pursuing further studies', value: N(d.fs), sub: P1(d.fsP) + '% of respondents', icon: 'M2 9l10-5 10 5-10 5-10-5z M6 11v5c0 1.5 3 3 6 3s6-1.5 6-3v-5', iconBg: '#E8EEF5', iconColor: '#3E5C7A', pill: 'Graduate & Professional', pillBg: '#EEF2F7', pillColor: '#334E68', isPill: true, isLink: false, cardBg: '#fff', cardBorder: '#E7E9ED' }),
         wire('m3', { label: 'Still seeking work', value: N(d.sk), sub: P1(d.skP) + '% of survey responses', icon: 'M10.5 4a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13z M15.5 15.5L20 20', iconBg: '#FBEBC4', iconColor: '#9A6400', pill: 'View outreach list \u2192', isPill: false, isLink: true, cardBg: '#FFFAEE', cardBorder: '#F0D9A0', onClick: goRecords }, true),
       ],
@@ -8893,7 +9394,7 @@ class Component extends DCLogic {
     const batch = [0, 1, 2, 3, 4, 5].map((i) => Math.round(sum((d) => d.batch[i] * d.total) / total));
     const code = sel === 'all' ? 'CCS' : this.courseCode(sel);
     const label = sel === 'all' ? COLLEGE : code;
-    const labels = ['Employed full-time', 'Employed part-time', 'Self-employed', 'Further studies', 'Still seeking work'];
+    const labels = ['Full-time', 'Part-time', 'Self-employed', 'Further studies', 'Still seeking work'];
     const colors = ['#0F3D2E', '#7CC4A0', '#F0C428', '#2F7FC1', '#D9620B'];
     let acc = 0; const segs = []; this.DEPT_SLICES = [];
     stc.forEach((n, i) => { const p = n / traced * 100, a = acc, b = acc + p; acc = b; const g = Math.max(a, b - .5);
@@ -8954,7 +9455,7 @@ class Component extends DCLogic {
         ...this.tipH('Batch ' + lb, v + '% traced · ' + (v >= 65 ? 'meets' : 'below') + ' 65% target') }; }),
       deptStatus: stc.map((n, i) => ({ label: labels[i], count: String(n), pct: fx(n / traced * 100) + '%', pctColor: i === 4 ? '#B4500A' : '#0B1220', color: colors[i] })),
       deptDonut: 'conic-gradient(' + segs.join(', ') + ')',
-      deptCompare: [['Employability', emp, 78.4], ['Degree-aligned jobs', aligned, 71.2]].map(([lb, c, u]) => ({ label: lb, col: fx(c) + '%', uni: fx(u) + '%', cw: fx(c) + '%', uw: fx(u) + '%', diff: (c >= u ? '+' : '\u2212') + fx(Math.abs(c - u)) + '%',
+      deptCompare: [['Employability', emp, 78.4], ['Work related to course', aligned, 71.2]].map(([lb, c, u]) => ({ label: lb, col: fx(c) + '%', uni: fx(u) + '%', cw: fx(c) + '%', uw: fx(u) + '%', diff: (c >= u ? '+' : '\u2212') + fx(Math.abs(c - u)) + '%',
         ...this.tipH(lb, (sel === 'all' ? 'College ' : code + ' ') + fx(c) + '% · University ' + fx(u) + '%') })),
       deptInsights: insights.map(([lead, text, t]) => ({ lead, text, color: tone[t][0], leadColor: tone[t][1], bg: tone[t][2], border: tone[t][3] })),
       ...this.deptOutPage(D, nrIn ? nr : null, mkOut),
@@ -8987,7 +9488,8 @@ class Component extends DCLogic {
       { id: 'jobs', label: 'Jobs' },
       { id: 'events', label: 'Events' },
       { id: 'my-data', label: 'Privacy & My Data' },
-      { id: 'admin-dashboard', label: 'Admin Dashboard' },
+      { id: 'admin-overview', label: 'Admin Dashboard' },
+      { id: 'admin-dashboard', label: 'Graduate Outcomes' },
       { id: 'dept-dashboard', label: 'College Dashboard' },
       { id: 'admin-jobs', label: 'Jobs (Admin)' },
       { id: 'admin-events', label: 'Events (Admin)' },
@@ -9185,7 +9687,9 @@ class Component extends DCLogic {
       isMyData: s === 'my-data',
       goMyData: () => this.setState({ screen: 'my-data' }),
       ...this.pvVals(),
-      isAdminDash: s === 'admin-dashboard',
+      isAdminDash2: s === 'admin-dashboard', isAdminDashOld: s === 'admin-dashboard-old', isAdminOv: s === 'admin-overview',
+      ...this.ovVals(),
+      ...this.gdVals(),
       isDeptDash: s === 'dept-dashboard' || s === 'dept-outreach',
       deptShowDash: s === 'dept-dashboard', isDeptOutreach: s === 'dept-outreach', goOutreach: () => this.navTo('dept-outreach'),
       isRecords: s === 'records',
@@ -9237,7 +9741,7 @@ class Component extends DCLogic {
       signinPending: !!this.state.signinPending,
       ...this.mfaVals(),
       signIn: () => this.state.selectedDemo === 'pending' ? this.setState({ signinPending: true }) : this.state.mfaTrusted ? this.mfaFinish() : this.setState({ signinPending: false, screen: 'mfa', mfaCode: '', mfaErr: '', mfaMethod: 'email', mfaSent: false }),
-      signInDirect: () => this.setState({ signinPending: false, screen: this.state.selectedDemo === 'admin' ? 'admin-dashboard' : this.state.selectedDemo === 'dept' ? 'dept-dashboard' : 'alumni-dashboard', deptMode: this.state.selectedDemo === 'dept' }),
+      signInDirect: () => this.setState({ signinPending: false, screen: this.state.selectedDemo === 'admin' ? 'admin-overview' : this.state.selectedDemo === 'dept' ? 'dept-dashboard' : 'alumni-dashboard', deptMode: this.state.selectedDemo === 'dept' }),
       signOut: () => this.setState({ screen: 'signin', selectedDemo: null, signinPending: false, showPassword: false, deptMode: false }),
 
       alumniNavItems: this.navFor('alumni', s),
