@@ -2,6 +2,7 @@ import React from 'react';
 import { hv } from '../lib/stateStyle';
 import { selectStyle, selectFx } from '../lib/selectStyle';
 import NavSidebar from '../components/NavSidebar';
+import RangeError from '../components/RangeError';
 import SearchPill from '../components/topbar/SearchPill';
 import NotificationBell from '../components/topbar/NotificationBell';
 import UserChip from '../components/topbar/UserChip';
@@ -63,6 +64,7 @@ export default function ReportsView(v) {
     repViewArchive,
     repYearsLabel,
     repToday,
+    rangeError,
     rowHover,
   } = v;
   return (
@@ -266,6 +268,7 @@ export default function ReportsView(v) {
                 </div>
               </div>
             </div>
+            <RangeError message={rangeError} />
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '14px', alignItems: 'flex-start' }}>
               <div
                 style={{

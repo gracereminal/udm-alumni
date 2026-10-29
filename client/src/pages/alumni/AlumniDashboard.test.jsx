@@ -17,11 +17,10 @@ function setup(board) {
 }
 
 describe('Alumni Dashboard job board card', () => {
-  it('shows the live open count and the latest postings from the job board', async () => {
+  it('shows the live posting count and the latest postings from the job board', async () => {
     setup({ current: [job(1), job(2), job(3), job(4), job(5, { status: 'inactive' })] });
     renderAt('/alumni/dashboard');
-    expect(await screen.findByText('4 OPEN')).toBeInTheDocument();
-    expect(screen.getByText('Browse all 4 postings →')).toBeInTheDocument();
+    expect(await screen.findByText('Browse all 4 postings →')).toBeInTheDocument();
     expect(screen.getByText('Job 1')).toBeInTheDocument();
     expect(screen.queryByText('Job 4')).toBeNull(); // the card previews three
   });
@@ -31,12 +30,10 @@ describe('Alumni Dashboard job board card', () => {
     setup(board);
     renderAt('/alumni/dashboard');
     expect(await screen.findByText('No open job postings right now.')).toBeInTheDocument();
-    expect(screen.getByText('0 OPEN')).toBeInTheDocument();
 
     board.current = [job(7, { title: 'Faculty, BS Criminology Program' })];
     await act(async () => { fireEvent.focus(window); });
     expect(await screen.findByText('Faculty, BS Criminology Program')).toBeInTheDocument();
-    expect(screen.getByText('1 OPEN')).toBeInTheDocument();
     expect(screen.getByText('Browse 1 posting →')).toBeInTheDocument();
   });
 });

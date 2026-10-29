@@ -21,12 +21,21 @@ function setup(board, routes = []) {
 
 describe('Alumni Job Board page', () => {
   it('shows the summary tiles from the API', async () => {
-    setup([job(1), job(2)]);
+    const recent = new Date(Date.now() - 2 * 864e5).toISOString();
+    setup([job(1, { publishedAt: recent }), job(2)]);
     renderAt('/alumni/jobs');
-    expect(await screen.findByText('1 Employer')).toBeInTheDocument();
-    expect(screen.getByText('2 Openings')).toBeInTheDocument();
-    expect(screen.getByText('₱35k – ₱45k Avg')).toBeInTheDocument();
-    expect(screen.getByText('50% Response Rate')).toBeInTheDocument();
+    expect(await screen.findByText('1 Partner Company')).toBeInTheDocument();
+    expect(screen.getByText('1 New Opening')).toBeInTheDocument();
+    expect(screen.getByText('1 via Portal')).toBeInTheDocument();
+  });
+
+  it('shows the deadline and urgent tags on a job card', async () => {
+    const soon = new Date(Date.now() + 5 * 864e5).toLocaleDateString('en-CA', { timeZone: 'Asia/Manila' });
+    setup([job(1, { deadline: soon, badge: 'Urgent Hiring' }), job(2, { badge: 'Alumni Referral' })]);
+    renderAt('/alumni/jobs');
+    expect(await screen.findByText('Closes in 5 days')).toBeInTheDocument();
+    expect(screen.getByText('Urgent Hiring')).toBeInTheDocument();
+    expect(screen.queryByText('Alumni Referral')).toBeNull(); // only the urgent tag is shown on cards
   });
 
   it('lists the active postings and filters them by search', async () => {
@@ -79,10 +88,21 @@ describe('Alumni Job Board page', () => {
 
     await user.type(screen.getByPlaceholderText('e.g. Junior Backend Developer'), 'QA Intern');
     await user.type(screen.getByPlaceholderText('e.g. Brightline Tech'), 'Beta');
-    await user.type(screen.getByPlaceholderText('e.g. Full-time'), 'internship');
+    const form = within(screen.getByRole('dialog', { name: 'Post a job opening' }));
+    await user.type(form.getByPlaceholderText('City, e.g. Manila'), 'Pasig');
+    await user.selectOptions(form.getByLabelText('Work setup'), 'Hybrid');
+    await user.selectOptions(form.getByLabelText('Employment type'), 'Internship');
+    await user.type(form.getByLabelText('Minimum salary (monthly)'), '20000');
+    await user.type(form.getByLabelText('Maximum salary (monthly)'), '15000');
+    expect(form.getByText('Maximum must be at least the minimum')).toBeInTheDocument();
+    await user.clear(form.getByLabelText('Maximum salary (monthly)'));
+    await user.type(form.getByLabelText('Maximum salary (monthly)'), '25000');
+    await user.click(form.getByLabelText(/Urgent hiring/));
     await user.click(submit);
     await waitFor(() => expect(api.find('POST', '/jobs')).toHaveLength(1));
-    expect(api.last('POST', '/jobs').body).toMatchObject({ title: 'QA Intern', company: 'Beta', type: 'Internship' });
-    expect(await screen.findByText('Thanks! Your job posting was sent to Alumni Affairs for review.')).toBeInTheDocument();
+    expect(api.last('POST', '/jobs').body).toMatchObject({
+      title: 'QA Intern', company: 'Beta', type: 'Internship', location: 'Pasig · Hybrid', salary: '₱20,000 - ₱25,000', badge: 'Urgent Hiring',
+    });
+    expect(await screen.findByText('Thanks! Your job posting was sent to the Alumni Relations Office for review.')).toBeInTheDocument();
   });
 });

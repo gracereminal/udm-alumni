@@ -5,7 +5,7 @@ import OfflineContactModal from '../../components/OfflineContactModal';
 import { useJobs } from '../../context/JobsContext';
 import { useProfile } from '../../context/ProfileContext';
 import { useToast } from '../../context/ToastContext';
-import { STRIPE, jobKey } from '../../data/jobs';
+import { DEADLINES, EMP_TYPES, STRIPE, WORK_SETUPS, closesBadge, deadlineFrom, jobKey, salaryFrom } from '../../data/jobs';
 import { readImage } from '../../lib/files';
 import { applyUrl, copyText, isEmail, mailtoUrl, messengerLabel, messengerUrl } from '../../lib/contact';
 
@@ -20,19 +20,17 @@ function applicationMessage(j, a, name) {
   const now = a.employer && a.job_name ? ` I currently work as ${a.job_name} at ${a.employer}.` : '';
   return `Hi! I’m ${name}, ${grad}. I saw the ${j.title} opening at ${j.company} on the UDM Alumni job board and I’d like to apply.${now} I can send my résumé right away — please let me know the next steps.${reach ? `\n\nYou can reach me at ${reach}.` : ''}\n\nThank you!`;
 }
-const KEYS = ['All', 'Full-time', 'Remote', 'Internship', 'Contract'];
+const KEYS = ['All', 'Full-time', 'Part-time', 'Internship', 'Contract'];
 const matchKind = (j, k) => {
   const t = String(j.type || '').toLowerCase();
-  const loc = String(j.location || '').toLowerCase();
   if (k === 'Full-time') return t.indexOf('full') > -1;
-  if (k === 'Remote') return loc.indexOf('remote') > -1;
+  if (k === 'Part-time') return t.indexOf('part') > -1;
   if (k === 'Internship') return t.indexOf('intern') > -1;
   if (k === 'Contract') return t.indexOf('contract') > -1;
   return true;
 };
 const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
-/** 45000 -> "₱45k" for the salary benchmark tile. */
-const pesoK = (n) => `₱${Math.round(n / 1000)}k`;
+const WEEK_MS = 7 * 864e5;
 const salaryMin = (j) => Number(String(j.salary || '').replace(/[^\d-]/g, '').split('-')[0]) || 0;
 const postedRank = (j) => {
   const s = String(j.posted || '').toLowerCase();
@@ -62,6 +60,7 @@ export default function AlumniJobs() {
   const [photoName, setPhotoName] = useState(null);
   const [formError, setFormError] = useState('');
   const [detail, setDetail] = useState(null);
+  const [statTip, setStatTip] = useState(null);
   const photoRef = useRef(null);
 
   const all = jobsCtx.activeJobs;
@@ -121,23 +120,25 @@ export default function AlumniJobs() {
   const touch = (fn) => (e) => { fn(e); setPage(1); };
 
   const setField = (k) => (e) => { const v = e.target.value; setDraft((d) => ({ ...d, [k]: v })); setFormError(''); };
-  const field = (key, label, placeholder, span) => ({ label, placeholder, span: span || 'auto', value: draft[key] || '', onChange: setField(key) });
+  const sal = salaryFrom(draft.salMin, draft.salMax);
+  const field = (key, label, placeholder, span, extra) => ({ key, label, placeholder, span, kind: 'text', value: draft[key] || '', onChange: setField(key), ...extra });
   const clearDraft = () => { setDraft({}); setPhoto(null); setPhotoName(null); setFormError(''); if (photoRef.current) photoRef.current.value = ''; };
 
   const submit = () => {
     if (!String(draft.title || '').trim()) { setFormError('Enter a job title.'); return; }
     if (!String(draft.company || '').trim()) { setFormError('Enter the company name.'); return; }
+    if (sal.error) { setFormError(sal.error); return; }
     if (draft.applyVia && !applyUrl(draft.applyVia)) { setFormError('Enter an email address or a website for applications.'); return; }
     if (draft.messenger && !messengerUrl(draft.messenger)) { setFormError('Enter a Facebook username or profile link for Messenger.'); return; }
     // The API fills in the poster (name, program and batch) from the signed-in alumnus' record.
     jobsCtx.submitForReview({
-      title: draft.title.trim(), company: draft.company.trim(), location: (draft.location || '').trim() || 'Location TBA', type: (draft.type || '').trim() || 'Full-time', photo,
-      salary: (draft.salary || '').trim() || 'Salary undisclosed', salaryNote: 'as posted',
+      title: draft.title.trim(), company: draft.company.trim(), location: [(draft.location || '').trim() || 'Location TBA', draft.setup].filter(Boolean).join(' · '), type: draft.type || 'Full-time', photo,
+      salary: sal.text || 'Salary undisclosed', salaryNote: 'as posted', deadline: deadlineFrom(draft.closes), badge: draft.urgent ? 'Urgent Hiring' : undefined,
       tags: String(draft.tags || '').split(',').map((t) => t.trim()).filter(Boolean), desc: (draft.desc || '').trim() || 'No description provided.', applyVia: (draft.applyVia || '').trim(),
       messenger: (draft.messenger || '').trim(),
     }).then(() => {
       setFormOpen(false); clearDraft();
-      toast('Thanks! Your job posting was sent to Alumni Affairs for review.');
+      toast('Thanks! Your job posting was sent to the Alumni Relations Office for review.');
     }, (err) => setFormError(err.message || 'Your posting could not be sent. Please try again.'));
   };
 
@@ -163,7 +164,7 @@ export default function AlumniJobs() {
     savedFilterFill: savedOnly ? '#0F3D2E' : 'none',
     savedCount: all.filter(isSaved).length,
     jobSelects: [
-      { label: 'Modality', value: modality, onChange: touch((e) => setModality(e.target.value)), options: [{ value: 'all', label: 'All Modalities' }, { value: 'on-site', label: 'On-site' }, { value: 'hybrid', label: 'Hybrid' }, { value: 'remote', label: 'Remote' }] },
+      { label: 'Work setup', value: modality, onChange: touch((e) => setModality(e.target.value)), options: [{ value: 'all', label: 'All Work Setups' }, { value: 'remote', label: 'Remote' }, { value: 'hybrid', label: 'Hybrid' }, { value: 'on-site', label: 'On-site' }] },
       { label: 'Location', value: place, onChange: touch((e) => setPlace(e.target.value)), options: [{ value: 'all', label: 'All Locations' }, ...cities.map((c) => ({ value: c, label: c }))] },
       { label: 'Sort', value: sort, onChange: touch((e) => setSort(e.target.value)), options: [{ value: 'recent', label: 'Most Recent' }, { value: 'salary', label: 'Highest Salary' }, { value: 'company', label: 'Company A–Z' }] },
     ],
@@ -172,37 +173,36 @@ export default function AlumniJobs() {
     resetHover: { color: '#0B3123' },
     inputFocus: { borderColor: '#0F3D2E' },
     jobStats: [
-      { label: 'Open Positions', value: plural(stats ? stats.open : all.length, 'Opening') },
-      { label: 'Alumni Employers', value: stats ? plural(stats.employers, 'Employer') : '—' },
-      { label: 'Salary Benchmark', value: !stats ? '—' : stats.salary ? `${pesoK(stats.salary.low)} – ${pesoK(stats.salary.high)} Avg` : 'Not disclosed' },
-      { label: 'Placement Response', value: !stats ? '—' : stats.applications ? `${stats.responseRate}% Response Rate` : 'No applications yet' },
-    ],
-    showJobForm: formOpen,
-    jobFormButtonLabel: formOpen ? 'Close composer' : 'Post a Job',
+      { label: 'Employer Network', value: stats ? `${stats.employers} Partner Compan${stats.employers === 1 ? 'y' : 'ies'}` : '—' },
+      { label: 'New This Week', value: plural(all.filter((j) => j.publishedAt && Date.now() - new Date(j.publishedAt).getTime() < WEEK_MS).length, 'New Opening') },
+      { label: 'Applications Sent', value: stats ? `${stats.applications} via Portal` : '—', hint: 'Applications alumni marked as sent from a portal posting, by Messenger, email or the careers page.' },
+    ].map((s, i) => ({ ...s, showHint: !!s.hint && statTip === i, onEnter: () => { if (s.hint) setStatTip(i); }, onLeave: () => setStatTip(null) })),
+    jobFormButtonLabel: 'Post a Job',
     toggleJobForm: () => setFormOpen((o) => !o),
-    jobPhotoRef: photoRef,
-    jobDraftPhotoCss: photo ? `url("${photo}") center/cover no-repeat` : STRIPE,
-    jobDraftNoPhoto: !photo,
-    jobDraftHasPhoto: !!photo,
-    jobDraftPhotoName: photoName || 'No photo attached yet.',
-    openJobPhoto: () => { if (photoRef.current) photoRef.current.click(); },
-    onJobPhotoFile: onPhoto,
-    removeJobPhoto: () => { setPhoto(null); setPhotoName(null); if (photoRef.current) photoRef.current.value = ''; },
-    jobFormFields: [
-      field('title', 'Job title', 'e.g. Junior Backend Developer', '1 / -1'),
-      field('company', 'Company', 'e.g. Brightline Tech'),
-      field('location', 'Location & setup', 'e.g. Manila · Hybrid'),
-      field('type', 'Employment type', 'e.g. Full-time'),
-      field('salary', 'Salary range', 'e.g. ₱35,000 - ₱48,000'),
-      field('applyVia', 'How to apply', 'e.g. careers@company.com or company.com/careers'),
-      field('messenger', 'Facebook / Messenger', 'Page username or profile link'),
-    ],
-    jobDraftTags: draft.tags || '',
-    onJobDraftTags: setField('tags'),
-    publishJob: submit,
-    jobFormError: formError,
+    jobComposer: formOpen ? {
+      heading: 'Post a job opening', badge: 'GOES TO ALUMNI RELATIONS OFFICE FOR REVIEW',
+      photo: {
+        ref: photoRef, css: photo ? `url("${photo}") center/cover no-repeat` : STRIPE, none: !photo, has: !!photo, name: photoName || 'No photo attached yet.',
+        open: () => { if (photoRef.current) photoRef.current.click(); }, onFile: onPhoto,
+        remove: () => { setPhoto(null); setPhotoName(null); if (photoRef.current) photoRef.current.value = ''; },
+      },
+      fields: [
+        field('title', 'Job title', 'e.g. Junior Backend Developer', '1 / -1'),
+        field('company', 'Company', 'e.g. Brightline Tech'),
+        field('location', 'Location', 'City, e.g. Manila'),
+        field('setup', 'Work setup', 'Select work setup', null, { kind: 'select', options: WORK_SETUPS }),
+        field('type', 'Employment type', 'Select employment type', null, { kind: 'select', options: EMP_TYPES }),
+        field('closes', 'Application deadline', 'Select deadline', null, { kind: 'select', options: DEADLINES }),
+        field('salMin', 'Minimum salary (monthly)', 'e.g. 35000', null, { kind: 'money' }),
+        field('salMax', 'Maximum salary (monthly)', 'e.g. 48000', null, { kind: 'money', err: sal.error }),
+        field('applyVia', 'How to apply', 'e.g. careers@company.com or company.com/careers'),
+        field('messenger', 'Facebook / Messenger', 'Page username or profile link'),
+      ],
+      urgent: !!draft.urgent, onUrgent: (e) => { const on = e.target.checked; setDraft((d) => ({ ...d, urgent: on })); },
+      tags: draft.tags || '', onTags: setField('tags'), desc: draft.desc || '', onDesc: setField('desc'),
+      error: formError, primaryLabel: 'Submit for review', onPrimary: submit, onClear: clearDraft, onClose: () => setFormOpen(false),
+    } : null,
     jobsCountLabel: `Showing ${visible.length} of ${all.length} verified alumni job postings`,
-    jobsPagingLabel: visible.length ? `Showing ${(cur - 1) * PAGE_SIZE + 1}–${(cur - 1) * PAGE_SIZE + pageRows.length} of ${visible.length} open positions` : 'Showing 0 open positions',
     jobPage: cur,
     jobPages: pages,
     setJobPage: setPage,
@@ -216,6 +216,8 @@ export default function AlumniJobs() {
         saved,
         photoCss: j.photo ? `url("${j.photo}") center/cover no-repeat` : STRIPE,
         noPhoto: !j.photo,
+        isUrgent: j.badgeKind === 'urgent',
+        closes: closesBadge(j.deadlineIso),
         badgeColor: alumni ? '#0F3D2E' : '#B3213C',
         badgeBg: alumni ? '#E6F0EB' : '#FDE7EC',
         badgeBorder: alumni ? 'rgba(15,61,46,.2)' : 'rgba(179,33,60,.2)',

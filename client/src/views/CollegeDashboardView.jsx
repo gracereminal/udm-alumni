@@ -1,6 +1,7 @@
 import React from 'react';
 import { hv } from '../lib/stateStyle';
 import NavSidebar from '../components/NavSidebar';
+import RangeError from '../components/RangeError';
 import SearchPill from '../components/topbar/SearchPill';
 import NotificationBell from '../components/topbar/NotificationBell';
 import { onActivate } from '../lib/a11y';
@@ -40,6 +41,7 @@ export default function CollegeDashboardView(v) {
     deptTitle,
     deptViewLabel,
     pageTitle,
+    rangeError,
     showKpis,
     showInsights,
     showOutreach,
@@ -346,6 +348,7 @@ export default function CollegeDashboardView(v) {
                 </div>
               </div>
             </div>
+            <RangeError message={rangeError} />
             {showKpis ? (
               <>
                 <div data-m="kpi-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,minmax(0,1fr))', gap: '14px' }}>

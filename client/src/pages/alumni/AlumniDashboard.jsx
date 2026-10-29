@@ -7,6 +7,14 @@ import { useEvents } from '../../context/EventsContext';
 import { isAnswered } from '../../data/formDefs';
 import { initials, RECORD_STATUS } from '../../lib/format';
 
+/* SVG paths for the KPI card icons. */
+const ICONS = {
+  portal: 'M12 3l8 3v6c0 4.5-3.2 8-8 9-4.8-1-8-4.5-8-9V6l8-3z M8.5 12l2.5 2.5L16 9.5',
+  employment: 'M3 8h18v11H3z M8 8V6a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2 M3 13h18',
+  months: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M12 7v5l3 2',
+  relevance: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8z M12 12.01V12',
+};
+
 /** Alumni Dashboard — profile summary, survey status, announcements & events feed, job matches. */
 export default function AlumniDashboard() {
   const navigate = useNavigate();
@@ -62,39 +70,37 @@ export default function AlumniDashboard() {
     surveyComplete: complete,
     surveyIncomplete: !complete,
     showSurveyBanner: !complete && !bannerDismissed,
-    showSurveyGhostCta: complete || bannerDismissed,
-    surveyGhostCtaLabel: complete ? 'Review Answers' : 'Continue Profile',
+    showSurveyGhostCta: !complete && bannerDismissed,
+    surveyGhostCtaLabel: 'Continue Profile',
     dismissSurveyBanner: () => setBannerDismissed(true),
     dashSurveyPct: `${pct}%`,
     dashSurveyRemainingLabel: remaining === 1 ? '1 question still needs an answer.' : `${remaining} questions still need answers.`,
     jobsOrder: complete ? 1 : 2,
     announceOrder: complete ? 2 : 1,
-    jobsTitleSize: complete ? '17px' : '14px',
     jobsCardShadow: complete ? '0 10px 28px rgba(0,40,33,.10)' : 'none',
     dashMetrics: [
-      { label: 'Portal Status', value: 'Active', sub: 'Alumni account in good standing', tag: 'VERIFIED ALUMNI', valueColor: '#0A0A0A', tagColor: '#0F8A5F', tagBg: '#E1F3EA' },
+      { label: 'Portal Status', icon: ICONS.portal, value: 'Active', sub: 'Alumni account in good standing', tag: '', valueColor: '#0A0A0A', tagColor: '#0F8A5F', tagBg: '#E1F3EA' },
       {
-        label: 'Employment Status', value: empValue, sub: employed ? av('org_type', 'Organization type not answered') : 'Section IV response',
+        label: 'Employment Status', icon: ICONS.employment, value: empValue, sub: employed ? av('org_type', 'Organization type not answered') : 'Section IV response',
         tag: employed ? 'EMPLOYED' : a.ever_employed === 'No' ? 'UNEMPLOYED' : 'NOT ANSWERED', valueColor: set('ever_employed') ? ink : muted,
         tagColor: employed ? '#0F8A5F' : '#8A6D1F', tagBg: employed ? '#E1F3EA' : '#FBF0D8',
       },
       {
-        label: 'Months Before First Job', value: av('time_to_job'), sub: employed ? 'Months after graduating from UDM' : 'Answer Section V to record this',
+        label: 'Months Before First Job', icon: ICONS.months, value: av('time_to_job'), sub: employed ? 'Months after graduating from UDM' : 'Answer Section V to record this',
         tag: set('time_to_job') ? 'RECORDED' : 'NOT ANSWERED', valueColor: set('time_to_job') ? ink : muted,
         tagColor: set('time_to_job') ? '#0F3D2E' : '#8A6D1F', tagBg: set('time_to_job') ? '#E6F0EB' : '#FBF0D8',
       },
       {
-        label: 'Course Relevance', value: relevance, sub: av('occ_class', 'Occupational classification not answered'),
+        label: 'Course Relevance', icon: ICONS.relevance, value: relevance, sub: av('occ_class', 'Occupational classification not answered'),
         tag: selfEmp ? 'SELF-EMPLOYED' : 'GRADUATE OUTCOME', valueColor: set('job_related') ? ink : muted, tagColor: 'rgba(0,0,0,.5)', tagBg: '#F2F0EA',
       },
     ],
     annTabs,
-    annFeed: feed,
+    annFeed: feed.slice(0, 3),
     annFeedEmpty: feed.length === 0,
-    annShowFooter: annTab !== 'announcements',
+    annShowFooter: feed.length > 0,
     annFeedEmptyText: annTab === 'events' ? 'No upcoming events right now.' : annTab === 'announcements' ? 'No announcements right now.' : 'Nothing posted yet.',
     dashJobs: activeJobs.slice(0, 3),
-    dashJobsOpen: activeJobs.length,
     dashJobsBrowseLabel: activeJobs.length === 1 ? 'Browse 1 posting →' : `Browse all ${activeJobs.length} postings →`,
     goJobs: () => navigate('/alumni/jobs'),
     goEvents: () => navigate('/alumni/events'),

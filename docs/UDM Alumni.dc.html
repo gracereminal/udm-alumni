@@ -295,6 +295,8 @@ body:has([data-auth]){overflow:hidden}
 [data-mobile="1"] [data-screen-label="Manage Records"] [data-m=tscroll] > [data-m=trow] > :first-child{flex:none}
 [data-mobile="1"] [data-screen-label="Manage Records"] [data-m=tscroll] > [data-m=trow] > :nth-child(2){flex:1 1 0;order:0;font-size:inherit!important;color:inherit}
 [data-mobile="1"] [data-screen-label="Manage Records"] [data-m=tscroll] > [data-m=trow] > :first-child{align-self:center;flex:none;width:20px!important;height:20px!important;min-width:20px!important}[data-mobile="1"] [data-screen-label="Manage Records"] [data-m=tscroll] > [data-m=trow] > :first-child > *{width:20px!important;height:20px!important;min-width:20px;flex:none;box-sizing:border-box}
+@media (max-height:760px){[data-screen-label="Admin Dashboard"] [data-m=ad-bottom]{display:none!important}}
+@media (max-height:620px){[data-screen-label="Admin Dashboard"] [data-m2=ad-kpi] > div > div:nth-child(4){display:none!important}[data-screen-label="Admin Dashboard"] [data-m=ws-head] > div:first-child > div:nth-child(2){display:none}}
 [data-mobile="1"] [data-m=ev-admin-layout]{flex-direction:column!important;flex-wrap:nowrap!important}
 [data-mobile="1"] [data-m=ev-admin-main],[data-mobile="1"] [data-m=ev-admin-side]{width:100%!important;max-width:none!important;flex:none!important}
 [data-mobile="1"] [data-screen-label="Alumni Dashboard"] [data-m=topbar] + div > div:first-child > div:first-child{flex-direction:column!important;gap:12px!important;text-align:center;width:100%}[data-mobile="1"] [data-screen-label="Alumni Dashboard"] [data-m=topbar] + div > div:first-child > div:first-child > div:nth-child(2){width:100%}
@@ -322,7 +324,6 @@ body:has([data-auth]){overflow:hidden}
 [data-frame="1"] [data-screen-label="Alumni Dashboard"] [data-m=topbar] + div > div{border-radius:22px!important}
 [data-frame="1"] [data-screen-label="Alumni Dashboard"] [data-m=topbar] + div [data-m=kpi-grid]{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important}
 [data-frame="1"] [data-screen-label="Alumni Dashboard"] [data-m=topbar] + div [data-m=kpi-grid] > div{border:0!important;border-radius:18px!important;padding:14px!important}
-[data-frame="1"] [data-screen-label="Alumni Dashboard"] [data-m=topbar] + div [data-m=kpi-grid] > div > div:first-child > div:last-child{display:none!important}
 [data-frame="1"] [data-screen-label="Alumni Dashboard"] [data-m=topbar] + div [data-m=kpi-grid] > div > div:first-child{margin-bottom:6px!important}
 [data-frame="1"] [data-screen-label="Alumni Dashboard"] [data-m=topbar] + div [data-m=kpi-grid] > div > div:first-child > div:first-child{font-size:12px!important;color:#64748B!important}
 [data-frame="1"] [data-screen-label="Alumni Dashboard"] [data-m=topbar] + div [data-m=kpi-val]{font-size:22px!important}
@@ -1362,7 +1363,6 @@ body{margin:0;background:#F3F6F4}a{color:#004D40}a:hover{color:#F0C428}</style>
 
         <sc-if value="{{ showSurveyBanner }}" hint-placeholder-val="{{ true }}">
           <div style="position:relative;background:#FBF0D8;border:1px solid #F0E2BD;border-radius:18px;padding:24px 28px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap">
-            <div onClick="{{ dismissSurveyBanner }}" title="Remind me later" style="position:absolute;top:12px;right:14px;width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:rgba(61,47,8,.5);cursor:pointer" style-hover="background:rgba(138,109,31,.14)">×</div>
             <div style="min-width:240px;flex:1">
               <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
                 <div style="font-size:10.5px;font-weight:700;letter-spacing:.6px;color:#8A6D1F;background:#fff;padding:4px 10px;border-radius:8px">ACTION REQUIRED</div>
@@ -1383,11 +1383,11 @@ body{margin:0;background:#F3F6F4}a{color:#004D40}a:hover{color:#F0C428}</style>
 
         <div data-m="kpi-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:14px;margin-bottom:14px">
           <sc-for list="{{ dashMetrics }}" as="m" hint-placeholder-count="4">
-            <div style="background:#fff;border:1px solid #E7E9ED;border-radius:16px;box-shadow:0 1px 2px rgba(16,24,40,.04),0 8px 24px -12px rgba(16,24,40,.08);padding:24px;min-width:0">
-              <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px"><div style="font-size:13.5px;font-weight:600;color:#0B1220">{{ m.label }}</div><div title="More options" style="width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#94A3B8;cursor:pointer;flex:none;font-size:17px;line-height:1;font-weight:700" style-hover="background:#F1F5F3;color:#0B1220">⋮</div></div>
-              <div data-m="kpi-val" style="font-family:Inter,sans-serif;font-weight:700;font-size:24px;line-height:1.15;letter-spacing:-.5px;color:{{ m.valueColor }};margin-bottom:4px">{{ m.value }}</div>
-              <div style="font-size:12px;color:#64748B;margin-bottom:10px">{{ m.sub }}</div>
-              <div style="font-size:11px;font-weight:700;color:{{ m.tagColor }};background:{{ m.tagBg }};padding:4px 10px;border-radius:999px;width:fit-content">{{ m.tag }}</div>
+            <div style="position:relative;overflow:hidden;background:radial-gradient(160px 120px at 100% 0%,{{ m.tagBg }},rgba(255,255,255,0) 72%),#fff;border:1px solid #E7E9ED;border-radius:20px;box-shadow:0 1px 2px rgba(16,24,40,.04),0 14px 30px -16px rgba(0,40,33,.22);padding:14px 16px;min-width:0;display:flex;flex-direction:column">
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><span style="width:34px;height:34px;border-radius:11px;background:{{ m.tagBg }};color:{{ m.tagColor }};display:flex;align-items:center;justify-content:center;flex:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:17px;height:17px"><path d="{{ m.icon }}"></path></svg></span><div style="font-size:11px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:#64748B;line-height:1.3">{{ m.label }}</div></div>
+              <div data-m="kpi-val" style="font-family:Inter,sans-serif;font-weight:700;font-size:22px;line-height:1.2;letter-spacing:-.5px;color:{{ m.valueColor }};margin-bottom:3px;text-wrap:balance">{{ m.value }}</div>
+              <div style="font-size:12px;line-height:1.4;color:#64748B;text-wrap:pretty;flex:1">{{ m.sub }}</div>
+              <sc-if value="{{ m.tag }}" hint-placeholder-val="{{ true }}"><div style="font-size:10.5px;font-weight:700;letter-spacing:.4px;color:{{ m.tagColor }};background:{{ m.tagBg }};padding:4px 10px;border-radius:999px;width:fit-content;max-width:100%;box-sizing:border-box;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:10px">{{ m.tag }}</div></sc-if>
             </div>
           </sc-for>
         </div>
@@ -1395,7 +1395,7 @@ body{margin:0;background:#F3F6F4}a{color:#004D40}a:hover{color:#F0C428}</style>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:14px;align-items:start">
           <div style="display:flex;flex-direction:column;gap:14px;min-width:0;order:{{ announceOrder }}">
             <div style="background:#fff;border:1px solid #E7E9ED;border-radius:16px;box-shadow:0 1px 2px rgba(16,24,40,.04),0 8px 24px -12px rgba(16,24,40,.08);padding:24px">
-              <div style="font-family:Inter,sans-serif;font-weight:700;font-size:15px;color:#0B1220;margin-bottom:10px">Announcements &amp; Events</div>
+              <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px"><span style="width:34px;height:34px;border-radius:11px;background:#0F3D2E;color:#F0C428;display:flex;align-items:center;justify-content:center;flex:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:17px;height:17px"><path d="M3 5h18v14H3z M3 9h18 M8 3v4 M16 3v4"></path></svg></span><div style="font-family:Inter,sans-serif;font-weight:700;font-size:16px;letter-spacing:-.2px;color:#0B1220">Announcements &amp; Events</div></div>
               <div role="tablist" aria-label="Filter announcements and events" style="display:flex;gap:20px;border-bottom:1px solid #E7E9ED;margin-bottom:14px;overflow-x:auto;overflow-y:hidden">
                 <sc-for list="{{ annTabs }}" as="t" hint-placeholder-count="3">
                   <button role="tab" aria-selected="{{ t.selected }}" onClick="{{ t.onClick }}" style="appearance:none;background:none;border:0;border-bottom:2px solid {{ t.line }};margin-bottom:-1px;padding:0 0 10px;min-height:40px;display:flex;align-items:center;gap:7px;font-family:inherit;font-size:13px;font-weight:{{ t.weight }};color:{{ t.color }};cursor:pointer;white-space:nowrap;transition:color .15s" style-hover="color:#0B1220">
@@ -1409,10 +1409,10 @@ body{margin:0;background:#F3F6F4}a{color:#004D40}a:hover{color:#F0C428}</style>
                   <div style="padding:28px 0 18px;text-align:center;font-size:13px;color:#64748B">{{ annFeedEmptyText }}</div>
                 </sc-if>
                 <sc-for list="{{ annFeed }}" as="an" hint-placeholder-count="4">
-                  <div onClick="{{ an.onOpen }}" style="background:#F7FAF8;border:1px solid #EDF2EF;border-radius:14px;padding:14px 16px;display:flex;gap:14px;align-items:flex-start;cursor:{{ an.cursor }};transition:border-color .15s" style-hover="{{ an.hover }}">
-                    <div style="flex:none;width:52px;height:56px;border-radius:11px;background:#fff;border:1px solid #E3ECE7;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px">
-                      <div style="font-size:10.5px;font-weight:700;color:#64748B;text-transform:uppercase;letter-spacing:.8px">{{ an.month }}</div>
-                      <div style="font-family:Inter,sans-serif;font-size:21px;font-weight:700;color:#0F3D2E;line-height:1">{{ an.day }}</div>
+                  <div onClick="{{ an.onOpen }}" style="background:#fff;border:1px solid #E3ECE7;box-shadow:0 1px 2px rgba(16,24,40,.04),0 8px 20px -14px rgba(0,40,33,.25);border-radius:16px;padding:14px 16px;display:flex;gap:14px;align-items:flex-start;cursor:{{ an.cursor }};transition:border-color .15s" style-hover="{{ an.hover }}">
+                    <div style="flex:none;width:52px;height:56px;border-radius:12px;background:#0F3D2E;border:0;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px">
+                      <div style="font-size:10.5px;font-weight:700;color:#F0C428;text-transform:uppercase;letter-spacing:.8px">{{ an.month }}</div>
+                      <div style="font-family:Inter,sans-serif;font-size:21px;font-weight:700;color:#fff;line-height:1">{{ an.day }}</div>
                     </div>
                     <div style="min-width:0;flex:1">
                       <div style="display:flex;align-items:center;gap:6px;margin-bottom:5px;font-size:10.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:{{ an.typeColor }}">
@@ -1445,7 +1445,7 @@ body{margin:0;background:#F3F6F4}a{color:#004D40}a:hover{color:#F0C428}</style>
                 </sc-for>
               </div>
               <sc-if value="{{ annShowFooter }}" hint-placeholder-val="{{ true }}">
-                <div onClick="{{ goEvents }}" style="border-top:1px solid #E7E9ED;margin-top:16px;padding-top:12px;font-size:12.5px;font-weight:700;color:#0F3D2E;cursor:pointer">View all events →</div>
+                <div onClick="{{ goEvents }}" style="border-top:1px solid #E7E9ED;margin-top:16px;padding-top:12px;font-size:12.5px;font-weight:700;color:#0F3D2E;cursor:pointer">View all →</div>
               </sc-if>
             </div>
 
@@ -1457,13 +1457,12 @@ body{margin:0;background:#F3F6F4}a{color:#004D40}a:hover{color:#F0C428}</style>
                 <div style="font-size:10.5px;font-weight:700;letter-spacing:.6px;color:#0F3D2E;background:#E6F0EB;padding:4px 10px;border-radius:8px;width:fit-content;margin-bottom:12px">MATCHED FOR YOU</div>
               </sc-if>
               <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;gap:12px">
-                <div style="font-family:Inter,sans-serif;font-weight:700;font-size:{{ jobsTitleSize }};color:#0B1220">Job Board</div>
-                <div style="font-size:10px;font-weight:700;color:#0F3D2E;background:#E6F0EB;padding:4px 9px;border-radius:6px;white-space:nowrap">5 OPEN</div>
+                <div style="display:flex;align-items:center;gap:12px"><span style="width:34px;height:34px;border-radius:11px;background:#0F3D2E;color:#F0C428;display:flex;align-items:center;justify-content:center;flex:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:17px;height:17px"><path d="M3 8h18v11H3z M8 8V6a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2 M3 13h18"></path></svg></span><div style="font-family:Inter,sans-serif;font-weight:700;font-size:16px;letter-spacing:-.2px;color:#0B1220">Job Board</div></div>
               </div>
               <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px">
                 <sc-for list="{{ dashJobs }}" as="job" hint-placeholder-count="3">
-                  <div style="background:#F7FAF8;border:1px solid #EDF2EF;border-radius:14px;padding:13px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px">
-                    <div style="display:flex;align-items:center;gap:12px;min-width:0"><div style="width:40px;height:40px;border-radius:12px;background:#E6F0EB;color:#0F3D2E;display:flex;align-items:center;justify-content:center;flex:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><rect x="3" y="7" width="18" height="13" rx="2"></rect><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></div><div style="min-width:0">
+                  <div style="background:#fff;border:1px solid #E3ECE7;box-shadow:0 1px 2px rgba(16,24,40,.04),0 8px 20px -14px rgba(0,40,33,.25);border-radius:16px;padding:13px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px">
+                    <div style="display:flex;align-items:center;gap:12px;min-width:0"><div style="width:40px;height:40px;border-radius:12px;background:#E6F0EB;color:#0F3D2E;display:flex;align-items:center;justify-content:center;flex:none;border:1px solid #CFE3DA"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><rect x="3" y="7" width="18" height="13" rx="2"></rect><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></div><div style="min-width:0">
                       <div style="font-size:13.5px;font-weight:700;color:#0B1220;margin-bottom:3px">{{ job.title }}</div>
                       <div style="font-size:12px;color:#64748B">{{ job.company }} · {{ job.location }}</div>
                       <div style="font-size:11px;color:#94A3B8;margin-top:4px">{{ job.posted }}</div>
@@ -1992,58 +1991,65 @@ body{margin:0;background:#F3F6F4}a{color:#004D40}a:hover{color:#F0C428}</style>
         </div>
 
         <sc-if value="{{ showJobForm }}" hint-placeholder-val="{{ false }}">
-          <div style="background:#fff;border:1px solid #E7E9ED;border-radius:16px;box-shadow:0 1px 2px rgba(16,24,40,.04),0 8px 24px -12px rgba(16,24,40,.08);padding:24px 26px;margin-bottom:14px">
-            <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:4px">
+          <div style="position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;padding:24px;box-sizing:border-box">
+<div onClick="{{ toggleJobForm }}" style="position:absolute;inset:0;background:rgba(11,18,32,.45)"></div>
+<div style="position:relative;width:100%;max-width:640px;max-height:calc(100vh - 48px);overflow-y:auto;background:#fff;border-radius:20px;box-shadow:0 24px 60px rgba(16,24,40,.25);padding:24px 26px;box-sizing:border-box">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px">
               <div style="font-family:Inter,sans-serif;font-weight:600;font-size:16px;color:#0B1220">Post a job opening</div>
-              <div style="font-size:10.5px;font-weight:700;letter-spacing:.5px;color:#475569;background:#EEF2F6;padding:4px 10px;border-radius:8px">GOES TO ALUMNI AFFAIRS FOR REVIEW</div>
+              <div style="display:flex;align-items:center;gap:8px"><div style="font-size:10px;font-weight:700;letter-spacing:.5px;color:#475569;background:#EEF2F6;padding:4px 10px;border-radius:8px;white-space:nowrap">GOES TO ALUMNI RELATIONS OFFICE FOR REVIEW</div><button type="button" aria-label="Close" onClick="{{ toggleJobForm }}" style="width:34px;height:34px;flex:none;border:none;border-radius:50%;background:#F1F3F5;color:#0B1220;font-size:18px;line-height:1;cursor:pointer" style-hover="background:#E2E5EA">×</button></div>
             </div>
-            <div style="font-size:12.5px;color:#64748B;margin-bottom:14px">Attach a company photo or logo so your posting stands out on the board.</div>
 
-            <div style="display:flex;gap:22px;flex-wrap:wrap;align-items:flex-start;margin-bottom:14px">
-              <div style="flex:none;width:210px">
-                <div onClick="{{ openJobPhoto }}" title="Upload job photo" style="width:210px;height:140px;border-radius:14px;position:relative;cursor:pointer;overflow:hidden;border:1px solid #E2E5EA;background:{{ jobDraftPhotoCss }}">
+            <div onClick="{{ openJobPhoto }}" title="Upload company photo" style="width:100%;height:120px;border-radius:14px;position:relative;cursor:pointer;overflow:hidden;border:1px solid #E2E5EA;background:{{ jobDraftPhotoCss }}">
                   <sc-if value="{{ jobDraftNoPhoto }}" hint-placeholder-val="{{ true }}">
-                    <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;color:#94A3B8;text-align:center;padding:10px">
-                      <span style="font-size:18px;line-height:1">+</span>
-                      <span>job photo — 1200×800</span>
+                    <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px;color:#94A3B8;text-align:center;padding:10px">
+                      <span style="font-size:20px;line-height:1">+</span>
+                      <span>company photo / logo — 1200×800</span>
                     </div>
                   </sc-if>
                 </div>
                 <input type="file" accept="image/*" ref="{{ jobPhotoRef }}" onChange="{{ onJobPhotoFile }}" style="display:none">
-                <div style="display:flex;align-items:center;gap:10px;margin-top:9px">
-                  <button type="button" onClick="{{ openJobPhoto }}" style="background:#fff;border:1px solid #E2E5EA;border-radius:8px;padding:7px 12px;font-family:inherit;font-size:12px;font-weight:700;color:#0B1220;cursor:pointer">Upload photo</button>
+                <div style="display:flex;align-items:center;gap:10px;margin-top:10px">
+                  <button type="button" onClick="{{ openJobPhoto }}" style="background:#fff;border:1px solid #E2E5EA;border-radius:8px;padding:8px 13px;font-family:inherit;font-size:12px;font-weight:700;color:#0B1220;cursor:pointer">Upload photo</button>
                   <sc-if value="{{ jobDraftHasPhoto }}" hint-placeholder-val="{{ false }}">
                     <button type="button" onClick="{{ removeJobPhoto }}" style="background:none;border:none;padding:4px 2px;font-family:inherit;font-size:12px;font-weight:700;color:#9F1239;cursor:pointer">Remove</button>
                   </sc-if>
+                  <div style="font-size:11.5px;color:#94A3B8;min-width:0;word-break:break-all">{{ jobDraftPhotoName }}</div>
                 </div>
-                <div style="font-size:11.5px;color:#94A3B8;margin-top:6px;word-break:break-all">{{ jobDraftPhotoName }}</div>
-              </div>
 
-              <div style="flex:1;min-width:280px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:14px">
-                <sc-for list="{{ jobFormFields }}" as="fl" hint-placeholder-count="6">
-                  <div style="min-width:0;grid-column:{{ fl.span }}">
-                    <div style="font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:#94A3B8;margin-bottom:6px">{{ fl.label }}</div>
-                    <input type="text" value="{{ fl.value }}" onChange="{{ fl.onChange }}" placeholder="{{ fl.placeholder }}" style="width:100%;box-sizing:border-box;border:1px solid #E2E5EA;border-radius:10px;padding:11px 13px;font-family:inherit;font-size:13px;color:#0B1220;background:#fff;outline:none" style-focus="{{ inputFocus }}">
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,190px),1fr));gap:14px;margin-top:20px">
+                  <sc-for list="{{ jobFormFields }}" as="jf" hint-placeholder-count="6">
+                    <div style="min-width:0;grid-column:{{ jf.span }}">
+                      <div style="font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:#94A3B8;margin-bottom:6px">{{ jf.label }}</div>
+                      <sc-if value="{{ jf.isText }}" hint-placeholder-val="{{ true }}"><input type="text" value="{{ jf.value }}" onChange="{{ jf.onChange }}" placeholder="{{ jf.placeholder }}" style="width:100%;box-sizing:border-box;border:1px solid #E2E5EA;border-radius:10px;padding:11px 13px;font-family:inherit;font-size:13px;color:#0B1220;background:#fff;outline:none" style-focus="{{ inputFocus }}"></sc-if>
+<sc-if value="{{ jf.isSelect }}" hint-placeholder-val="{{ false }}"><select value="{{ jf.value }}" onChange="{{ jf.onChange }}" style="width:100%;box-sizing:border-box;border:1px solid #E2E5EA;border-radius:10px;padding:11px 13px;font-family:inherit;font-size:13px;color:#0B1220;background:#fff;outline:none;appearance:auto;cursor:pointer"><option value="">{{ jf.placeholder }}</option><sc-for list="{{ jf.options }}" as="o" hint-placeholder-count="3"><option value="{{ o }}">{{ o }}</option></sc-for></select></sc-if>
+<sc-if value="{{ jf.isNum }}" hint-placeholder-val="{{ false }}"><div style="position:relative"><span style="position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:13px;color:#64748B">₱</span><input type="number" min="0" step="1000" inputmode="numeric" value="{{ jf.value }}" onChange="{{ jf.onChange }}" placeholder="{{ jf.placeholder }}" style="width:100%;box-sizing:border-box;border:1px solid #E2E5EA;border-radius:10px;padding:11px 13px;font-family:inherit;font-size:13px;color:#0B1220;background:#fff;outline:none;padding-left:28px;border-color:{{ jf.border }}" style-focus="{{ inputFocus }}"></div></sc-if>
+<sc-if value="{{ jf.err }}" hint-placeholder-val="{{ false }}"><div style="font-size:11.5px;color:#B3213C;margin-top:5px">{{ jf.err }}</div></sc-if>
+                    </div>
+                  </sc-for>
+                  <label style="grid-column:1 / -1;display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;font-weight:600;color:#0B1220;padding:10px 12px;border:1px solid #E2E5EA;border-radius:10px;min-height:44px"><input type="checkbox" checked="{{ jobDraftUrgent }}" onChange="{{ onJobDraftUrgent }}" style="width:18px;height:18px;accent-color:#B3213C;margin:0" /><span>Urgent hiring<span style="font-weight:500;color:#64748B"> — shows an “Urgent Hiring” tag on the job card</span></span></label>
+                  <div style="min-width:0;grid-column:1 / -1">
+                    <div style="font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:#94A3B8;margin-bottom:6px">Skills / tags</div>
+                    <input type="text" value="{{ jobDraftTags }}" onChange="{{ onJobDraftTags }}" placeholder="Comma separated — e.g. React, Figma, SQL" style="width:100%;box-sizing:border-box;border:1px solid #E2E5EA;border-radius:10px;padding:11px 13px;font-family:inherit;font-size:13px;color:#0B1220;background:#fff;outline:none" style-focus="{{ inputFocus }}">
                   </div>
-                </sc-for>
-                <div style="min-width:0;grid-column:1 / -1">
-                  <div style="font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:#94A3B8;margin-bottom:6px">Skills / tags</div>
-                  <input type="text" value="{{ jobDraftTags }}" onChange="{{ onJobDraftTags }}" placeholder="Comma separated — e.g. React, Figma, SQL" style="width:100%;box-sizing:border-box;border:1px solid #E2E5EA;border-radius:10px;padding:11px 13px;font-family:inherit;font-size:13px;color:#0B1220;background:#fff;outline:none" style-focus="{{ inputFocus }}">
+                  <div style="min-width:0;grid-column:1 / -1">
+                    <div style="font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:#94A3B8;margin-bottom:6px">Description</div>
+                    <textarea value="{{ jobDraftDesc }}" onChange="{{ onJobDraftDesc }}" rows="4" placeholder="Role summary, requirements, how to apply…" style="width:100%;box-sizing:border-box;border:1px solid #E2E5EA;border-radius:10px;padding:12px 13px;font-family:inherit;font-size:13px;line-height:1.6;color:#0B1220;background:#fff;outline:none;resize:vertical" style-focus="{{ inputFocus }}"></textarea>
+                  </div>
                 </div>
-              </div>
-            </div>
 
-            <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding-top:18px;border-top:1px solid #E7E9ED">
-              <button type="button" onClick="{{ publishJob }}" style="background:#0F3D2E;color:#fff;font-family:inherit;font-weight:700;font-size:13.5px;padding:13px 24px;min-height:44px;border:none;border-radius:10px;cursor:pointer">Publish posting</button>
-              <button type="button" onClick="{{ toggleJobForm }}" style="background:#fff;color:#0B1220;font-family:inherit;font-weight:600;font-size:13.5px;padding:13px 20px;min-height:44px;border:1px solid #E2E5EA;border-radius:10px;cursor:pointer">Cancel</button>
-              <div style="font-size:12px;color:#94A3B8">Posting appears at the top of the board immediately in this preview.</div>
+            <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:20px;padding-top:18px;border-top:1px solid #E7E9ED">
+              <button type="button" onClick="{{ publishJob }}" style="background:#0F3D2E;color:#fff;font-family:inherit;font-weight:700;font-size:13.5px;padding:13px 24px;min-height:44px;border:none;border-radius:10px;cursor:pointer">Publish job</button>
+              <button type="button" onClick="{{ clearJobDraft }}" style="background:#fff;color:#0B1220;font-family:inherit;font-weight:600;font-size:13.5px;padding:13px 20px;min-height:44px;border:1px solid #E2E5EA;border-radius:10px;cursor:pointer">Clear draft</button>
+              <button type="button" onClick="{{ toggleJobForm }}" style="background:none;color:#64748B;font-family:inherit;font-weight:600;font-size:13.5px;padding:13px 10px;min-height:44px;border:none;cursor:pointer">Cancel</button>
             </div>
           </div>
+</div>
         </sc-if>
 
         <div style="background:#fff;border:1px solid #E7E9ED;border-radius:16px;box-shadow:0 1px 2px rgba(16,24,40,.04),0 8px 24px -12px rgba(16,24,40,.08);padding:16px 22px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr));gap:18px;margin-bottom:16px">
           <sc-for list="{{ jobStats }}" as="st" hint-placeholder-count="4">
-            <div style="display:flex;flex-direction:column;gap:4px;min-width:0">
+            <div onMouseEnter="{{ st.onEnter }}" onMouseLeave="{{ st.onLeave }}" style="position:relative;display:flex;flex-direction:column;gap:4px;min-width:0;cursor:{{ st.cursor }}">
+              <sc-if value="{{ st.showHint }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;left:0;bottom:calc(100% + 10px);z-index:20;width:240px;background:#0B1220;color:#fff;font-size:12px;line-height:1.5;font-weight:500;padding:10px 12px;border-radius:10px;box-shadow:0 8px 24px rgba(16,24,40,.25);pointer-events:none">{{ st.hint }}</div></sc-if>
               <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#94A3B8">{{ st.label }}</div>
               <div style="font-family:Inter,sans-serif;font-weight:600;font-size:17px;color:#0B1220">{{ st.value }}</div>
             </div>
@@ -2055,6 +2061,7 @@ body{margin:0;background:#F3F6F4}a{color:#004D40}a:hover{color:#F0C428}</style>
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="rgba(0,0,0,.4)" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-4-4"></path></svg>
             <input value="{{ jobQuery }}" onChange="{{ setJobQuery }}" placeholder="Search job titles, tech stack, company, or keywords…" style="flex:1;min-width:0;border:none;outline:none;background:transparent;font-family:inherit;font-size:13px;color:#0B1220">
           </div>
+          <select value="{{ jobSetup }}" onChange="{{ setJobSetup }}" aria-label="Work setup" style="min-width:172px;box-sizing:border-box;border:1px solid #E2E5EA;border-radius:10px;padding:11px 16px;font-family:inherit;font-size:13px;font-weight:600;color:#0B1220;background:#fff;cursor:pointer;outline:none"><option value="All">All Work Setups</option><option value="Remote">Remote</option><option value="Hybrid">Hybrid</option><option value="On-site">On-site</option></select>
           <sc-for list="{{ jobSelects }}" as="sel" hint-placeholder-count="3">
             <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;min-width:172px;box-sizing:border-box;border:1px solid #E2E5EA;border-radius:10px;padding:11px 16px;font-size:13px;font-weight:600;color:#0B1220;background:#fff;cursor:pointer;white-space:nowrap;overflow:visible">
               <span style="white-space:nowrap">{{ sel }}</span>
@@ -2064,7 +2071,7 @@ body{margin:0;background:#F3F6F4}a{color:#004D40}a:hover{color:#F0C428}</style>
         </div>
 
         <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:18px">
-          <div data-m="seg" style="display:flex;align-items:center;gap:4px;padding:4px;background:#F1F5F3;border:1px solid #E7E9ED;border-radius:999px;flex-wrap:wrap;max-width:100%;box-sizing:border-box">
+          <div data-m="seg" style="display:flex;align-items:center;gap:4px;padding:4px;background:#F1F5F3;border:1px solid #E7E9ED;border-radius:999px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;min-width:0;max-width:100%;box-sizing:border-box">
             <sc-for list="{{ jobFilters }}" as="f" hint-placeholder-count="5">
               <div onClick="{{ f.onClick }}" style="border-radius:999px;padding:8px 16px;font-size:12.5px;font-weight:600;white-space:nowrap;cursor:pointer;background:{{ f.bg }};color:{{ f.color }}">{{ f.label }}</div>
             </sc-for>
@@ -2089,7 +2096,8 @@ body{margin:0;background:#F3F6F4}a{color:#004D40}a:hover{color:#F0C428}</style>
                 <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;flex-wrap:wrap">
                   <div style="font-size:15px;font-weight:700;color:#0B1220">{{ job.title }}</div>
                   <div style="font-size:11px;font-weight:700;color:#0F3D2E;background:#E6F0EB;padding:3px 9px;border-radius:8px;white-space:nowrap">{{ job.type }}</div>
-                  <div style="font-size:11px;font-weight:700;padding:3px 9px;border-radius:8px;white-space:nowrap;color:{{ job.badgeColor }};background:{{ job.badgeBg }};border:1px solid {{ job.badgeBorder }}">{{ job.badge }}</div>
+                  <sc-if value="{{ job.hasCloses }}" hint-placeholder-val="{{ false }}"><div style="font-size:11px;font-weight:700;padding:3px 9px;border-radius:8px;white-space:nowrap;color:{{ job.closesColor }};background:{{ job.closesBg }}">{{ job.closesLabel }}</div></sc-if>
+                  <sc-if value="{{ job.isUrgent }}" hint-placeholder-val="{{ false }}"><div style="font-size:11px;font-weight:700;padding:3px 9px;border-radius:8px;white-space:nowrap;color:{{ job.badgeColor }};background:{{ job.badgeBg }};border:1px solid {{ job.badgeBorder }}">{{ job.badge }}</div></sc-if>
                 </div>
                 <div style="font-size:13px;color:#64748B;margin-bottom:10px">{{ job.company }} · {{ job.location }} · {{ job.posted }}</div>
                 <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
@@ -2117,8 +2125,7 @@ body{margin:0;background:#F3F6F4}a{color:#004D40}a:hover{color:#F0C428}</style>
           </sc-for>
         </div>
 
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-top:22px;padding-top:18px;border-top:1px solid #E7E9ED">
-          <div style="font-size:12.5px;color:#64748B">{{ jobsPagingLabel }}</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-top:22px;padding-top:18px;border-top:1px solid #E7E9ED;justify-content:flex-end">
           <div style="display:flex;align-items:center;gap:6px">
             <div style="font-size:12.5px;font-weight:600;color:#94A3B8;padding:10px 14px">Previous</div>
             <div style="font-size:13.5px;font-weight:700;color:#fff;background:#0F3D2E;border:1px solid #0F3D2E;border-radius:10px;min-width:40px;height:40px;padding:0 10px;box-sizing:border-box;display:flex;align-items:center;justify-content:center">1</div>
@@ -2510,12 +2517,12 @@ body{margin:0;background:#F3F6F4}a{color:#004D40}a:hover{color:#F0C428}</style>
           <div data-m="ws-head" style="display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap;padding:0 4px 20px;margin-bottom:6px;border-bottom:1px solid #E3E8E5">
             <div style="min-width:0">
               <sc-if value="{{ tabJobs }}" hint-placeholder-val="{{ true }}">
-                <div style="font-family:Inter,sans-serif;font-weight:700;font-size:30px;line-height:1.1;letter-spacing:-.7px;color:#0B1220">Jobs</div>
+                <div style="font-family:Inter,sans-serif;font-weight:700;font-size:30px;line-height:1.1;letter-spacing:-.7px;color:#0B1220">Job Management</div>
               </sc-if>
               <sc-if value="{{ tabEvents }}" hint-placeholder-val="{{ false }}">
                 <div style="font-family:Inter,sans-serif;font-weight:700;font-size:30px;line-height:1.1;letter-spacing:-.7px;color:#0B1220">Events</div>
               </sc-if>
-              <sc-if value="{{ tabJobs }}" hint-placeholder-val="{{ false }}"><div style="display:flex;align-items:center;gap:8px;margin-top:7px;font-size:13.5px;color:#64748B">
+              <sc-if value="{{ tabJobs }}" hint-placeholder-val="{{ false }}"><div style="display:flex;align-items:center;gap:8px;font-size:13.5px;color:#64748B">
                 <span style="width:13px;height:13px;border-radius:50%;border:1.5px solid #A7B0BC;flex:none"></span>
                 <span>{{ postsSubtitle }}</span>
               </div></sc-if>
@@ -2523,12 +2530,6 @@ body{margin:0;background:#F3F6F4}a{color:#004D40}a:hover{color:#F0C428}</style>
             </div>
             <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
               <sc-if value="{{ tabJobs }}" hint-placeholder-val="{{ true }}">
-                <div style="display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #E2E5EA;border-radius:12px;padding:11px 14px;font-size:13px;font-weight:600;color:#0F172A">
-                  <span style="width:7px;height:7px;border-radius:50%;background:#0F8A5F;flex:none"></span><span>{{ jobLiveCount }} jobs live</span>
-                </div>
-                <div style="display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #E2E5EA;border-radius:12px;padding:11px 14px;font-size:13px;font-weight:600;color:#0F172A">
-                  <span style="width:7px;height:7px;border-radius:50%;background:#F0C428;flex:none"></span><span>{{ jobPendingCount }} alumni jobs pending</span>
-                </div>
                 <div onClick="{{ postsPreviewGo }}" style="display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #E2E5EA;border-radius:12px;padding:11px 16px;font-size:13px;font-weight:700;color:#0B1220;cursor:pointer" style-hover="{{ rowHover }}">
                   <span>Preview job board</span><span style="font-size:12px">→</span>
                 </div>
@@ -2545,14 +2546,19 @@ body{margin:0;background:#F3F6F4}a{color:#004D40}a:hover{color:#F0C428}</style>
           <sc-if value="{{ tabJobs }}" hint-placeholder-val="{{ false }}">
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:14px;align-items:start">
 
-              <div ref="{{ jobFormRef }}" style="background:#fff;border:1px solid #E7E9ED;border-radius:16px;box-shadow:0 1px 2px rgba(16,24,40,.04),0 8px 24px -12px rgba(16,24,40,.08);padding:24px 26px">
-                <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:4px">
+<div style="display:{{ jobBubbleDisplay }};position:fixed;inset:0;z-index:80;align-items:center;justify-content:center;padding:24px;box-sizing:border-box">
+<div onClick="{{ closeJobForm }}" style="position:absolute;inset:0;background:rgba(11,18,32,.45)"></div>
+<div ref="{{ jobFormRef }}" onKeyDown="{{ jobFormKey }}" style="position:relative;width:100%;max-width:640px;max-height:calc(100vh - 48px);overflow-y:auto;background:#fff;border-radius:20px;box-shadow:0 24px 60px rgba(16,24,40,.25);padding:24px 26px;box-sizing:border-box">
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:4px">
                   <div style="font-family:Inter,sans-serif;font-weight:600;font-size:16px;color:#0B1220">Post a job opening</div>
-                  <div style="font-size:10.5px;font-weight:700;letter-spacing:.5px;color:#0F3D2E;background:#E6F0EB;padding:4px 10px;border-radius:8px">PUBLISHES INSTANTLY</div>
+                  <div style="display:flex;align-items:center;gap:8px">
+                    <div style="font-size:10px;font-weight:700;letter-spacing:.5px;color:#0F3D2E;background:#E6F0EB;padding:4px 10px;border-radius:8px;white-space:nowrap">PUBLISHES INSTANTLY</div>
+                    <button type="button" aria-label="Close" onClick="{{ closeJobForm }}" style="width:34px;height:34px;flex:none;border:none;border-radius:50%;background:#F1F3F5;color:#0B1220;font-size:18px;line-height:1;cursor:pointer" style-hover="background:#E2E5EA">×</button>
+                  </div>
                 </div>
                 <div style="font-size:12.5px;color:#64748B;margin-bottom:14px">Admin postings skip review. Alumni-submitted jobs land in the queue on the right for approval.</div>
 
-                <div onClick="{{ openJobPhoto }}" title="Upload company photo" style="width:100%;height:170px;border-radius:14px;position:relative;cursor:pointer;overflow:hidden;border:1px solid #E2E5EA;background:{{ jobDraftPhotoCss }}">
+                <div onClick="{{ openJobPhoto }}" title="Upload company photo" style="width:100%;height:120px;border-radius:14px;position:relative;cursor:pointer;overflow:hidden;border:1px solid #E2E5EA;background:{{ jobDraftPhotoCss }}">
                   <sc-if value="{{ jobDraftNoPhoto }}" hint-placeholder-val="{{ true }}">
                     <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px;color:#94A3B8;text-align:center;padding:10px">
                       <span style="font-size:20px;line-height:1">+</span>
@@ -2573,9 +2579,13 @@ body{margin:0;background:#F3F6F4}a{color:#004D40}a:hover{color:#F0C428}</style>
                   <sc-for list="{{ jobFormFields }}" as="jf" hint-placeholder-count="6">
                     <div style="min-width:0;grid-column:{{ jf.span }}">
                       <div style="font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:#94A3B8;margin-bottom:6px">{{ jf.label }}</div>
-                      <input type="text" value="{{ jf.value }}" onChange="{{ jf.onChange }}" placeholder="{{ jf.placeholder }}" style="width:100%;box-sizing:border-box;border:1px solid #E2E5EA;border-radius:10px;padding:11px 13px;font-family:inherit;font-size:13px;color:#0B1220;background:#fff;outline:none" style-focus="{{ inputFocus }}">
+                      <sc-if value="{{ jf.isText }}" hint-placeholder-val="{{ true }}"><input type="text" value="{{ jf.value }}" onChange="{{ jf.onChange }}" placeholder="{{ jf.placeholder }}" style="width:100%;box-sizing:border-box;border:1px solid #E2E5EA;border-radius:10px;padding:11px 13px;font-family:inherit;font-size:13px;color:#0B1220;background:#fff;outline:none" style-focus="{{ inputFocus }}"></sc-if>
+<sc-if value="{{ jf.isSelect }}" hint-placeholder-val="{{ false }}"><select value="{{ jf.value }}" onChange="{{ jf.onChange }}" style="width:100%;box-sizing:border-box;border:1px solid #E2E5EA;border-radius:10px;padding:11px 13px;font-family:inherit;font-size:13px;color:#0B1220;background:#fff;outline:none;appearance:auto;cursor:pointer"><option value="">{{ jf.placeholder }}</option><sc-for list="{{ jf.options }}" as="o" hint-placeholder-count="3"><option value="{{ o }}">{{ o }}</option></sc-for></select></sc-if>
+<sc-if value="{{ jf.isNum }}" hint-placeholder-val="{{ false }}"><div style="position:relative"><span style="position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:13px;color:#64748B">₱</span><input type="number" min="0" step="1000" inputmode="numeric" value="{{ jf.value }}" onChange="{{ jf.onChange }}" placeholder="{{ jf.placeholder }}" style="width:100%;box-sizing:border-box;border:1px solid #E2E5EA;border-radius:10px;padding:11px 13px;font-family:inherit;font-size:13px;color:#0B1220;background:#fff;outline:none;padding-left:28px;border-color:{{ jf.border }}" style-focus="{{ inputFocus }}"></div></sc-if>
+<sc-if value="{{ jf.err }}" hint-placeholder-val="{{ false }}"><div style="font-size:11.5px;color:#B3213C;margin-top:5px">{{ jf.err }}</div></sc-if>
                     </div>
                   </sc-for>
+                  <label style="grid-column:1 / -1;display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;font-weight:600;color:#0B1220;padding:10px 12px;border:1px solid #E2E5EA;border-radius:10px;min-height:44px"><input type="checkbox" checked="{{ jobDraftUrgent }}" onChange="{{ onJobDraftUrgent }}" style="width:18px;height:18px;accent-color:#B3213C;margin:0" /><span>Urgent hiring<span style="font-weight:500;color:#64748B"> — shows an “Urgent Hiring” tag on the job card</span></span></label>
                   <div style="min-width:0;grid-column:1 / -1">
                     <div style="font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:#94A3B8;margin-bottom:6px">Skills / tags</div>
                     <input type="text" value="{{ jobDraftTags }}" onChange="{{ onJobDraftTags }}" placeholder="Comma separated — e.g. React, Figma, SQL" style="width:100%;box-sizing:border-box;border:1px solid #E2E5EA;border-radius:10px;padding:11px 13px;font-family:inherit;font-size:13px;color:#0B1220;background:#fff;outline:none" style-focus="{{ inputFocus }}">
@@ -2589,15 +2599,20 @@ body{margin:0;background:#F3F6F4}a{color:#004D40}a:hover{color:#F0C428}</style>
                 <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:20px;padding-top:18px;border-top:1px solid #E7E9ED">
                   <button type="button" onClick="{{ publishJob }}" style="background:#0F3D2E;color:#fff;font-family:inherit;font-weight:700;font-size:13.5px;padding:13px 24px;min-height:44px;border:none;border-radius:10px;cursor:pointer">Publish job</button>
                   <button type="button" onClick="{{ clearJobDraft }}" style="background:#fff;color:#0B1220;font-family:inherit;font-weight:600;font-size:13.5px;padding:13px 20px;min-height:44px;border:1px solid #E2E5EA;border-radius:10px;cursor:pointer">Clear draft</button>
+                  <button type="button" onClick="{{ closeJobForm }}" style="background:none;color:#64748B;font-family:inherit;font-weight:600;font-size:13.5px;padding:13px 10px;min-height:44px;border:none;cursor:pointer">Cancel</button>
                 </div>
               </div>
+</div>
 
-              <div style="display:flex;flex-direction:column;gap:18px;min-width:0">
+
+
+              <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:18px;min-width:0;align-items:start">
                 <div style="background:#fff;border:1px solid #E7E9ED;border-radius:16px;box-shadow:0 1px 2px rgba(16,24,40,.04),0 8px 24px -12px rgba(16,24,40,.08);padding:22px 0 8px">
                   <div style="padding:0 24px 16px">
                     <div style="font-family:Inter,sans-serif;font-weight:600;font-size:16px;color:#0B1220">Alumni submissions</div>
-                    <div style="font-size:13px;color:#8A6D1F;margin-top:4px;font-weight:600">{{ jobPendingCount }} awaiting approval before they appear on the board</div>
+                    <div style="font-size:13px;color:#64748B;margin-top:4px">Awaiting approval before they appear on the board</div>
                   </div>
+                  <div style="margin:0 24px 16px;display:flex;align-items:center;gap:14px;background:#FBF0D8;border-radius:14px;padding:14px 18px"><div style="font-family:Inter,sans-serif;font-weight:700;font-size:32px;line-height:1;letter-spacing:-1px;color:#6B4E00">{{ jobPendingCount }}</div><div style="font-size:12.5px;font-weight:700;color:#6B4E00">Alumni jobs pending</div></div>
                   <sc-for list="{{ jobQueueRows }}" as="q" hint-placeholder-count="3">
                     <div onClick="{{ q.open }}" style="display:flex;align-items:center;gap:14px;padding:14px 24px;border-top:1px solid #F2F4F5;cursor:pointer" style-hover="{{ rowHover }}">
                       <div style="flex:none;width:64px;height:52px;border-radius:12px;overflow:hidden;position:relative;background:{{ q.photoCss }};border:1px solid #E7E9ED">
@@ -2621,20 +2636,81 @@ body{margin:0;background:#F3F6F4}a{color:#004D40}a:hover{color:#F0C428}</style>
                     <div style="font-family:Inter,sans-serif;font-weight:600;font-size:16px;color:#0B1220">Live job postings</div>
                     <div style="font-size:13px;color:#64748B;margin-top:4px">Visible to all alumni on the Job Board</div>
                   </div>
+                  <div style="margin:0 24px 16px;display:flex;align-items:center;gap:14px;background:#E1F3EA;border-radius:14px;padding:14px 18px"><div style="font-family:Inter,sans-serif;font-weight:700;font-size:32px;line-height:1;letter-spacing:-1px;color:#0F6B4F">{{ jobLiveCount }}</div><div style="font-size:12.5px;font-weight:700;color:#0F6B4F">Jobs live</div></div>
                   <sc-for list="{{ adminJobRows }}" as="jr" hint-placeholder-count="5">
-                    <div style="display:flex;align-items:center;gap:14px;padding:14px 24px;border-top:1px solid #F2F4F5" style-hover="{{ rowHover }}">
-                      <div style="min-width:0;flex:1">
-                        <div style="font-size:13.5px;font-weight:700;color:#0B1220;line-height:1.35">{{ jr.title }}</div>
-                        <div style="font-size:12px;color:#64748B;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ jr.meta }}</div>
+                    <div style="padding:14px 24px;border-top:1px solid #F2F4F5">
+                      <div style="display:flex;align-items:center;gap:14px;opacity:{{ jr.dim }}">
+                        <div style="min-width:0;flex:1">
+                          <div style="font-size:13.5px;font-weight:700;color:#0B1220;line-height:1.35">{{ jr.title }}</div>
+                          <div style="font-size:12px;color:#64748B;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ jr.meta }}</div>
+                        </div>
+<div style="flex:none;display:flex;flex-direction:column;align-items:flex-end;gap:8px">
+<div style="font-size:11.5px;font-weight:700;color:{{ jr.sourceColor }};background:{{ jr.sourceBg }};padding:5px 11px;border-radius:99px;white-space:nowrap">{{ jr.source }}</div>
+<div style="position:relative;display:flex">
+                        <button type="button" aria-haspopup="menu" aria-expanded="{{ jr.revOpen }}" onClick="{{ jr.onReview }}" style="display:inline-flex;align-items:center;gap:6px;background:#0F3D2E;color:#fff;border:none;border-radius:8px;padding:6px 13px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer" style-hover="background:#0B3125">Review <span style="font-size:9px">▾</span></button>
+                        <sc-if value="{{ jr.revOpen }}" hint-placeholder-val="{{ false }}">
+                          <div onClick="{{ jr.onReview }}" style="position:fixed;inset:0;z-index:40"></div>
+                          <div role="menu" style="position:absolute;right:0;top:36px;z-index:41;min-width:210px;background:#fff;border:1px solid #E7E9ED;border-radius:12px;box-shadow:0 12px 32px rgba(16,24,40,.16);padding:6px;display:flex;flex-direction:column;gap:2px">
+                            <button type="button" role="menuitem" onClick="{{ jr.mEdit }}" style="background:#fff;border:none;border-radius:8px;padding:9px 12px;font-family:inherit;font-size:12.5px;font-weight:700;text-align:left;cursor:pointer;width:100%;color:#0B1220" style-hover="background:#F3F6F4">Edit listing</button>
+                            <button type="button" role="menuitem" onClick="{{ jr.mApps }}" style="background:#fff;border:none;border-radius:8px;padding:9px 12px;font-family:inherit;font-size:12.5px;font-weight:700;text-align:left;cursor:pointer;width:100%;color:#0B1220" style-hover="background:#F3F6F4">View {{ jr.appLabel }}</button>
+                            <div style="height:1px;background:#EEF0F3;margin:2px 0"></div>
+                            <button type="button" role="menuitem" onClick="{{ jr.mToggle }}" style="background:#fff;border:none;border-radius:8px;padding:9px 12px;font-family:inherit;font-size:12.5px;font-weight:700;text-align:left;cursor:pointer;width:100%;color:{{ jr.toggleColor }}" style-hover="background:#F8F8F8">{{ jr.toggleLabel }}</button>
+                          </div>
+                        </sc-if>
                       </div>
-                      <div style="flex:none;font-size:11.5px;font-weight:700;color:{{ jr.sourceColor }};background:{{ jr.sourceBg }};padding:5px 11px;border-radius:99px;white-space:nowrap">{{ jr.source }}</div>
+</div>
+                      </div>
+                      
+                      <sc-if value="{{ jr.editing }}" hint-placeholder-val="{{ false }}">
+<div style="position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;padding:24px;box-sizing:border-box">
+<div onClick="{{ jr.onCancel }}" style="position:absolute;inset:0;background:rgba(11,18,32,.45)"></div>
+<div role="dialog" aria-modal="true" aria-label="Edit listing" style="position:relative;width:100%;max-width:640px;max-height:calc(100vh - 48px);overflow-y:auto;background:#fff;border-radius:20px;box-shadow:0 24px 60px rgba(16,24,40,.25);padding:24px 26px;box-sizing:border-box">
+<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:16px">
+<div><div style="font-family:Inter,sans-serif;font-weight:600;font-size:16px;color:#0B1220">Edit listing</div><div style="font-size:12.5px;color:#64748B;margin-top:3px">{{ jr.title }}</div></div>
+<button type="button" aria-label="Close" onClick="{{ jr.onCancel }}" style="width:34px;height:34px;flex:none;border:none;border-radius:50%;background:#F1F3F5;color:#0B1220;font-size:18px;line-height:1;cursor:pointer" style-hover="background:#E2E5EA">×</button>
+</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,190px),1fr));gap:14px">
+<sc-for list="{{ jr.editFields }}" as="ef" hint-placeholder-count="4">
+<div style="min-width:0">
+<div style="font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:#94A3B8;margin-bottom:6px">{{ ef.label }}</div>
+<input type="text" value="{{ ef.value }}" onChange="{{ ef.onChange }}" style="width:100%;box-sizing:border-box;border:1px solid #E2E5EA;border-radius:10px;padding:11px 13px;font-family:inherit;font-size:13px;color:#0B1220;background:#fff;outline:none" style-focus="{{ inputFocus }}">
+</div>
+</sc-for>
+</div>
+<div style="display:flex;align-items:center;gap:12px;margin-top:20px;padding-top:18px;border-top:1px solid #E7E9ED">
+<button type="button" onClick="{{ jr.onSave }}" style="background:#0F3D2E;color:#fff;font-family:inherit;font-weight:700;font-size:13.5px;padding:13px 24px;min-height:44px;border:none;border-radius:10px;cursor:pointer">Save changes</button>
+<button type="button" onClick="{{ jr.onCancel }}" style="background:#fff;color:#0B1220;font-family:inherit;font-weight:600;font-size:13.5px;padding:13px 20px;min-height:44px;border:1px solid #E2E5EA;border-radius:10px;cursor:pointer">Cancel</button>
+</div>
+</div>
+</div>
+</sc-if>
+<sc-if value="{{ jr.appOpen }}" hint-placeholder-val="{{ false }}">
+<div style="position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;padding:24px;box-sizing:border-box">
+<div onClick="{{ jr.onApps }}" style="position:absolute;inset:0;background:rgba(11,18,32,.45)"></div>
+<div role="dialog" aria-modal="true" aria-label="Applicants" style="position:relative;width:100%;max-width:640px;max-height:calc(100vh - 48px);overflow-y:auto;background:#fff;border-radius:20px;box-shadow:0 24px 60px rgba(16,24,40,.25);padding:24px 26px;box-sizing:border-box">
+<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px">
+<div><div style="font-family:Inter,sans-serif;font-weight:600;font-size:16px;color:#0B1220">{{ jr.appLabel }}</div><div style="font-size:12.5px;color:#64748B;margin-top:3px">{{ jr.title }}</div></div>
+<button type="button" aria-label="Close" onClick="{{ jr.onApps }}" style="width:34px;height:34px;flex:none;border:none;border-radius:50%;background:#F1F3F5;color:#0B1220;font-size:18px;line-height:1;cursor:pointer" style-hover="background:#E2E5EA">×</button>
+</div>
+<div style="padding:4px 14px;background:#F7F8FA;border:1px solid #E7E9ED;border-radius:12px">
+<sc-if value="{{ jr.noApps }}" hint-placeholder-val="{{ false }}"><div style="padding:12px 0;font-size:13px;color:#64748B">No applicants yet.</div></sc-if>
+<sc-for list="{{ jr.apps }}" as="ap" hint-placeholder-count="2">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;font-size:13px;border-bottom:1px solid #EEF0F3">
+<span style="font-weight:700;color:#0B1220">{{ ap.name }}</span>
+<span style="color:#64748B">{{ ap.batch }} · {{ ap.applied }}</span>
+</div>
+</sc-for>
+</div>
+</div>
+</div>
+</sc-if>
                     </div>
                   </sc-for>
                 </div>
               </div>
             </div>
           </sc-if>
-
+    
           <sc-if value="{{ tabEvents }}" hint-placeholder-val="{{ true }}">
           <div data-m="ev-admin-layout" style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start">
           <div data-m="ev-admin-main" style="flex:20 1 600px;min-width:0;display:flex;flex-direction:column;gap:14px">
@@ -2962,10 +3038,10 @@ body{margin:0;background:#F3F6F4}a{color:#004D40}a:hover{color:#F0C428}</style>
   </sc-if>
 
   <sc-if value="{{ isAdminDash }}" hint-placeholder-val="{{ false }}">
-    <div data-screen-label="Admin Dashboard" style="display:flex;min-height:calc(100vh - 45px);background:radial-gradient(900px 520px at 0% 0%,#FBF1D3 0%,rgba(251,241,211,0) 70%),radial-gradient(800px 500px at 100% 100%,#F8F1DE 0%,rgba(248,241,222,0) 70%),#F7F6F1">
+    <div data-screen-label="Admin Dashboard" style="display:flex;height:calc(100vh - 45px);overflow:hidden;background:radial-gradient(900px 520px at 0% 0%,#FBF1D3 0%,rgba(251,241,211,0) 70%),radial-gradient(800px 500px at 100% 100%,#F8F1DE 0%,rgba(248,241,222,0) 70%),#F7F6F1">
       <dc-import name="NavSidebar" items="{{ adminNavItems }}" role-label="Administrator" user-name="System Admin" on-sign-out="{{ signOut }}" hint-size="240px,100%" style="display:flex;align-self:flex-start;flex:none;position:sticky;top:var(--sw-h,45px);height:calc(100dvh - var(--sw-h,45px));z-index:5"></dc-import>
       <div style="flex:1;min-width:0;display:flex;flex-direction:column;background-color:transparent">
-      <div data-m="topbar" style="background:#fff;border:1px solid #E7E9ED;display:flex;align-items:center;justify-content:space-between;padding:12px 16px 12px 24px;margin:16px 12px 0;border-radius:16px;box-shadow:0 1px 2px rgba(16,24,40,.04),0 8px 24px -12px rgba(16,24,40,.08);min-height:70px;box-sizing:border-box;gap:16px;min-width:0">
+      <div data-m="topbar" style="background:#fff;border:1px solid #E7E9ED;display:flex;align-items:center;justify-content:space-between;padding:8px 16px 8px 24px;margin:12px 12px 0;border-radius:16px;box-shadow:0 1px 2px rgba(16,24,40,.04),0 8px 24px -12px rgba(16,24,40,.08);flex:none;min-height:60px;box-sizing:border-box;gap:16px;min-width:0">
         <div style="min-width:0">
           <div style="font-family:Inter,sans-serif;font-weight:700;font-size:26px;line-height:1.15;letter-spacing:-.6px;color:#0B1220">Admin Dashboard</div>
           <div style="font-size:11px;color:rgba(0,0,0,.45);font-weight:600;letter-spacing:.3px;margin-top:4px">UDM ALUMNI RELATIONS OFFICE · ADMIN</div>
@@ -3015,331 +3091,230 @@ body{margin:0;background:#F3F6F4}a{color:#004D40}a:hover{color:#F0C428}</style>
         </div>
       </div>
 
-      <div data-m="ws" style="margin:16px 12px 24px;padding:24px;box-sizing:border-box;min-width:0;display:flex;flex-direction:column;gap:24px;font-family:Inter,system-ui,sans-serif;background:rgba(255,255,255,.55);border:1px solid #E7E9ED;border-radius:20px;box-shadow:0 1px 2px rgba(16,24,40,.03)">
-
-        <div data-m="ws-head" style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:0 0 24px;margin-bottom:0;border-bottom:1px solid #E3E8E5">
-          <div style="min-width:0">
-            <div style="font-family:Inter,sans-serif;font-weight:700;font-size:30px;line-height:1.1;letter-spacing:-.7px;color:#0B1220">Graduate Outcomes</div>
-            <div style="display:flex;align-items:center;gap:8px;margin-top:8px;font-size:13.5px;color:#64748B">
+      <div data-m="ws" style="flex:1;min-height:0;margin:12px;padding:16px;box-sizing:border-box;min-width:0;display:flex;flex-direction:column;gap:12px;overflow:hidden;font-family:Inter,system-ui,sans-serif;background:rgba(255,255,255,.55);border:1px solid #E7E9ED;border-radius:20px;box-shadow:0 1px 2px rgba(16,24,40,.03)">
+        <div data-m="ws-head" style="flex:none;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:nowrap;padding:0 0 12px;margin-bottom:0;border-bottom:1px solid #E3E8E5">
+          <div style="min-width:0;flex:none">
+            <div style="font-family:Inter,sans-serif;font-weight:700;font-size:22px;line-height:1.1;letter-spacing:-.5px;color:#0B1220">Graduate Outcomes</div>
+            <div style="display:flex;align-items:center;gap:8px;margin-top:4px;font-size:12.5px;color:#64748B">
               <span>Survey cycle 2026 · Synced Sep 16</span>
             </div>
           </div>
-          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-            <select value="{{ admBatchVal }}" onChange="{{ admOnBatch }}" style="font-size:13px;font-weight:600;color:#0F172A;max-width:260px;appearance:none;-webkit-appearance:none;min-height:44px;padding:0 40px 0 14px;border-radius:10px;border-width:1px;border-style:solid;border-color:#D5DBE3;background-color:#fff;background-image:url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 12 12%22%3E%3Cpath d=%22M2.5 4.5 6 8l3.5-3.5%22 fill=%22none%22 stroke=%22%2364748B%22 stroke-width=%221.6%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/%3E%3C/svg%3E');background-repeat:no-repeat;background-position:right 14px center;background-size:12px 12px;font-family:inherit;line-height:1.3;text-overflow:ellipsis;cursor:pointer;outline:none;box-shadow:0 1px 2px rgba(16,24,40,.04);transition:border-color .15s, box-shadow .15s" style-hover="border-color:#9AA6B5" style-focus="border-color:#0F3D2E;box-shadow:0 0 0 3px rgba(15,61,46,.15)">
+          <div style="flex:1;min-width:0;display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:nowrap">
+            <select value="{{ admBatchVal }}" onChange="{{ admOnBatch }}" style="font-size:12px;font-weight:600;color:#0F172A;max-width:170px;min-width:0;flex:1 1 0;appearance:none;-webkit-appearance:none;min-height:38px;padding:0 28px 0 10px;border-radius:10px;border-width:1px;border-style:solid;border-color:#D5DBE3;background-color:#fff;background-image:url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 12 12%22%3E%3Cpath d=%22M2.5 4.5 6 8l3.5-3.5%22 fill=%22none%22 stroke=%22%2364748B%22 stroke-width=%221.6%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/%3E%3C/svg%3E');background-repeat:no-repeat;background-position:right 9px center;background-size:12px 12px;font-family:inherit;line-height:1.3;text-overflow:ellipsis;cursor:pointer;outline:none;box-shadow:0 1px 2px rgba(16,24,40,.04);transition:border-color .15s, box-shadow .15s" style-hover="border-color:#9AA6B5" style-focus="border-color:#0F3D2E;box-shadow:0 0 0 3px rgba(15,61,46,.15)">
               <sc-for list="{{ admBatchOpts }}" as="o" hint-placeholder-count="4"><option value="{{ o.value }}">{{ o.label }}</option></sc-for>
             </select>
-            <select value="{{ admStatusVal }}" onChange="{{ admOnStatus }}" style="font-size:13px;font-weight:600;color:#0F172A;max-width:260px;appearance:none;-webkit-appearance:none;min-height:44px;padding:0 40px 0 14px;border-radius:10px;border-width:1px;border-style:solid;border-color:#D5DBE3;background-color:#fff;background-image:url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 12 12%22%3E%3Cpath d=%22M2.5 4.5 6 8l3.5-3.5%22 fill=%22none%22 stroke=%22%2364748B%22 stroke-width=%221.6%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/%3E%3C/svg%3E');background-repeat:no-repeat;background-position:right 14px center;background-size:12px 12px;font-family:inherit;line-height:1.3;text-overflow:ellipsis;cursor:pointer;outline:none;box-shadow:0 1px 2px rgba(16,24,40,.04);transition:border-color .15s, box-shadow .15s" style-hover="border-color:#9AA6B5" style-focus="border-color:#0F3D2E;box-shadow:0 0 0 3px rgba(15,61,46,.15)">
+            <select value="{{ admStatusVal }}" onChange="{{ admOnStatus }}" style="font-size:12px;font-weight:600;color:#0F172A;max-width:170px;min-width:0;flex:1 1 0;appearance:none;-webkit-appearance:none;min-height:38px;padding:0 28px 0 10px;border-radius:10px;border-width:1px;border-style:solid;border-color:#D5DBE3;background-color:#fff;background-image:url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 12 12%22%3E%3Cpath d=%22M2.5 4.5 6 8l3.5-3.5%22 fill=%22none%22 stroke=%22%2364748B%22 stroke-width=%221.6%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/%3E%3C/svg%3E');background-repeat:no-repeat;background-position:right 9px center;background-size:12px 12px;font-family:inherit;line-height:1.3;text-overflow:ellipsis;cursor:pointer;outline:none;box-shadow:0 1px 2px rgba(16,24,40,.04);transition:border-color .15s, box-shadow .15s" style-hover="border-color:#9AA6B5" style-focus="border-color:#0F3D2E;box-shadow:0 0 0 3px rgba(15,61,46,.15)">
               <sc-for list="{{ admStatusOpts }}" as="o" hint-placeholder-count="4"><option value="{{ o.value }}">{{ o.label }}</option></sc-for>
             </select>
-            <select value="{{ admCollegeVal }}" onChange="{{ admOnCollege }}" style="font-size:13px;font-weight:600;color:#0F172A;max-width:260px;appearance:none;-webkit-appearance:none;min-height:44px;padding:0 40px 0 14px;border-radius:10px;border-width:1px;border-style:solid;border-color:#D5DBE3;background-color:#fff;background-image:url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 12 12%22%3E%3Cpath d=%22M2.5 4.5 6 8l3.5-3.5%22 fill=%22none%22 stroke=%22%2364748B%22 stroke-width=%221.6%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/%3E%3C/svg%3E');background-repeat:no-repeat;background-position:right 14px center;background-size:12px 12px;font-family:inherit;line-height:1.3;text-overflow:ellipsis;cursor:pointer;outline:none;box-shadow:0 1px 2px rgba(16,24,40,.04);transition:border-color .15s, box-shadow .15s" style-hover="border-color:#9AA6B5" style-focus="border-color:#0F3D2E;box-shadow:0 0 0 3px rgba(15,61,46,.15)">
+            <select value="{{ admCollegeVal }}" onChange="{{ admOnCollege }}" style="font-size:12px;font-weight:600;color:#0F172A;max-width:170px;min-width:0;flex:1 1 0;appearance:none;-webkit-appearance:none;min-height:38px;padding:0 28px 0 10px;border-radius:10px;border-width:1px;border-style:solid;border-color:#D5DBE3;background-color:#fff;background-image:url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 12 12%22%3E%3Cpath d=%22M2.5 4.5 6 8l3.5-3.5%22 fill=%22none%22 stroke=%22%2364748B%22 stroke-width=%221.6%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/%3E%3C/svg%3E');background-repeat:no-repeat;background-position:right 9px center;background-size:12px 12px;font-family:inherit;line-height:1.3;text-overflow:ellipsis;cursor:pointer;outline:none;box-shadow:0 1px 2px rgba(16,24,40,.04);transition:border-color .15s, box-shadow .15s" style-hover="border-color:#9AA6B5" style-focus="border-color:#0F3D2E;box-shadow:0 0 0 3px rgba(15,61,46,.15)">
               <sc-for list="{{ admCollegeOpts }}" as="o" hint-placeholder-count="8"><option value="{{ o.value }}">{{ o.label }}</option></sc-for>
             </select>
-            <select value="{{ admCourseVal }}" onChange="{{ admOnCourse }}" disabled="{{ admCourseDisabled }}" style="font-size:13px;font-weight:600;color:#0F172A;max-width:260px;opacity:{{ admCourseOpacity }};appearance:none;-webkit-appearance:none;min-height:44px;padding:0 40px 0 14px;border-radius:10px;border-width:1px;border-style:solid;border-color:#D5DBE3;background-color:#fff;background-image:url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 12 12%22%3E%3Cpath d=%22M2.5 4.5 6 8l3.5-3.5%22 fill=%22none%22 stroke=%22%2364748B%22 stroke-width=%221.6%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/%3E%3C/svg%3E');background-repeat:no-repeat;background-position:right 14px center;background-size:12px 12px;font-family:inherit;line-height:1.3;text-overflow:ellipsis;cursor:pointer;outline:none;box-shadow:0 1px 2px rgba(16,24,40,.04);transition:border-color .15s, box-shadow .15s" style-hover="border-color:#9AA6B5" style-focus="border-color:#0F3D2E;box-shadow:0 0 0 3px rgba(15,61,46,.15)">
+            <select value="{{ admCourseVal }}" onChange="{{ admOnCourse }}" disabled="{{ admCourseDisabled }}" style="font-size:12px;font-weight:600;color:#0F172A;max-width:170px;min-width:0;flex:1 1 0;opacity:{{ admCourseOpacity }};appearance:none;-webkit-appearance:none;min-height:38px;padding:0 28px 0 10px;border-radius:10px;border-width:1px;border-style:solid;border-color:#D5DBE3;background-color:#fff;background-image:url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 12 12%22%3E%3Cpath d=%22M2.5 4.5 6 8l3.5-3.5%22 fill=%22none%22 stroke=%22%2364748B%22 stroke-width=%221.6%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/%3E%3C/svg%3E');background-repeat:no-repeat;background-position:right 9px center;background-size:12px 12px;font-family:inherit;line-height:1.3;text-overflow:ellipsis;cursor:pointer;outline:none;box-shadow:0 1px 2px rgba(16,24,40,.04);transition:border-color .15s, box-shadow .15s" style-hover="border-color:#9AA6B5" style-focus="border-color:#0F3D2E;box-shadow:0 0 0 3px rgba(15,61,46,.15)">
               <sc-for list="{{ admCourseOpts }}" as="o" hint-placeholder-count="3"><option value="{{ o.value }}">{{ o.label }}</option></sc-for>
             </select>
-            <div onClick="{{ goReports }}" style="display:flex;align-items:center;gap:8px;background:#0F3D2E;color:#fff;border-radius:12px;padding:0 20px;min-height:44px;box-sizing:border-box;font-size:13px;font-weight:700;cursor:pointer" style-hover="{{ exportHover }}">
+            <div onClick="{{ goReports }}" style="display:flex;align-items:center;gap:8px;background:#0F3D2E;color:#fff;border-radius:12px;padding:0 20px;min-height:38px;box-sizing:border-box;font-size:13px;font-weight:700;cursor:pointer" style-hover="{{ exportHover }}">
               <span style="font-size:12px">↓</span><span>Export report</span>
             </div>
           </div>
         </div>
 
-        <div data-m="kpi-grid" style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:16px">
-          <div onMouseEnter="{{ kpiHero.onEnter }}" onMouseLeave="{{ kpiHero.onLeave }}" style="background:#fff;border:1px solid #E7E9ED;border-radius:16px;box-shadow:0 1px 2px rgba(16,24,40,.04),0 8px 24px -12px rgba(16,24,40,.08);cursor:pointer;transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease;min-width:0;grid-column:span 2;padding:24px;display:flex;flex-direction:column;gap:16px" style-hover="transform:translateY(-2px);box-shadow:0 2px 4px rgba(16,24,40,.05),0 14px 28px -12px rgba(16,24,40,.16);border-color:#D3DAD6">
-            <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
-              <div style="font-size:14px;font-weight:600;color:#0B1220">{{ kpiHero.label }}</div>
-              <span style="font-size:16px;font-weight:600;color:#0F3D2E;flex:none;transition:opacity .18s ease,transform .18s ease;opacity:{{ kpiHero.arrowOp }};transform:{{ kpiHero.arrowX }}">→</span>
+        
+        <sc-if value="{{ fcOpen }}" hint-placeholder-val="{{ false }}">
+          <div data-screen-label="Employability Forecast" onClick="{{ fcClose }}" style="position:fixed;inset:0;z-index:80;background:rgba(11,18,32,.45);display:flex;align-items:center;justify-content:center;padding:24px;font-family:Inter,system-ui,sans-serif">
+            <div onClick="{{ fcStop }}" style="width:100%;max-width:760px;max-height:100%;overflow:auto;background:#fff;border-radius:16px;box-shadow:0 24px 60px -12px rgba(0,20,16,.35);padding:24px;display:flex;flex-direction:column;gap:18px;box-sizing:border-box">
+              <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px">
+                <div>
+                  <div style="font-family:Inter,sans-serif;font-weight:700;font-size:20px;letter-spacing:-.4px;color:#0B1220">Employability forecast</div>
+                  <div style="font-size:13px;color:#64748B;margin-top:4px">{{ fcSub }}</div>
+                </div>
+                <div onClick="{{ fcClose }}" title="Close" style="flex:none;width:34px;height:34px;border-radius:50%;border:1px solid #E7E9ED;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#475569;font-size:18px" style-hover="background:#F1F4F3">×</div>
+              </div>
+              <div style="position:relative;width:100%">
+              <svg viewBox="0 0 640 250" style="width:100%;height:auto;display:block">
+                <sc-for list="{{ fcGrid }}" as="g" hint-placeholder-count="4"><line x1="50" x2="610" y1="{{ g.y }}" y2="{{ g.y }}" stroke="#EEF1EF"></line></sc-for>
+                <polygon points="{{ fcBand }}" fill="#0F6B4F" fill-opacity=".12"></polygon>
+                <polyline points="{{ fcHist }}" fill="none" stroke="#0F6B4F" stroke-width="2.5" stroke-linejoin="round"></polyline>
+                <polyline points="{{ fcProj }}" fill="none" stroke="#0F6B4F" stroke-width="2.5" stroke-dasharray="6 5" stroke-linejoin="round"></polyline>
+                <sc-for list="{{ fcDots }}" as="p" hint-placeholder-count="8"><circle cx="{{ p.cx }}" cy="{{ p.cy }}" r="4.5" fill="{{ p.fill }}" stroke="#0F6B4F" stroke-width="2"></circle></sc-for>
+              </svg>
+              <sc-for list="{{ fcGrid }}" as="g" hint-placeholder-count="4"><div style="position:absolute;left:{{ g.lx }};top:{{ g.ty }};transform:translate(-100%,-50%);font-size:11px;color:#64748B;line-height:1">{{ g.t }}</div></sc-for>
+              <sc-for list="{{ fcDots }}" as="p" hint-placeholder-count="8"><div style="position:absolute;left:{{ p.lx }};top:0;width:0;height:0"><div style="position:absolute;left:0;top:{{ p.vy }};transform:translate(-50%,-100%);font-size:11.5px;font-weight:700;color:#0B1220;line-height:1;white-space:nowrap">{{ p.v }}</div></div></sc-for>
+              <sc-for list="{{ fcDots }}" as="p" hint-placeholder-count="8"><div style="position:absolute;left:{{ p.lx }};top:{{ p.yy }};transform:translateX(-50%);font-size:11.5px;color:#64748B;line-height:1">{{ p.yr }}</div></sc-for>
             </div>
-            <div style="display:flex;align-items:baseline;gap:4px">
-              <div style="font-family:Inter,sans-serif;font-weight:700;font-size:60px;line-height:.95;letter-spacing:-2px;color:#0B1220">{{ kpiHero.value }}</div>
-              <div style="font-size:24px;font-weight:600;color:#475569">{{ kpiHero.unit }}</div>
+              <div style="display:flex;align-items:center;gap:18px;font-size:12px;color:#475569;flex-wrap:wrap">
+                <span style="display:flex;align-items:center;gap:6px"><span style="width:18px;height:0;border-top:2.5px solid #0F6B4F"></span>Actual</span>
+                <span style="display:flex;align-items:center;gap:6px"><span style="width:18px;height:0;border-top:2.5px dashed #0F6B4F"></span>Forecast</span>
+                <span style="display:flex;align-items:center;gap:6px"><span style="width:18px;height:10px;background:rgba(15,107,79,.12)"></span>Likely range</span>
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px">
+                <sc-for list="{{ fcCards }}" as="c" hint-placeholder-count="3">
+                  <div style="border:1px solid #E7E9ED;border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:4px">
+                    <div style="font-size:12px;font-weight:600;color:#64748B">Batch {{ c.yr }}</div>
+                    <div style="font-family:Inter,sans-serif;font-weight:700;font-size:26px;letter-spacing:-.6px;color:#0B1220">{{ c.v }}%</div>
+                    <div style="font-size:12px;color:#475569">{{ c.range }}</div>
+                  </div>
+                </sc-for>
+              </div>
             </div>
-            <div style="font-size:13.5px;color:#475569;line-height:1.5"><span style="font-weight:700;color:#0B1220">{{ kpiHero.subLead }}</span> {{ kpiHero.sub }}</div>
-            <div style="height:8px;border-radius:99px;background:#EEF4F1;overflow:hidden;margin-top:auto"><div style="height:100%;border-radius:99px;background:#0F6B4F;width:{{ kpiHero.pct }}"></div></div>
-            <div style="align-self:flex-start;border-radius:999px;padding:4px 12px;font-size:12.5px;font-weight:700;background:#E1F3EA;color:#0F6B4F">{{ kpiHero.context }}</div>
           </div>
-          <sc-for list="{{ kpiSide }}" as="k" hint-placeholder-count="2">
-            <div onMouseEnter="{{ k.onEnter }}" onMouseLeave="{{ k.onLeave }}" style="background:#fff;border:1px solid #E7E9ED;border-radius:16px;box-shadow:0 1px 2px rgba(16,24,40,.04),0 8px 24px -12px rgba(16,24,40,.08);cursor:pointer;transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease;min-width:0;padding:20px 24px;display:flex;flex-direction:column;gap:12px" style-hover="transform:translateY(-2px);box-shadow:0 2px 4px rgba(16,24,40,.05),0 14px 28px -12px rgba(16,24,40,.16);border-color:#D3DAD6">
-              <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
-                <div style="font-size:13.5px;font-weight:600;color:#0B1220;min-width:0">{{ k.label }}</div>
-                <span style="font-size:16px;font-weight:600;color:#0F3D2E;flex:none;transition:opacity .18s ease,transform .18s ease;opacity:{{ k.arrowOp }};transform:{{ k.arrowX }}">→</span>
+        </sc-if>
+        
+        <sc-if value="{{ adDetOpen }}" hint-placeholder-val="{{ false }}">
+          <div data-screen-label="Stat Detail" onClick="{{ adDetClose }}" style="position:fixed;inset:0;z-index:80;background:rgba(11,18,32,.45);display:flex;align-items:center;justify-content:center;padding:24px;font-family:Inter,system-ui,sans-serif">
+            <div onClick="{{ fcStop }}" style="width:100%;max-width:520px;max-height:100%;overflow:auto;background:#fff;border-radius:16px;box-shadow:0 24px 60px -12px rgba(0,20,16,.35);padding:24px;display:flex;flex-direction:column;gap:16px;box-sizing:border-box">
+              <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px">
+                <div style="min-width:0"><div style="font-weight:700;font-size:18px;letter-spacing:-.3px;color:#0B1220">{{ adDetTitle }}</div><div style="font-size:12.5px;color:#64748B;margin-top:4px">{{ adDetSub }}</div></div>
+                <div onClick="{{ adDetClose }}" title="Close" style="flex:none;width:34px;height:34px;border-radius:50%;border:1px solid #E7E9ED;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#475569;font-size:18px" style-hover="background:#F1F4F3">×</div>
               </div>
-              <div style="display:flex;align-items:baseline;gap:6px;min-width:0;flex-wrap:wrap">
-                <div data-m="kpi-val" style="font-family:Inter,sans-serif;font-weight:700;font-size:34px;line-height:1;letter-spacing:-1px;color:#0B1220">{{ k.value }}</div>
-                <div style="font-size:13px;font-weight:500;color:#475569;white-space:nowrap">{{ k.unit }}</div>
+              <div style="display:flex;align-items:center;gap:18px;flex-wrap:wrap">
+                <sc-if value="{{ adDetHasRing }}" hint-placeholder-val="{{ false }}"><div style="flex:none;width:92px;height:92px;border-radius:50%;background:{{ adDetRingBg }};display:flex;align-items:center;justify-content:center"><div style="width:68px;height:68px;border-radius:50%;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center"><div style="font-weight:700;font-size:17px;letter-spacing:-.4px;color:#0B1220;line-height:1">{{ adDetRingText }}</div><div style="font-size:10px;font-weight:600;color:#64748B;margin-top:3px">{{ adDetRingLabel }}</div></div></div></sc-if>
+                <div style="font-weight:700;font-size:44px;line-height:1;letter-spacing:-1.4px;color:#0B1220;flex:1;min-width:0">{{ adDetBig }}</div>
               </div>
-              <div style="font-size:13px;color:#475569;line-height:1.5"><span style="font-weight:700;color:#0B1220">{{ k.subLead }}</span> {{ k.sub }}</div>
-              <sc-if value="{{ k.hasBar }}" hint-placeholder-val="{{ false }}">
-                <div style="display:flex;flex-direction:column;gap:6px;margin-top:auto">
-                  <div style="height:6px;border-radius:99px;background:#F5F0DC;overflow:hidden"><div style="height:100%;border-radius:99px;background:#F0C428;width:{{ k.pct }}"></div></div>
-                  <div style="font-size:12px;font-weight:600;color:#475569">{{ k.context }}</div>
+              <sc-if value="{{ adDetHasBars }}" hint-placeholder-val="{{ false }}">
+                <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px">
+                  <sc-for list="{{ adDetChips }}" as="c" hint-placeholder-count="3"><div style="background:#F6F8F7;border:1px solid #EEF0F3;border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:3px"><div style="font-size:10.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#64748B">{{ c.k }}</div><div style="font-weight:700;font-size:18px;letter-spacing:-.4px;color:{{ c.c }}">{{ c.v }}</div><div style="font-size:11.5px;color:#475569">{{ c.s }}</div></div></sc-for>
+                </div>
+                <div style="border:1px solid #EEF0F3;border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:9px">
+                  <div style="font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:#64748B">{{ adDetBarTitle }}</div>
+                  <sc-for list="{{ adDetBars }}" as="b" hint-placeholder-count="6"><div title="{{ b.full }}" style="display:grid;grid-template-columns:52px minmax(0,1fr) 54px;align-items:center;gap:10px;font-size:12.5px"><span style="font-weight:700;color:#0B1220;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ b.code }}</span><span style="height:12px;border-radius:6px;background:#EEF4F1;overflow:hidden"><span style="display:block;height:100%;width:{{ b.w }};background:{{ b.color }};border-radius:6px"></span></span><span style="font-weight:700;color:#0B1220;text-align:right;font-variant-numeric:tabular-nums">{{ b.val }}</span></div></sc-for>
                 </div>
               </sc-if>
-              <sc-if value="{{ k.isDelta }}" hint-placeholder-val="{{ false }}">
-                <div style="align-self:flex-start;margin-top:auto;border-radius:999px;padding:4px 12px;font-size:12px;font-weight:700;background:#E1F3EA;color:#0F6B4F">{{ k.context }}</div>
-              </sc-if>
-            </div>
-          </sc-for>
-        </div>
-
-        <div data-m="kpi-grid" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px">
-          <sc-for list="{{ miniStats }}" as="m" hint-placeholder-count="3">
-            <div onMouseEnter="{{ m.onEnter }}" onMouseLeave="{{ m.onLeave }}" onClick="{{ m.onClick }}" style="background:#fff;border:1px solid #E7E9ED;border-radius:16px;box-shadow:0 1px 2px rgba(16,24,40,.04),0 8px 24px -12px rgba(16,24,40,.08);cursor:pointer;transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease;min-width:0;padding:16px 20px;display:flex;flex-direction:column;gap:8px;background:{{ m.cardBg }};border-color:{{ m.cardBorder }}" style-hover="transform:translateY(-2px);box-shadow:0 2px 4px rgba(16,24,40,.05),0 14px 28px -12px rgba(16,24,40,.16);border-color:#D3DAD6">
-              <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
-                <div style="display:flex;align-items:center;gap:8px;min-width:0"><div style="width:26px;height:26px;border-radius:8px;flex:none;display:flex;align-items:center;justify-content:center;background:{{ m.iconBg }};color:{{ m.iconColor }}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><path d="{{ m.icon }}"></path></svg></div><div style="font-size:13px;font-weight:600;color:#0B1220;line-height:1.3">{{ m.label }}</div></div>
-                <span style="font-size:16px;font-weight:600;color:#0F3D2E;flex:none;transition:opacity .18s ease,transform .18s ease;opacity:{{ m.arrowOp }};transform:{{ m.arrowX }}">→</span>
+              <div style="display:flex;flex-direction:column;border:1px solid #EEF0F3;border-radius:12px;overflow:hidden">
+                <sc-for list="{{ adDetRows }}" as="r" hint-placeholder-count="4">
+                  <div style="display:flex;justify-content:space-between;gap:16px;padding:11px 14px;border-bottom:1px solid #F1F2F4;font-size:13px;color:#334155;background:{{ r.bg }};font-weight:{{ r.w }}"><span>{{ r.label }}</span><span style="color:#0B1220;font-weight:700;text-align:right">{{ r.value }}</span></div>
+                </sc-for>
               </div>
-              <div data-m="kpi-val" style="font-family:Inter,sans-serif;font-weight:700;font-size:24px;line-height:1.1;letter-spacing:-.6px;color:#0B1220">{{ m.value }}</div>
-              <div style="font-size:12.5px;color:#475569">{{ m.sub }}</div>
-              <sc-if value="{{ m.isLink }}" hint-placeholder-val="{{ false }}">
-                <div style="align-self:flex-start;font-size:12.5px;font-weight:700;color:#7A4E00;text-decoration:underline;text-underline-offset:3px;text-decoration-color:#E3B455">{{ m.pill }}</div>
-              </sc-if>
-              <sc-if value="{{ m.isPill }}" hint-placeholder-val="{{ true }}">
-                <div style="align-self:flex-start;border-radius:999px;padding:4px 12px;font-size:12px;font-weight:600;background:{{ m.pillBg }};color:{{ m.pillColor }}">{{ m.pill }}</div>
-              </sc-if>
+              <div onClick="{{ adDetGo }}" style="align-self:flex-end;display:flex;align-items:center;gap:8px;background:#0F3D2E;color:#fff;border-radius:12px;padding:0 18px;min-height:40px;font-size:13px;font-weight:700;cursor:pointer" style-hover="{{ exportHover }}"><span>Open full report</span><span>→</span></div>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ popOpen }}" hint-placeholder-val="{{ false }}">
+          <div data-screen-label="Alumni Population" onClick="{{ popClose }}" style="position:fixed;inset:0;z-index:80;background:rgba(11,18,32,.45);display:flex;align-items:center;justify-content:center;padding:20px;font-family:Inter,system-ui,sans-serif">
+            <div onClick="{{ fcStop }}" style="width:100%;max-width:1120px;max-height:100%;overflow:auto;background:#F7F8F7;border-radius:16px;box-shadow:0 24px 60px -12px rgba(0,20,16,.35);padding:22px;display:flex;flex-direction:column;gap:14px;box-sizing:border-box">
+              <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px">
+                <div style="min-width:0"><div style="font-weight:700;font-size:20px;letter-spacing:-.4px;color:#0B1220">Alumni population</div><div style="font-size:12.5px;color:#64748B;margin-top:3px"><b style="color:#0B1220">{{ popTotal }}</b> total · {{ popReg }} registered · {{ popVer }} verified</div></div>
+                <div onClick="{{ popClose }}" title="Close" style="flex:none;width:34px;height:34px;border-radius:50%;border:1px solid #E7E9ED;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#475569;font-size:18px" style-hover="background:#F1F4F3">×</div>
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:12px">
+                <div style="background:#fff;border:1px solid #E7E9ED;border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:8px"><div style="font-weight:600;font-size:13.5px;color:#0B1220">By graduation year (batch)</div>
+                  <sc-for list="{{ popBatch }}" as="r" hint-placeholder-count="6"><div style="display:grid;grid-template-columns:90px minmax(0,1fr) 52px 44px;gap:8px;align-items:center;font-size:12px"><span style="font-weight:600;color:#334155;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.label }}</span><div style="height:7px;border-radius:99px;background:#EEF4F1;overflow:hidden"><div style="height:100%;width:{{ r.w }};background:{{ r.color }};border-radius:99px"></div></div><span style="font-weight:700;text-align:right;color:#0B1220">{{ r.n }}</span><span style="color:#94A3B8;text-align:right">{{ r.pct }}</span></div></sc-for></div>
+                <div style="background:#fff;border:1px solid #E7E9ED;border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:8px"><div style="font-weight:600;font-size:13.5px;color:#0B1220">By gender</div>
+                  <sc-for list="{{ popGender }}" as="r" hint-placeholder-count="3"><div style="display:grid;grid-template-columns:90px minmax(0,1fr) 52px 44px;gap:8px;align-items:center;font-size:12px"><span style="font-weight:600;color:#334155;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.label }}</span><div style="height:7px;border-radius:99px;background:#EEF4F1;overflow:hidden"><div style="height:100%;width:{{ r.w }};background:{{ r.color }};border-radius:99px"></div></div><span style="font-weight:700;text-align:right;color:#0B1220">{{ r.n }}</span><span style="color:#94A3B8;text-align:right">{{ r.pct }}</span></div></sc-for></div>
+                <div style="background:#fff;border:1px solid #E7E9ED;border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:8px"><div style="font-weight:600;font-size:13.5px;color:#0B1220">By location (city / country)</div>
+                  <sc-for list="{{ popLoc }}" as="r" hint-placeholder-count="8"><div style="display:grid;grid-template-columns:110px minmax(0,1fr) 52px 44px;gap:8px;align-items:center;font-size:12px"><span style="font-weight:600;color:#334155;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.label }}</span><div style="height:7px;border-radius:99px;background:#EEF4F1;overflow:hidden"><div style="height:100%;width:{{ r.w }};background:{{ r.color }};border-radius:99px"></div></div><span style="font-weight:700;text-align:right;color:#0B1220">{{ r.n }}</span><span style="color:#94A3B8;text-align:right">{{ r.pct }}</span></div></sc-for></div>
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,440px),1fr));gap:12px">
+                <div style="background:#fff;border:1px solid #E7E9ED;border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:8px"><div style="font-weight:600;font-size:13.5px;color:#0B1220">By department / college</div>
+                  <sc-for list="{{ popCol }}" as="r" hint-placeholder-count="6"><div style="display:grid;grid-template-columns:170px minmax(0,1fr) 52px 44px;gap:8px;align-items:center;font-size:12px"><span title="{{ r.label }}" style="font-weight:600;color:#334155;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.label }}</span><div style="height:7px;border-radius:99px;background:#EEF4F1;overflow:hidden"><div style="height:100%;width:{{ r.w }};background:{{ r.color }};border-radius:99px"></div></div><span style="font-weight:700;text-align:right;color:#0B1220">{{ r.n }}</span><span style="color:#94A3B8;text-align:right">{{ r.pct }}</span></div></sc-for></div>
+                <div style="background:#fff;border:1px solid #E7E9ED;border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:8px"><div style="font-weight:600;font-size:13.5px;color:#0B1220">By program / course (top 8)</div>
+                  <sc-for list="{{ popProg }}" as="r" hint-placeholder-count="8"><div style="display:grid;grid-template-columns:90px minmax(0,1fr) 52px 44px;gap:8px;align-items:center;font-size:12px"><span style="font-weight:600;color:#334155;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.label }}</span><div style="height:7px;border-radius:99px;background:#EEF4F1;overflow:hidden"><div style="height:100%;width:{{ r.w }};background:{{ r.color }};border-radius:99px"></div></div><span style="font-weight:700;text-align:right;color:#0B1220">{{ r.n }}</span><span style="color:#94A3B8;text-align:right">{{ r.pct }}</span></div></sc-for></div>
+              </div>
+              <div style="background:#fff;border:1px solid #E7E9ED;border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:10px">
+                <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap"><div style="font-weight:600;font-size:13.5px;color:#0B1220">Batch × program heatmap <span style="font-weight:500;color:#64748B">· alumni per cohort</span></div>
+                  <div style="display:flex;align-items:center;gap:12px;font-size:11.5px;color:#475569"><span style="display:flex;align-items:center;gap:6px"><span style="width:12px;height:12px;border-radius:3px;background:#0F3D2E"></span>Well represented</span><span style="display:flex;align-items:center;gap:6px"><span style="width:12px;height:12px;border-radius:3px;background:#FBF0D8;border:1px solid #E3C97E"></span>Thin (under 55% of the {{ popMean }} average) · {{ popThin }}</span></div></div>
+                <div style="display:grid;grid-template-columns:90px repeat(6,minmax(0,1fr)) 64px;gap:4px;align-items:center;font-size:11.5px">
+                  <span></span><sc-for list="{{ popYears }}" as="y" hint-placeholder-count="6"><span style="text-align:center;font-weight:700;color:#64748B">{{ y }}</span></sc-for><span style="text-align:right;font-weight:700;color:#64748B">Total</span>
+                  <sc-for list="{{ popHeat }}" as="h" hint-placeholder-count="10"><span style="font-weight:600;color:#0B1220;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ h.label }}</span><sc-for list="{{ h.cells }}" as="c" hint-placeholder-count="6"><div style="height:30px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-weight:700;background:{{ c.bg }};color:{{ c.color }};border:{{ c.ring }}">{{ c.n }}</div></sc-for><span style="text-align:right;font-weight:700;color:#0B1220">{{ h.total }}</span></sc-for>
+                </div>
+              </div>
+            </div>
+          </div>
+        </sc-if>
+        <div data-m="kpi-grid" data-m2="ad-kpi" style="flex:none;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:10px">
+          <sc-for list="{{ kpiCards }}" as="k" hint-placeholder-count="6">
+            <div onClick="{{ k.onClick }}" onMouseEnter="{{ k.onEnter }}" onMouseLeave="{{ k.onLeave }}" style="border:1px solid #E7E9ED;border-radius:16px;box-shadow:0 1px 2px rgba(16,24,40,.04),0 10px 26px -14px rgba(16,24,40,.14);cursor:pointer;transition:transform .18s,box-shadow .18s;min-width:0;padding:12px 14px 13px;display:flex;flex-direction:column;gap:7px;background:{{ k.bg }};border-color:{{ k.border }}" style-hover="transform:translateY(-3px);box-shadow:0 2px 4px rgba(16,24,40,.05),0 18px 30px -12px rgba(16,24,40,.22)">
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:6px"><div style="width:30px;height:30px;border-radius:10px;background:{{ k.chip }};color:{{ k.acc }};display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;flex:none">{{ k.ico }}</div><span style="font-size:14px;font-weight:600;color:{{ k.acc }};flex:none;transition:opacity .18s,transform .18s;opacity:{{ k.arrowOp }};transform:{{ k.arrowX }}">→</span></div>
+              <div style="font-size:11.5px;font-weight:700;color:#475569;line-height:1.25;letter-spacing:.2px;text-transform:uppercase">{{ k.label }}</div>
+              <div data-m="kpi-val" style="font-weight:700;font-size:30px;line-height:1;letter-spacing:-1px;color:#0B1220">{{ k.value }}</div>
+              <div style="font-size:11.5px;font-weight:600;color:{{ k.subColor }};line-height:1.3">{{ k.sub }}</div>
             </div>
           </sc-for>
         </div>
 
-        <div ref="{{ chartsRef }}" style="position:relative;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:16px">
+        <div ref="{{ chartsRef }}" style="position:relative;flex:1;min-height:0;display:flex;flex-direction:column;gap:12px">
           <sc-if value="{{ tipShow }}" hint-placeholder-val="{{ false }}">
             <div style="position:absolute;left:{{ tipX }};top:{{ tipY }};transform:translate(-50%,calc(-100% - 14px));pointer-events:none;z-index:50;background:#0B1220;color:#fff;border-radius:8px;padding:7px 11px;white-space:nowrap;box-shadow:0 8px 20px -6px rgba(11,18,32,.35);display:flex;flex-direction:column;gap:2px">
               <div style="font-size:11.5px;font-weight:600;color:#A7B0BC">{{ tipTitle }}</div>
               <div style="font-size:13px;font-weight:700">{{ tipValue }}</div>
             </div>
           </sc-if>
-          <div style="background:#fff;border:1px solid #E7E9ED;border-radius:16px;box-shadow:0 1px 2px rgba(16,24,40,.04),0 8px 24px -12px rgba(16,24,40,.08);padding:24px;display:flex;flex-direction:column">
-            <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap">
-              <div style="font-family:Inter,sans-serif;font-weight:600;font-size:16px;color:#0B1220">Graduates traced by batch</div>
-              <div style="display:flex;align-items:center;gap:6px 14px;flex-wrap:wrap;font-size:11.5px;color:#475569;white-space:nowrap">
-                <div style="display:flex;align-items:center;gap:6px"><span style="width:9px;height:9px;border-radius:3px;background:#0F3D2E"></span><span>At or above target</span></div>
-                <div style="display:flex;align-items:center;gap:6px"><span style="width:9px;height:9px;border-radius:3px;background:#E0A915"></span><span>Below target</span></div>
-              </div>
-            </div>
-            <div style="font-size:13px;color:#64748B;margin-top:4px">{{ batchSub }}</div>
-            <div style="display:flex;flex-direction:column;gap:10px;margin-top:24px">
-              <div style="position:relative;height:184px;padding-left:46px">
-                <div style="position:absolute;left:0;width:40px;bottom:65%;transform:translateY(50%);font-size:10.5px;font-weight:700;color:#475569;line-height:1.15;text-align:right">65%<br>target</div>
-                <div style="position:absolute;left:44px;right:0;bottom:65%;height:2px;transform:translateY(50%);background:repeating-linear-gradient(90deg,#0B1220 0 6px,#fff 6px 10px);z-index:2;pointer-events:none"></div>
-                <div style="display:flex;gap:12px;height:100%">
-                  <sc-for list="{{ batchBars }}" as="b" hint-placeholder-count="6">
-                    <div onMouseMove="{{ b.onTipMove }}" onMouseLeave="{{ b.onTipLeave }}" style="flex:1;min-width:0;display:flex;justify-content:center;height:100%">
-                      <div style="position:relative;width:100%;max-width:54px;height:100%;background:#F4F7F5;border-radius:10px;overflow:hidden">
-                        <div style="position:absolute;left:0;right:0;bottom:0;height:{{ b.pct }};background:{{ b.color }};border-radius:10px"></div>
-                      </div>
-                    </div>
-                  </sc-for>
-                </div>
-              </div>
-              <div style="display:flex;gap:12px;padding-left:46px">
+          <div style="flex:1;min-height:170px;display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr) minmax(0,1.2fr);gap:12px">
+            <div style="background:#fff;border:1px solid #E7E9ED;border-radius:14px;box-shadow:0 1px 2px rgba(16,24,40,.04),0 8px 24px -12px rgba(16,24,40,.08);padding:14px 16px;display:flex;flex-direction:column;min-height:0;min-width:0;overflow:hidden">
+              <div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px"><div style="font-weight:600;font-size:14px;color:#0B1220">Graduates traced by batch</div><div style="font-size:11px;color:#475569;white-space:nowrap">Dashed = 65% target</div></div>
+              <div style="font-size:12px;color:#64748B;margin-top:2px">{{ batchSub }}</div>
+              <div style="flex:1;min-height:0;display:flex;gap:8px;margin-top:10px;position:relative">
+                <div style="position:absolute;left:0;right:0;bottom:calc(65% * .86 + 22px);height:2px;background:repeating-linear-gradient(90deg,#0B1220 0 6px,#fff 6px 10px);z-index:2;pointer-events:none"></div>
                 <sc-for list="{{ batchBars }}" as="b" hint-placeholder-count="6">
-                  <div style="flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:2px">
-                    <div style="font-size:12.5px;font-weight:700;color:{{ b.pctColor }}">{{ b.pct }}</div>
-                    <div style="font-size:12px;color:#64748B;font-weight:600">{{ b.label }}</div>
+                  <div onClick="{{ b.onClick }}" onMouseMove="{{ b.onTipMove }}" onMouseLeave="{{ b.onTipLeave }}" style="flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer">
+                    <div style="flex:1;min-height:0;width:100%;max-width:46px;position:relative;background:#F4F7F5;border-radius:8px;overflow:hidden"><div style="position:absolute;left:0;right:0;bottom:0;height:{{ b.pct }};background:{{ b.color }};border-radius:8px"></div></div>
+                    <div style="font-size:12px;font-weight:700;color:{{ b.pctColor }}">{{ b.pct }}</div>
+                    <div style="font-size:11px;color:#64748B;font-weight:600">{{ b.label }}</div>
                   </div>
                 </sc-for>
               </div>
             </div>
-          </div>
-
-          <div style="background:#fff;border:1px solid #E7E9ED;border-radius:16px;box-shadow:0 1px 2px rgba(16,24,40,.04),0 8px 24px -12px rgba(16,24,40,.08);padding:24px;display:flex;flex-direction:column">
-            <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px">
-              <div style="font-family:Inter,sans-serif;font-weight:600;font-size:16px;color:#0B1220">Employment status mix</div>
-            </div>
-            <div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap;margin:24px 0 0;flex:1">
-              <div onMouseMove="{{ onStatusMove }}" onMouseLeave="{{ hideTip }}" style="position:relative;width:172px;height:172px;border-radius:50%;background:{{ statusDonut }};flex:none;margin:0 auto">
-                <div style="position:absolute;inset:24px;background:#fff;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;box-shadow:0 0 0 1px #EEF0F3">
-                  <div style="font-weight:700;font-size:26px;line-height:1;letter-spacing:-.6px;color:#0B1220">{{ donutTotal }}</div>
-                  <div style="font-size:11px;font-weight:600;color:#94A3B8">Respondents</div>
+            <div style="background:#fff;border:1px solid #E7E9ED;border-radius:14px;box-shadow:0 1px 2px rgba(16,24,40,.04),0 8px 24px -12px rgba(16,24,40,.08);padding:14px 16px;display:flex;flex-direction:column;min-height:0;min-width:0;overflow:hidden">
+              <div style="font-weight:600;font-size:14px;color:#0B1220">Employment status mix</div>
+              <div style="flex:1;min-height:0;display:flex;align-items:center;gap:14px;margin-top:8px">
+                <div onClick="{{ statusOpen }}" onMouseMove="{{ onStatusMove }}" onMouseLeave="{{ hideTip }}" style="position:relative;width:118px;height:118px;border-radius:50%;background:{{ statusDonut }};flex:none;cursor:pointer">
+                  <div style="position:absolute;inset:18px;background:#fff;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;box-shadow:0 0 0 1px #EEF0F3"><div style="font-weight:700;font-size:18px;line-height:1;letter-spacing:-.4px;color:#0B1220">{{ donutTotal }}</div><div style="font-size:9.5px;font-weight:600;color:#94A3B8">Respondents</div></div>
                 </div>
-              </div>
-              <div style="flex:1;min-width:220px;display:flex;flex-direction:column;gap:12px">
-                <sc-for list="{{ statusMix }}" as="s" hint-placeholder-count="5">
-                  <div style="display:flex;align-items:center;gap:12px">
-                    <div style="width:10px;height:10px;border-radius:50%;background:{{ s.color }};flex:none"></div>
-                    <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:1px">
-                      <div style="font-size:13px;font-weight:600;color:#0B1220;line-height:1.3">{{ s.label }}</div>
-                      <div style="font-size:11.5px;color:#94A3B8">{{ s.count }}</div>
-                    </div>
-                    <div style="font-weight:700;font-size:13.5px;text-align:right;color:{{ s.pctColor }}">{{ s.pct }}</div>
-                  </div>
-                </sc-for>
-              </div>
-            </div>
-            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:24px;padding-top:16px;border-top:1px solid #EEF0F3">
-              <div style="font-size:13px;font-weight:700;color:#0B4A36">Overall Active Labor Force: {{ activeLabor }}</div>
-            </div>
-          </div>
-        </div>
-
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:16px;align-items:start">
-          <div style="background:#fff;border:1px solid #E7E9ED;border-radius:16px;box-shadow:0 1px 2px rgba(16,24,40,.04),0 8px 24px -12px rgba(16,24,40,.08);padding:24px">
-            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
-              <div>
-                <div style="font-family:Inter,sans-serif;font-weight:600;font-size:16px;color:#0B1220">{{ programRatesTitle }}</div>
-                <div style="font-size:13px;color:#64748B;margin-top:4px">{{ programRatesSub }}</div>
-              </div>
-              <div onClick="{{ goReports }}" style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:#0F6B4F;cursor:pointer;white-space:nowrap"><span>Drill down</span><span style="font-size:11px">›</span></div>
-            </div>
-            <div style="display:flex;align-items:center;gap:8px;margin-top:16px;font-size:11.5px;font-weight:600;color:#475569"><span style="width:2px;height:12px;background:repeating-linear-gradient(180deg,#0B1220 0 3px,transparent 3px 5px)"></span><span>70% CHED target</span></div>
-            <div style="display:flex;flex-direction:column;gap:16px;margin-top:16px">
-              <sc-for list="{{ programRates }}" as="p" hint-placeholder-count="6">
-                <div style="display:grid;grid-template-columns:136px minmax(40px,1fr) 44px 72px;align-items:center;gap:10px">
-                  <div title="{{ p.full }}" style="font-size:13px;font-weight:600;color:#0B1220;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ p.program }}</div>
-                  <div onMouseMove="{{ p.onTipMove }}" onMouseLeave="{{ p.onTipLeave }}" style="position:relative;padding:6px 0;margin:-6px 0">
-                    <div style="position:absolute;left:70%;top:-8px;bottom:-8px;width:2px;transform:translateX(-50%);background:repeating-linear-gradient(180deg,#0B1220 0 3px,transparent 3px 5px);z-index:2;pointer-events:none"></div>
-                    <div style="height:8px;border-radius:99px;background:#EEF4F1;overflow:hidden">
-                      <div style="height:100%;border-radius:99px;background:#0F6B4F;width:{{ p.pct }}"></div>
-                    </div>
-                  </div>
-                  <div style="font-family:Inter,sans-serif;font-weight:700;font-size:13px;color:#0B1220;text-align:right">{{ p.pct }}</div>
-                  <div style="justify-self:end;font-size:11.5px;font-weight:700;color:{{ p.deltaColor }};background:{{ p.deltaBg }};padding:3px 7px;border-radius:999px;white-space:nowrap;font-size:11px">{{ p.arrow }} {{ p.delta }}</div>
-                </div>
-              </sc-for>
-            </div>
-          </div>
-
-          <div style="display:flex;flex-direction:column;gap:16px">
-            <div style="background:#fff;border:1px solid #E7E9ED;border-radius:16px;box-shadow:0 1px 2px rgba(16,24,40,.04),0 8px 24px -12px rgba(16,24,40,.08);padding:24px">
-              <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:16px">
-                <div style="font-family:Inter,sans-serif;font-weight:600;font-size:16px;color:#0B1220">Months Before First Job</div>
-              </div>
-              <div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap">
-                <div style="flex:none;display:flex;flex-direction:column;gap:4px">
-                  <div style="display:flex;align-items:baseline;gap:6px">
-                    <span style="font-family:Inter,sans-serif;font-weight:700;font-size:44px;line-height:1;letter-spacing:-1.2px;color:#0B1220">{{ medianMonths }}</span>
-                    <span style="font-size:14px;font-weight:600;color:#64748B">months</span>
-                  </div>
-                  <div style="font-size:10.5px;font-weight:700;color:#94A3B8;letter-spacing:.7px">MEDIAN</div>
-                </div>
-                <div style="flex:1;min-width:230px;display:flex;flex-direction:column;gap:12px">
-                  <div style="display:flex;gap:2px;height:30px;border-radius:8px;overflow:hidden">
-                    <sc-for list="{{ timeToJob }}" as="t" hint-placeholder-count="4">
-                      <div onMouseMove="{{ t.onTipMove }}" onMouseLeave="{{ t.onTipLeave }}" style="flex:{{ t.grow }} 1 0;min-width:0;background:{{ t.color }};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:{{ t.text }}">{{ t.pct }}</div>
-                    </sc-for>
-                  </div>
-                  <div style="display:flex;flex-wrap:wrap;gap:8px 16px">
-                    <sc-for list="{{ timeToJob }}" as="t" hint-placeholder-count="4">
-                      <div style="display:flex;align-items:center;gap:8px;font-size:12.5px;color:#334155;white-space:nowrap">
-                        <span style="width:9px;height:9px;border-radius:3px;background:{{ t.color }};flex:none"></span><span>{{ t.label }}</span>
-                      </div>
-                    </sc-for>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div style="background:#fff;border:1px solid #E7E9ED;border-radius:16px;box-shadow:0 1px 2px rgba(16,24,40,.04),0 8px 24px -12px rgba(16,24,40,.08);padding:24px">
-              <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px">
-                <div style="display:flex;align-items:center;gap:8px">
-                  <span style="width:7px;height:7px;border-radius:50%;background:#F0C428;flex:none"></span>
-                  <span style="font-size:12.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:#0B1220">Signals worth acting on</span>
-                </div>
-              </div>
-              <div style="display:flex;flex-direction:column;gap:12px">
-                <sc-for list="{{ insights }}" as="i" hint-placeholder-count="3">
-                  <div style="display:flex;gap:12px;align-items:flex-start;border-radius:12px;padding:16px;background:{{ i.bg }};border:1px solid {{ i.border }}">
-                    <div style="width:7px;height:7px;border-radius:50%;background:{{ i.color }};margin-top:6px;flex:none"></div>
-                    <div style="font-size:13.5px;line-height:1.5;color:#334155;text-wrap:pretty"><span style="font-weight:700;color:{{ i.leadColor }}">{{ i.lead }}</span> {{ i.text }}</div>
-                  </div>
-                </sc-for>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div style="background:#fff;border:1px solid #E7E9ED;border-radius:16px;box-shadow:0 1px 2px rgba(16,24,40,.04),0 8px 24px -12px rgba(16,24,40,.08);padding:24px">
-          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap">
-            <div>
-              <div style="font-family:Inter,sans-serif;font-weight:600;font-size:16px;color:#0B1220">Inclusion profile</div>
-              <div style="font-size:13px;color:#64748B;margin-top:4px">{{ inclSub }}</div>
-            </div>
-            <div onClick="{{ goReportsIncl }}" style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:#0F6B4F;cursor:pointer;white-space:nowrap"><span>Open report</span><span style="font-size:11px">›</span></div>
-          </div>
-          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:16px;margin-top:16px">
-            <sc-for list="{{ inclGroups }}" as="g" hint-placeholder-count="2">
-              <div style="border:1px solid #EEF0F3;border-radius:14px;padding:24px;display:flex;flex-direction:column;gap:16px;min-width:0">
-                <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
-                  <div style="font-size:13.5px;font-weight:600;color:#0B1220">{{ g.title }}</div>
-                  <div style="border-radius:999px;padding:4px 12px;font-size:11px;font-weight:700;background:#EEF1F5;color:#475569">Restricted · aggregated</div>
-                </div>
-                <div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap">
-                  <div style="font-family:Inter,sans-serif;font-weight:700;font-size:34px;line-height:1;letter-spacing:-1px;color:#0B1220">{{ g.yes }}</div>
-                  <div style="font-size:13px;color:#475569">answered Yes · <span style="font-weight:700;color:#0B1220">{{ g.yesPct }}</span></div>
-                </div>
-                <div style="display:flex;height:10px;border-radius:99px;overflow:hidden;background:#E3E8E5;gap:2px">
-                  <div style="width:{{ g.yesPct }};min-width:4px;background:{{ g.color }};border-radius:99px"></div>
-                </div>
-                <div style="display:flex;gap:8px 16px;flex-wrap:wrap;font-size:12.5px;color:#334155">
-                  <div style="display:flex;align-items:center;gap:8px"><span style="width:9px;height:9px;border-radius:3px;background:{{ g.color }}"></span><span>Yes</span><span style="font-weight:700;color:#0B1220">{{ g.yes }}</span><span style="color:#94A3B8">{{ g.yesPct }}</span></div>
-                  <div style="display:flex;align-items:center;gap:8px"><span style="width:9px;height:9px;border-radius:3px;background:#E3E8E5"></span><span>No</span><span style="font-weight:700;color:#0B1220">{{ g.no }}</span><span style="color:#94A3B8">{{ g.noPct }}</span></div>
-                </div>
-                <div style="border-top:1px solid #EEF0F3;padding-top:16px;display:flex;flex-direction:column;gap:10px">
-                  <div style="font-size:10.5px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:#94A3B8">{{ g.rowsTitle }}</div>
-                  <sc-if value="{{ g.adding }}" hint-placeholder-val="{{ false }}">
-                <div data-m="tq-add" style="border-top:1px solid #F1F2F4;background:#FBF8EA;padding:16px 18px;display:flex;flex-direction:column;gap:12px">
-                  <div style="font-size:13px;font-weight:700;color:#0B1220">New question in {{ g.title }}</div>
-                  <input type="text" value="{{ adLabel }}" onInput="{{ onAdLabel }}" placeholder="Question text" style="border:1px solid #D5DAE0;border-radius:10px;padding:10px 12px;font-size:13.5px;font-family:inherit;color:#0B1220;background:#fff;outline:none;width:100%;box-sizing:border-box" style-focus="border-color:#0F3D2E">
-                  <div style="display:flex;gap:8px;flex-wrap:wrap">
-                    <sc-for list="{{ adTypes }}" as="ty" hint-placeholder-count="5">
-                      <div onClick="{{ ty.onClick }}" style="font-size:12.5px;font-weight:600;padding:7px 13px;border-radius:999px;cursor:pointer;border:1px solid {{ ty.border }};background:{{ ty.bg }};color:{{ ty.color }}">{{ ty.label }}</div>
-                    </sc-for>
-                  </div>
-                  <sc-if value="{{ adHas }}" hint-placeholder-val="{{ false }}">
-                    <textarea rows="4" onInput="{{ onAdOpt }}" placeholder="Answer options — one per line, at least 2" style="border:1px solid #D5DAE0;border-radius:10px;padding:10px 12px;font-size:13px;font-family:inherit;color:#0B1220;background:#fff;outline:none;width:100%;box-sizing:border-box;resize:vertical;line-height:1.5" style-focus="border-color:#0F3D2E">{{ adOpt }}</textarea>
-                  </sc-if>
-                  <div style="display:flex;justify-content:flex-end;gap:8px">
-                    <div onClick="{{ adCancel }}" style="font-size:13px;font-weight:600;color:#334155;border:1px solid #E7E9ED;border-radius:10px;padding:9px 16px;cursor:pointer;background:#fff">Cancel</div>
-                    <div onClick="{{ adSave }}" style="font-size:13px;font-weight:700;color:#fff;background:#0F3D2E;border-radius:10px;padding:9px 18px;cursor:pointer" style-hover="background:#00251F">Add question</div>
-                  </div>
-                </div>
-              </sc-if>
-              <sc-for list="{{ g.rows }}" as="r" hint-placeholder-count="5">
-                    <div style="display:grid;grid-template-columns:minmax(0,140px) minmax(40px,1fr) 36px;gap:10px;align-items:center">
-                      <div style="font-size:12.5px;font-weight:600;color:#0B1220;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.label }}</div>
-                      <div style="height:7px;border-radius:99px;background:#F1F4F2;overflow:hidden"><div style="height:100%;border-radius:99px;width:{{ r.w }};background:{{ r.color }}"></div></div>
-                      <div style="font-size:12.5px;font-weight:700;color:#0B1220;text-align:right">{{ r.n }}</div>
+                <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px">
+                  <sc-for list="{{ statusMix }}" as="s" hint-placeholder-count="5">
+                    <div onClick="{{ s.onClick }}" style="display:flex;align-items:center;gap:8px;cursor:pointer;border-radius:6px" style-hover="background:#F4F7F5">
+                      <div style="width:9px;height:9px;border-radius:50%;background:{{ s.color }};flex:none"></div>
+                      <div style="flex:1;min-width:0;font-size:12px;font-weight:600;color:#0B1220;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ s.label }}</div>
+                      <div style="font-weight:700;font-size:12px;color:{{ s.pctColor }}">{{ s.pct }}</div>
                     </div>
                   </sc-for>
                 </div>
               </div>
-            </sc-for>
-          </div>
-        </div>
-
-        <div style="background:#fff;border:1px solid #E7E9ED;border-radius:16px;box-shadow:0 1px 2px rgba(16,24,40,.04),0 8px 24px -12px rgba(16,24,40,.08);padding:24px 0 0">
-          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:0 24px 16px">
-            <div>
-              <div style="font-family:Inter,sans-serif;font-weight:600;font-size:16px;color:#0B1220">Latest survey submissions</div>
-              <div style="font-size:13px;color:#8A6D1F;margin-top:4px;font-weight:600">{{ adminAwaiting }}</div>
+              <div style="font-size:12px;font-weight:700;color:#0B4A36;padding-top:8px;border-top:1px solid #EEF0F3">Overall Active Labor Force: {{ activeLabor }}</div>
             </div>
-            <div onClick="{{ goRecords }}" style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:#0F6B4F;cursor:pointer;white-space:nowrap"><span>View all submissions</span><span>→</span></div>
-          </div>
-          <div data-m="tscroll" style="overflow-x:auto">
-          <div data-m="trow" style="display:grid;grid-template-columns:1.5fr .8fr .6fr 1.5fr 1fr .8fr .6fr;padding:12px 24px;margin:0;background:#F8FAF9;border-top:1px solid #EEF0F3;border-bottom:1px solid #EEF0F3;font-size:11px;font-weight:600;color:#94A3B8;letter-spacing:.7px;text-transform:uppercase;gap:16px">
-            <div>Name</div><div>Program</div><div>Batch</div><div>Employment status</div><div>Submitted</div><div>Status</div><div style="text-align:right">Action</div>
-          </div>
-          <sc-for list="{{ registrations }}" as="r" hint-placeholder-count="5">
-            <div data-m="trow" style="display:grid;grid-template-columns:1.5fr .8fr .6fr 1.5fr 1fr .8fr .6fr;padding:16px 24px;border-bottom:1px solid #EEF0F3;align-items:center;gap:16px" style-hover="{{ rowHover }}">
-              <div style="font-size:13.5px;font-weight:600;color:#0B1220">{{ r.name }}</div>
-              <div title="{{ r.full }}" style="font-size:13px;color:#475569">{{ r.program }}</div>
-              <div style="font-size:13px;color:#475569">{{ r.batch }}</div>
-              <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:#334155;min-width:0">
-                <span style="width:8px;height:8px;border-radius:50%;background:{{ r.dot }};flex:none"></span><span>{{ r.employment }}</span>
+            <div style="background:#fff;border:1px solid #E7E9ED;border-radius:14px;box-shadow:0 1px 2px rgba(16,24,40,.04),0 8px 24px -12px rgba(16,24,40,.08);padding:14px 16px;display:flex;flex-direction:column;min-height:0;min-width:0;overflow:hidden">
+              <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+                <div style="min-width:0"><div style="font-weight:600;font-size:14px;color:#0B1220">{{ programRatesTitle }}</div><div style="font-size:12px;color:#64748B;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ programRatesSub }}</div></div>
+                <div onClick="{{ goReports }}" style="font-size:12px;font-weight:700;color:#0F6B4F;cursor:pointer;white-space:nowrap">Drill down ›</div>
               </div>
-              <div style="font-size:13px;color:#64748B">{{ r.date }}</div>
-              <div style="font-size:12px;font-weight:700;color:{{ r.statusColor }};background:{{ r.statusBg }};padding:5px 12px;border-radius:99px;width:fit-content">{{ r.status }}</div>
-              <div onClick="{{ goRecords }}" style="font-size:13px;font-weight:600;color:{{ r.actionColor }};text-align:right;cursor:pointer">{{ r.action }}</div>
+              <div style="flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;justify-content:space-evenly;gap:6px;margin-top:8px">
+                <sc-for list="{{ programRates }}" as="p" hint-placeholder-count="6">
+                  <div onClick="{{ p.onClick }}" onMouseMove="{{ p.onTipMove }}" onMouseLeave="{{ p.onTipLeave }}" style="display:grid;grid-template-columns:96px minmax(30px,1fr) 40px 64px;align-items:center;gap:8px;cursor:pointer;border-radius:6px" style-hover="background:#F4F7F5">
+                    <div title="{{ p.full }}" style="font-size:12px;font-weight:600;color:#0B1220;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ p.program }}</div>
+                    <div style="position:relative"><div style="position:absolute;left:70%;top:-5px;bottom:-5px;width:2px;background:repeating-linear-gradient(180deg,#0B1220 0 3px,transparent 3px 5px);z-index:2"></div><div style="height:7px;border-radius:99px;background:#EEF4F1;overflow:hidden"><div style="height:100%;border-radius:99px;background:#0F6B4F;width:{{ p.pct }}"></div></div></div>
+                    <div style="font-weight:700;font-size:12px;color:#0B1220;text-align:right">{{ p.pct }}</div>
+                    <div style="justify-self:end;font-weight:700;color:{{ p.deltaColor }};background:{{ p.deltaBg }};padding:2px 6px;border-radius:999px;white-space:nowrap;font-size:10.5px">{{ p.arrow }} {{ p.delta }}</div>
+                  </div>
+                </sc-for>
+              </div>
             </div>
-          </sc-for>
-          <sc-if value="{{ registrationsEmpty }}" hint-placeholder-val="{{ false }}">
-            <div style="padding:40px 24px;text-align:center;font-size:13px;color:#64748B">No recent submissions for {{ admScopeLabel }}.</div>
-          </sc-if>
           </div>
-          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 24px">
-            <div style="font-size:12.5px;color:#64748B">Showing <span style="font-weight:700;color:#0B1220">{{ adminShowFrom }}</span> to <span style="font-weight:700;color:#0B1220">{{ adminShowTo }}</span> of <span style="font-weight:700;color:#0B1220">{{ adminTotalEntries }}</span> entries</div>
-            <div style="display:flex;align-items:center;gap:8px">
-              <div style="border:1px solid #E7E9ED;border-radius:10px;padding:10px 16px;font-size:12.5px;font-weight:600;color:#A7B0BC;background:#FAFBFB">Previous</div>
-              <div style="border:1px solid #E2E5EA;border-radius:10px;padding:10px 16px;font-size:12.5px;font-weight:700;color:#0B1220;background:#fff;cursor:pointer" style-hover="{{ filterHover }}">Next</div>
+
+          <div data-m="ad-bottom" style="flex:none;display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr) minmax(0,1.2fr);gap:12px">
+            <div style="background:#fff;border:1px solid #E7E9ED;border-radius:14px;box-shadow:0 1px 2px rgba(16,24,40,.04),0 8px 24px -12px rgba(16,24,40,.08);padding:12px 16px;display:flex;flex-direction:column;gap:8px;min-width:0">
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><div style="font-weight:600;font-size:14px;color:#0B1220">Months before first job</div><div style="display:flex;align-items:baseline;gap:4px"><span style="font-weight:700;font-size:20px;letter-spacing:-.5px;color:#0B1220">{{ avgMonths }}</span><span style="font-size:11.5px;color:#64748B;font-weight:600">mo avg</span></div></div>
+              <div style="display:flex;gap:2px;height:24px;border-radius:7px;overflow:hidden">
+                <sc-for list="{{ timeToJob }}" as="t" hint-placeholder-count="4"><div onClick="{{ t.onClick }}" onMouseMove="{{ t.onTipMove }}" onMouseLeave="{{ t.onTipLeave }}" style="flex:{{ t.grow }} 1 0;min-width:0;background:{{ t.color }};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:{{ t.text }};cursor:pointer">{{ t.pct }}</div></sc-for>
+              </div>
+              <div style="display:flex;flex-wrap:wrap;gap:2px 12px">
+                <sc-for list="{{ timeToJob }}" as="t" hint-placeholder-count="4"><div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#334155;white-space:nowrap"><span style="width:8px;height:8px;border-radius:2px;background:{{ t.color }}"></span>{{ t.label }}</div></sc-for>
+              </div>
+            </div>
+            <div onClick="{{ insOpen }}" style="background:#fff;border:1px solid #E7E9ED;border-radius:14px;box-shadow:0 1px 2px rgba(16,24,40,.04),0 8px 24px -12px rgba(16,24,40,.08);padding:12px 16px;display:flex;flex-direction:column;gap:6px;min-width:0;cursor:pointer" style-hover="transform:translateY(-2px);box-shadow:0 2px 4px rgba(16,24,40,.05),0 14px 28px -12px rgba(16,24,40,.16);border-color:#D3DAD6">
+              <div style="display:flex;align-items:center;justify-content:space-between"><div style="display:flex;align-items:center;gap:8px"><span style="width:7px;height:7px;border-radius:50%;background:#F0C428"></span><span style="font-size:11.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:#0B1220">Signals worth acting on</span></div><span style="font-size:11.5px;font-weight:700;color:#0F6B4F">{{ insCount }} ›</span></div>
+              <div style="font-size:12.5px;line-height:1.45;color:#334155;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden"><span style="font-weight:700;color:#0B1220">{{ insTop.lead }}</span> {{ insTop.text }}</div>
+            </div>
+            <div style="background:#fff;border:1px solid #E7E9ED;border-radius:14px;box-shadow:0 1px 2px rgba(16,24,40,.04),0 8px 24px -12px rgba(16,24,40,.08);padding:12px 16px;display:flex;flex-direction:column;gap:8px;min-width:0">
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><div style="font-weight:600;font-size:14px;color:#0B1220">Inclusion profile</div><div onClick="{{ goReportsIncl }}" style="font-size:12px;font-weight:700;color:#0F6B4F;cursor:pointer;white-space:nowrap">Open report ›</div></div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+                <sc-for list="{{ inclGroups }}" as="g" hint-placeholder-count="2">
+                  <div onClick="{{ g.onClick }}" style="border:1px solid #EEF0F3;border-radius:10px;padding:8px 10px;cursor:pointer;min-width:0" style-hover="background:#F4F7F5">
+                    <div style="font-size:11px;font-weight:600;color:#475569;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ g.title }}</div>
+                    <div style="display:flex;align-items:baseline;gap:6px;margin:2px 0 5px"><span style="font-weight:700;font-size:20px;letter-spacing:-.5px;color:#0B1220">{{ g.yes }}</span><span style="font-size:11.5px;color:#475569">{{ g.yesPct }}</span></div>
+                    <div style="height:6px;border-radius:99px;background:#E3E8E5;overflow:hidden"><div style="height:100%;width:{{ g.yesPct }};min-width:3px;background:{{ g.color }};border-radius:99px"></div></div>
+                  </div>
+                </sc-for>
+              </div>
             </div>
           </div>
         </div>
@@ -4016,26 +3991,8 @@ body{margin:0;background:#F3F6F4}a{color:#004D40}a:hover{color:#F0C428}</style>
                   </sc-if>
 
                   <div style="flex:none">
-                    <div style="font-size:10.5px;font-weight:700;letter-spacing:.6px;color:#A7B0BC;margin-bottom:8px">UPLOADED PROOF</div>
-                    <div style="display:flex;flex-direction:column;gap:8px">
-                      <sc-for list="{{ recDrawerProof }}" as="p" hint-placeholder-count="2">
-                        <div style="display:flex;align-items:center;gap:11px;background:#F7FAF8;border:1px solid #EDF2EF;border-radius:14px;padding:10px 12px">
-                          <div style="width:28px;height:28px;border-radius:8px;background:#F1F3F5;color:#5A6572;display:flex;align-items:center;justify-content:center;font-size:12px;flex:none">▤</div>
-                          <div style="min-width:0;flex:1">
-                            <div style="font-size:12.5px;font-weight:700;color:#0B1220">{{ p.name }}</div>
-                            <div style="font-size:11.5px;color:#94A3B8">{{ p.meta }}</div>
-                          </div>
-                          <sc-if value="{{ p.ok }}" hint-placeholder-val="{{ true }}">
-                            <div style="font-size:11.5px;font-weight:700;color:#0F6B4F;flex:none">View</div>
-                          </sc-if>
-                        </div>
-                      </sc-for>
-                    </div>
-                  </div>
-
-                  <div style="flex:none">
                     <div style="font-size:10.5px;font-weight:700;letter-spacing:.6px;color:#A7B0BC;margin-bottom:8px">ADMIN NOTES</div>
-                    <textarea value="{{ recDrawerNote }}" onChange="{{ recDrawerSetNote }}" placeholder="Record what was checked, or what the alumnus still needs to submit…" style="width:100%;box-sizing:border-box;min-height:96px;resize:vertical;border:1px solid #E2E5EA;border-radius:12px;padding:11px 12px;font-family:inherit;font-size:12.5px;line-height:1.55;color:#0B1220;outline:none;background:#FBFCFC"></textarea>
+                    <textarea value="{{ recDrawerNote }}" onChange="{{ recDrawerSetNote }}" placeholder="Record what was checked, or what follow-up is needed…" style="width:100%;box-sizing:border-box;min-height:96px;resize:vertical;border:1px solid #E2E5EA;border-radius:12px;padding:11px 12px;font-family:inherit;font-size:12.5px;line-height:1.55;color:#0B1220;outline:none;background:#FBFCFC"></textarea>
                   </div>
                 </div>
 
@@ -4202,37 +4159,6 @@ body{margin:0;background:#F3F6F4}a{color:#004D40}a:hover{color:#F0C428}</style>
                       <div>
                         <div style="font-size:10.5px;font-weight:700;letter-spacing:.6px;color:#A7B0BC;margin-bottom:6px">MESSAGE</div>
                         <textarea value="{{ recActBody }}" onChange="{{ recActSetBody }}" style="width:100%;box-sizing:border-box;min-height:170px;resize:vertical;border:1px solid #E2E5EA;border-radius:10px;padding:10px 12px;font-family:inherit;font-size:12.5px;line-height:1.55;color:#0B1220;outline:none"></textarea>
-                      </div>
-                    </div>
-                  </sc-if>
-
-                  <sc-if value="{{ recActIsProof }}" hint-placeholder-val="{{ false }}">
-                    <div style="display:flex;flex-direction:column;gap:14px">
-                      <div>
-                        <div style="font-size:10.5px;font-weight:700;letter-spacing:.6px;color:#A7B0BC;margin-bottom:8px">DOCUMENTS TO REQUEST</div>
-                        <div style="display:flex;flex-direction:column;gap:6px">
-                          <sc-for list="{{ recActDocs }}" as="d" hint-placeholder-count="5">
-                            <div onClick="{{ d.toggle }}" role="checkbox" tabindex="0" style="display:flex;align-items:center;gap:11px;padding:9px 12px;border:1px solid {{ d.border }};background:{{ d.bg }};border-radius:10px;cursor:pointer">
-                              <div style="width:16px;height:16px;border-radius:5px;border:1.5px solid {{ d.markBorder }};background:{{ d.markBg }};color:#fff;font-size:10px;display:flex;align-items:center;justify-content:center;flex:none">{{ d.mark }}</div>
-                              <div style="min-width:0">
-                                <div style="font-size:12.5px;font-weight:600;color:#0B1220">{{ d.label }}</div>
-                                <div style="font-size:11.5px;color:#94A3B8">{{ d.hint }}</div>
-                              </div>
-                            </div>
-                          </sc-for>
-                        </div>
-                      </div>
-                      <div>
-                        <div style="font-size:10.5px;font-weight:700;letter-spacing:.6px;color:#A7B0BC;margin-bottom:8px">DUE IN</div>
-                        <div style="display:flex;gap:6px;flex-wrap:wrap">
-                          <sc-for list="{{ recActDue }}" as="c" hint-placeholder-count="3">
-                            <div onClick="{{ c.onClick }}" role="button" tabindex="0" style="padding:7px 13px;border-radius:99px;border:1px solid {{ c.border }};background:{{ c.bg }};color:{{ c.color }};font-size:12px;font-weight:600;cursor:pointer">{{ c.label }}</div>
-                          </sc-for>
-                        </div>
-                      </div>
-                      <div>
-                        <div style="font-size:10.5px;font-weight:700;letter-spacing:.6px;color:#A7B0BC;margin-bottom:6px">NOTE TO ALUMNUS (OPTIONAL)</div>
-                        <textarea value="{{ recActNote }}" onChange="{{ recActSetNote }}" placeholder="e.g. A clear phone photo is fine." style="width:100%;box-sizing:border-box;min-height:64px;resize:vertical;border:1px solid #E2E5EA;border-radius:10px;padding:9px 12px;font-family:inherit;font-size:12.5px;line-height:1.5;color:#0B1220;outline:none"></textarea>
                       </div>
                     </div>
                   </sc-if>
@@ -5427,7 +5353,13 @@ class Component extends DCLogic {
         : this.setState({ screen: 'forgot', fpStep: 3, fpViaLink: true, fpLinkUsed: true, fpEmail: to, fpPw: '', fpPw2: '', fpEmailErr: '' }),
     };
   }
-  componentDidUpdate() { if (this.state.screen === 'manage-events') this.setState({ screen: 'admin-jobs' }); }
+  componentDidUpdate() { if (this.state.screen === 'manage-events') this.setState({ screen: 'admin-jobs' }); this.fitJobs(); }
+  fitJobs() {
+    const w = document.querySelector('[data-fit="jobs"]'), b = w && w.querySelector('[data-fitbody]'); if (!b) return;
+    b.style.zoom = 1;
+    const avail = w.clientHeight - w.firstElementChild.offsetHeight - 14 - 32;
+    b.style.zoom = Math.max(0.25, Math.min(1, avail / b.offsetHeight));
+  }
   stripe = 'repeating-linear-gradient(135deg,#E9E5DB 0 10px,#F1EEE7 10px 20px)';
 
   eventDefs() {
@@ -5594,7 +5526,17 @@ class Component extends DCLogic {
       isEvents: this.state.screen === 'events',
       isAdminPosts: this.state.screen === 'admin-jobs' || this.state.screen === 'admin-events',
       adminPostsLabel: this.state.screen === 'admin-events' ? 'Admin Events' : 'Admin Jobs',
-      addJob: () => this.focusForm(this.jobFormRef),
+      addJob: () => { this.setState({ adminJobForm: true }); setTimeout(() => this.focusForm(this.jobFormRef), 60); },
+      jobBubbleDisplay: this.state.adminJobForm ? 'flex' : 'none',
+      closeJobForm: () => this.setState({ adminJobForm: false }),
+      jobFormKey: (e) => { if (e.key === 'Escape') this.setState({ adminJobForm: false }); },
+      jobFormOpen: !!this.state.adminJobForm,
+      addJobIcon: this.state.adminJobForm ? '×' : '+',
+      addJobLabel: this.state.adminJobForm ? 'Close form' : 'Add Job',
+      jobsColDir: 'row',
+      jobsColSpan: '1 / -1',
+      stopProp: (e) => e.stopPropagation(),
+      jobsCard1Flex: '1 1 0',
       addEvent: () => this.focusForm(this.eventFormRef),
       jobFormRef: this.jobFormRef,
       eventFormRef: this.eventFormRef,
@@ -5602,7 +5544,7 @@ class Component extends DCLogic {
       evPostedCount: all.length,
       ...(() => {
         const s = this.state.screen;
-        const jobCount = ((this.state.postedJobs || []).length) + this.jobsData().length;
+        const jobCount = this.pubPosted().length + this.jobsData().length;
         const mkA = (id, label, count) => ({
           label, count, onClick: () => this.setState({ screen: id }),
           bg: s === id ? '#0F3D2E' : 'transparent',
@@ -5614,8 +5556,8 @@ class Component extends DCLogic {
       })(),
       ...(() => {
         const tab = this.state.screen === 'admin-events' ? 'events' : 'jobs';
-        const posted = (this.state.postedJobs || []);
-        const jobs = posted.concat(this.jobsData());
+        const jobs = this.adminJobsAll();
+        const nOpen = jobs.filter(j => !j.closed).length;
         const queue = this.jobQueue();
         const mk = (id, label, count) => ({
           label, count,
@@ -5627,7 +5569,9 @@ class Component extends DCLogic {
         return {
           tabEvents: tab === 'events',
           tabJobs: tab === 'jobs',
-          jobLiveCount: jobs.length,
+          wsFit: tab === 'jobs' ? 'jobs' : 'none',
+          wsH: tab === 'jobs' ? 'calc(100dvh - 170px)' : 'auto',
+          jobLiveCount: nOpen,
           postsSubtitle: tab === 'jobs'
             ? 'Post openings directly and approve job listings submitted by alumni'
             : 'Create and manage alumni events',
@@ -5658,13 +5602,39 @@ class Component extends DCLogic {
               jqReject: () => { if (q) this.setState({ jobQueue: this.jobQueue().filter((x) => x.title !== q.title), jqSel: null }); },
             };
           })(),
-          adminJobRows: jobs.map((j, i) => ({
-            title: j.title,
-            meta: [j.company, j.location, j.type].filter(Boolean).join(' · '),
-            source: i < posted.length ? 'Posted by admin' : (j.badgeKind === 'alumni' ? 'Alumni referral' : 'Partner employer'),
-            sourceColor: i < posted.length ? '#0F3D2E' : '#475569',
-            sourceBg: i < posted.length ? '#E6F0EB' : '#F2F4F5',
-          })),
+          adminJobRows: jobs.map((j) => {
+            const k = j._k, ed = this.state.jobEditKey === k, dr = this.state.jobEditDraft || {};
+            const apps = this.applicantsFor(k);
+            const fld = (label, key) => ({ label, value: dr[key] || '', onChange: (e) => { const v = e.target.value; this.setState(st => ({ jobEditDraft: Object.assign({}, st.jobEditDraft, { [key]: v }) })); } });
+            const adm = j._posted && !j._fromAlumni;
+            return {
+              title: j.title,
+              meta: [j.company, j.location, j.type].filter(Boolean).join(' · '),
+              source: j.closed ? 'Closed' : adm ? 'Posted by admin' : (j.badgeKind === 'alumni' ? 'Alumni referral' : 'Partner employer'),
+              sourceColor: j.closed ? '#9F1239' : adm ? '#0F3D2E' : '#475569',
+              sourceBg: j.closed ? '#FEF0F2' : adm ? '#E6F0EB' : '#F2F4F5',
+              dim: j.closed ? 0.62 : 1,
+              toggleLabel: j.closed ? 'Reopen listing' : 'Unpublish / Close listing',
+              revOpen: this.state.jobRevKey === k,
+              onReview: () => this.setState(st => ({ jobRevKey: st.jobRevKey === k ? null : k })),
+              mEdit: () => { this.setState({ jobRevKey: null }); this.setState({ jobEditKey: k, jobEditDraft: { title: j.title, company: j.company, location: j.location, type: j.type } }); },
+              mApps: () => this.setState({ jobRevKey: null, jobAppKey: k }),
+              mToggle: () => { this.setState({ jobRevKey: null }); this.setState(st => ({ jobMods: Object.assign({}, st.jobMods, { [k]: Object.assign({}, (st.jobMods || {})[k], { closed: !j.closed }) }) })); },
+              toggleColor: j.closed ? '#0F3D2E' : '#9F1239',
+              onToggle: () => this.setState(st => ({ jobMods: Object.assign({}, st.jobMods, { [k]: Object.assign({}, (st.jobMods || {})[k], { closed: !j.closed }) }), jobEditKey: st.jobEditKey === k ? null : st.jobEditKey })),
+              editing: ed,
+              notEditing: !ed,
+              onEdit: () => this.setState({ jobEditKey: ed ? null : k, jobEditDraft: { title: j.title, company: j.company, location: j.location, type: j.type } }),
+              editFields: [fld('Title', 'title'), fld('Company', 'company'), fld('Location', 'location'), fld('Type', 'type')],
+              onSave: () => this.setState(st => { const d = st.jobEditDraft || {}; return { jobMods: Object.assign({}, st.jobMods, { [k]: Object.assign({}, (st.jobMods || {})[k], { title: (d.title || '').trim() || j.title, company: (d.company || '').trim() || j.company, location: d.location || '', type: d.type || '' }) }), jobEditKey: null }; }),
+              onCancel: () => this.setState({ jobEditKey: null }),
+              appLabel: 'Applicants (' + apps.length + ')',
+              appOpen: this.state.jobAppKey === k,
+              onApps: () => this.setState(st => ({ jobAppKey: st.jobAppKey === k ? null : k })),
+              apps,
+              noApps: apps.length === 0,
+            };
+          }),
         };
       })(),
       ...this.evAdminVals(all),
@@ -6471,6 +6441,7 @@ class Component extends DCLogic {
   }
 
   componentDidMount() {
+    this._rz = () => this.fitJobs(); window.addEventListener('resize', this._rz); this.fitJobs();
     this._fitPrivacy = () => { const c = document.querySelector('[data-m="done-card"]'); if (!c || !c.offsetParent) return; c.style.zoom = 1; if (c.closest('[data-mobile="1"]')) return; const p = c.parentElement.getBoundingClientRect(); const z = Math.min(1, (innerWidth - 32) / 1040, (Math.min(p.height, innerHeight - p.top) - 32) / c.offsetHeight); c.style.zoom = z; };
     window.addEventListener('resize', this._fitPrivacy); this._fitTimer = setInterval(this._fitPrivacy, 250);
     this._onEvKey = (e) => { if (e.key !== 'Escape') return; if (this.state.confirm) { if (!this.state.cfBusy) this.setState({ confirm: null, cfErr: '' }); } else if (this.state.evMenu) this.setState({ evMenu: null }); else if (this.state.evManage) this.setState({ evManage: null }); };
@@ -6795,7 +6766,7 @@ class Component extends DCLogic {
     const nj = {
       title: q.title, company: q.company || 'Alumni submission',
       location: q.location || 'Manila · On-site', type: q.type || 'Full-time',
-      badge: 'Alumni Referral', badgeKind: 'alumni',
+      badge: 'Alumni Referral', badgeKind: 'alumni', _fromAlumni: true,
       salary: q.salary || 'Salary undisclosed', salaryNote: q.salaryNote || 'as submitted',
       id: 'job-' + Date.now() + '-' + Math.round(Math.random() * 1e4),
       posted: 'Approved just now', tags: q.tags || [], note: 'Referred by ' + q.by + ' · ' + q.batch,
@@ -6807,13 +6778,25 @@ class Component extends DCLogic {
     }));
   }
 
-  jobsData() {
+  pubPosted() { return (this.state.postedJobs || []).map(j => this.modJob(j, j.id)).filter(j => !j.closed); }
+  modJob(j, k) { return Object.assign({}, j, { _k: k }, (this.state.jobMods || {})[k] || {}); }
+  adminJobsAll() {
+    return (this.state.postedJobs || []).map(j => Object.assign(this.modJob(j, j.id), { _posted: true })).concat(this.jobsRaw().map(j => this.modJob(j, j.title + '|' + j.company)));
+  }
+  applicantsFor(k) {
+    let h = 0; for (let i = 0; i < k.length; i++) h = (h * 31 + k.charCodeAt(i)) >>> 0;
+    const pool = [['Maria Santos', 'BSIT 2021'], ['John Dela Cruz', 'BSCS 2022'], ['Angela Reyes', 'BSIT 2020'], ['Mark Villanueva', 'BSECE 2019'], ['Kristine Bautista', 'BSIS 2023'], ['Paolo Ramirez', 'BSCS 2021']];
+    const n = (this.state.postedJobs || []).some(j => j.id === k) ? 0 : (h % 5) + 1;
+    return pool.slice(0, n).map((p, i) => ({ name: p[0], batch: p[1], applied: (i + 1) + 'd ago' }));
+  }
+  jobsData() { return this.jobsRaw().map(j => this.modJob(j, j.title + '|' + j.company)).filter(j => !j.closed); }
+  jobsRaw() {
     return [
-      { title: 'Junior Backend Developer', company: 'Brightline Tech', location: 'Manila · Hybrid', type: 'Full-time', badge: 'Alumni Founded', badgeKind: 'alumni', salary: '₱35,000 - ₱48,000', salaryNote: 'per month', posted: 'Posted 2 days ago', tags: ['Node.js', 'SQL', 'Express', 'AWS'], note: '2 UDM alumni work here' },
-      { title: 'Product Marketing Associate', company: 'Nimbus Systems', location: 'Cebu · Remote', type: 'Full-time', badge: 'UDM Referral Available', badgeKind: 'alumni', salary: '₱40,000 - ₱55,000', salaryNote: 'per month', posted: 'Posted 5 days ago', tags: ['Marketing', 'SaaS', 'Growth Marketing'], note: '' },
-      { title: 'Data Analyst Intern', company: 'Veyra Analytics', location: 'Quezon City · On-site', type: 'Internship', badge: 'Alumni Hiring Partner', badgeKind: 'alumni', salary: '₱18,000 - ₱22,000', salaryNote: 'allowance / month', posted: 'Posted 1 week ago', tags: ['SQL', 'Excel', 'Python', 'Power BI'], note: '' },
-      { title: 'UX/UI Designer', company: 'Formwell Studio', location: 'Pasig · Hybrid', type: 'Full-time', badge: 'Lead by Alumni', badgeKind: 'alumni', salary: '₱45,000 - ₱65,000', salaryNote: 'per month', posted: 'Posted 3 days ago', tags: ['Figma', 'Design Systems', 'User Research'], note: '' },
-      { title: 'Cloud Support Engineer', company: 'Northpoint Cloud', location: 'Davao · Remote', type: 'Full-time', badge: 'Urgent Hiring', badgeKind: 'urgent', salary: '₱50,000 - ₱70,000', salaryNote: 'per month', posted: 'Posted 6 hours ago', tags: ['AWS', 'Linux', 'Docker', 'Terraform'], note: 'Fast-track interview for UDM grads' },
+      { title: 'Junior Backend Developer', closesIn: 5, company: 'Brightline Tech', location: 'Manila · Hybrid', type: 'Full-time', badge: 'Alumni Founded', badgeKind: 'alumni', salary: '₱35,000 - ₱48,000', salaryNote: 'per month', posted: 'Posted 2 days ago', tags: ['Node.js', 'SQL', 'Express', 'AWS'], note: '2 UDM alumni work here' },
+      { title: 'Product Marketing Associate', closesIn: 12, company: 'Nimbus Systems', location: 'Cebu · Remote', type: 'Full-time', badge: 'UDM Referral Available', badgeKind: 'alumni', salary: '₱40,000 - ₱55,000', salaryNote: 'per month', posted: 'Posted 5 days ago', tags: ['Marketing', 'SaaS', 'Growth Marketing'], note: '' },
+      { title: 'Data Analyst Intern', closesIn: 21, company: 'Veyra Analytics', location: 'Quezon City · On-site', type: 'Internship', badge: 'Alumni Hiring Partner', badgeKind: 'alumni', salary: '₱18,000 - ₱22,000', salaryNote: 'allowance / month', posted: 'Posted 1 week ago', tags: ['SQL', 'Excel', 'Python', 'Power BI'], note: '' },
+      { title: 'UX/UI Designer', closesIn: 9, company: 'Formwell Studio', location: 'Pasig · Hybrid', type: 'Full-time', badge: 'Lead by Alumni', badgeKind: 'alumni', salary: '₱45,000 - ₱65,000', salaryNote: 'per month', posted: 'Posted 3 days ago', tags: ['Figma', 'Design Systems', 'User Research'], note: '' },
+      { title: 'Cloud Support Engineer', closesIn: 3, company: 'Northpoint Cloud', location: 'Davao · Remote', type: 'Full-time', badge: 'Urgent Hiring', badgeKind: 'urgent', salary: '₱50,000 - ₱70,000', salaryNote: 'per month', posted: 'Posted 6 hours ago', tags: ['AWS', 'Linux', 'Docker', 'Terraform'], note: 'Fast-track interview for UDM grads' },
     ];
   }
 
@@ -6844,8 +6827,8 @@ class Component extends DCLogic {
       surveyComplete: complete,
       surveyIncomplete: !complete,
       showSurveyBanner: !complete && !this.state.surveyBannerDismissed,
-      showSurveyGhostCta: complete || this.state.surveyBannerDismissed,
-      surveyGhostCtaLabel: complete ? 'Review Answers' : 'Continue Survey',
+      showSurveyGhostCta: !complete && this.state.surveyBannerDismissed,
+      surveyGhostCtaLabel: 'Continue Survey',
       dismissSurveyBanner: () => this.setState({ surveyBannerDismissed: true }),
       dashSurveyPct: pct + '%',
       dashSurveyRemainingLabel: remaining === 1
@@ -6856,24 +6839,24 @@ class Component extends DCLogic {
       jobsTitleSize: complete ? '17px' : '14px',
       jobsCardShadow: complete ? '0 10px 28px rgba(0,40,33,.10)' : 'none',
       dashMetrics: [
-        { label: 'Portal Status', value: 'Active',
+        { label: 'Portal Status', icon: 'M12 3l8 3v6c0 4.5-3.2 8-8 9-4.8-1-8-4.5-8-9V6l8-3z M8.5 12l2.5 2.5L16 9.5', value: 'Active',
           sub: 'Alumni account in good standing',
-          tag: 'VERIFIED ALUMNI',
+          tag: '',
           valueColor: '#0A0A0A',
           tagColor: '#0F8A5F', tagBg: '#E1F3EA' },
-        { label: 'Employment Status', value: empValue,
+        { label: 'Employment Status', icon: 'M3 8h18v11H3z M8 8V6a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2 M3 13h18', value: empValue,
           sub: employed ? this.av('org_type', 'Organization type pending') : 'Section IV response',
           tag: employed ? 'EMPLOYED' : a.ever_employed === 'No' ? 'UNEMPLOYED' : 'PENDING',
           valueColor: set('ever_employed') ? ink : muted,
           tagColor: employed ? '#0F8A5F' : '#8A6D1F',
           tagBg: employed ? '#E1F3EA' : '#FBF0D8' },
-        { label: 'Months Before First Job', value: this.av('time_to_job'),
+        { label: 'Months Before First Job', icon: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M12 7v5l3 2', value: this.av('time_to_job'),
           sub: employed ? 'Months after graduating from UDM' : 'Answer Section V to record this',
           tag: set('time_to_job') ? 'RECORDED' : 'PENDING',
           valueColor: set('time_to_job') ? ink : muted,
           tagColor: set('time_to_job') ? '#0F3D2E' : '#8A6D1F',
           tagBg: set('time_to_job') ? '#E6F0EB' : '#FBF0D8' },
-        { label: 'Course Relevance', value: relevance,
+        { label: 'Course Relevance', icon: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8z M12 12.01V12', value: relevance,
           sub: this.av('occ_class', 'Occupational classification pending'),
           tag: selfEmp ? 'SELF-EMPLOYED' : 'GRADUATE OUTCOME',
           valueColor: set('job_related') ? ink : muted,
@@ -6902,7 +6885,7 @@ class Component extends DCLogic {
         const annTabs = [['all', 'All', it.length], ['announcements', 'Announcements', ns.length], ['events', 'Events', evs.length]].map(([k, label, count]) => { const on = k === tab;
           return { label, count, selected: on ? 'true' : 'false', line: on ? '#0F3D2E' : 'transparent', weight: on ? 700 : 600, color: on ? '#0B1220' : '#64748B',
             countColor: on ? '#0F3D2E' : '#64748B', countBg: on ? '#E6F0EB' : '#F1F3F5', onClick: () => this.setState({ dashAnnTab: k }) }; });
-        return { announcements: it, annTabs, annFeed: feed, annFeedEmpty: feed.length === 0, annShowFooter: tab !== 'announcements',
+        return { announcements: it, annTabs, annFeed: feed.slice(0, 3), annFeedEmpty: feed.length === 0, annShowFooter: feed.length > 0,
           annFeedEmptyText: tab === 'events' ? 'No upcoming events right now.' : tab === 'announcements' ? 'No announcements right now.' : 'Nothing posted yet.' }; })(),
       dashJobs: this.jobsData().slice(0, 3),
       goJobs: () => this.setState({ screen: 'jobs' }),
@@ -7721,14 +7704,12 @@ class Component extends DCLogic {
     const docsN = Object.values(f.docs || {}).filter(Boolean).length;
     const valid = k === 'history' ? true
       : k === 'email' ? !!(f.subject || '').trim() && !!(f.body || '').trim()
-      : k === 'proof' ? docsN > 0
       : k === 'dup' ? !!f.dupSid && !!(f.reason || '').trim()
       : changed && (!reasonNeeded || !!(f.reason || '').trim());
     const danger = (k === 'archive' && !isArchived) || k === 'dup';
     const T = {
       history: ['Edit history', 'Every change to this record, newest first. Entries cannot be edited or removed.'],
       email: [r.status === 'verified' ? 'Send follow-up email' : 'Send email / follow-up link', 'Includes a secure one-time link to the alumnus’s record.'],
-      proof: ['Request document proof', 'The alumnus gets an upload link. The record stays unverified until proof is reviewed.'],
       reassign: ['Reassign program / batch', 'Corrects where this record is counted in employability reports.'],
       archive: isArchived ? ['Restore from archive', 'Returns the record to active tracking and report counts.'] : ['Archive record', 'Archived records are excluded from reports but kept for seven years.'],
       dup: isFlagged ? ['Confirm as duplicate', 'This record will be merged into the one you pick and archived.'] : ['Mark as duplicate / flag', 'Moves the record to Flagged until a reviewer resolves it.'],
@@ -7737,12 +7718,6 @@ class Component extends DCLogic {
       if (!valid) return;
       let patch = null, what = '', toast = '';
       if (k === 'email') { what = 'Email sent — “' + f.subject.trim() + '”'; toast = 'Email sent to ' + email; }
-      if (k === 'proof') {
-        const names = DOCS.filter((d) => f.docs[d[0]]).map((d) => d[1]);
-        what = 'Proof requested (' + names.join(', ') + ') · due in ' + f.due + ' days';
-        toast = 'Document request sent to ' + r.name;
-        patch = { note: 'Awaiting proof: ' + names.join(', ') + ' — due in ' + f.due + ' days.' + (f.note.trim() ? ' ' + f.note.trim() : '') };
-      }
       if (k === 'reassign') {
         const toCode = this.progCode(f.course);
         what = 'Reassigned ' + r.program + ' · ' + r.batch + ' → ' + toCode + ' · ' + f.batch + ' — ' + f.reason.trim();
@@ -7775,7 +7750,7 @@ class Component extends DCLogic {
       recActWho: r.name + ' · ' + r.sid + ' · ' + r.program + ' ' + r.batch,
       recActClose: close,
       recActStop: (e) => e.stopPropagation(),
-      recActIsHistory: k === 'history', recActIsEmail: k === 'email', recActIsProof: k === 'proof',
+      recActIsHistory: k === 'history', recActIsEmail: k === 'email',
       recActIsReassign: k === 'reassign', recActIsDup: k === 'dup',
       recActLog: [...log.map((x) => ({ ...x, dot: '#0F6B4F' })), ...seed.map((x) => ({ ...x, dot: '#C9CFD6' }))],
       recActTo: r.name + ' <' + email + '>',
@@ -7794,7 +7769,7 @@ class Component extends DCLogic {
       recActReason: f.reason || '', recActSetReason: (e) => setF({ reason: e.target.value }),
       recActHasPrimary: k !== 'history',
       recActCancel: k === 'history' ? 'Close' : 'Cancel',
-      recActPrimary: { email: 'Send email', proof: 'Send request', reassign: 'Save change', archive: isArchived ? 'Restore record' : 'Archive record', dup: isFlagged ? 'Merge & archive' : 'Flag as duplicate' }[k] || '',
+      recActPrimary: { email: 'Send email', reassign: 'Save change', archive: isArchived ? 'Restore record' : 'Archive record', dup: isFlagged ? 'Merge & archive' : 'Flag as duplicate' }[k] || '',
       recActPrimaryBg: danger ? '#B3213C' : '#0F6B4F',
       recActPrimaryOp: valid ? 1 : 0.45,
       recActPrimaryCursor: valid ? 'pointer' : 'not-allowed',
@@ -8027,7 +8002,6 @@ class Component extends DCLogic {
           menuItems: [
             { k: 'history', label: 'View edit history / audit log', icon: '◷' },
             { k: 'email', label: r.status === 'verified' ? 'Send follow-up email' : 'Send email / follow-up link', icon: '✉' },
-            { k: 'proof', label: r.status === 'flagged' ? 'Request document proof (SSS/BIR)' : 'Request document proof', icon: '⎙' },
             { k: 'reassign', label: 'Reassign program / batch', icon: '⇄' },
           ].map((m) => ({ ...m, color: '#334155', hover: { background: '#F4F6F8' }, onClick: (e) => { e && e.stopPropagation && e.stopPropagation(); this.recActOpen(m.k, r.sid); } })),
           menuDanger: [
@@ -8092,10 +8066,6 @@ class Component extends DCLogic {
       ] : [],
       recDrawerHasFlag: !!(dr && dr.note),
       recDrawerFlag: dr ? dr.note : '',
-      recDrawerProof: dr ? [
-        { name: 'employment_certificate.pdf', meta: 'Uploaded ' + dr.updated + ' · 240 KB', ok: true },
-        { name: dr.status === 'flagged' ? 'SSS / BIR proof — missing' : 'company_id_front.jpg', meta: dr.status === 'flagged' ? 'Required for self-employment validation' : 'Uploaded ' + dr.updated + ' · 1.1 MB', ok: dr.status !== 'flagged' },
-      ] : [],
       recDrawerNote: st.recAdminNote || '',
       recDrawerSetNote: (e) => this.setState({ recAdminNote: e.target.value }),
       recDrawerClose: () => this.setState({ recDrawer: null }),
@@ -8192,9 +8162,9 @@ class Component extends DCLogic {
     if (units) rows = units.map((u) => { const v = this.repSum(pairs(u.cs, NOW)).emp + SF[1], d = v - SF[1] - this.repSum(pairs(u.cs, PREV)).emp; return { program: this.repAbbr(u.full), full: u.full, v, d, cs: u.cs, ys: NOW }; }).sort((a, b) => b.v - a.v);
     else rows = (batch === 'all' ? [2021, 2022, 2023, 2024, 2025, 2026] : [batch]).map((y) => { const v = this.repSum([[course, y]]).emp + SF[1], d = v - SF[1] - this.repSum([[course, y - 1]]).emp; return { program: 'Batch ' + y, full: course + ' · Batch ' + y, v, d, cs: [course], ys: [y] }; });
     const programRates = rows.map(({ program, full, v, d }) => ({ program, full, pct: v.toFixed(1) + '%',
-      delta: (d >= 0 ? '+' : '\u2212') + Math.abs(d).toFixed(1) + ' pts', arrow: d >= 0 ? '\u2191' : '\u2193',
+      delta: (d >= 0 ? '+' : '\u2212') + Math.abs(d).toFixed(1) + '%', arrow: d >= 0 ? '\u2191' : '\u2193',
       deltaColor: d >= 0 ? '#0F6B4F' : d < -1 ? '#B3213C' : '#8A6D1F', deltaBg: d >= 0 ? '#E1F3EA' : d < -1 ? '#FDE7EC' : '#FBF0D8',
-      ...this.tipH(full, v.toFixed(1) + '% employed · ' + (d >= 0 ? '+' : '\u2212') + Math.abs(d).toFixed(1) + ' pts YoY') }));
+      ...this.tipH(full, v.toFixed(1) + '% employed · ' + (d >= 0 ? '+' : '\u2212') + Math.abs(d).toFixed(1) + '% from last year') }));
     const ST = { pending: ['Pending', '#8A6D1F', '#FBF0D8', 'Review', '#0F6B4F'], verified: ['Verified', '#0F6B4F', '#E1F3EA', 'Details', '#64748B'], flagged: ['Flagged', '#B3213C', '#FDE7EC', 'Review', '#0F6B4F'] };
     const dotOf = (e) => e.startsWith('Employed') ? '#12A36F' : e.startsWith('Self') ? '#F0C428' : e.startsWith('Further') ? '#4FA383' : e.startsWith('Not') ? '#E5484D' : '#A7B0BC';
     const nr = this.regRecord();
@@ -8282,7 +8252,7 @@ class Component extends DCLogic {
     const tt = [t1, t2, t3, t4].map(Math.round); tt[2] = 100 - tt[0] - tt[1] - tt[3];
     const tone = { r: ['#E5484D', '#C2344F', '#FDF2F4', '#F8DFE4'], y: ['#F0C428', '#8A6D1F', '#FDF9EE', '#F5E9CE'], g: ['#12A36F', '#0F6B4F', '#F0FAF4', '#D8EFE1'] };
     let ins;
-    if (isDef) ins = [['Criminology employability fell 2.3 pts', '\u2014 63 graduates from 2023\u20132024 remain unplaced in protective/security services.', 'r'],
+    if (isDef) ins = [['Criminology employability fell 2.3% from last year', '\u2014 63 graduates from 2023\u20132024 remain unplaced in protective/security services.', 'r'],
       ['Batch 2023 coverage is the weakest at 54%.', '468 records still have no survey response before upcoming audit.', 'y'],
       ['Information Technology graduates', 'reach first employment in 3.1 months on average, beating historical records.', 'g']];
     else {
@@ -8291,7 +8261,7 @@ class Component extends DCLogic {
       if (rows.length) {
         const fall = rows.reduce((a, b) => (b.d < a.d ? b : a)), low = rows.reduce((a, b) => (b.v < a.v ? b : a));
         const pick = fall.d < -0.5 ? fall : low, un = Math.round(lf * (100 - pick.v) / 100 / rows.length);
-        ins.push(fall.d < -0.5 ? [fall.program + ' employability fell ' + Math.abs(fall.d).toFixed(1) + ' pts', '\u2014 ' + N(un) + ' graduates ' + yl + ' remain unplaced.', 'r']
+        ins.push(fall.d < -0.5 ? [fall.program + ' employability fell ' + Math.abs(fall.d).toFixed(1) + '%', '\u2014 ' + N(un) + ' graduates ' + yl + ' remain unplaced.', 'r']
           : [low.program + ' trails at ' + low.v.toFixed(1) + '% employability', '\u2014 the lowest in this view; ' + N(un) + ' graduates ' + yl + ' remain unplaced.', low.v < 70 ? 'r' : 'y']);
       }
       const tg = batch === 'all' ? bars.reduce((a, b) => (b.v < a.v ? b : a)) : bars.find((b) => b.y === batch);
@@ -8313,7 +8283,7 @@ class Component extends DCLogic {
           ...this.tipH('Batch ' + y, v + '% traced \u00b7 ' + (v >= 65 ? 'meets' : 'below') + ' 65% target') }; }),
       statusMix: MIX.map((m, i) => ({ label: m[0], count: N(cnt[i]) + ' graduates', pct: P1(sh[i]) + '%', pctColor: i === 4 ? '#B4500A' : '#0B1220', color: m[1] })),
       statusDonut: 'conic-gradient(' + stops.join(', ') + ')',
-      donutTotal: N(traced), activeLabor: P1(100 - ne) + '%', medianMonths: P1(med),
+      donutTotal: N(traced), activeLabor: P1(100 - ne) + '%', avgMonths: P1(med),
       timeToJob: [['Under 3 months', '#CFE8DA', '#0B3A2B'], ['3 \u2013 6 months', '#7CC4A0', '#0B3A2B'], ['6 \u2013 12 months', '#1F7A57', '#fff'], ['Over 12 months', '#0B3A2B', '#fff']]
         .map(([label, color, text], i) => ({ label, pct: tt[i] + '%', grow: tt[i], color, text, ...this.tipH(label, tt[i] + '% of employed graduates') })),
       insights: ins.map(([lead, text, t]) => ({ lead, text, color: tone[t][0], leadColor: tone[t][1], bg: tone[t][2], border: tone[t][3] })),
@@ -8450,13 +8420,13 @@ class Component extends DCLogic {
         cols: [unitHead, 'Respondents', 'IP Yes', 'IP No', 'PWD Yes', 'PWD No'],
         rows: [...ur.map((u) => [u.label, N(u.s.t), N(u.ip), N(u.s.t - u.ip), N(u.pwd), N(u.s.t - u.pwd)]), ['Total', N(tot.t), N(ip), N(tot.t - ip), N(pwd), N(tot.t - pwd)]],
         findings: [pc(ip) + ' of respondents identify as members of an Indigenous People group; ' + pc(pwd) + ' are Persons with Disability.',
-          'PWD respondents trail non-PWD peers on employment by ' + (nonEmp(pwd, pwdEmp) - pwdEmp).toFixed(1) + ' pts — a candidate for targeted placement and accommodation support.',
+          'PWD respondents trail non-PWD peers on employment by ' + (nonEmp(pwd, pwdEmp) - pwdEmp).toFixed(1) + '% — a candidate for targeted placement and accommodation support.',
           topIp.full + ' has the highest IP share (' + P(topIp.ip / Math.max(1, topIp.s.t) * 100) + '); ' + topPwd.full + ' has the highest PWD share (' + P(topPwd.pwd / Math.max(1, topPwd.s.t) * 100) + ').'] };
     }
     const meet = byBatch.filter((u) => u.s.emp >= 80).length;
     const b = best(units, (u) => u.s.emp), lr = worst(units, (u) => u.s.rel);
     return { ...base, file: 'UDM_Form-A_' + fileScope,
-      kpis: [{ label: 'Employment rate', value: P(tot.emp), sub: 'of traced respondents' }, { label: 'Degree-relevant', value: P(tot.rel), sub: 'of employed respondents' }, { label: 'Months Before First Job', value: tot.m.toFixed(1) + ' mo', sub: 'average, from graduation' }, { label: 'Respondents', value: N(tot.t), sub: Math.round(tot.cov) + '% response rate' }],
+      kpis: [{ label: 'Employment rate', value: P(tot.emp), sub: 'of traced respondents' }, { label: 'Degree-relevant', value: P(tot.rel), sub: 'of employed respondents' }, { label: 'Months Before First Job', icon: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M12 7v5l3 2', value: tot.m.toFixed(1) + ' mo', sub: 'average, from graduation' }, { label: 'Respondents', value: N(tot.t), sub: Math.round(tot.cov) + '% response rate' }],
       chartTitle: 'Employment rate by graduating batch', chartNote: 'Share of respondents employed', unit: '%', target: 80,
       bars: byBatch.map((u) => [u.label, u.s.emp]),
       tableTitle: unitHead + ' breakdown', grid: '1.4fr 1fr 1fr 1fr 1fr',
@@ -8698,6 +8668,111 @@ class Component extends DCLogic {
     };
   }
 
+  empForecast(d) {
+    const cur = d.emp, v25 = cur - d.empD, hist = [v25 - 7.5, v25 - 5.1, v25 - 2.4, v25, cur], yrs = [2022, 2023, 2024, 2025, 2026];
+    const sl = Math.max(0.6, d.empD * 0.55), cl = (n) => Math.min(99, n);
+    const f1 = cl(cur + sl), f2 = cl(f1 + sl * 0.7), f3 = cl(f2 + sl * 0.5), fv = [f1, f2, f3], bw = [0.9, 1.6, 2.3];
+    const all = hist.concat(fv), up = fv.map((v, i) => cl(v + bw[i])), lo = fv.map((v, i) => v - bw[i]);
+    const mn = Math.floor(Math.min(...hist) - 2), mx = Math.min(100, Math.ceil(Math.max(...up) + 2));
+    const X = (i) => 50 + i * 80, Y = (v) => 20 + (mx - v) / (mx - mn) * 180, pt = (i, v) => X(i).toFixed(1) + ',' + Y(v).toFixed(1);
+    const step = Math.max(2, Math.ceil((mx - mn) / 4)), grid = [];
+    for (let g = mn; g <= mx; g += step) grid.push({ y: Y(g), ty: (Y(g) / 2.5).toFixed(2) + '%', lx: (42 / 6.4).toFixed(2) + '%', t: g + '%' });
+    const band = [pt(4, cur)].concat(up.map((v, i) => pt(5 + i, v)), lo.map((v, i) => pt(7 - i, lo[2 - i])).slice(0, 0));
+    const lower = [2, 1, 0].map((i) => pt(5 + i, lo[i]));
+    return {
+      fcOpen: !!this.state.empFc, fcGrid: grid,
+      fcHist: hist.map((v, i) => pt(i, v)).join(' '),
+      fcProj: [pt(4, cur)].concat(fv.map((v, i) => pt(5 + i, v))).join(' '),
+      fcBand: band.concat(lower, [pt(4, cur)]).join(' '),
+      fcDots: all.map((v, i) => ({ cx: X(i), cy: Y(v), fill: i > 4 ? '#fff' : '#0F6B4F', lx: (X(i) / 6.4).toFixed(2) + '%', vy: ((Y(v) - 9) / 2.5).toFixed(2) + '%', yy: (226 / 2.5).toFixed(2) + '%', v: v.toFixed(1), yr: i < 5 ? yrs[i] : 2027 + i - 5 })),
+      fcCards: fv.map((v, i) => ({ yr: 2027 + i, v: v.toFixed(1), range: lo[i].toFixed(1) + '–' + up[i].toFixed(1) + '% likely range' })),
+      fcSub: 'Projected from the last five graduating batches · ' + (cur - v25 >= 0 ? '+' : '') + (cur - v25).toFixed(1) + '% from last year',
+    };
+  }
+
+  kpiBreakdown(valStr, key, rates) {
+    const hash = (str) => { let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } h ^= h >>> 13; h = Math.imul(h, 1274126177); h ^= h >>> 16; return (h >>> 0) / 4294967296; };
+    const n = parseFloat(String(valStr).replace(/,/g, '')), pct = /%/.test(valStr), U = (rates || []).slice(0, 8);
+    if (!U.length || isNaN(n)) return { bdLabel: '', bd: [], all: [], bdFull: '' };
+    const NF = (x) => Math.round(x).toLocaleString('en-US'), bdLabel = /^(College|School|Graduate)/.test(U[0].full) ? 'By college' : 'By program';
+    let vals;
+    if (pct) { const off = U.map((u) => (hash(u.full + key) - 0.5) * 12), m = off.reduce((a, b) => a + b, 0) / U.length; vals = off.map((o) => Math.max(1, Math.min(99, n + o - m))); }
+    else { const w = U.map((u) => 0.5 + hash(u.full + key)), t = w.reduce((a, b) => a + b, 0); vals = w.map((x) => Math.round(n * x / t)); vals[0] += Math.round(n) - vals.reduce((a, b) => a + b, 0); }
+    const mx = Math.max(...vals);
+    const rows = U.map((u, i) => ({ code: u.program, full: u.full, val: pct ? vals[i].toFixed(1) + '%' : NF(vals[i]), raw: vals[i], w: (pct ? vals[i] : vals[i] / mx * 100).toFixed(1) + '%' })).sort((a, b) => b.raw - a.raw);
+    return { bdLabel: bdLabel + (rows.length > 4 ? ' · top 4 of ' + rows.length : ''), bd: rows.slice(0, 4), all: rows, bdFull: bdLabel };
+  }
+
+  popVals(v) {
+    const A = v.admK, NF = (n) => Math.round(n).toLocaleString('en-US'), open = !!this.state.adPop;
+    if (!open) return { popOpen: false };
+    const hash = (str) => { let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } h ^= h >>> 13; h = Math.imul(h, 1274126177); h ^= h >>> 16; return (h >>> 0) / 4294967296; };
+    const cols = this.colleges(), colNames = Object.keys(cols);
+    const progs = []; colNames.forEach((c) => (cols[c] || []).forEach((p) => progs.push({ p, c, w: 0.4 + hash(p) * 1.6 })));
+    const years = v.batchBars.map((b) => b.label), yw = years.map((y, i) => 0.6 + hash('batch' + y + i) * 0.9);
+    let cells = progs.map((r) => years.map((y, i) => r.w * yw[i] * (0.2 + Math.pow(hash(r.p + '|' + y), 1.6) * 1.8)));
+    const sum = cells.flat().reduce((a, b) => a + b, 0), f = A.total / sum;
+    cells = cells.map((r) => r.map((x) => Math.round(x * f)));
+    const pTot = cells.map((r) => r.reduce((a, b) => a + b, 0)), bTot = years.map((y, i) => cells.reduce((a, r) => a + r[i], 0));
+    const grand = pTot.reduce((a, b) => a + b, 0);
+    const bars = (items, color) => { const mx = Math.max(...items.map((x) => x[1])) || 1; return items.map(([label, n]) => ({ label, n: NF(n), pct: (n / grand * 100).toFixed(1) + '%', w: (n / mx * 100).toFixed(1) + '%', color })); };
+    const byProg = progs.map((r, i) => [this.progCode(r.p), pTot[i], r.p]).sort((a, b) => b[1] - a[1]);
+    const byCol = colNames.map((c) => [c, progs.reduce((a, r, i) => a + (r.c === c ? pTot[i] : 0), 0)]).sort((a, b) => b[1] - a[1]);
+    const gw = [['Female', .58], ['Male', .40], ['Prefer not to say', .02]], lw = [['Caloocan City', .27], ['Quezon City', .14], ['Manila', .11], ['Valenzuela', .08], ['Other Metro Manila', .13], ['Other Philippines', .15], ['USA', .04], ['UAE / Middle East', .03], ['Canada', .02], ['Other countries', .03]];
+    const split = (w) => { let used = 0; return w.map(([l, p], i) => { const n = i === w.length - 1 ? grand - used : Math.round(grand * p); used += n; return [l, n]; }); };
+    const top = byProg.slice(0, 10), idx = top.map((t) => progs.findIndex((r) => this.progCode(r.p) === t[0]));
+    const shown = idx.flatMap((pi) => cells[pi]), mean = shown.reduce((a, b) => a + b, 0) / shown.length, mx = Math.max(...cells.flat());
+    const mix = (t) => { const a = [230, 240, 235], b = [15, 61, 46]; return 'rgb(' + a.map((x, i) => Math.round(x + (b[i] - x) * t)).join(',') + ')'; };
+    const heat = idx.map((pi, ri) => ({ label: top[ri][0], total: NF(pTot[pi]), cells: cells[pi].map((n) => { const thin = n < mean * 0.55, t = Math.min(1, n / (mx * 0.9)); return { n: NF(n), bg: thin ? '#FBF0D8' : mix(0.12 + t * 0.88), color: thin ? '#8A6D1F' : t > 0.45 ? '#fff' : '#0B1220', ring: thin ? '1px solid #E3C97E' : '1px solid transparent' }; }) }));
+    const thinCount = idx.reduce((a, pi) => a + cells[pi].filter((n) => n < mean * 0.55).length, 0);
+    return {
+      popOpen: true, popClose: () => this.setState({ adPop: false }), popTotal: NF(A.total), popReg: NF(A.traced), popVer: NF(A.completed),
+      popYears: years, popBatch: bars(years.map((y, i) => [y, bTot[i]]), '#0F3D2E'), popGender: bars(split(gw), '#2F7FC1'), popLoc: bars(split(lw), '#E0A915'),
+      popCol: bars(byCol, '#0F6B4F'), popProg: bars(byProg.slice(0, 8).map((t) => [t[0], t[1]]), '#4FA383'), popHeat: heat, popThin: thinCount + ' thin cohorts', popMean: NF(mean),
+    };
+  }
+
+  adDetVals(v, k) {
+    const st = this.state.adDet, R = (label, value) => ({ label, value });
+    const open = (title, sub, big, rows, hl, x) => () => this.setState({ adDet: { title, sub, big, rows, hl: hl || '', go: 'reports', x: x || null } });
+    const ana = (key, valStr, ringVal, ringLabel) => { const B = this.kpiBreakdown(valStr, key, v.programRates); if (!B.all.length) return null; const pct = /%/.test(valStr), tot = parseFloat(String(valStr).replace(/,/g, '')), hi = B.all[0], lo = B.all[B.all.length - 1], L = B.all.length - 1; return { ring: ringVal, ringLabel, barTitle: B.bdFull, chips: [{ k: 'Highest', v: hi.code, s: hi.val, c: '#0F3D2E' }, { k: 'Lowest', v: lo.code, s: lo.val, c: '#8A6D1F' }, pct ? { k: 'Spread', v: (hi.raw - lo.raw).toFixed(1), s: 'pts high\u2013low', c: '#475569' } : { k: 'Top share', v: (hi.raw / tot * 100).toFixed(0) + '%', s: 'of total', c: '#475569' }], bars: B.all.map((r, i) => ({ code: r.code, full: r.full, val: r.val, w: r.w, color: i === 0 ? '#0F3D2E' : i === L ? '#E0A915' : '#4FA383' })) }; };
+    const withHl = (rows, hl) => rows.map((r) => ({ ...r, bg: r.label === hl ? '#EEF6F2' : '#fff', w: r.label === hl ? 700 : 500 }));
+    const bRows = v.batchBars.map((b) => R('Batch ' + b.label, b.pct + ' traced'));
+    const sRows = v.statusMix.map((s) => R(s.label, s.count + ' \u00b7 ' + s.pct));
+    const pRows = v.programRates.map((p) => R(p.full, p.pct + ' (' + p.arrow + ' ' + p.delta + ')'));
+    const tRows = v.timeToJob.map((t) => R(t.label, t.pct + ' of employed'));
+    const iRows = v.insights.map((i) => R(i.lead, i.text));
+    const sd = k.kpiSide, ms = k.miniStats, H = k.kpiHero;
+    const card = (o, label, value, sub, subColor, onClick, bg, border) => ({ label, value, sub, subColor, onClick, onEnter: o.onEnter, onLeave: o.onLeave, arrowOp: o.arrowOp, arrowX: o.arrowX, bg: bg || '#fff', border: border || '#E7E9ED' });
+    const A = v.admK, NF = (n) => Math.round(n).toLocaleString('en-US');
+    const alumniCard = { label: 'Total alumni', value: NF(A.total), sub: NF(A.traced) + ' registered \u00b7 ' + NF(A.completed) + ' verified', subColor: '#475569', onClick: () => this.setState({ adPop: true }), onEnter: sd[0].onEnter, onLeave: sd[0].onLeave, arrowOp: sd[0].arrowOp, arrowX: sd[0].arrowX, bg: '#fff', border: '#E7E9ED' };
+    const pop = this.popVals(v);
+    const cards = [
+      alumniCard,
+      card(H, 'Employability rate', H.value + '%', H.context, '#0F6B4F', H.onClick),
+      card(sd[0], 'Graduates traced', sd[0].value, sd[0].subLead + ' of records \u00b7 ' + sd[0].context, '#475569', open('Graduates traced', 'Survey cycle 2026', sd[0].value + ' ' + sd[0].unit, [R('Traced alumni', sd[0].value), R('Total records', sd[0].unit.replace('/ ', '').replace(' total', '')), R('Coverage', sd[0].subLead), R('Collection goal', sd[0].context.replace('Goal: ', ''))], null, ana('Graduates traced', sd[0].value, parseFloat(sd[0].subLead), 'coverage'))),
+      card(sd[1], 'Survey completion', sd[1].value + '%', sd[1].context, '#0F6B4F', open('Survey completion', 'Fully completed survey forms', sd[1].value + '%', [R('Completed forms', sd[1].subLead), R('Change vs 2025 cycle', sd[1].context)], null, ana('Survey completion', sd[1].value + '%', parseFloat(sd[1].value), 'complete'))),
+      card(ms[0], 'Degree-aligned jobs', ms[0].value, ms[0].pill, '#0F6B4F', open('Degree-aligned jobs', ms[0].sub, ms[0].value, [R('Working in their field', ms[0].sub), R('Change', ms[0].pill)], null, ana('Degree-aligned jobs', ms[0].value, parseFloat(ms[0].value), 'aligned'))),
+      card(ms[1], 'Further studies', ms[1].value, ms[1].sub, '#475569', open('Pursuing further studies', ms[1].pill, ms[1].value, [R('Graduates enrolled', ms[1].value), R('Share of respondents', ms[1].sub)], null, ana('Further studies', ms[1].value, parseFloat(ms[1].sub), 'of respondents'))),
+      card(ms[2], 'Still seeking work', ms[2].value, 'View outreach list \u2192', '#7A4E00', ms[2].onClick, '#FFFAEE', '#F0D9A0'),
+    ];
+    return {
+      kpiCards: cards.map((c, i) => { const P = i === 6 ? ['#7A4E00','#FBEFD0','\u2691'] : [['#0F3D2E','#EEF6F2','\u2630'],['#0F3D2E','#EEF6F2','\u2197'],['#0F3D2E','#EEF6F2','\u2316'],['#0F3D2E','#EEF6F2','\u2713'],['#0F3D2E','#EEF6F2','\u25C6'],['#0F3D2E','#EEF6F2','\u2726']][i]; return { ...c, acc: P[0], chip: P[1], ico: P[2], bg: i === 6 ? '#FFFAEE' : '#fff', border: i === 6 ? '#F0D9A0' : '#E7E9ED' }; }), ...pop,
+      batchBars: v.batchBars.map((b) => ({ ...b, onClick: open('Graduates traced \u00b7 Batch ' + b.label, v.batchSub, b.pct, withHl(bRows, 'Batch ' + b.label), 'Batch ' + b.label) })),
+      statusMix: v.statusMix.map((s) => ({ ...s, onClick: open(s.label, 'Employment status mix', s.pct, withHl(sRows, s.label), s.label) })),
+      statusOpen: open('Employment status mix', v.donutTotal + ' respondents', v.activeLabor, sRows),
+      programRates: v.programRates.map((p) => ({ ...p, onClick: open(p.full, 'Employed within 12 months of graduating', p.pct, withHl(pRows, p.full), p.full) })),
+      timeToJob: v.timeToJob.map((t) => ({ ...t, onClick: open('Months before first job', 'Average ' + v.avgMonths + ' months', t.pct, withHl(tRows, t.label), t.label) })),
+      insTop: v.insights[0] || { lead: '', text: '' }, insCount: v.insights.length + ' signals',
+      insOpen: open('Signals worth acting on', 'Recommended follow-ups', String(v.insights.length), iRows),
+      inclGroups: v.inclGroups.map((g) => ({ ...g, onClick: open(g.title, v.inclSub, g.yesPct, g.rows.map((r) => R(r.label, r.n)))})),
+      adDetOpen: !!st, adDetTitle: st ? st.title : '', adDetSub: st ? st.sub : '', adDetBig: st ? st.big : '', adDetRows: st ? withHl(st.rows, st.hl) : [],
+      adDetHasRing: !!(st && st.x && !isNaN(st.x.ring)), adDetRingBg: st && st.x && !isNaN(st.x.ring) ? 'conic-gradient(#0F3D2E ' + Math.min(100, st.x.ring) * 3.6 + 'deg,#E6EEEA 0)' : '', adDetRingText: st && st.x && !isNaN(st.x.ring) ? st.x.ring + '%' : '', adDetRingLabel: st && st.x ? st.x.ringLabel : '', adDetChips: st && st.x ? st.x.chips : [], adDetHasBars: !!(st && st.x), adDetBars: st && st.x ? st.x.bars : [], adDetBarTitle: st && st.x ? st.x.barTitle : '',
+      adDetClose: () => this.setState({ adDet: null }),
+      adDetGo: () => this.setState({ adDet: null, screen: 'reports' }),
+    };
+  }
+
   kpiVals(d) {
     const hv = this.state.kpiHover;
     const N = (n) => Math.round(n).toLocaleString('en-US'), P1 = (n) => n.toFixed(1);
@@ -8708,15 +8783,17 @@ class Component extends DCLogic {
       onLeave: () => this.setState(s => s.kpiHover === id ? { kpiHover: null } : null),
       arrowOp: hv === id && !noArrow ? 1 : 0, arrowX: hv === id ? 'translateX(0)' : 'translateX(-4px)' });
     const goRecords = () => this.setState({ screen: 'records' });
+    const fc = this.empForecast(d);
     return {
-      kpiHero: wire('emp', { label: 'Employability rate', value: P1(d.emp), unit: '%', subLead: N(d.employed), sub: 'employed of ' + N(d.lf) + ' in the labour force', pct: Math.round(d.emp) + '%', context: sg(d.empD) + ' pts vs 2025 cycle' }),
+      ...fc, fcClose: () => this.setState({ empFc: false }), fcStop: (e) => e && e.stopPropagation && e.stopPropagation(),
+      kpiHero: wire('emp', { onClick: () => this.setState({ empFc: true }), label: 'Employability rate', value: P1(d.emp), unit: '%', subLead: N(d.employed), sub: 'employed of ' + N(d.lf) + ' in the labour force', pct: Math.round(d.emp) + '%', context: sg(d.empD) + '% from last year' }),
       kpiSide: [
         wire('traced', { label: 'Graduates traced', value: N(d.traced), unit: '/ ' + N(d.total) + ' total', subLead: P1(d.covP) + '%', sub: 'of alumni records reached this cycle', hasBar: true, isDelta: false, pct: P1(d.goalP) + '%', context: 'Goal: ' + N(d.goal) }),
-        wire('survey', { label: 'Survey completion', value: P1(d.comp), unit: '%', subLead: N(d.completed), sub: 'fully completed survey forms', hasBar: false, isDelta: true, context: sg(d.compD) + ' pts vs 2025 cycle' }),
+        wire('survey', { label: 'Survey completion', value: P1(d.comp), unit: '%', subLead: N(d.completed), sub: 'fully completed survey forms', hasBar: false, isDelta: true, context: sg(d.compD) + '% from last year' }),
         wire('firstgen', { label: 'First-generation graduates', caption: 'Are you the first in your family to graduate college?', value: N(d.fg), unit: 'respondents', subLead: P1(d.fgP) + '%', sub: 'answered “Yes”', hasBar: false, isDelta: false }),
       ],
       miniStats: [
-        wire('m1', { label: 'Degree-aligned jobs', value: P1(d.al) + '%', sub: N(d.alN) + ' working in their field', icon: 'M4 8h16v11H4z M9 8V6a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2 M9 13.5l2 2 4-4', iconBg: '#E7F6EE', iconColor: '#0E7A5A', pill: sgn(d.alD) + '% field alignment', pillBg: '#E1F3EA', pillColor: '#0F6B4F', isPill: true, isLink: false, cardBg: '#fff', cardBorder: '#E7E9ED' }),
+        wire('m1', { label: 'Degree-aligned jobs', value: P1(d.al) + '%', sub: N(d.alN) + ' working in their field', icon: 'M4 8h16v11H4z M9 8V6a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2 M9 13.5l2 2 4-4', iconBg: '#E7F6EE', iconColor: '#0E7A5A', pill: sgn(d.alD) + '% from last year', pillBg: '#E1F3EA', pillColor: '#0F6B4F', isPill: true, isLink: false, cardBg: '#fff', cardBorder: '#E7E9ED' }),
         wire('m2', { label: 'Pursuing further studies', value: N(d.fs), sub: P1(d.fsP) + '% of respondents', icon: 'M2 9l10-5 10 5-10 5-10-5z M6 11v5c0 1.5 3 3 6 3s6-1.5 6-3v-5', iconBg: '#E8EEF5', iconColor: '#3E5C7A', pill: 'Graduate & Professional', pillBg: '#EEF2F7', pillColor: '#334E68', isPill: true, isLink: false, cardBg: '#fff', cardBorder: '#E7E9ED' }),
         wire('m3', { label: 'Still seeking work', value: N(d.sk), sub: P1(d.skP) + '% of survey responses', icon: 'M10.5 4a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13z M15.5 15.5L20 20', iconBg: '#FBEBC4', iconColor: '#9A6400', pill: 'View outreach list \u2192', isPill: false, isLink: true, cardBg: '#FFFAEE', cardBorder: '#F0D9A0', onClick: goRecords }, true),
       ],
@@ -8728,7 +8805,7 @@ class Component extends DCLogic {
       insights: [
         ['Networking and cloud certifications are in demand.', 'CCNA or AWS cited in 7 of 10 IT support and infra postings this cycle \u2014 consider a pre-graduation certification drive.', 'b'],
         ['Batch 2024 coverage is 58%,', 'below the 65% target. 52 BSIT records still need a survey response before the CHED audit.', 'y'],
-        ['Capstone teams with industry partners', 'landed first jobs in a 2.1-month median, vs 3.6 months for other BSIT graduates.', 'g'],
+        ['Capstone teams with industry partners', 'landed first jobs in a 2.1-month average, vs 3.6 months for other BSIT graduates.', 'g'],
       ],
       out: [['i1', 'Andrea Villanueva', '2024', 's', 'Aug 28, 2026'], ['i2', 'Mark Joseph Lim', '2023', 'n', 'Never'], ['i3', 'Kevin Soriano', '2022', 'n', 'Jul 15, 2026'], ['i4', 'Rhea Castillo', '2024', 's', 'Sep 10, 2026'], ['i5', 'John Paul Reyes', '2023', 's', 'Sep 18, 2026']], outTotal: 64 },
     'Bachelor of Science in Computer Science': { total: 280, done: 201, st: [148, 20, 9, 19, 18], aligned: 84.1, prev: 88.3, batch: [88, 85, 80, 76, 69, 61],
@@ -8859,7 +8936,7 @@ class Component extends DCLogic {
       deptCourseSelVal: sel,
       onDeptCourseChange: (e) => this.setState({ deptCourse: e.target.value, kpiHover: null }),
       deptCourseOpts: [{ key: 'all', label: 'All CCS courses' }, ...courses.map((c) => ({ key: c, label: this.courseCode(c) }))],
-      deptEmp: fx(hEmp), deptEmpW: fx(hEmp) + '%', deptEmpDelta: bv._bi < 0 ? (d >= 0 ? '\u2191 ' : '\u2193 ') + fx(Math.abs(d)) + ' pts vs 2025' : 'Batch ' + bv._yr,
+      deptEmp: fx(hEmp), deptEmpW: fx(hEmp) + '%', deptEmpDelta: bv._bi < 0 ? (d >= 0 ? '\u2191 ' : '\u2193 ') + fx(Math.abs(d)) + '% from last year' : 'Batch ' + bv._yr,
       deptHeroEmployed: bv._cur.em.toLocaleString(),
       deptReachNote: 'Share of each batch reached by the survey',
       deptCoverageAvg: (sel === 'all' ? 'College' : 'Course') + ' coverage average: ' + fx(batch.reduce((a, b) => a + b, 0) / 6) + '%',
@@ -8877,7 +8954,7 @@ class Component extends DCLogic {
         ...this.tipH('Batch ' + lb, v + '% traced · ' + (v >= 65 ? 'meets' : 'below') + ' 65% target') }; }),
       deptStatus: stc.map((n, i) => ({ label: labels[i], count: String(n), pct: fx(n / traced * 100) + '%', pctColor: i === 4 ? '#B4500A' : '#0B1220', color: colors[i] })),
       deptDonut: 'conic-gradient(' + segs.join(', ') + ')',
-      deptCompare: [['Employability', emp, 78.4], ['Degree-aligned jobs', aligned, 71.2]].map(([lb, c, u]) => ({ label: lb, col: fx(c) + '%', uni: fx(u) + '%', cw: fx(c) + '%', uw: fx(u) + '%', diff: (c >= u ? '+' : '\u2212') + fx(Math.abs(c - u)) + ' pts',
+      deptCompare: [['Employability', emp, 78.4], ['Degree-aligned jobs', aligned, 71.2]].map(([lb, c, u]) => ({ label: lb, col: fx(c) + '%', uni: fx(u) + '%', cw: fx(c) + '%', uw: fx(u) + '%', diff: (c >= u ? '+' : '\u2212') + fx(Math.abs(c - u)) + '%',
         ...this.tipH(lb, (sel === 'all' ? 'College ' : code + ' ') + fx(c) + '% · University ' + fx(u) + '%') })),
       deptInsights: insights.map(([lead, text, t]) => ({ lead, text, color: tone[t][0], leadColor: tone[t][1], bg: tone[t][2], border: tone[t][3] })),
       ...this.deptOutPage(D, nrIn ? nr : null, mkOut),
@@ -8921,11 +8998,13 @@ class Component extends DCLogic {
     ];
 
     const jd = this.state.jobDraft || {};
-    const jf = (key, label, placeholder, span) => ({
+    const jf = (key, label, placeholder, span, o) => ({
       label, placeholder, span: span || 'auto', value: jd[key] || '',
+      isText: !o, isSelect: !!(o && o.options), isNum: !!(o && o.num), options: (o && o.options) || [], err: (o && o.err) || '', border: (o && o.err) ? '#D92D20' : '#E2E5EA',
       onChange: (e) => { const v = e.target.value; this.setState(st => ({ jobDraft: Object.assign({}, st.jobDraft, { [key]: v }) })); },
     });
-    const jobsAll = (this.state.postedJobs || []).concat(this.jobsData());
+    const sMin = Number(jd.salMin) || 0, sMax = Number(jd.salMax) || 0, salErr = sMin && sMax && sMax < sMin ? 'Maximum must be at least the minimum' : '';
+    const jobsAll = this.pubPosted().concat(this.jobsData());
 
     const pv = this.props.mobilePreview ?? 'Auto';
     const forcePhone = pv === 'Phone frame';
@@ -9218,13 +9297,15 @@ class Component extends DCLogic {
           const t = String(j.type || '').toLowerCase();
           const loc = String(j.location || '').toLowerCase();
           if (k === 'Full-time') return t.indexOf('full') > -1;
-          if (k === 'Remote') return loc.indexOf('remote') > -1;
+          if (k === 'Part-time') return t.indexOf('part') > -1;
           if (k === 'Internship') return t.indexOf('intern') > -1;
           if (k === 'Contract') return t.indexOf('contract') > -1;
           return true;
         };
         const isSaved = (j) => !!(this.state.savedJobs || {})[j.id || (j.title + '|' + j.company)];
-        const keys = ['All', 'Full-time', 'Remote', 'Internship', 'Contract'];
+        const keys = ['All', 'Full-time', 'Part-time', 'Internship', 'Contract'];
+        const setup = this.state.jobSetup || 'All';
+        const setupOk = (j) => setup === 'All' || String(j.location || '').toLowerCase().indexOf(setup.toLowerCase()) > -1;
         return {
           jobFilters: keys.map((k) => {
             const n = jobsAll.filter((j) => match(j, k)).length;
@@ -9237,9 +9318,11 @@ class Component extends DCLogic {
               onClick: () => this.setState({ jobFilter: k }),
             };
           }),
-          jobFilterMatch: (j) => match(j, key) && (!savedOnly || isSaved(j)),
-          filtersActive: key !== 'All' || savedOnly || !!(this.state.jobQuery || '').trim(),
-          resetFilters: () => this.setState({ jobFilter: 'All', savedOnly: false, jobQuery: '' }),
+          jobFilterMatch: (j) => match(j, key) && setupOk(j) && (!savedOnly || isSaved(j)),
+          jobSetup: setup,
+          setJobSetup: (e) => this.setState({ jobSetup: e.target.value }),
+          filtersActive: key !== 'All' || setup !== 'All' || savedOnly || !!(this.state.jobQuery || '').trim(),
+          resetFilters: () => this.setState({ jobFilter: 'All', jobSetup: 'All', savedOnly: false, jobQuery: '' }),
           jobQuery: this.state.jobQuery || '',
           setJobQuery: (e) => this.setState({ jobQuery: e.target.value }),
           toggleSavedOnly: () => this.setState((st) => ({ savedOnly: !st.savedOnly })),
@@ -9248,16 +9331,15 @@ class Component extends DCLogic {
           savedFilterFill: savedOnly ? '#0F3D2E' : 'none',
         };
       })(),
-      jobSelects: ['All Modalities', 'All Locations', 'Most Recent'],
+      jobSelects: ['All Locations', 'Most Recent'],
       goldHover: { background: '#0B3123' },
       bookmarkHover: { background: '#F1F5F9', borderColor: '#CBD5E1' },
       resetHover: { color: '#0B3123' },
-      jobStats: [
-        { label: 'Open Positions', value: jobsAll.length + ' Openings' },
-        { label: 'Alumni Employers', value: '42 Partners' },
-        { label: 'Salary Benchmark', value: '₱45k – ₱85k Avg' },
-        { label: 'Placement Response', value: '94% Response Rate' },
-      ],
+      jobStats: ([
+        { label: 'Employer Network', value: '42 Partner Companies' },
+        { label: 'New This Week', value: jobsAll.filter(j => /just now|minute|hour|\b[1-6] days?\b|yesterday/i.test(j.posted || '')).length + ' New Openings' },
+        { label: 'Alumni Hired', value: '128 Hired via Portal', hint: 'Alumni who reported a job offer from a portal posting, confirmed by the Alumni Relations Office.' },
+      ]).map((s, i) => Object.assign({}, s, { cursor: s.hint ? "help" : "default", showHint: !!s.hint && this.state.statTip === i, onEnter: () => s.hint && this.setState({ statTip: i }), onLeave: () => this.setState({ statTip: null }) })),
       savedCount: Object.keys(this.state.savedJobs || {}).filter(k => this.state.savedJobs[k]).length,
       inputFocus: { borderColor: '#0F3D2E' },
       showJobForm: !!this.state.jobForm,
@@ -9283,11 +9365,16 @@ class Component extends DCLogic {
       jobFormFields: [
         jf('title', 'Job title', 'e.g. Junior Backend Developer', '1 / -1'),
         jf('company', 'Company', 'e.g. Brightline Tech'),
-        jf('location', 'Location & setup', 'e.g. Manila · Hybrid'),
-        jf('type', 'Employment type', 'e.g. Full-time'),
-        jf('salary', 'Salary range', 'e.g. ₱35,000 - ₱48,000'),
+        jf('location', 'Location', 'City, e.g. Manila'),
+        jf('setup', 'Work setup', 'Select work setup', null, { options: ['On-site', 'Hybrid', 'Remote'] }),
+        jf('type', 'Employment type', 'Select employment type', null, { options: ['Full-time', 'Part-time', 'Contract', 'Internship', 'Temporary'] }),
+        jf('closes', 'Application deadline', 'Select deadline', null, { options: ['Closes in 3 days', 'Closes in 7 days', 'Closes in 14 days', 'Closes in 30 days'] }),
+        jf('salMin', 'Minimum salary (monthly)', 'e.g. 35000', null, { num: true }),
+        jf('salMax', 'Maximum salary (monthly)', 'e.g. 48000', null, { num: true, err: salErr }),
       ],
       jobDraftTags: jd.tags || '',
+      jobDraftUrgent: !!jd.urgent,
+      onJobDraftUrgent: (e) => { const v = e.target.checked; this.setState(s => ({ jobDraft: Object.assign({}, s.jobDraft, { urgent: v }) })); },
       jobDraftDesc: jd.desc || '',
       onJobDraftDesc: (e) => { const v = e.target.value; this.setState(s => ({ jobDraft: Object.assign({}, s.jobDraft, { desc: v }) })); },
       clearJobDraft: () => {
@@ -9297,19 +9384,24 @@ class Component extends DCLogic {
       onJobDraftTags: (e) => { const v = e.target.value; this.setState(s => ({ jobDraft: Object.assign({}, s.jobDraft, { tags: v }) })); },
       publishJob: () => {
         const d = this.state.jobDraft || {};
+        const mn = Number(d.salMin) || 0, mx = Number(d.salMax) || 0;
+        if (mn && mx && mx < mn) return;
+        const fm = (n) => '₱' + n.toLocaleString('en-US');
+        const salary = mn && mx ? fm(mn) + ' - ' + fm(mx) : mn ? 'From ' + fm(mn) : mx ? 'Up to ' + fm(mx) : '';
         const nj = {
           id: 'job-' + Date.now() + '-' + Math.round(Math.random() * 1e4),
           title: d.title || 'Untitled posting', company: d.company || 'Company to be confirmed',
-          location: d.location || 'Location TBA', type: d.type || 'Full-time',
-          badge: 'Posted by Alumni', badgeKind: 'alumni',
-          salary: d.salary || 'Salary undisclosed', salaryNote: 'as posted',
+          location: [d.location || 'Location TBA', d.setup].filter(Boolean).join(' · '), type: d.type || 'Full-time',
+          badge: d.urgent ? 'Urgent Hiring' : 'Posted by Alumni', badgeKind: d.urgent ? 'urgent' : 'alumni',
+          salary: salary || 'Salary undisclosed', salaryNote: 'as posted',
           posted: 'Posted just now',
+          closesIn: parseInt(String(d.closes || '').replace(/\D+/g, ''), 10) || undefined,
           tags: String(d.tags || '').split(',').map(t => t.trim()).filter(Boolean),
           note: '', photo: this.state.jobPhoto,
         };
         this.setState(s => ({
           postedJobs: [nj].concat(s.postedJobs || []),
-          jobForm: false, jobDraft: {}, jobPhoto: null, jobPhotoName: null,
+          jobForm: false, adminJobForm: false, jobDraft: {}, jobPhoto: null, jobPhotoName: null,
         }));
       },
       ...(() => {
@@ -9319,12 +9411,13 @@ class Component extends DCLogic {
         const loc = (j) => String(j.location || '').toLowerCase();
         const match = (j) => k === 'All' ? true
           : k === 'Full-time' ? t(j).indexOf('full') > -1
-          : k === 'Remote' ? loc(j).indexOf('remote') > -1
+          : k === 'Part-time' ? t(j).indexOf('part') > -1
           : k === 'Internship' ? t(j).indexOf('intern') > -1
           : t(j).indexOf('contract') > -1;
         const jq = String(this.state.jobQuery || '').trim().toLowerCase();
         const qm = (j) => !jq || [j.title, j.company, j.location, j.type, j.badge, (j.tags || []).join(' ')].join(' ').toLowerCase().indexOf(jq) > -1;
-        const vis = jobsAll.filter((j) => match(j) && qm(j) && (!savedOnly || !!(this.state.savedJobs || {})[j.id || (j.title + '|' + j.company)]));
+        const su = this.state.jobSetup || 'All';
+        const vis = jobsAll.filter((j) => match(j) && (su === 'All' || loc(j).indexOf(su.toLowerCase()) > -1) && qm(j) && (!savedOnly || !!(this.state.savedJobs || {})[j.id || (j.title + '|' + j.company)]));
         this._visibleJobs = vis;
         return {
           jobsCountLabel: 'Showing ' + vis.length + ' of ' + jobsAll.length + ' verified alumni job postings',
@@ -9340,6 +9433,11 @@ class Component extends DCLogic {
           saved,
           photoCss: j.photo ? 'url("' + j.photo + '") center/cover no-repeat' : this.stripe,
           noPhoto: !j.photo,
+          isUrgent: j.badgeKind === 'urgent',
+          hasCloses: typeof j.closesIn === 'number',
+          closesLabel: j.closesIn === 0 ? 'Closes today' : j.closesIn === 1 ? 'Closes in 1 day' : 'Closes in ' + j.closesIn + ' days',
+          closesColor: j.closesIn <= 7 ? '#B3213C' : j.closesIn <= 14 ? '#8A5A00' : '#475569',
+          closesBg: j.closesIn <= 7 ? '#FDE7EC' : j.closesIn <= 14 ? '#FBF0D8' : '#EEF2F6',
           badgeColor: alumni ? '#0F3D2E' : '#B3213C',
           badgeBg: alumni ? '#E6F0EB' : '#FDE7EC',
           badgeBorder: alumni ? 'rgba(15,61,46,.2)' : 'rgba(179,33,60,.2)',
@@ -9362,7 +9460,7 @@ class Component extends DCLogic {
       exportHover: { background: '#0B3123' },
       rowHover: { background: '#FBFCFC' },
 
-      ...(() => { const v = this.adminScopeVals(); return { ...v, ...this.kpiVals(v.admK) }; })(),
+      ...(() => { const v = this.adminScopeVals(); const k = this.kpiVals(v.admK); return { ...v, ...k, ...this.adDetVals(v, k) }; })(),
       ...this.deptVals(),
       chartsRef: this.chartsRef, hideTip: this.hideTip, onStatusMove: this.onStatusMove,
       tipShow: !!this.state.tip, tipTitle: this.state.tip ? this.state.tip.title : '', tipValue: this.state.tip ? this.state.tip.value : '',

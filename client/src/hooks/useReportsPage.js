@@ -5,6 +5,7 @@ import { CATALOG, collegeById, programById } from '../data/colleges';
 import { nowLabel } from '../lib/format';
 import { useAuth } from '../context/AuthContext';
 import { get, post, qs } from '../lib/api';
+import { RANGE_ERROR, pickYear } from '../lib/batchRange';
 
 const SECS = [{ id: 'kpi', label: 'KPIs' }, { id: 'chart', label: 'Chart' }, { id: 'table', label: 'Table' }, { id: 'findings', label: 'Findings' }];
 const STATUS = { Submitted: ['#E1F3EA', '#0F6B4F'], Ready: ['#E7F0EE', '#0F3D2E'], Archived: ['#EDEFF2', '#5A6572'] };
@@ -33,6 +34,12 @@ export default function useReportsPage(role) {
     if (BATCH_YEARS.includes(+b)) return { from: +b, to: +b };
     return DEFAULT_BATCH_RANGE;
   });
+  const [rangeError, setRangeError] = useState('');
+  const onYear = (key) => (e) => {
+    const next = pickYear(range, key, +e.target.value);
+    setRangeError(next ? '' : RANGE_ERROR);
+    if (next) setRange(next);
+  };
   const [type, setType] = useState(REPORT_TYPES.some((t) => t.id === navState?.repType) ? navState.repType : 'ched');
   const [format, setFormat] = useState('PDF');
   const [secs, setSecs] = useState({ kpi: true, chart: true, table: true, findings: true });
@@ -116,10 +123,11 @@ export default function useReportsPage(role) {
     repOnCourse: (e) => setCourse(e.target.value),
     repFromVal: String(by.from),
     repFromOpts: BATCH_YEARS.map((y) => ({ value: String(y), label: `From ${y}` })),
-    repOnFrom: (e) => setRange((r) => ({ ...r, from: +e.target.value })),
+    repOnFrom: onYear('from'),
     repToVal: String(by.to),
     repToOpts: BATCH_YEARS.map((y) => ({ value: String(y), label: `To ${y}` })),
-    repOnTo: (e) => setRange((r) => ({ ...r, to: +e.target.value })),
+    repOnTo: onYear('to'),
+    rangeError,
     repYearsLabel: by.label,
     repCourseDisabled: !col,
     repCourseOpacity: col ? 1 : 0.55,

@@ -2,10 +2,10 @@
 // The report data itself — KPIs, bars, table rows, findings — comes from GET /reports/:type (SQL views).
 
 const thisYear = new Date().getFullYear();
-/** Graduating batches covered by the reports, newest first (registration accepts 1999 to the current year). */
-export const BATCH_YEARS = (() => { const ys = []; for (let y = thisYear; y >= 1999; y--) ys.push(y); return ys; })();
+/** Graduating batches covered by the reports, oldest first (registration accepts 1999 to the current year). */
+export const BATCH_YEARS = (() => { const ys = []; for (let y = 1999; y <= thisYear; y++) ys.push(y); return ys; })();
 /** Default report window, the same as the API's: the last five graduating batches. */
-export const DEFAULT_BATCH_RANGE = { from: thisYear, to: thisYear - 4 };
+export const DEFAULT_BATCH_RANGE = { from: thisYear - 4, to: thisYear };
 
 /**
  * Resolve a report batch range. `from` and `to` are years in either order (e.g. 2026 → 2022);

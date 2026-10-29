@@ -271,6 +271,15 @@ body:has([data-mobile="1"][data-frame="0"] [data-screen-label="Register as Alumn
 [data-mobile="1"] [data-screen-label="Manage Records"] [data-m=tscroll] > [data-m=trow] > :first-child{flex:none}
 [data-mobile="1"] [data-screen-label="Manage Records"] [data-m=tscroll] > [data-m=trow] > :nth-child(2){flex:1 1 0;order:0;font-size:inherit!important;color:inherit}
 [data-mobile="1"] [data-screen-label="Manage Records"] [data-m=tscroll] > [data-m=trow] > :first-child{align-self:center;flex:none;width:20px!important;height:20px!important;min-width:20px!important}[data-mobile="1"] [data-screen-label="Manage Records"] [data-m=tscroll] > [data-m=trow] > :first-child > *{width:20px!important;height:20px!important;min-width:20px;flex:none;box-sizing:border-box}
+@media (max-height:760px){[data-mobile="0"] [data-screen-label="Admin Dashboard"] [data-m=ad-bottom]{display:none!important}}
+@media (max-height:620px){[data-mobile="0"] [data-screen-label="Admin Dashboard"] [data-m2=ad-kpi] > div > div:nth-child(4){display:none!important}[data-mobile="0"] [data-screen-label="Admin Dashboard"] [data-m=ws-head] > div:first-child > div:nth-child(2){display:none}}
+[data-mobile="1"] [data-screen-label="Admin Dashboard"]{height:auto!important;overflow:visible!important}
+[data-mobile="1"] [data-screen-label="Admin Dashboard"] [data-m=ws]{overflow:visible!important}
+[data-mobile="1"] [data-screen-label="Admin Dashboard"] [data-m=ws-head],[data-mobile="1"] [data-screen-label="Admin Dashboard"] [data-m=ws-head] > div:last-child{flex-wrap:wrap!important}
+[data-mobile="1"] [data-screen-label="Admin Dashboard"] [data-m=ws-head] > div:last-child{width:100%;justify-content:flex-start!important}
+[data-mobile="1"] [data-screen-label="Admin Dashboard"] [data-m=ws-head] > div:last-child > select{flex:1 1 140px!important;max-width:none!important}
+[data-mobile="1"] [data-screen-label="Admin Dashboard"] [data-m=ad-charts],[data-mobile="1"] [data-screen-label="Admin Dashboard"] [data-m=ad-bottom]{grid-template-columns:minmax(0,1fr)!important}
+[data-mobile="1"] [data-screen-label="Admin Dashboard"] [data-m=ad-charts] > div{min-height:240px}
 [data-mobile="1"] [data-m=ev-admin-layout]{flex-direction:column!important;flex-wrap:nowrap!important}
 [data-mobile="1"] [data-m=ev-admin-main],[data-mobile="1"] [data-m=ev-admin-side]{width:100%!important;max-width:none!important;flex:none!important}
 [data-mobile="1"] [data-screen-label="Alumni Dashboard"] [data-m=topbar] + div > div:first-child > div:first-child{flex-direction:column!important;gap:12px!important;text-align:center;width:100%}[data-mobile="1"] [data-screen-label="Alumni Dashboard"] [data-m=topbar] + div > div:first-child > div:first-child > div:nth-child(2){width:100%}
@@ -298,7 +307,6 @@ body:has([data-mobile="1"][data-frame="0"] [data-screen-label="Register as Alumn
 [data-mobile="1"] [data-screen-label="Alumni Dashboard"] [data-m=topbar] + div > div{border-radius:22px!important}
 [data-mobile="1"] [data-screen-label="Alumni Dashboard"] [data-m=topbar] + div [data-m=kpi-grid]{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important}
 [data-mobile="1"] [data-screen-label="Alumni Dashboard"] [data-m=topbar] + div [data-m=kpi-grid] > div{border:0!important;border-radius:18px!important;padding:14px!important}
-[data-mobile="1"] [data-screen-label="Alumni Dashboard"] [data-m=topbar] + div [data-m=kpi-grid] > div > div:first-child > div:last-child{display:none!important}
 [data-mobile="1"] [data-screen-label="Alumni Dashboard"] [data-m=topbar] + div [data-m=kpi-grid] > div > div:first-child{margin-bottom:6px!important}
 [data-mobile="1"] [data-screen-label="Alumni Dashboard"] [data-m=topbar] + div [data-m=kpi-grid] > div > div:first-child > div:first-child{font-size:12px!important;color:#64748B!important}
 [data-mobile="1"] [data-screen-label="Alumni Dashboard"] [data-m=topbar] + div [data-m=kpi-val]{font-size:22px!important}
