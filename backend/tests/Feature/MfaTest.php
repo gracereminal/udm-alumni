@@ -46,7 +46,7 @@ it('signs in with the right code, once', function () {
     $token = (string) $r->getCookie('udm_sid', false)?->getValue();
     withSession($token)->getJson('/api/v1/auth/session')->assertOk();
     expect($r->getCookie('udm_tdev', false))->toBeNull()
-        ->and(DB::table('audit_log')->where('action', 'login')->latest('created_at')->value('meta'))->toContain('"mfa"');
+        ->and(DB::table('audit_log')->where('action', 'login')->latest('created_at')->value('diff'))->toContain('"mfa"');
 
     $this->postJson('/api/v1/auth/mfa/verify', ['challenge' => $challenge, 'code' => $code])
         ->assertStatus(400)->assertJsonPath('code', 'mfa_expired');

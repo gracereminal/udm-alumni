@@ -144,7 +144,7 @@ class AuthController extends Controller
         $keep = $guard instanceof SessionGuard ? $guard->sessionId() : null;
 
         DB::transaction(function () use ($user, $request, $keep) {
-            DB::update('UPDATE user_account SET password_hash = ?, must_change_password = false, temp_password_expires_at = NULL WHERE user_id = ?',[Hash::make((string) $request->input('password')), $user->user_id]);
+            DB::update('UPDATE user_account SET password_hash = ?, must_change_password = false, temp_password_expires_at = NULL WHERE user_id = ?', [Hash::make((string) $request->input('password')), $user->user_id]);
             $this->sessions->revokeAll($user->user_id, $keep);
             $this->mfa->forgetDevices($user->user_id);
             $this->audit->log('password_changed', 'user', $user->user_id);

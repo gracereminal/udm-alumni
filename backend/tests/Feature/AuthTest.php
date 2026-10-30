@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\V1\AuthController;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 
@@ -69,9 +70,9 @@ it('signs a self-registered alumnus in without any admin approval', function () 
 
 it('keeps pending out of accounts and records', function () {
     expect(fn () => DB::table('user_account')->where('email', 'paolo.mendoza@gmail.com')->update(['account_status' => 'pending']))
-        ->toThrow(Illuminate\Database\QueryException::class);
+        ->toThrow(QueryException::class);
     expect(fn () => DB::table('alumnus')->where('membership_id', 'AM-2026-00001')->update(['verification_status' => 'pending']))
-        ->toThrow(Illuminate\Database\QueryException::class);
+        ->toThrow(QueryException::class);
 });
 
 it('revokes the session on logout, so the old cookie gets 401 at once', function () {
