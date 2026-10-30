@@ -706,7 +706,8 @@ export default function AlumniDashboardView(v) {
                     ) : null}
                     {(dashJobs || []).map((job, _i) => (
                       <React.Fragment key={_i}>
-                        <div
+                        <div role="button" tabIndex={0} aria-label={`View ${job.title} at ${job.company}`} onKeyDown={onActivate(job.onOpen)}
+                          onClick={job.onOpen}
                           style={{
                             background: '#fff',
                             border: '1px solid #E3ECE7',
@@ -717,7 +718,10 @@ export default function AlumniDashboardView(v) {
                             alignItems: 'center',
                             justifyContent: 'space-between',
                             gap: '12px',
+                            cursor: 'pointer',
+                            transition: 'border-color .15s',
                           }}
+                          {...hv({ borderColor: '#9FC3B2' })}
                         >
                           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: '0' }}>
                             <div

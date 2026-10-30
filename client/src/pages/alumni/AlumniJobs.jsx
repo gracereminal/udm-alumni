@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import JobsView from '../../views/JobsView';
 import JobDetailsModal from '../../components/alumni/JobDetailsModal';
 import OfflineContactModal from '../../components/OfflineContactModal';
@@ -44,6 +45,7 @@ const postedRank = (j) => {
 
 /** Alumni Job Board: search & filter, details, save, apply (with status) and "post a job" for review. */
 export default function AlumniJobs() {
+  const location = useLocation();
   const jobsCtx = useJobs();
   const { alumniName, a } = useProfile();
   const { toast } = useToast();
@@ -59,7 +61,7 @@ export default function AlumniJobs() {
   const [photo, setPhoto] = useState(null);
   const [photoName, setPhotoName] = useState(null);
   const [formError, setFormError] = useState('');
-  const [detail, setDetail] = useState(null);
+  const [detail, setDetail] = useState(() => location.state?.jobKey || null); // the dashboard's job cards open a posting's details
   const [statTip, setStatTip] = useState(null);
   const photoRef = useRef(null);
 

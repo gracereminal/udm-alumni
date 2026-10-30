@@ -5,6 +5,7 @@ import { useProfile } from '../../context/ProfileContext';
 import { useJobs } from '../../context/JobsContext';
 import { useEvents } from '../../context/EventsContext';
 import { isAnswered } from '../../data/formDefs';
+import { jobKey } from '../../data/jobs';
 import { initials, RECORD_STATUS } from '../../lib/format';
 
 /* SVG paths for the KPI card icons. */
@@ -58,7 +59,10 @@ export default function AlumniDashboard() {
   // "Recommended jobs for you" (matched to the course and skills by the API); the latest postings when nothing matches.
   const recs = (recommended || []).filter((j) => j.status === 'active');
   const cardJobs = (recs.length ? recs : activeJobs).slice(0, 3)
-    .map((j) => ({ ...j, why: j.match?.terms?.length ? `Matches: ${j.match.terms.join(', ')}` : '' }));
+    .map((j) => ({
+      ...j, why: j.match?.terms?.length ? `Matches: ${j.match.terms.join(', ')}` : '',
+      onOpen: () => navigate('/alumni/jobs', { state: { jobKey: jobKey(j) } }),
+    }));
 
   const course = a.course || a.course_other;
   const status = RECORD_STATUS[record?.status] || null;
