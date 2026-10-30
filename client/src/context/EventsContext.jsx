@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { useAuth } from './AuthContext';
 import { dataUrlToBlob, del, get, list, patch, post, upload } from '../lib/api';
+import useLiveRefresh from '../hooks/useLiveRefresh';
 import { EVENT_KIND_STYLE, EV_MONTHS_SHORT, EV_STATUS_META, NOTICE_KINDS, evCount, evFmtTime, evPad, evStatusKey, photoCss } from '../data/events';
 
 const EventsContext = createContext(null);
@@ -39,6 +40,9 @@ export function EventsProvider({ children }) {
     setEvents(evs.map(toEvent)); setNotices(ns.map(toNotice));
   }, [user, role]);
   useEffect(() => { reload().catch(() => {}); }, [reload]);
+  // Keep events, RSVP counts and announcements in step with changes made elsewhere (an admin publishing or cancelling,
+  // other alumni registering): refetch when the tab comes back into view and every minute while it is.
+  useLiveRefresh(() => reload().catch(() => {}), { enabled: !!user && (role === 'admin' || role === 'alumni') });
 
   const put1 = (e) => setEvents((list) => (list.some((x) => x.id === e.id) ? list.map((x) => (x.id === e.id ? toEvent(e) : x)) : [toEvent(e), ...list]));
   const attachPhoto = async (id, photo) => (photo && String(photo).startsWith('data:') ? upload(`/events/${id}/photo`, 'photo', dataUrlToBlob(photo), 'cover.jpg') : null);

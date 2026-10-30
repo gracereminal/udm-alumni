@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AdminDashboardView from '../../views/AdminDashboardView';
 import useChartTip from '../../hooks/useChartTip';
+import useLiveRefresh from '../../hooks/useLiveRefresh';
 import {
   ADMIN_YEARS, adminRequests, adminScope, buildAdminDash, buildKpiCards, detailVals, emptyAdminData,
 } from '../../lib/adminDash';
@@ -76,14 +77,22 @@ export default function AdminDashboard() {
     return () => { live = false; };
   }, [sigKey, retry]);
 
-  // College accounts (GET /users?role=dept) for "Active colleges"; loaded once, apart from the scoped statistics,
-  // so the rest of the dashboard still loads if this list fails.
+  // College accounts (GET /users?role=dept) for "Active colleges"; loaded apart from the scoped statistics, so the
+  // rest of the dashboard still loads if this list fails.
   const [deptUsers, setDeptUsers] = useState([]);
-  useEffect(() => {
-    let live = true;
-    get('/users?role=dept').then((res) => { if (live) setDeptUsers(res.data || []); }).catch(() => {});
-    return () => { live = false; };
-  }, []);
+  const loadDeptUsers = () => get('/users?role=dept').then((res) => setDeptUsers(res.data || [])).catch(() => {});
+  useEffect(() => { loadDeptUsers(); }, []);
+
+  // Keep the numbers in step with registrations, approvals and survey answers made while the page is open. A
+  // background refresh fails silently and is dropped if the filters changed while it was in flight.
+  const shown = useRef({});
+  shown.current = { reqKey, sigKey };
+  useLiveRefresh(() => {
+    const { reqKey: k, sigKey: sk } = shown.current;
+    fetchAll(JSON.parse(k)).then((res) => { if (shown.current.reqKey === k) { setData(res); setLoaded({ key: k, err: false }); } }).catch(() => {});
+    fetchAll(JSON.parse(sk)).then((res) => { if (shown.current.sigKey === sk) setSig({ key: sk, res, err: false }); }).catch(() => {});
+    loadDeptUsers();
+  });
 
   const d = buildAdminDash(sel, data, tipH, colMetric);
 

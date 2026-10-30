@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import CollegeDashboardView from '../../views/CollegeDashboardView';
 import OfflineContactModal from '../../components/OfflineContactModal';
 import useChartTip from '../../hooks/useChartTip';
+import useLiveRefresh from '../../hooks/useLiveRefresh';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { OUTREACH_METHOD, buildCollegeDash, contactedLabel, deptRange, deptRequests, emptyDeptData } from '../../lib/collegeDash';
@@ -15,7 +16,6 @@ const PAGES = {
   outreach: { title: 'Outreach', kpis: false, insights: false, outreach: true },
 };
 
-const REFRESH_MS = 60000;
 const SUBJECT ='UDM Alumni Tracer — we’d love to hear from you';
 /** Default outreach message; the dean can edit it before sending. */
 const outreachMessage = (first, status, college) => (status === 'Seeking work'
@@ -58,13 +58,7 @@ export default function CollegeDashboard({ section = 'dashboard' }) {
   }, [reqKey, reloadKey, toast]);
   // Keep the numbers in step with survey answers submitted while the page is open: refetch when the tab comes back
   // into view and every minute while it is (background refreshes fail silently).
-  useEffect(() => {
-    const refresh = () => { if (document.visibilityState === 'visible') { quiet.current = true; setReloadKey((k) => k + 1); } };
-    const timer = setInterval(refresh, REFRESH_MS);
-    window.addEventListener('focus', refresh);
-    document.addEventListener('visibilitychange', refresh);
-    return () => { clearInterval(timer); window.removeEventListener('focus', refresh); document.removeEventListener('visibilitychange', refresh); };
-  }, []);
+  useLiveRefresh(() => { quiet.current = true; setReloadKey((k) => k + 1); });
 
   const close = () => setTarget(null);
   const done = (msg) => { close(); toast(msg); setReloadKey((k) => k + 1); };

@@ -1,9 +1,9 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { useAuth } from './AuthContext';
 import { dataUrlToBlob, del, get, list, patch, post, upload } from '../lib/api';
+import useLiveRefresh from '../hooks/useLiveRefresh';
 
 const JobsContext = createContext(null);
-const REFRESH_MS = 60_000;
 
 const fmtDate = (iso) => (iso ? new Date(`${iso}T00:00:00+08:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'Asia/Manila' }) : '');
 function ago(iso, verb) {
@@ -73,14 +73,7 @@ export function JobsProvider({ children }) {
   useEffect(() => { reload().catch(() => {}); }, [reload]);
   // Keep the board, the dashboard's Job Board card and the summary tiles in step with postings changed elsewhere
   // (an admin posting, deactivating or approving): refetch when the tab comes back into view and every minute while it is.
-  useEffect(() => {
-    if (!user) return undefined;
-    const refresh = () => { if (document.visibilityState === 'visible') reload().catch(() => {}); };
-    const timer = setInterval(refresh, REFRESH_MS);
-    window.addEventListener('focus', refresh);
-    document.addEventListener('visibilitychange', refresh);
-    return () => { clearInterval(timer); window.removeEventListener('focus', refresh); document.removeEventListener('visibilitychange', refresh); };
-  }, [user, reload]);
+  useLiveRefresh(() => reload().catch(() => {}), { enabled: !!user });
 
   const replace = (j) => setJobs((all) => all.map((x) => (x.id === j.id ? toJob(j) : x)));
   const attachPhoto = async (id, photo) => (photo && String(photo).startsWith('data:') ? upload(`/jobs/${id}/photo`, 'photo', dataUrlToBlob(photo), 'company.jpg') : null);
