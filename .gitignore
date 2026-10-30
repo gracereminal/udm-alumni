@@ -15,3 +15,7 @@ coverage
 backend/account.md
 # Dummy data passwords (backend/dummy_data.sql and backend/wipe_data.sql have none and are committed).
 backend/dummy_data_pass.sql
+# Claude Code files (local only)
+.claude/
+CLAUDE.md
+**/CLAUDE.md
