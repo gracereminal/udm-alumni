@@ -24,7 +24,7 @@ export default function ContactModalView(v) {
           justifyContent: 'center',
           padding: '16px',
           boxSizing: 'border-box',
-          fontFamily: 'Inter,system-ui,sans-serif',
+          fontFamily: 'var(--udm-sans)',
         }}
       >
         <div

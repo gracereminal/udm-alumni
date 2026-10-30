@@ -23,7 +23,7 @@ function PhoneStatus() {
 /** Auto / Phone frame / Desktop toggle, styled like the design file's preview bar. Shown in dev, or once a preview mode is picked with `?preview=` (until `?preview=off`); hidden on an actual phone. */
 function PreviewSwitcher({ mode, setMode }) {
   return (
-    <div role="radiogroup" aria-label="Layout preview" style={{ position: 'fixed', right: 16, bottom: 16, zIndex: 500, display: 'flex', alignItems: 'center', gap: 4, padding: 5, borderRadius: 999, background: '#00332B', boxShadow: '0 10px 28px -8px rgba(0,25,18,.5)', fontFamily: 'Inter,system-ui,sans-serif' }}>
+    <div role="radiogroup" aria-label="Layout preview" style={{ position: 'fixed', right: 16, bottom: 16, zIndex: 500, display: 'flex', alignItems: 'center', gap: 4, padding: 5, borderRadius: 999, background: '#00332B', boxShadow: '0 10px 28px -8px rgba(0,25,18,.5)', fontFamily: 'var(--udm-sans)' }}>
       <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 1.2, textTransform: 'uppercase', color: 'rgba(234,243,241,.45)', margin: '0 6px 0 10px' }}>Preview</div>
       {PREVIEW_MODES.map((m) => {
         const on = m.id === mode;
@@ -45,7 +45,7 @@ export default function AppShell({ children }) {
   const { mode, setMode, mobile, frame, narrow } = useMobilePreview();
   const showSwitcher = !narrow && (import.meta.env.DEV || previewEnabled);
   return (
-    <div data-mobile={mobile ? '1' : '0'} data-frame={frame ? '1' : '0'} style={{ fontFamily: 'Inter,system-ui,sans-serif', background: '#F3F6F4', minHeight: '100vh' }}>
+    <div data-mobile={mobile ? '1' : '0'} data-frame={frame ? '1' : '0'} style={{ fontFamily: 'var(--udm-sans)', background: '#F3F6F4', minHeight: '100vh' }}>
       {showSwitcher ? <PreviewSwitcher mode={mode} setMode={setMode} /> : null}
       <div data-m="phone" style={{ display: 'contents' }}>
         <PhoneStatus />

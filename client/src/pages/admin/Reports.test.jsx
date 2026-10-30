@@ -51,9 +51,9 @@ describe('Reports page', () => {
     await screen.findByText('BSCS is below target.');
     // Only the template card names it until it is opened in the preview.
     expect(screen.getAllByText('Batch Coverage Audit')).toHaveLength(1);
-    await user.click(screen.getByRole('button', { name: /Batch Coverage Audit/ }));
+    await user.click(screen.getByRole('radio', { name: /Batch Coverage Audit/ }));
     await waitFor(() => expect(screen.getAllByText('Batch Coverage Audit').length).toBeGreaterThan(1));
-    expect(screen.getAllByText('PDF · ~5 pages').length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/PDF · ~5 pages/).length).toBeGreaterThan(0);
   });
 
   it('exports a CSV and logs the export', async () => {
@@ -63,7 +63,7 @@ describe('Reports page', () => {
     const api = setup('admin');
     renderAt('/admin/reports');
     await screen.findByText('BSCS is below target.');
-    await user.click(screen.getByRole('button', { name: 'CSV' }));
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Format' }), 'CSV');
     await user.click(screen.getByRole('button', { name: /Export CSV/ }));
     await waitFor(() => expect(api.find('POST', '/reports/exports')).toHaveLength(1));
     expect(api.last('POST', '/reports/exports').body).toEqual({ type: 'ched', format: 'CSV', batch_from: Y - 4, batch_to: Y });
@@ -75,9 +75,10 @@ describe('Reports page', () => {
   it('college users only get their own college to choose', async () => {
     const api = setup('dept');
     renderAt('/college/reports');
-    const college = await screen.findByRole('combobox', { name: 'Filter by college' });
     await screen.findByText('BSCS is below target.');
-    expect([...college.options].map((o) => o.textContent)).toEqual(['College of Computer Studies']);
+    // The college is shown read-only instead of a select.
+    expect(screen.queryByRole('combobox', { name: 'Filter by college' })).toBeNull();
+    expect(screen.getByText('Scoped to College of Computer Studies')).toBeInTheDocument();
     expect(api.calls.some((c) => c.query.college_id)).toBe(false);
   });
 });

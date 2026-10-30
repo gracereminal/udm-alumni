@@ -19,7 +19,7 @@ export default function ReportToastView(v) {
           borderRadius: '12px',
           padding: '12px 14px 12px 16px',
           boxShadow: '0 14px 36px -10px rgba(0,0,0,.4)',
-          fontFamily: 'Inter,system-ui,sans-serif',
+          fontFamily: 'var(--udm-sans)',
           fontSize: '13px',
           maxWidth: 'calc(100vw - 44px)',
         }}

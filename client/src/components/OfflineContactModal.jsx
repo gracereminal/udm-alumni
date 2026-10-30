@@ -32,7 +32,7 @@ export default function OfflineContactModal({
     <div
       role="presentation"
       onClick={onBackdrop(onClose)}
-      style={{ position: 'fixed', inset: 0, zIndex: 310, background: 'rgba(11,18,32,.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, boxSizing: 'border-box', fontFamily: 'Inter,system-ui,sans-serif' }}
+      style={{ position: 'fixed', inset: 0, zIndex: 310, background: 'rgba(11,18,32,.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, boxSizing: 'border-box', fontFamily: 'var(--udm-sans)' }}
     >
       <div
         role="dialog"

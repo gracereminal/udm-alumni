@@ -246,7 +246,7 @@ export default function RecordsView(v) {
                 <>
                   <div
                     style={{
-                      fontFamily: 'Inter,sans-serif',
+                      fontFamily: 'var(--udm-sans)',
                       fontWeight: '700',
                       fontSize: '26px',
                       lineHeight: '1.15',
@@ -276,7 +276,7 @@ export default function RecordsView(v) {
               display: 'flex',
               flexDirection: 'column',
               gap: '14px',
-              fontFamily: 'Inter,system-ui,sans-serif',
+              fontFamily: 'var(--udm-sans)',
               background: 'rgba(255,255,255,.55)',
               border: '1px solid #E7E9ED',
               borderRadius: '20px',
@@ -301,7 +301,7 @@ export default function RecordsView(v) {
                   <>
                     <div
                       style={{
-                        fontFamily: 'Inter,sans-serif',
+                        fontFamily: 'var(--udm-sans)',
                         fontWeight: '700',
                         fontSize: '30px',
                         lineHeight: '1.1',
@@ -496,7 +496,7 @@ export default function RecordsView(v) {
                         <div
                           data-m="kpi-val"
                           style={{
-                            fontFamily: 'Inter,sans-serif',
+                            fontFamily: 'var(--udm-sans)',
                             fontWeight: '700',
                             fontSize: '32px',
                             lineHeight: '1.05',
@@ -1400,7 +1400,7 @@ export default function RecordsView(v) {
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', marginBottom: '18px' }}>
-                    <div style={{ fontFamily: 'Inter,sans-serif', fontWeight: '600', fontSize: '16px', color: '#0B1220' }}>Audit trail</div>
+                    <div style={{ fontFamily: 'var(--udm-sans)', fontWeight: '600', fontSize: '16px', color: '#0B1220' }}>Audit trail</div>
                     <div style={{ fontSize: '12.5px', color: '#94A3B8' }}>
                       Alumni Office actions and automated system tasks · reversible for 30 days
                     </div>
@@ -1492,7 +1492,7 @@ export default function RecordsView(v) {
                       boxShadow: '-20px 0 60px rgba(11,18,32,.24)',
                       display: 'flex',
                       flexDirection: 'column',
-                      fontFamily: 'Inter,system-ui,sans-serif',
+                      fontFamily: 'var(--udm-sans)',
                     }}
                   >
                     <div
@@ -1524,7 +1524,7 @@ export default function RecordsView(v) {
                           {recDrawerInitials}
                         </div>
                         <div style={{ minWidth: '0' }}>
-                          <div style={{ fontFamily: 'Inter,sans-serif', fontWeight: '600', fontSize: '17px', color: '#0B1220' }}>{recDrawerName}</div>
+                          <div style={{ fontFamily: 'var(--udm-sans)', fontWeight: '600', fontSize: '17px', color: '#0B1220' }}>{recDrawerName}</div>
                           <div style={{ fontSize: '12px', color: '#94A3B8' }}>{recDrawerSid}</div>
                         </div>
                       </div>
@@ -1778,7 +1778,7 @@ export default function RecordsView(v) {
                     justifyContent: 'center',
                     padding: '16px',
                     boxSizing: 'border-box',
-                    fontFamily: 'Inter,system-ui,sans-serif',
+                    fontFamily: 'var(--udm-sans)',
                   }}
                 >
                   <div
@@ -2149,7 +2149,7 @@ export default function RecordsView(v) {
                     justifyContent: 'center',
                     padding: '16px',
                     boxSizing: 'border-box',
-                    fontFamily: 'Inter,system-ui,sans-serif',
+                    fontFamily: 'var(--udm-sans)',
                   }}
                 >
                   <div
@@ -2298,7 +2298,7 @@ export default function RecordsView(v) {
                     justifyContent: 'center',
                     padding: '16px',
                     boxSizing: 'border-box',
-                    fontFamily: 'Inter,system-ui,sans-serif',
+                    fontFamily: 'var(--udm-sans)',
                   }}
                 >
                   <div

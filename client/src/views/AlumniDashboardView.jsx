@@ -82,7 +82,7 @@ export default function AlumniDashboardView(v) {
             <div style={{ minWidth: '0' }}>
               <div
                 style={{
-                  fontFamily: 'Inter,sans-serif',
+                  fontFamily: 'var(--udm-sans)',
                   fontWeight: '700',
                   fontSize: '26px',
                   lineHeight: '1.15',
@@ -102,7 +102,7 @@ export default function AlumniDashboardView(v) {
               <UserChip />
             </div>
           </div>
-          <div style={{ padding: '14px 12px 28px', width: '100%', boxSizing: 'border-box', fontFamily: 'Inter,system-ui,sans-serif' }}>
+          <div style={{ padding: '14px 12px 28px', width: '100%', boxSizing: 'border-box', fontFamily: 'var(--udm-sans)' }}>
             <div
               style={{
                 background: '#fff',
@@ -148,7 +148,7 @@ export default function AlumniDashboardView(v) {
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          fontFamily: 'Inter,sans-serif',
+                          fontFamily: 'var(--udm-sans)',
                           fontWeight: '700',
                           fontSize: '19px',
                           color: '#94A3B8',
@@ -192,7 +192,7 @@ export default function AlumniDashboardView(v) {
                     </div>
                     ) : null}
                   </div>
-                  <div style={{ fontFamily: 'Inter,sans-serif', fontWeight: '700', fontSize: '30px', letterSpacing: '-.7px', color: '#0B1220' }}>
+                  <div style={{ fontFamily: 'var(--udm-sans)', fontWeight: '700', fontSize: '30px', letterSpacing: '-.7px', color: '#0B1220' }}>
                     Welcome, {alumniName}
                   </div>
                   <div style={{ fontSize: '13px', color: '#64748B', marginTop: '5px' }}>{dashSubline}</div>
@@ -271,7 +271,7 @@ export default function AlumniDashboardView(v) {
                       </div>
                       <div style={{ fontSize: '11.5px', fontWeight: '700', color: '#8A6D1F' }}>{dashSurveyPct} complete</div>
                     </div>
-                    <div style={{ fontFamily: 'Inter,sans-serif', fontWeight: '700', fontSize: '19px', color: '#3D2F08', marginBottom: '6px' }}>
+                    <div style={{ fontFamily: 'var(--udm-sans)', fontWeight: '700', fontSize: '19px', color: '#3D2F08', marginBottom: '6px' }}>
                       Your alumni profile is unfinished
                     </div>
                     <div style={{ fontSize: '13px', color: '#5A4712', lineHeight: '1.55', maxWidth: '560px' }}>{dashSurveyRemainingLabel}</div>
@@ -359,7 +359,7 @@ export default function AlumniDashboardView(v) {
                     <div
                       data-m="kpi-val"
                       style={{
-                        fontFamily: 'Inter,sans-serif',
+                        fontFamily: 'var(--udm-sans)',
                         fontWeight: '700',
                         fontSize: '22px',
                         lineHeight: '1.2',
@@ -415,7 +415,7 @@ export default function AlumniDashboardView(v) {
                         <path d="M3 5h18v14H3z M3 9h18 M8 3v4 M16 3v4" />
                       </svg>
                     </span>
-                    <div style={{ fontFamily: 'Inter,sans-serif', fontWeight: '700', fontSize: '16px', letterSpacing: '-.2px', color: '#0B1220' }}>
+                    <div style={{ fontFamily: 'var(--udm-sans)', fontWeight: '700', fontSize: '16px', letterSpacing: '-.2px', color: '#0B1220' }}>
                       Announcements & Events
                     </div>
                   </div>
@@ -522,7 +522,7 @@ export default function AlumniDashboardView(v) {
                             >
                               {an.month}
                             </div>
-                            <div style={{ fontFamily: 'Inter,sans-serif', fontSize: '21px', fontWeight: '700', color: '#fff', lineHeight: '1' }}>
+                            <div style={{ fontFamily: 'var(--udm-sans)', fontSize: '21px', fontWeight: '700', color: '#fff', lineHeight: '1' }}>
                               {an.day}
                             </div>
                           </div>
@@ -693,7 +693,7 @@ export default function AlumniDashboardView(v) {
                           <path d="M3 8h18v11H3z M8 8V6a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2 M3 13h18" />
                         </svg>
                       </span>
-                      <div style={{ fontFamily: 'Inter,sans-serif', fontWeight: '700', fontSize: '16px', letterSpacing: '-.2px', color: '#0B1220' }}>Job Board</div>
+                      <div style={{ fontFamily: 'var(--udm-sans)', fontWeight: '700', fontSize: '16px', letterSpacing: '-.2px', color: '#0B1220' }}>Job Board</div>
                     </div>
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '14px' }}>

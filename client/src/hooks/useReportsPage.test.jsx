@@ -115,20 +115,20 @@ describe('Reports', () => {
     await waitFor(() => expect(vals().repRecords).toBe('120'));
     act(() => vals().repTemplates.find((t) => t.id === 'coverage').onClick());
     expect(vals().repTitle).toBe('Batch Coverage Audit');
-    expect(vals().repOutputMeta).toBe('PDF · ~5 pages');
+    expect(vals().repOutputMeta).toBe('PDF · ~5 pages · 4 of 4 sections');
 
-    act(() => vals().repSectionRows.find((s) => s.label === 'Table').onClick());
+    act(() => vals().repSectionRows.find((s) => s.id === 'table').onClick());
     expect(vals().repShowTable).toBe(false);
-    expect(vals().repOutputMeta).toBe('PDF · ~3 pages');
+    expect(vals().repOutputMeta).toBe('PDF · ~3 pages · 3 of 4 sections');
 
     act(() => vals().repFormats.find((f) => f.label === 'Excel').onClick());
-    expect(vals().repOutputMeta).toBe('Excel · 3 sheets');
+    expect(vals().repOutputMeta).toBe('Excel · 3 sheets · 3 of 4 sections');
   });
 
   it('cannot export with every section turned off', async () => {
     const { api, vals } = setup('admin');
     await waitFor(() => expect(vals().repRecords).toBe('120'));
-    ['KPIs', 'Chart', 'Table', 'Findings'].forEach((label) => act(() => vals().repSectionRows.find((s) => s.label === label).onClick()));
+    ['kpi', 'chart', 'table', 'findings'].forEach((id) => act(() => vals().repSectionRows.find((s) => s.id === id).onClick()));
     expect(vals().repNoSections).toBe(true);
     await act(async () => { vals().repExportNow(); });
     expect(api.find('POST', '/reports/exports')).toHaveLength(0);
@@ -142,7 +142,7 @@ describe('Reports', () => {
     act(() => vals().repOnCollege({ target: { value: '1' } }));
     await waitFor(() => expect(withScope(api, { college_id: '1' })).toHaveLength(REPORT_TYPES.length));
     act(() => vals().repFormats.find((f) => f.label === 'CSV').onClick());
-    act(() => vals().repSectionRows.find((s) => s.label === 'Findings').onClick());
+    act(() => vals().repSectionRows.find((s) => s.id === 'findings').onClick());
 
     await act(async () => { vals().repExportNow(); });
     await waitFor(() => expect(api.find('POST', '/reports/exports')).toHaveLength(1));

@@ -2,7 +2,7 @@ import { hv, fv } from '../lib/stateStyle';
 import { onActivate } from '../lib/a11y';
 
 const FOCUS = { borderColor: '#0B5A40', boxShadow: '0 0 0 3px rgba(11,90,64,.14)' };
-const titleStyle = { fontFamily: "'Plus Jakarta Sans',sans-serif", fontWeight: '800', fontSize: '28px', letterSpacing: '-.8px', color: '#0A1F18', lineHeight: '1.15' };
+const titleStyle = { fontFamily: 'var(--udm-display)', fontWeight: '800', fontSize: '28px', letterSpacing: '-.8px', color: '#0A1F18', lineHeight: '1.15' };
 const italic = { fontFamily: "'Playfair Display',serif", fontStyle: 'italic', fontWeight: '600', color: '#0B5A40' };
 const descStyle = { fontSize: '13.5px', lineHeight: '1.55', color: 'rgba(0,0,0,.55)', textWrap: 'pretty' };
 const labelStyle = { fontSize: '12.5px', fontWeight: '700', color: '#0A0A0A', marginBottom: '6px' };
@@ -54,7 +54,7 @@ export default function ForgotPasswordView(v) {
           flexDirection: 'column',
           color: '#fff',
           boxSizing: 'border-box',
-          fontFamily: "'Plus Jakarta Sans',Inter,sans-serif",
+          fontFamily: 'var(--udm-display)',
         }}
       >
         <div data-m="si-brand" style={{ flex: 'none', display: 'flex', alignItems: 'center', gap: 'clamp(14px,1.4vw,24px)' }}>

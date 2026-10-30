@@ -33,10 +33,10 @@ export default function JobComposerDialog({
       style={{ position: 'fixed', inset: '0', zIndex: '80', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px', boxSizing: 'border-box', background: 'rgba(11,18,32,.45)' }}
     >
       <div ref={box} role="dialog" aria-modal="true" aria-label={heading}
-        style={{ position: 'relative', width: '100%', maxWidth: '640px', maxHeight: 'calc(100vh - 48px)', overflowY: 'auto', background: '#fff', borderRadius: '20px', boxShadow: '0 24px 60px rgba(16,24,40,.25)', padding: '24px 26px', boxSizing: 'border-box', fontFamily: 'Inter,system-ui,sans-serif' }}
+        style={{ position: 'relative', width: '100%', maxWidth: '640px', maxHeight: 'calc(100vh - 48px)', overflowY: 'auto', background: '#fff', borderRadius: '20px', boxShadow: '0 24px 60px rgba(16,24,40,.25)', padding: '24px 26px', boxSizing: 'border-box', fontFamily: 'var(--udm-sans)' }}
       >
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', marginBottom: intro ? '4px' : '14px' }}>
-          <div style={{ fontFamily: 'Inter,sans-serif', fontWeight: '600', fontSize: '16px', color: '#0B1220' }}>{heading}</div>
+          <div style={{ fontFamily: 'var(--udm-sans)', fontWeight: '600', fontSize: '16px', color: '#0B1220' }}>{heading}</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             {badge ? (
               <div style={{ fontSize: '10px', fontWeight: '700', letterSpacing: '.5px', color: badgeColor, background: badgeBg, padding: '4px 10px', borderRadius: '8px', whiteSpace: 'nowrap' }}>{badge}</div>

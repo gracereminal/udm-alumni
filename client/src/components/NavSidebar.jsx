@@ -107,7 +107,7 @@ export default function NavSidebar({ style }) {
       style={{
         width: expanded ? 240 : 84, minWidth: expanded ? 240 : 84, boxSizing: 'border-box', margin: '12px 0 12px 12px', padding: '18px 12px 14px', borderRadius: 16,
         display: 'flex', flexDirection: 'column', position: 'sticky', top: 12, height: 'calc(100dvh - 24px)', alignSelf: 'flex-start', overflowY: 'auto', overflowX: 'hidden',
-        scrollbarWidth: 'none', color: '#EAF3F1', background: '#00332B', boxShadow: '0 12px 32px -12px rgba(0,51,43,.45)', fontFamily: 'Inter,system-ui,sans-serif',
+        scrollbarWidth: 'none', color: '#EAF3F1', background: '#00332B', boxShadow: '0 12px 32px -12px rgba(0,51,43,.45)', fontFamily: 'var(--udm-sans)',
         transition: 'width .2s,min-width .2s', ...style,
       }}
     >
@@ -126,7 +126,7 @@ export default function NavSidebar({ style }) {
         </button>
       </div>
       {/* phone layout: bottom tab bar (first four items + More) */}
-      <nav data-m="nav-tabs" aria-label="Main navigation" style={{ display: 'none', pointerEvents: 'auto', background: '#fff', borderTop: '1px solid #E3E8E5', padding: '6px 6px 8px', boxSizing: 'border-box', width: '100%', alignItems: 'stretch', justifyContent: 'space-around', boxShadow: '0 -8px 24px -12px rgba(0,30,20,.2)', fontFamily: 'Inter,system-ui,sans-serif' }}>
+      <nav data-m="nav-tabs" aria-label="Main navigation" style={{ display: 'none', pointerEvents: 'auto', background: '#fff', borderTop: '1px solid #E3E8E5', padding: '6px 6px 8px', boxSizing: 'border-box', width: '100%', alignItems: 'stretch', justifyContent: 'space-around', boxShadow: '0 -8px 24px -12px rgba(0,30,20,.2)', fontFamily: 'var(--udm-sans)' }}>
         {items.slice(0, 4).map(tabItem)}
         <button
           type="button" aria-expanded={menuOpen} aria-label="More" onClick={() => setMenuOpen((o) => !o)}

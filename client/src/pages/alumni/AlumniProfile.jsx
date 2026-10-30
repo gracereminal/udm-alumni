@@ -59,7 +59,7 @@ function AlumniIdCard({ name, course, batch, avatar, idNo, verified, onClose }) 
       style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'rgba(0,37,31,.55)', display: 'flex', alignItems: 'safe center', justifyContent: 'center', overflowY: 'auto', padding: 20, boxSizing: 'border-box' }}
     >
       <div role="dialog" aria-modal="true" aria-labelledby="alumni-id-name" style={{ flex: 'none', width: '100%', maxWidth: 360, display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'stretch' }}>
-        <div style={{ flex: 'none', background: 'linear-gradient(165deg,#00251F,#0F3D2E)', borderRadius: 22, overflow: 'hidden', boxShadow: '0 30px 60px -20px rgba(0,0,0,.55)', color: '#fff', fontFamily: 'Inter,sans-serif' }}>
+        <div style={{ flex: 'none', background: 'linear-gradient(165deg,#00251F,#0F3D2E)', borderRadius: 22, overflow: 'hidden', boxShadow: '0 30px 60px -20px rgba(0,0,0,.55)', color: '#fff', fontFamily: 'var(--udm-sans)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '16px 20px', borderBottom: '1px solid rgba(255,255,255,.14)' }}>
             <img src="/alumni-logo.png" alt="" style={{ width: 36, height: 36, objectFit: 'contain', borderRadius: '50%', background: '#fff' }} />
             <div>

@@ -7,8 +7,15 @@ import { useAuth } from '../context/AuthContext';
 import { get, post, qs } from '../lib/api';
 import { RANGE_ERROR, pickYear } from '../lib/batchRange';
 
-const SECS = [{ id: 'kpi', label: 'KPIs' }, { id: 'chart', label: 'Chart' }, { id: 'table', label: 'Table' }, { id: 'findings', label: 'Findings' }];
-const STATUS = { Submitted: ['#E1F3EA', '#0F6B4F'], Ready: ['#E7F0EE', '#0F3D2E'], Archived: ['#EDEFF2', '#5A6572'] };
+const SECS = [
+  { id: 'kpi', label: 'KPIs', desc: 'Headline indicators for the selected scope' },
+  { id: 'chart', label: 'Charts', desc: 'Visual comparison against university targets' },
+  { id: 'table', label: 'Data tables', desc: 'Breakdown behind the chart' },
+  { id: 'findings', label: 'Key findings', desc: 'What the indicators and tables show' },
+];
+/* Status pill: [background, text, dot]. */
+const STATUS = { Submitted: ['#E6F2EC', '#0F6B4F', '#1F9D6B'], Ready: ['#E7F0EE', '#0F3D2E', '#0F3D2E'], Archived: ['#EEF0F3', '#5A6572', '#94A3B8'] };
+const FORMAT_LABELS = { PDF: 'PDF — formatted report', Excel: 'Excel — editable tables', CSV: 'CSV — data only' };
 const STATUS_LABEL = { ready: 'Ready', submitted: 'Submitted', archived: 'Archived' };
 const EMPTY = { kpis: [{ label: '', value: '—', sub: '' }], bars: [['', 0]], cols: [], rows: [], findings: [], records: '0', scope: '', batchLabel: '', unit: '%', target: null, grid: '1fr', chartTitle: '', chartNote: '', tableTitle: '' };
 const sizeLabel = (b) => (b == null ? '—' : b >= 1048576 ? `${(b / 1048576).toFixed(1)} MB` : `${Math.max(1, Math.round(b / 1024))} KB`);
@@ -112,9 +119,24 @@ export default function useReportsPage(role) {
 
   const colleges = CATALOG.colleges.filter((c) => c.programs.length);
   const courses = col ? col.programs : [];
+  const scopeLabel = prog && progId ? prog.name : col ? col.name : 'All colleges';
+  // Section numbers in the preview ("1", "2", …), counting only the sections that are on.
+  const secNum = {};
+  SECS.filter((s) => secs[s.id]).forEach((s, i) => { secNum[s.id] = String(i + 1); });
   const vals = {
     repPreviewRef: previewRef,
-    repScopeLabel: prog && progId ? prog.name : col ? col.name : 'All colleges',
+    repScopeLabel: scopeLabel,
+    repIsDept: dept,
+    repDeptCollege: dept ? user?.college || '' : '',
+    repScopeNote: current.note,
+    repReset: () => { setCollege('all'); setCourse('all'); setRange(DEFAULT_BATCH_RANGE); setRangeError(''); setSecs({ kpi: true, chart: true, table: true, findings: true }); },
+    repMetaRows: [
+      { k: 'Scope', v: scopeLabel },
+      { k: 'Graduation batches', v: by.label },
+      { k: type === 'employer' ? 'Employed respondents' : type === 'coverage' ? 'Traced graduates' : 'Respondents', v: d.records },
+      { k: 'Prepared', v: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric', timeZone: 'Asia/Manila' }) },
+    ],
+    repNumKpi: secNum.kpi || '', repNumChart: secNum.chart || '', repNumTable: secNum.table || '', repNumFind: secNum.findings || '',
     repCollegeVal: col ? String(col.id) : 'all',
     repCollegeOpts: dept ? [{ value: String(colId || ''), label: user?.college || '' }] : [{ value: 'all', label: 'All colleges' }, ...colleges.map((c) => ({ value: String(c.id), label: c.name }))],
     repOnCollege: (e) => { setCollege(e.target.value); setCourse('all'); },
@@ -122,10 +144,10 @@ export default function useReportsPage(role) {
     repCourseOpts: [{ value: 'all', label: col ? `All courses (${courses.length})` : 'All courses' }, ...courses.map((c) => ({ value: String(c.id), label: c.name }))],
     repOnCourse: (e) => setCourse(e.target.value),
     repFromVal: String(by.from),
-    repFromOpts: BATCH_YEARS.map((y) => ({ value: String(y), label: `From ${y}` })),
+    repFromOpts: BATCH_YEARS.map((y) => ({ value: String(y), label: `Batch ${y}` })),
     repOnFrom: onYear('from'),
     repToVal: String(by.to),
-    repToOpts: BATCH_YEARS.map((y) => ({ value: String(y), label: `To ${y}` })),
+    repToOpts: BATCH_YEARS.map((y) => ({ value: String(y), label: `Batch ${y}` })),
     repOnTo: onYear('to'),
     rangeError,
     repYearsLabel: by.label,
@@ -137,9 +159,11 @@ export default function useReportsPage(role) {
       const td = all[t.id] || EMPTY;
       const m = Math.max(1, ...td.bars.map((b) => b[1]));
       return {
-        ...t, runs: runsLabel(t, lastRun(t.id)), headline: td.kpis[0].value, headlineLabel: td.kpis[0].label.toLowerCase(),
+        ...t, on, runs: runsLabel(t, lastRun(t.id)), headline: td.kpis[0].value, headlineLabel: td.kpis[0].label.toLowerCase(),
         mini: td.bars.slice(0, 7).map((b) => ({ h: `${Math.max(8, Math.round((b[1] / m) * 100))}%`, c: on ? '#0F3D2E' : '#A9C3B8' })),
-        bg: on ? '#F4F8F6' : '#fff', border: on ? '#0F3D2E' : '#E7E9ED', hover: on ? {} : { borderColor: '#B9CCC4' },
+        bg: on ? '#F4F8F6' : '#fff', border: on ? '#0F3D2E' : '#E7E9ED', ring: on ? 'inset 0 0 0 1px #0F3D2E' : 'none',
+        hover: on ? {} : { borderColor: '#B9CCC4', background: '#FAFBFA' },
+        iconBg: on ? '#0F3D2E' : '#EEF4F1', iconColor: on ? '#fff' : '#0F3D2E', dotBorder: on ? '#0F3D2E' : '#CBD5E1', dot: on ? '#0F3D2E' : 'transparent',
         thumbBg: on ? '#fff' : '#F6F8F7', thumbBorder: on ? '#D2E1DD' : '#EEF0F3', tagBg: on ? '#0F3D2E' : '#F1F3F5', tagColor: on ? '#fff' : '#64748B', onClick: () => setType(t.id),
       };
     }),
@@ -148,14 +172,19 @@ export default function useReportsPage(role) {
     repRecords: d.records,
     repToday: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric', timeZone: 'Asia/Manila' }),
     repFormats: ['PDF', 'Excel', 'CSV'].map((f) => ({ label: f, bg: f === fmt ? '#fff' : 'transparent', color: f === fmt ? '#0B1220' : '#64748B', shadow: f === fmt ? '0 1px 2px rgba(16,24,40,.12)' : 'none', onClick: () => setFormat(f) })),
+    repFmtVal: fmt,
+    repFmtOpts: ['PDF', 'Excel', 'CSV'].map((f) => ({ value: f, label: FORMAT_LABELS[f] })),
+    repOnFmt: (e) => setFormat(e.target.value),
+    repExporting: exporting,
+    repExportDisabled: exporting || !onCount,
     repExportLabel: exporting ? `Preparing ${fmt}…` : `Export ${fmt}`,
-    repExportOpacity: exporting || !onCount ? 0.6 : 1,
+    repExportOpacity: exporting || !onCount ? 0.55 : 1,
     repExportNow: () => { if (onCount) doExport(type, fmt); },
     repSectionRows: SECS.map((s) => {
       const on = !!secs[s.id];
-      return { label: s.label, mark: on ? '✓' : '+', bg: on ? '#0F3D2E' : '#fff', color: on ? '#fff' : '#475569', border: on ? '#0F3D2E' : '#E2E5EA', onClick: () => setSecs((x) => ({ ...x, [s.id]: !on })) };
+      return { id: s.id, label: s.label, desc: s.desc, on, mark: on ? '✓' : '+', bg: on ? '#0F3D2E' : '#fff', color: on ? '#fff' : '#475569', border: on ? '#0F3D2E' : '#E2E5EA', onClick: () => setSecs((x) => ({ ...x, [s.id]: !on })) };
     }),
-    repOutputMeta: `${fmt} · ${est}`,
+    repOutputMeta: `${fmt} · ${est} · ${onCount} of ${SECS.length} sections`,
     repNoSections: onCount === 0,
     repShowKpi: !!secs.kpi, repShowChart: !!secs.chart, repShowTable: !!secs.table, repShowFindings: !!secs.findings,
     repKpis: d.kpis,
@@ -171,14 +200,15 @@ export default function useReportsPage(role) {
     repTableHead: d.cols.map((c, i) => ({ v: c, align: i ? 'right' : 'left' })),
     repTableRows: d.rows.map((r) => {
       const total = r[0] === 'Total';
-      return { cells: r.map((v, i) => ({ v, align: i ? 'right' : 'left', weight: !i || total ? 700 : 500, color: v === 'Below target' || String(v).startsWith('−') ? '#B3213C' : v === 'Above target' ? '#0F6B4F' : (!i ? '#0B1220' : '#334155') })) };
+      return { bg: total ? '#F8FAF9' : '#fff', cells: r.map((v, i) => ({ v, align: i ? 'right' : 'left', weight: !i || total ? 700 : 500, color: v === 'Below target' || String(v).startsWith('−') ? '#B3213C' : v === 'Above target' ? '#0F6B4F' : (!i ? '#0B1220' : '#334155') })) };
     }),
-    repFindings: d.findings.map((text) => ({ text })),
+    repFindings: d.findings.map((text, i) => ({ text, n: i + 1 })),
     repHistory: (hist.data || []).map((h) => {
       const status = STATUS_LABEL[h.status] || 'Ready';
       return {
         type: h.type, name: h.name, scope: h.scopeLabel || '', by: h.by, date: when(h.createdAt), fmt: h.fmt, size: sizeLabel(h.fileSize), status,
-        statusBg: (STATUS[status] || STATUS.Ready)[0], statusColor: (STATUS[status] || STATUS.Ready)[1],
+        statusBg: (STATUS[status] || STATUS.Ready)[0], statusColor: (STATUS[status] || STATUS.Ready)[1], statusDot: (STATUS[status] || STATUS.Ready)[2],
+        previewLabel: `Preview ${h.name}`, dlLabel: `Download ${h.name} (${h.fmt})`,
         onPreview: () => {
           setType(h.type); setFormat(h.fmt);
           const el = previewRef.current;

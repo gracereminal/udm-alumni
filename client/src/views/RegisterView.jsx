@@ -33,7 +33,7 @@ export default function RegisterView(v) {
             flexDirection: 'column',
             color: '#fff',
             boxSizing: 'border-box',
-            fontFamily: "'Plus Jakarta Sans',Inter,sans-serif",
+            fontFamily: 'var(--udm-display)',
           }}
         >
           <div data-m="hero-logo" style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '56px' }}>
@@ -232,7 +232,7 @@ export default function RegisterView(v) {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
               <div
                 style={{
-                  fontFamily: "'Plus Jakarta Sans',sans-serif",
+                  fontFamily: 'var(--udm-display)',
                   fontWeight: '800',
                   fontSize: '24px',
                   letterSpacing: '-.6px',

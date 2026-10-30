@@ -155,7 +155,7 @@ export default function MessagesWidget() {
   const lift = !narrow && (import.meta.env.DEV || previewEnabled) ? 64 : 0;
 
   return (
-    <div data-m="msgw" style={{ position: 'fixed', right: 20, bottom: 20 + lift, zIndex: 60, fontFamily: 'Inter,system-ui,sans-serif' }}>
+    <div data-m="msgw" style={{ position: 'fixed', right: 20, bottom: 20 + lift, zIndex: 60, fontFamily: 'var(--udm-sans)' }}>
       {open ? (
         <div
           data-m="msgw-panel"

@@ -94,7 +94,7 @@ export default function CollegeDashboardView(v) {
             <div style={{ minWidth: '0' }}>
               <div
                 style={{
-                  fontFamily: 'Inter,sans-serif',
+                  fontFamily: 'var(--udm-sans)',
                   fontWeight: '700',
                   fontSize: '26px',
                   lineHeight: '1.15',
@@ -153,7 +153,7 @@ export default function CollegeDashboardView(v) {
               display: 'flex',
               flexDirection: 'column',
               gap: '14px',
-              fontFamily: 'Inter,system-ui,sans-serif',
+              fontFamily: 'var(--udm-sans)',
               background: 'rgba(255,255,255,.55)',
               border: '1px solid #E7E9ED',
               borderRadius: '20px',
@@ -176,7 +176,7 @@ export default function CollegeDashboardView(v) {
               <div style={{ minWidth: '0' }}>
                 <div
                   style={{
-                    fontFamily: 'Inter,sans-serif',
+                    fontFamily: 'var(--udm-sans)',
                     fontWeight: '700',
                     fontSize: '30px',
                     lineHeight: '1.1',
@@ -204,7 +204,7 @@ export default function CollegeDashboardView(v) {
                       border: '1px solid #E2E5EA',
                       borderRadius: '12px',
                       padding: '11px 32px 11px 13px',
-                      fontFamily: 'Inter,system-ui,sans-serif',
+                      fontFamily: 'var(--udm-sans)',
                       fontSize: '13px',
                       fontWeight: '600',
                       color: '#0F172A',
@@ -244,7 +244,7 @@ export default function CollegeDashboardView(v) {
                       border: '1px solid #E2E5EA',
                       borderRadius: '12px',
                       padding: '11px 32px 11px 13px',
-                      fontFamily: 'Inter,system-ui,sans-serif',
+                      fontFamily: 'var(--udm-sans)',
                       fontSize: '13px',
                       fontWeight: '600',
                       color: '#0F172A',
@@ -283,7 +283,7 @@ export default function CollegeDashboardView(v) {
                       border: '1px solid #E2E5EA',
                       borderRadius: '12px',
                       padding: '11px 32px 11px 13px',
-                      fontFamily: 'Inter,system-ui,sans-serif',
+                      fontFamily: 'var(--udm-sans)',
                       fontSize: '13px',
                       fontWeight: '600',
                       color: '#0F172A',
@@ -395,7 +395,7 @@ export default function CollegeDashboardView(v) {
                     <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
                       <div
                         style={{
-                          fontFamily: 'Inter,sans-serif',
+                          fontFamily: 'var(--udm-sans)',
                           fontWeight: '700',
                           fontSize: '60px',
                           lineHeight: '.95',
@@ -501,7 +501,7 @@ export default function CollegeDashboardView(v) {
                           <div
                             data-m="kpi-val"
                             style={{
-                              fontFamily: 'Inter,sans-serif',
+                              fontFamily: 'var(--udm-sans)',
                               fontWeight: '700',
                               fontSize: '34px',
                               lineHeight: '1',
@@ -550,7 +550,7 @@ export default function CollegeDashboardView(v) {
                 >
                   <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
                     <div style={{ minWidth: '0' }}>
-                      <div style={{ fontFamily: 'Inter,sans-serif', fontWeight: '600', fontSize: '16px', color: '#0B1220' }}>Outcomes by batch</div>
+                      <div style={{ fontFamily: 'var(--udm-sans)', fontWeight: '600', fontSize: '16px', color: '#0B1220' }}>Outcomes by batch</div>
                       <div style={{ fontSize: '13px', color: '#64748B', marginTop: '4px' }}>{deptBatchNote}</div>
                     </div>
                   </div>
@@ -589,7 +589,7 @@ export default function CollegeDashboardView(v) {
                             <div
                               data-m="kpi-val"
                               style={{
-                                fontFamily: 'Inter,sans-serif',
+                                fontFamily: 'var(--udm-sans)',
                                 fontWeight: '700',
                                 fontSize: '34px',
                                 lineHeight: '1',
@@ -625,7 +625,7 @@ export default function CollegeDashboardView(v) {
                 >
                   <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
                     <div style={{ minWidth: '0' }}>
-                      <div style={{ fontFamily: 'Inter,sans-serif', fontWeight: '600', fontSize: '16px', color: '#0B1220' }}>
+                      <div style={{ fontFamily: 'var(--udm-sans)', fontWeight: '600', fontSize: '16px', color: '#0B1220' }}>
                         Top 10 jobs of employed graduates
                       </div>
                       <div style={{ fontSize: '13px', color: '#64748B', marginTop: '4px' }}>{deptJobsNote}</div>
@@ -738,7 +738,7 @@ export default function CollegeDashboardView(v) {
                       }}
                     >
                       <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
-                        <div style={{ fontFamily: 'Inter,sans-serif', fontWeight: '600', fontSize: '16px', color: '#0B1220' }}>
+                        <div style={{ fontFamily: 'var(--udm-sans)', fontWeight: '600', fontSize: '16px', color: '#0B1220' }}>
                           Graduates traced by batch
                         </div>
                         <div
@@ -856,7 +856,7 @@ export default function CollegeDashboardView(v) {
                       }}
                     >
                       <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
-                        <div style={{ fontFamily: 'Inter,sans-serif', fontWeight: '600', fontSize: '16px', color: '#0B1220' }}>
+                        <div style={{ fontFamily: 'var(--udm-sans)', fontWeight: '600', fontSize: '16px', color: '#0B1220' }}>
                           Employment status mix
                         </div>
                       </div>
@@ -938,7 +938,7 @@ export default function CollegeDashboardView(v) {
                         flexDirection: 'column',
                       }}
                     >
-                      <div style={{ fontFamily: 'Inter,sans-serif', fontWeight: '600', fontSize: '16px', color: '#0B1220' }}>
+                      <div style={{ fontFamily: 'var(--udm-sans)', fontWeight: '600', fontSize: '16px', color: '#0B1220' }}>
                         Compare with university average
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginTop: '14px', fontSize: '11.5px', color: '#475569' }}>
@@ -1051,7 +1051,7 @@ export default function CollegeDashboardView(v) {
                 >
                   <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px', padding: '0 24px 18px' }}>
                     <div>
-                      <div style={{ fontFamily: 'Inter,sans-serif', fontWeight: '600', fontSize: '16px', color: '#0B1220' }}>
+                      <div style={{ fontFamily: 'var(--udm-sans)', fontWeight: '600', fontSize: '16px', color: '#0B1220' }}>
                         Alumni needing outreach
                       </div>
                       <div style={{ fontSize: '13px', color: '#8A6D1F', marginTop: '4px', fontWeight: '600' }}>{deptOutreachNote}</div>

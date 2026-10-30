@@ -26,7 +26,7 @@ export default function Modal({ open = true, onClose, title, eyebrow, width = 46
           <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.2, textTransform: 'uppercase', color: '#004D40', marginBottom: 6 }}>{eyebrow}</div>
         ) : null}
         {title ? (
-          <div id={labelledBy} style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontWeight: 800, fontSize: 20, letterSpacing: -0.4, color: '#0A1F18', marginBottom: 10 }}>{title}</div>
+          <div id={labelledBy} style={{ fontFamily: 'var(--udm-display)', fontWeight: 800, fontSize: 20, letterSpacing: -0.4, color: '#0A1F18', marginBottom: 10 }}>{title}</div>
         ) : null}
         <div style={{ fontSize: 13.5, lineHeight: 1.6, color: 'rgba(0,0,0,.65)' }}>{children}</div>
         {footer ? <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', flexWrap: 'wrap', marginTop: 20 }}>{footer}</div> : null}

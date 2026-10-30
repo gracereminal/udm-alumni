@@ -151,17 +151,17 @@ function admDash(sc, S, data, rows, tipH, target) {
   if (rows.length) {
     const falling = rows.filter((r) => r.d != null).sort((a, b) => a.d - b.d)[0];
     const low = rows.reduce((a, b) => (b.v < a.v ? b : a));
-    if (falling && falling.d < -0.5) ins.push([`${falling.program} employability fell ${Math.abs(falling.d).toFixed(1)}% from last year`, `— now ${falling.v.toFixed(1)}%.`, 'r']);
-    else ins.push([`${low.program} trails at ${low.v.toFixed(1)}% employability`, `— the lowest in this view (target ${target.employment}%).`, low.v < target.employment ? 'r' : 'y']);
+    if (falling && falling.d < -0.5) ins.push([`${falling.program} employability fell ${Math.abs(falling.d).toFixed(1)}% from last year`, `— now ${falling.v.toFixed(1)}%.`, 'r', 'Employability trend']);
+    else ins.push([`${low.program} trails at ${low.v.toFixed(1)}% employability`, `— the lowest in this view (target ${target.employment}%).`, low.v < target.employment ? 'r' : 'y', 'Employability trend']);
   }
   const counted = bars.filter((b) => b.total > 0);
   if (counted.length) {
     const weak = counted.reduce((a, b) => (b.v < a.v ? b : a));
-    ins.push([`Batch ${weak.y} coverage is the weakest at ${weak.v}%.`, `${N(weak.total - weak.traced)} records still have no survey response (target ${target.coverage}%).`, weak.v < target.coverage ? 'y' : 'g']);
+    ins.push([`Batch ${weak.y} coverage is the weakest at ${weak.v}%.`, `${N(weak.total - weak.traced)} records still have no survey response (target ${target.coverage}%).`, weak.v < target.coverage ? 'y' : 'g', 'Tracer survey completion']);
   }
   const fast = rows.filter((r) => r.m != null).sort((a, b) => a.m - b.m)[0];
-  if (fast) ins.push([`${fast.program} graduates`, `reach first employment in about ${fast.m.toFixed(1)} months (bucket midpoints).`, 'g']);
-  if (!ins.length) ins.push(['No survey responses in this view yet.', 'Insights appear once alumni in this scope answer the survey.', 'y']);
+  if (fast) ins.push([`${fast.program} graduates`, `reach first employment in about ${fast.m.toFixed(1)} months (bucket midpoints).`, 'g', 'Time to first job']);
+  if (!ins.length) ins.push(['No survey responses in this view yet.', 'Insights appear once alumni in this scope answer the survey.', 'y', 'Tracer survey completion']);
 
   return {
     admK: {
@@ -178,12 +178,18 @@ function admDash(sc, S, data, rows, tipH, target) {
       avgMonths: S.monthsAvg == null ? '—' : P1(S.monthsAvg),
       timeToJob: groups.map(([lb, , color], i) => ({ label: lb, pct: `${tt[i]}%`, grow: tt[i] || 0, color, ...tipH(lb, `${tt[i]}% of employed graduates`) })),
       ttjHas: ttjN > 0, ttjWithin6: `${ttjN ? tt[0] + tt[1] : 0}%`,
-      insights: ins.slice(0, 3).map(([lead, text, k]) => ({ lead, text, color: tone[k][0], leadColor: tone[k][1], bg: tone[k][2], border: tone[k][3] })),
+      insights: ins.slice(0, 3).map(([lead, text, k, cat]) => ({
+        lead, text, cat, color: tone[k][0], leadColor: tone[k][1], bg: tone[k][2], border: tone[k][3],
+        // Priority pill of the signal list: High / Medium / Low.
+        pl: `${PRIORITY[k][0]} priority`, pc: PRIORITY[k][1], pbg: PRIORITY[k][2], pbd: PRIORITY[k][3],
+      })),
     },
   };
 }
 
 const R = (label, value) => ({ label, value });
+/** Signal tone → [priority, text, background, border]. */
+const PRIORITY = { r: ['High', '#B42318', '#FDF1F0', '#F3C9C6'], y: ['Medium', '#7A5E0E', '#FDF6DD', '#F0E0A6'], g: ['Low', '#0F6B4F', '#E6F0EB', '#CFE3DA'] };
 
 /** KPI card icons (24×24 stroke paths, from the reference design). */
 const ICONS = {
@@ -264,6 +270,11 @@ export function buildKpiCards(d, vals, units, h) {
     insTop: vals.insights[0] || { lead: '', text: '' },
     insCount: `${vals.insights.length} signal${vals.insights.length === 1 ? '' : 's'}`,
     insOpen: open({ title: 'Signals worth acting on', sub: 'Recommended follow-ups', big: String(vals.insights.length), rows: vals.insights.map((i) => R(i.lead, i.text)) }),
+    // Each signal opens the same dialog with its own row highlighted.
+    insights: vals.insights.map((i) => ({
+      ...i,
+      onClick: open({ title: 'Signals worth acting on', sub: 'Recommended follow-ups', big: String(vals.insights.length), rows: vals.insights.map((x) => R(x.lead, x.text)), hl: i.lead }),
+    })),
   };
 }
 

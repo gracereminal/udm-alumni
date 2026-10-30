@@ -24,12 +24,12 @@ const sideHead = { margin: 0, fontSize: 10.5, fontWeight: 700, letterSpacing: 0.
 const raBadge = { fontSize: 10.5, fontWeight: 700, color: '#0F3D2E', background: '#E6F0EB', padding: '2px 8px', borderRadius: 999 };
 const pillBtn = (primary) => ({
   width: 'auto', whiteSpace: 'nowrap', padding: '8px 16px', borderRadius: 999, border: primary ? 0 : '1px solid #D5E0DB', background: primary ? '#F0C428' : '#fff', color: '#00251F',
-  font: `${primary ? 700 : 600} 13.5px Inter,sans-serif`, cursor: 'pointer',
+  font: `${primary ? 700 : 600} 13.5px var(--udm-sans)`, cursor: 'pointer',
 });
 const barBtn = (primary) => ({
   display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6, whiteSpace: 'nowrap', minHeight: 42, padding: '0 16px', borderRadius: 12,
   border: primary ? 0 : '1px solid rgba(255,255,255,.28)', background: primary ? '#fff' : 'rgba(255,255,255,.1)', color: primary ? '#00251F' : '#fff',
-  font: `${primary ? 700 : 600} 13px Inter,sans-serif`, cursor: 'pointer',
+  font: `${primary ? 700 : 600} 13px var(--udm-sans)`, cursor: 'pointer',
 });
 const Arrow = ({ back, color = 'currentColor' }) => (
   <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flex: 'none' }} aria-hidden="true">
@@ -179,7 +179,7 @@ export default function AlumniProfileEdit() {
   const cancel = () => leaveTo('/alumni/profile');
 
   return (
-    <div data-screen-label="Edit Profile" style={{ display: 'flex', minHeight: '100vh', background: BG, fontFamily: 'Inter,system-ui,sans-serif' }}>
+    <div data-screen-label="Edit Profile" style={{ display: 'flex', minHeight: '100vh', background: BG, fontFamily: 'var(--udm-sans)' }}>
       <NavSidebar style={{ flex: 'none' }} />
       <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
         <Topbar title="Edit Profile" caption="UDM ALUMNI RELATIONS OFFICE • ALUMNI → EDIT PROFILE" />
@@ -228,7 +228,7 @@ export default function AlumniProfileEdit() {
                     role="tab"
                     aria-selected={on}
                     onClick={() => goTab(i)}
-                    style={{ flex: '1 0 190px', display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', borderRadius: 14, border: `1.5px solid ${on ? '#004D40' : '#E3EBE8'}`, background: on ? '#E6F0EC' : '#fff', textAlign: 'left', cursor: 'pointer', fontFamily: 'Inter,sans-serif' }}
+                    style={{ flex: '1 0 190px', display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', borderRadius: 14, border: `1.5px solid ${on ? '#004D40' : '#E3EBE8'}`, background: on ? '#E6F0EC' : '#fff', textAlign: 'left', cursor: 'pointer', fontFamily: 'var(--udm-sans)' }}
                   >
                     <span
                       style={{
@@ -272,11 +272,11 @@ export default function AlumniProfileEdit() {
                   <div style={{ flex: '1 1 220px', display: 'flex', flexDirection: 'column', gap: 8 }}>
                     <div style={{ fontSize: 15, fontWeight: 700, color: '#00251F', overflowWrap: 'anywhere' }}>{name}</div>
                     <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                      <button type="button" onClick={photo.pick} style={{ minHeight: 40, padding: '0 16px', borderRadius: 12, border: 0, background: '#004D40', color: '#fff', font: '600 13px Inter,sans-serif', cursor: 'pointer' }} {...hv({ background: '#00251F' })}>
+                      <button type="button" onClick={photo.pick} style={{ minHeight: 40, padding: '0 16px', borderRadius: 12, border: 0, background: '#004D40', color: '#fff', font: '600 13px var(--udm-sans)', cursor: 'pointer' }} {...hv({ background: '#00251F' })}>
                         {photo.avatar ? 'Change Photo' : 'Upload Photo'}
                       </button>
                       {photo.avatar ? (
-                        <button type="button" onClick={photo.remove} style={{ minHeight: 40, padding: '0 16px', borderRadius: 12, border: '1px solid #D5E0DB', background: '#fff', color: '#00251F', font: '600 13px Inter,sans-serif', cursor: 'pointer' }}>
+                        <button type="button" onClick={photo.remove} style={{ minHeight: 40, padding: '0 16px', borderRadius: 12, border: '1px solid #D5E0DB', background: '#fff', color: '#00251F', font: '600 13px var(--udm-sans)', cursor: 'pointer' }}>
                           Remove
                         </button>
                       ) : null}
@@ -297,7 +297,7 @@ export default function AlumniProfileEdit() {
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', paddingTop: 20, borderTop: '1px solid #EDF2F0' }}>
-                <button type="button" onClick={cancel} style={{ minHeight: 46, padding: '0 6px', border: 0, background: 'none', color: '#6B7D75', font: '600 13.5px Inter,sans-serif', cursor: 'pointer' }} {...hv({ color: '#C0392B' })}>
+                <button type="button" onClick={cancel} style={{ minHeight: 46, padding: '0 6px', border: 0, background: 'none', color: '#6B7D75', font: '600 13.5px var(--udm-sans)', cursor: 'pointer' }} {...hv({ color: '#C0392B' })}>
                   Cancel
                 </button>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
@@ -305,7 +305,7 @@ export default function AlumniProfileEdit() {
                   <button
                     type="button"
                     onClick={() => save(last ? undefined : idx + 1)}
-                    style={{ minHeight: 46, padding: '0 22px', borderRadius: 12, border: 0, background: '#00251F', color: '#fff', font: '700 13.5px Inter,sans-serif', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 10 }}
+                    style={{ minHeight: 46, padding: '0 22px', borderRadius: 12, border: 0, background: '#00251F', color: '#fff', font: '700 13.5px var(--udm-sans)', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 10 }}
                     {...hv({ background: '#004D40' })}
                   >
                     {saving ? 'Saving…' : last ? 'Save & Finish' : `Save & Continue to Step ${idx + 2}`}
@@ -322,7 +322,7 @@ export default function AlumniProfileEdit() {
                   <svg width="96" height="96" viewBox="0 0 96 96" style={{ flex: 'none' }} role="img" aria-label={`${pct}% complete`}>
                     <circle cx="48" cy="48" r="40" fill="none" stroke="#E6EEEA" strokeWidth="9" />
                     <circle cx="48" cy="48" r="40" fill="none" stroke="#F0C428" strokeWidth="9" strokeLinecap="round" strokeDasharray={`${(pct / 100) * ring} ${ring}`} style={{ transition: 'stroke-dasharray .4s' }} transform="rotate(-90 48 48)" />
-                    <text x="48" y="54" textAnchor="middle" fontFamily="Inter,sans-serif" fontSize="22" fontWeight="800" fill="#00251F">{pct}%</text>
+                    <text x="48" y="54" textAnchor="middle" fontFamily="Outfit,Arial,sans-serif" fontSize="22" fontWeight="800" fill="#00251F">{pct}%</text>
                   </svg>
                   <div>
                     <div style={{ fontSize: 16, fontWeight: 700, color: '#00251F' }}>{pct}% Completed</div>
@@ -337,7 +337,7 @@ export default function AlumniProfileEdit() {
                       <button
                         type="button"
                         onClick={() => goTab(c.step)}
-                        style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '8px 0', border: 0, background: 'none', textAlign: 'left', fontFamily: 'Inter,sans-serif', fontSize: 13.5, color: c.done ? '#0F1F1A' : '#55675F', fontWeight: c.done ? 500 : 600, cursor: 'pointer' }}
+                        style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '8px 0', border: 0, background: 'none', textAlign: 'left', fontFamily: 'var(--udm-sans)', fontSize: 13.5, color: c.done ? '#0F1F1A' : '#55675F', fontWeight: c.done ? 500 : 600, cursor: 'pointer' }}
                       >
                         <span aria-hidden="true" style={{ flex: 'none', width: 20, height: 20, borderRadius: '50%', display: 'grid', placeItems: 'center', fontSize: 11, fontWeight: 800, background: c.done ? '#004D40' : '#fff', color: '#fff', border: `1.5px solid ${c.done ? '#004D40' : '#C5D5CF'}`, boxSizing: 'border-box' }}>
                           {c.done ? '✓' : ''}
@@ -351,7 +351,7 @@ export default function AlumniProfileEdit() {
                 <button
                   type="button"
                   onClick={() => { if (left.length) goTab(left[0].step); }}
-                  style={{ minHeight: 46, borderRadius: 12, border: 0, background: left.length ? '#F0C428' : '#E6EEEA', color: '#00251F', font: '700 13.5px Inter,sans-serif', cursor: left.length ? 'pointer' : 'default' }}
+                  style={{ minHeight: 46, borderRadius: 12, border: 0, background: left.length ? '#F0C428' : '#E6EEEA', color: '#00251F', font: '700 13.5px var(--udm-sans)', cursor: left.length ? 'pointer' : 'default' }}
                   {...(left.length ? hv({ background: '#E0B515' }) : {})}
                 >
                   {left.length ? 'Complete remaining fields' : 'Profile complete'}

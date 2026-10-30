@@ -69,7 +69,7 @@ export default function JobsView(v) {
             <div style={{ minWidth: '0' }}>
               <div
                 style={{
-                  fontFamily: 'Inter,sans-serif',
+                  fontFamily: 'var(--udm-sans)',
                   fontWeight: '700',
                   fontSize: '26px',
                   lineHeight: '1.15',
@@ -87,7 +87,7 @@ export default function JobsView(v) {
               <UserChip />
             </div>
           </div>
-          <div style={{ padding: '14px 12px 28px', width: '100%', boxSizing: 'border-box', fontFamily: 'Inter,system-ui,sans-serif' }}>
+          <div style={{ padding: '14px 12px 28px', width: '100%', boxSizing: 'border-box', fontFamily: 'var(--udm-sans)' }}>
             <div
               data-m="jb-page"
               style={{
@@ -116,7 +116,7 @@ export default function JobsView(v) {
                 <div style={{ minWidth: '0', flex: '1 1 320px' }}>
                   <div
                     style={{
-                      fontFamily: 'Inter,sans-serif',
+                      fontFamily: 'var(--udm-sans)',
                       fontWeight: '700',
                       fontSize: '30px',
                       lineHeight: '1.1',
@@ -247,7 +247,7 @@ export default function JobsView(v) {
                       <div style={{ fontSize: '11px', fontWeight: '700', letterSpacing: '.5px', textTransform: 'uppercase', color: '#94A3B8' }}>
                         {st.label}
                       </div>
-                      <div style={{ fontFamily: 'Inter,sans-serif', fontWeight: '600', fontSize: '17px', color: '#0B1220' }}>{st.value}</div>
+                      <div style={{ fontFamily: 'var(--udm-sans)', fontWeight: '600', fontSize: '17px', color: '#0B1220' }}>{st.value}</div>
                     </div>
                   </React.Fragment>
                 ))}

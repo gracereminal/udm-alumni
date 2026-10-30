@@ -22,7 +22,7 @@ const panel = { background: '#fff', border: '1px solid #E3EBE8', borderRadius: 2
 const kicker = { margin: 0, fontSize: 12, fontWeight: 700, letterSpacing: 1.3, color: '#6B7D75', textTransform: 'uppercase' };
 const lead = { margin: '6px 0 0', fontSize: 13.5, color: '#5A6D65', lineHeight: 1.55 };
 const btn = (primary) => ({
-  display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, whiteSpace: 'nowrap', cursor: 'pointer', fontFamily: 'Inter,sans-serif', minHeight: 40, padding: '0 14px',
+  display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, whiteSpace: 'nowrap', cursor: 'pointer', fontFamily: 'var(--udm-sans)', minHeight: 40, padding: '0 14px',
   borderRadius: 10, fontSize: 13, fontWeight: 600, textDecoration: 'none', boxSizing: 'border-box',
   ...(primary ? { border: 0, background: '#004D40', color: '#fff' } : { border: '1px solid #D5E0DB', background: '#fff', color: '#00251F' }),
 });
@@ -181,7 +181,7 @@ export default function AlumniPrivacy() {
           type="button"
           onClick={download}
           disabled={exporting || !me}
-          style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, whiteSpace: 'nowrap', cursor: 'pointer', fontFamily: 'Inter,sans-serif', minHeight: 46, padding: '0 20px', borderRadius: 12, border: '1px solid rgba(255,255,255,.3)', background: 'rgba(255,255,255,.1)', color: '#fff', fontSize: 13.5, fontWeight: 600, opacity: me ? 1 : 0.6 }}
+          style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, whiteSpace: 'nowrap', cursor: 'pointer', fontFamily: 'var(--udm-sans)', minHeight: 46, padding: '0 20px', borderRadius: 12, border: '1px solid rgba(255,255,255,.3)', background: 'rgba(255,255,255,.1)', color: '#fff', fontSize: 13.5, fontWeight: 600, opacity: me ? 1 : 0.6 }}
           {...hv({ background: 'rgba(255,255,255,.2)' })}
         >
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">

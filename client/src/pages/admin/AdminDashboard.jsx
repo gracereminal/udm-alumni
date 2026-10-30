@@ -1,8 +1,7 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AdminDashboardView from '../../views/AdminDashboardView';
 import useChartTip from '../../hooks/useChartTip';
-import useNarrow from '../../hooks/useNarrow';
 import {
   ADMIN_YEARS, adminRequests, adminScope, buildAdminDash, buildKpiCards, buildPopulation, detailVals, emptyAdminData, populationRequests,
 } from '../../lib/adminDash';
@@ -23,46 +22,11 @@ const fetchAll = (reqs) => {
 /** The unfiltered scope: every college and course, the whole batch range, all statuses. */
 const DEFAULT_SEL = { college: 'all', course: 'all', from: ADMIN_YEARS[0], to: ADMIN_YEARS[ADMIN_YEARS.length - 1], status: 'all' };
 
-/** Matches the desktop grid layout in prototype.css (the outcomes chart is drawn wider and shorter there). */
-const WIDE = '(min-width:1181px) and (min-height:620px)';
-function useWide() {
-  const mq = () => typeof window !== 'undefined' && !!window.matchMedia && window.matchMedia(WIDE).matches;
-  const [wide, setWide] = useState(mq);
-  useEffect(() => {
-    if (!window.matchMedia) return undefined;
-    const m = window.matchMedia(WIDE);
-    const on = () => setWide(m.matches);
-    m.addEventListener('change', on);
-    return () => m.removeEventListener('change', on);
-  }, []);
-  return wide;
-}
-
-/** [size, ref]: the attached element's content size ({ w, h }, whole pixels), kept current by a ResizeObserver. */
-function useBoxSize() {
-  const [size, setSize] = useState(null);
-  const obs = useRef(null);
-  const ref = useCallback((el) => {
-    if (obs.current) { obs.current.disconnect(); obs.current = null; }
-    if (!el || typeof ResizeObserver === 'undefined') return;
-    obs.current = new ResizeObserver(([e]) => {
-      const w = Math.round(e.contentRect.width);
-      const h = Math.round(e.contentRect.height);
-      setSize((s) => (s && s.w === w && s.h === h ? s : { w, h }));
-    });
-    obs.current.observe(el);
-  }, []);
-  return [size, ref];
-}
-
 /** Admin Dashboard —system-wide KPIs, outcomes by batch, registrations, engagement and events (GET /stats/*), on one screen. */
 export default function AdminDashboard() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { events } = useEvents();
-  const narrow = useNarrow();
-  const wide = useWide() && !narrow;
-  const [chartBox, chartBoxRef] = useBoxSize();
   const { tipH, vals: tipVals } = useChartTip();
   const [sel, setSel] = useState(DEFAULT_SEL);
   const [data, setData] = useState(emptyAdminData);
@@ -142,9 +106,7 @@ export default function AdminDashboard() {
     admFiltered: Object.keys(DEFAULT_SEL).some((k) => String(sel[k]) !== String(DEFAULT_SEL[k])),
     admOnReset: () => { setChartHover(null); setRangeError(''); setSel(DEFAULT_SEL); },
     // Outcomes chart (per-batch rows, unaffected by the batch range) and the overview panels.
-    // On the desktop layout the chart is drawn at the size of its box, so the page fits the window.
-    chart: buildOutcomeChart(data.byBatch.data, chartTab, chartHover, CATALOG.targets.employment, wide ? chartBox : null),
-    chartBoxRef,
+    chart: buildOutcomeChart(data.byBatch.data, chartTab, chartHover, CATALOG.targets.employment, null),
     chartTab,
     onChartTab: (t) => { setChartTab(t); setChartHover(null); },
     onChartHover: setChartHover,

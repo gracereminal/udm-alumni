@@ -56,7 +56,7 @@ export default function SearchOverlayView(v) {
           alignItems: 'flex-start',
           padding: srPad,
           boxSizing: 'border-box',
-          fontFamily: 'Inter,system-ui,sans-serif',
+          fontFamily: 'var(--udm-sans)',
         }}
       >
         <div

@@ -98,7 +98,7 @@ export default function EventsView(v) {
             <div style={{ minWidth: '0' }}>
               <div
                 style={{
-                  fontFamily: 'Inter,sans-serif',
+                  fontFamily: 'var(--udm-sans)',
                   fontWeight: '700',
                   fontSize: '26px',
                   lineHeight: '1.15',
@@ -118,7 +118,7 @@ export default function EventsView(v) {
               <UserChip />
             </div>
           </div>
-          <div style={{ padding: '14px 12px 28px', width: '100%', boxSizing: 'border-box', fontFamily: 'Inter,system-ui,sans-serif' }}>
+          <div style={{ padding: '14px 12px 28px', width: '100%', boxSizing: 'border-box', fontFamily: 'var(--udm-sans)' }}>
             <div
               data-m="ev-page"
               style={{
@@ -141,7 +141,7 @@ export default function EventsView(v) {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }} />
                 <div
                   style={{
-                    fontFamily: 'Inter,sans-serif',
+                    fontFamily: 'var(--udm-sans)',
                     fontWeight: '700',
                     fontSize: '30px',
                     lineHeight: '1.1',
@@ -249,7 +249,7 @@ export default function EventsView(v) {
                     <h2
                       style={{
                         margin: '0',
-                        fontFamily: 'Inter,sans-serif',
+                        fontFamily: 'var(--udm-sans)',
                         fontWeight: '700',
                         fontSize: '24px',
                         lineHeight: '1.25',
@@ -641,7 +641,7 @@ export default function EventsView(v) {
                     ) : null}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '28px', marginTop: '28px', maxWidth: '720px' }}>
                       <div>
-                        <div style={{ fontFamily: 'Inter,sans-serif', fontWeight: '700', fontSize: '15px', color: '#0B1220', marginBottom: '12px' }}>
+                        <div style={{ fontFamily: 'var(--udm-sans)', fontWeight: '700', fontSize: '15px', color: '#0B1220', marginBottom: '12px' }}>
                           About this event
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -656,7 +656,7 @@ export default function EventsView(v) {
                         <>
                           <div>
                             <div
-                              style={{ fontFamily: 'Inter,sans-serif', fontWeight: '700', fontSize: '15px', color: '#0B1220', marginBottom: '12px' }}
+                              style={{ fontFamily: 'var(--udm-sans)', fontWeight: '700', fontSize: '15px', color: '#0B1220', marginBottom: '12px' }}
                             >
                               Highlights
                             </div>
@@ -687,7 +687,7 @@ export default function EventsView(v) {
                         <>
                           <div>
                             <div
-                              style={{ fontFamily: 'Inter,sans-serif', fontWeight: '700', fontSize: '15px', color: '#0B1220', marginBottom: '12px' }}
+                              style={{ fontFamily: 'var(--udm-sans)', fontWeight: '700', fontSize: '15px', color: '#0B1220', marginBottom: '12px' }}
                             >
                               Program
                             </div>
@@ -843,7 +843,7 @@ export default function EventsView(v) {
                           }}
                         >
                           <div style={{ fontSize: '10.5px', fontWeight: '700', letterSpacing: '.8px', color: ev.dateSub }}>{ev.month}</div>
-                          <div style={{ fontFamily: 'Inter,sans-serif', fontSize: '22px', fontWeight: '700', lineHeight: '1', color: ev.dateColor }}>
+                          <div style={{ fontFamily: 'var(--udm-sans)', fontSize: '22px', fontWeight: '700', lineHeight: '1', color: ev.dateColor }}>
                             {ev.day}
                           </div>
                         </div>
@@ -920,7 +920,7 @@ export default function EventsView(v) {
                         background: '#fff',
                         borderRadius: '16px',
                         boxShadow: '0 24px 48px -12px rgba(16,24,40,.28)',
-                        fontFamily: 'Inter,system-ui,sans-serif',
+                        fontFamily: 'var(--udm-sans)',
                       }}
                     >
                       <div
@@ -947,7 +947,7 @@ export default function EventsView(v) {
                           </div>
                           <div
                             style={{
-                              fontFamily: 'Inter,sans-serif',
+                              fontFamily: 'var(--udm-sans)',
                               fontWeight: '700',
                               fontSize: '19px',
                               lineHeight: '1.3',

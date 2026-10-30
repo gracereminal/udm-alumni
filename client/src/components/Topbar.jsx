@@ -16,7 +16,7 @@ export default function Topbar({ title, caption, actions, tools = true }) {
       }}
     >
       <div style={{ minWidth: 0 }}>
-        <div style={{ fontFamily: 'Inter,sans-serif', fontWeight: 700, fontSize: 26, lineHeight: 1.15, letterSpacing: -0.6, color: '#0B1220' }}>{title}</div>
+        <div style={{ fontFamily: 'var(--udm-sans)', fontWeight: 700, fontSize: 26, lineHeight: 1.15, letterSpacing: -0.6, color: '#0B1220' }}>{title}</div>
         {caption ? <div style={{ fontSize: 11, color: 'rgba(0,0,0,.45)', fontWeight: 600, letterSpacing: 0.3 }}>{caption}</div> : null}
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>

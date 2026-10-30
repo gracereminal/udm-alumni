@@ -59,12 +59,12 @@ export function buildOutcomeChart(rows, tab, hover, target, size) {
 
   // Drawn in CSS pixels at the box size on desktop, so text keeps its size; a short box drops the axis title and
   // tightens the margins.
-  const W = size ? Math.max(320, Math.round(size.w)) : 560;
-  const H = size ? Math.max(60, Math.round(size.h)) : 400;
+  const W = size ? Math.max(320, Math.round(size.w)) : 980;
+  const H = size ? Math.max(60, Math.round(size.h)) : 360;
   const compact = !!size && H < 300;
   const fs = compact ? 11.5 : size ? 12.5 : 15;
   const fsS = compact ? 11 : 13;
-  const L = compact ? 54 : size ? 66 : 78; const Rm = compact ? 14 : 24; const T = compact ? 10 : 18; const B = compact ? 24 : size ? 52 : 70;
+  const L = compact ? 54 : size ? 66 : 78; const Rm = compact ? 14 : size ? 24 : 28; const T = compact ? 10 : size ? 18 : 20; const B = compact ? 24 : size ? 52 : 70;
   const pw = W - L - Rm; const ph = H - T - B;
   const X = (i) => L + (pw * i) / (n - 1);
   const bot = T + ph;

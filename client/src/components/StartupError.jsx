@@ -3,7 +3,7 @@ import { Component } from 'react';
 /** Full-page message when start-up data or a page's code can't be loaded (e.g. the API is down). */
 export function StartupError({ error, onRetry }) {
   return (
-    <div role="alert" style={{ minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, boxSizing: 'border-box', background: '#F4F6F5', fontFamily: 'Inter,system-ui,sans-serif', color: '#0B1220', textAlign: 'center' }}>
+    <div role="alert" style={{ minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, boxSizing: 'border-box', background: '#F4F6F5', fontFamily: 'var(--udm-sans)', color: '#0B1220', textAlign: 'center' }}>
       <div style={{ maxWidth: 380 }}>
         <div style={{ fontWeight: 700, fontSize: 18, marginBottom: 8 }}>The alumni portal is unavailable</div>
         <div style={{ fontSize: 13.5, color: '#64748B', marginBottom: 18 }}>{error}</div>

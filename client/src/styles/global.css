@@ -1,8 +1,13 @@
 @import './prototype.css';
 
 html, body, #root { margin: 0; }
-body { margin: 0; background: #F3F6F4; font-family: Inter, system-ui, sans-serif; }
+/* App typeface (from "UDM Alumni.dc.html"): Outfit throughout; the MFA / forgot-password screens keep Inter + Plus Jakarta Sans. */
+:root { --udm-sans: 'Outfit', Arial, sans-serif; --udm-display: 'Outfit', Arial, sans-serif; }
+body { margin: 0; background: #F3F6F4; font-family: var(--udm-sans); }
 * { -webkit-tap-highlight-color: transparent; }
-button { font-family: inherit; }
+input, select, textarea, button, option { font-family: inherit; }
+[data-screen-label="MFA Verification"], [data-screen-label="Forgot Password"], [data-screen-label="Reset Link Expired"] {
+  --udm-sans: Inter, system-ui, sans-serif; --udm-display: 'Plus Jakarta Sans', sans-serif; font-family: var(--udm-sans);
+}
 .udm-spin { animation: udm-spin .8s linear infinite; }
 @keyframes udm-spin { to { transform: rotate(360deg); } }

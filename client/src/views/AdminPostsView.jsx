@@ -172,7 +172,7 @@ export default function AdminPostsView(v) {
                 justifyContent: 'center',
                 padding: '24px',
                 boxSizing: 'border-box',
-                fontFamily: 'Inter,system-ui,sans-serif',
+                fontFamily: 'var(--udm-sans)',
               }}
             >
               <div role="button" tabIndex={0} onKeyDown={onActivate(jqStop)}
@@ -249,7 +249,7 @@ export default function AdminPostsView(v) {
                   <div>
                     <div
                       style={{
-                        fontFamily: 'Inter,sans-serif',
+                        fontFamily: 'var(--udm-sans)',
                         fontWeight: '700',
                         fontSize: '22px',
                         letterSpacing: '-.4px',
@@ -512,7 +512,7 @@ export default function AdminPostsView(v) {
                 <>
                   <div
                     style={{
-                      fontFamily: 'Inter,sans-serif',
+                      fontFamily: 'var(--udm-sans)',
                       fontWeight: '700',
                       fontSize: '26px',
                       lineHeight: '1.15',
@@ -529,7 +529,7 @@ export default function AdminPostsView(v) {
                 <>
                   <div
                     style={{
-                      fontFamily: 'Inter,sans-serif',
+                      fontFamily: 'var(--udm-sans)',
                       fontWeight: '700',
                       fontSize: '26px',
                       lineHeight: '1.15',
@@ -559,7 +559,7 @@ export default function AdminPostsView(v) {
               display: 'flex',
               flexDirection: 'column',
               gap: '14px',
-              fontFamily: 'Inter,system-ui,sans-serif',
+              fontFamily: 'var(--udm-sans)',
               background: 'rgba(255,255,255,.55)',
               border: '1px solid #E7E9ED',
               borderRadius: '20px',
@@ -584,7 +584,7 @@ export default function AdminPostsView(v) {
                   <>
                     <div
                       style={{
-                        fontFamily: 'Inter,sans-serif',
+                        fontFamily: 'var(--udm-sans)',
                         fontWeight: '700',
                         fontSize: '30px',
                         lineHeight: '1.1',
@@ -600,7 +600,7 @@ export default function AdminPostsView(v) {
                   <>
                     <div
                       style={{
-                        fontFamily: 'Inter,sans-serif',
+                        fontFamily: 'var(--udm-sans)',
                         fontWeight: '700',
                         fontSize: '30px',
                         lineHeight: '1.1',
@@ -713,7 +713,7 @@ export default function AdminPostsView(v) {
                     >
                       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px', marginBottom: '12px' }}>
                         <div>
-                          <div style={{ fontFamily: 'Inter,sans-serif', fontWeight: '600', fontSize: '16px', color: '#0B1220' }}>{jobApps.label}</div>
+                          <div style={{ fontFamily: 'var(--udm-sans)', fontWeight: '600', fontSize: '16px', color: '#0B1220' }}>{jobApps.label}</div>
                           <div style={{ fontSize: '12.5px', color: '#64748B', marginTop: '3px' }}>{jobApps.title}</div>
                         </div>
                         <button type="button" aria-label="Close" onClick={jobApps.onClose}
@@ -738,11 +738,11 @@ export default function AdminPostsView(v) {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(100%,420px),1fr))', gap: '18px', minWidth: '0', alignItems: 'start' }}>
                   <div style={{ ...jobCard, padding: '22px 0 8px' }}>
                     <div style={{ padding: '0 24px 16px' }}>
-                      <div style={{ fontFamily: 'Inter,sans-serif', fontWeight: '600', fontSize: '16px', color: '#0B1220' }}>Alumni submissions</div>
+                      <div style={{ fontFamily: 'var(--udm-sans)', fontWeight: '600', fontSize: '16px', color: '#0B1220' }}>Alumni submissions</div>
                       <div style={{ fontSize: '13px', color: '#64748B', marginTop: '4px' }}>Awaiting approval before they appear on the board</div>
                     </div>
                     <div style={{ margin: '0 24px 16px', display: 'flex', alignItems: 'center', gap: '14px', background: '#FBF0D8', borderRadius: '14px', padding: '14px 18px' }}>
-                      <div style={{ fontFamily: 'Inter,sans-serif', fontWeight: '700', fontSize: '32px', lineHeight: '1', letterSpacing: '-1px', color: '#6B4E00' }}>{jobPendingCount}</div>
+                      <div style={{ fontFamily: 'var(--udm-sans)', fontWeight: '700', fontSize: '32px', lineHeight: '1', letterSpacing: '-1px', color: '#6B4E00' }}>{jobPendingCount}</div>
                       <div style={{ fontSize: '12.5px', fontWeight: '700', color: '#6B4E00' }}>Alumni jobs pending</div>
                     </div>
                     {(jobQueueRows || []).map((q, _i) => (
@@ -775,11 +775,11 @@ export default function AdminPostsView(v) {
                   </div>
                   <div style={{ ...jobCard, padding: '22px 0 8px' }}>
                     <div style={{ padding: '0 24px 16px' }}>
-                      <div style={{ fontFamily: 'Inter,sans-serif', fontWeight: '600', fontSize: '16px', color: '#0B1220' }}>Live job postings</div>
+                      <div style={{ fontFamily: 'var(--udm-sans)', fontWeight: '600', fontSize: '16px', color: '#0B1220' }}>Live job postings</div>
                       <div style={{ fontSize: '13px', color: '#64748B', marginTop: '4px' }}>Visible to all alumni on the Job Board</div>
                     </div>
                     <div style={{ margin: '0 24px 16px', display: 'flex', alignItems: 'center', gap: '14px', background: '#E1F3EA', borderRadius: '14px', padding: '14px 18px' }}>
-                      <div style={{ fontFamily: 'Inter,sans-serif', fontWeight: '700', fontSize: '32px', lineHeight: '1', letterSpacing: '-1px', color: '#0F6B4F' }}>{jobLiveCount}</div>
+                      <div style={{ fontFamily: 'var(--udm-sans)', fontWeight: '700', fontSize: '32px', lineHeight: '1', letterSpacing: '-1px', color: '#0F6B4F' }}>{jobLiveCount}</div>
                       <div style={{ fontSize: '12.5px', fontWeight: '700', color: '#0F6B4F' }}>Jobs live</div>
                     </div>
                     {(adminJobRows || []).map((jr) => (
@@ -1379,7 +1379,7 @@ export default function AdminPostsView(v) {
                       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px' }}>
                         <div style={{ minWidth: '0' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <div style={{ fontFamily: 'Inter,sans-serif', fontWeight: '700', fontSize: '16px', color: '#0B1220' }}>
+                            <div style={{ fontFamily: 'var(--udm-sans)', fontWeight: '700', fontSize: '16px', color: '#0B1220' }}>
                               Official announcements
                             </div>
                             <div
@@ -1809,7 +1809,7 @@ export default function AdminPostsView(v) {
                           background: 'rgba(11,18,32,.4)',
                           display: 'flex',
                           justifyContent: 'flex-end',
-                          fontFamily: 'Inter,system-ui,sans-serif',
+                          fontFamily: 'var(--udm-sans)',
                         }}
                       >
                         <div role="presentation" onClick={fdClose} style={{ position: 'absolute', inset: '0' }} />
@@ -1844,7 +1844,7 @@ export default function AdminPostsView(v) {
                               borderBottom: '1px solid #EEF0F3',
                             }}
                           >
-                            <div id="fd-h" style={{ fontFamily: 'Inter,sans-serif', fontWeight: '700', fontSize: '19px', color: '#0B1220' }}>
+                            <div id="fd-h" style={{ fontFamily: 'var(--udm-sans)', fontWeight: '700', fontSize: '19px', color: '#0B1220' }}>
                               {fdHead}
                             </div>
                             <button
@@ -2347,7 +2347,7 @@ export default function AdminPostsView(v) {
                           background: 'rgba(11,18,32,.4)',
                           display: 'flex',
                           justifyContent: 'flex-end',
-                          fontFamily: 'Inter,system-ui,sans-serif',
+                          fontFamily: 'var(--udm-sans)',
                         }}
                       >
                         <div role="presentation" onClick={mdClose} style={{ position: 'absolute', inset: '0' }} />
@@ -2438,7 +2438,7 @@ export default function AdminPostsView(v) {
                                 <div
                                   id="md-h"
                                   style={{
-                                    fontFamily: 'Inter,sans-serif',
+                                    fontFamily: 'var(--udm-sans)',
                                     fontWeight: '700',
                                     fontSize: '20px',
                                     lineHeight: '1.3',
@@ -2619,7 +2619,7 @@ export default function AdminPostsView(v) {
                                     >
                                       <div
                                         style={{
-                                          fontFamily: 'Inter,sans-serif',
+                                          fontFamily: 'var(--udm-sans)',
                                           fontWeight: '700',
                                           fontSize: '20px',
                                           color: x.color,
@@ -2868,7 +2868,7 @@ export default function AdminPostsView(v) {
                       padding: '10px 10px 10px 16px',
                       borderRadius: '12px',
                       boxShadow: '0 12px 32px rgba(11,18,32,.25)',
-                      fontFamily: 'Inter,system-ui,sans-serif',
+                      fontFamily: 'var(--udm-sans)',
                       fontSize: '13.5px',
                       fontWeight: '600',
                     }}
@@ -2925,7 +2925,7 @@ export default function AdminPostsView(v) {
                     alignItems: 'center',
                     justifyContent: 'center',
                     padding: '20px',
-                    fontFamily: 'Inter,system-ui,sans-serif',
+                    fontFamily: 'var(--udm-sans)',
                   }}
                 >
                   <div

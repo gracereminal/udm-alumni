@@ -11,7 +11,7 @@ export default function ForecastPanel({ forecast, scopeLabel, onClose }) {
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px' }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '9px', flexWrap: 'wrap' }}>
-            <span style={{ fontFamily: 'Inter,sans-serif', fontWeight: '700', fontSize: '20px', letterSpacing: '-.4px', color: '#0B1220' }}>Employability forecast</span>
+            <span style={{ fontFamily: 'var(--udm-sans)', fontWeight: '700', fontSize: '20px', letterSpacing: '-.4px', color: '#0B1220' }}>Employability forecast</span>
             <span style={{ fontSize: '11px', fontWeight: '700', color: '#3E5C7A', background: '#E8EEF5', borderRadius: '999px', padding: '3px 8px' }}>Next 3 batches</span>
           </div>
           <div style={{ fontSize: '13px', color: '#64748B', marginTop: '4px' }}>

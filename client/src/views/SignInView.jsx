@@ -72,7 +72,7 @@ export default function SignInView(v) {
             flexDirection: 'column',
             color: '#fff',
             boxSizing: 'border-box',
-            fontFamily: "'Plus Jakarta Sans',Inter,sans-serif",
+            fontFamily: 'var(--udm-display)',
             transition: 'padding .25s ease',
           }}
         >
@@ -450,7 +450,7 @@ export default function SignInView(v) {
             <div
               data-m="f-title"
               style={{
-                fontFamily: "'Plus Jakarta Sans',sans-serif",
+                fontFamily: 'var(--udm-display)',
                 fontWeight: '800',
                 fontSize: '28px',
                 letterSpacing: '-.8px',

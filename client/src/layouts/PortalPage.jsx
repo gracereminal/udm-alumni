@@ -13,7 +13,7 @@ export default function PortalPage({ label, title, caption, actions, tools = tru
       <NavSidebar style={{ flex: 'none' }} />
       <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
         <Topbar title={title} caption={caption} actions={actions} tools={tools} />
-        <div style={{ padding: '14px 12px 28px', width: '100%', boxSizing: 'border-box', fontFamily: 'Inter,system-ui,sans-serif', ...contentStyle }}>{children}</div>
+        <div style={{ padding: '14px 12px 28px', width: '100%', boxSizing: 'border-box', fontFamily: 'var(--udm-sans)', ...contentStyle }}>{children}</div>
       </div>
     </div>
   );

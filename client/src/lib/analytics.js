@@ -24,11 +24,11 @@ export function resolveBatch(from, to) {
 }
 
 export const REPORT_TYPES = [
-  { id: 'ched', name: 'UDM Alumni Survey — Form A', desc: 'Mandated institutional submission covering employment status, relevance of degree and months before first job, for the last five graduating batches.', cadence: 'Annual', due: 'Due Nov 30' },
-  { id: 'employability', name: 'Employability by Program', desc: 'Per-program employment rate against the university target, with batch-on-batch movement.', cadence: 'Quarterly' },
-  { id: 'coverage', name: 'Batch Coverage Audit', desc: 'Traced versus total graduates for each batch, with unreached counts for follow-up.', cadence: 'Monthly' },
-  { id: 'employer', name: 'Employer & Industry Distribution', desc: 'Where graduates are absorbed, by industry sector — employer counts only, no named alumni.', cadence: 'On demand' },
-  { id: 'inclusion', name: 'Inclusion Profile — IP & PWD', desc: 'Indigenous Peoples and Persons with Disability (Yes / No) among respondents, with employment outcomes per group. Aggregated counts only.', cadence: 'Annual' },
+  { id: 'ched', name: 'UDM Alumni Survey — Form A', short: 'Annual CHED submission on employment status, degree relevance and time to first job.', icon: 'M7 3h7l5 5v13H7z M14 3v5h5 M10 13h6 M10 17h4', note: 'Covers all respondents regardless of employment status, as required for Form A.', desc: 'Mandated institutional submission covering employment status, relevance of degree and months before first job, for the last five graduating batches.', cadence: 'Annual', due: 'Due Nov 30' },
+  { id: 'employability', name: 'Employability by Program', short: 'Employment rate per program against the 80% university target.', icon: 'M4 8h16v11H4z M9 8V5h6v3 M4 13h16', note: 'Rates use all traced respondents (employed ÷ traced), so employment status is not filtered.', desc: 'Per-program employment rate against the university target, with batch-on-batch movement.', cadence: 'Quarterly' },
+  { id: 'coverage', name: 'Batch Coverage Audit', short: 'Traced versus total graduates per batch, with unreached counts.', icon: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8z', note: 'Covers all graduates in scope, traced and untraced.', desc: 'Traced versus total graduates for each batch, with unreached counts for follow-up.', cadence: 'Monthly' },
+  { id: 'employer', name: 'Employer & Industry Distribution', short: 'Where employed graduates work, grouped by industry sector.', icon: 'M4 21V8l8-5 8 5v13 M9 21v-5h6v5 M8 11h.01 M12 11h.01 M16 11h.01', note: 'Limited to employed respondents.', desc: 'Where graduates are absorbed, by industry sector — employer counts only, no named alumni.', cadence: 'On demand' },
+  { id: 'inclusion', name: 'Inclusion Profile — IP & PWD', short: 'Indigenous Peoples and PWD respondents, with employment outcomes.', icon: 'M9 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6z M3 20c0-3.3 2.7-5 6-5s6 1.7 6 5 M16 5.2a3 3 0 0 1 0 5.6 M18 15.2c1.8.6 3 2.2 3 4.8', note: 'Covers all respondents who answered the IP and PWD questions.', desc: 'Indigenous Peoples and Persons with Disability (Yes / No) among respondents, with employment outcomes per group. Aggregated counts only.', cadence: 'Annual' },
 ];
 
 /** "Due Nov 30 · last run Aug 28, 2026" from the latest REPORT_EXPORT row of that type. */
@@ -51,7 +51,7 @@ export function repDocHtml(t, d, secs, nowLabel) {
   return h;
 }
 
-const PRINT_CSS = '@page{size:A4;margin:16mm}body{font-family:Inter,system-ui,sans-serif;color:#0B1220;font-size:10.5pt}h3{font-size:12pt;margin:0 0 8px}table{border-collapse:collapse;width:100%}th,td{padding:6px 8px;border-bottom:1px solid #E2E5EA;text-align:left}th{font-size:8.5pt;text-transform:uppercase;color:#64748B;background:#F4F8F6}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}';
+const PRINT_CSS = '@page{size:A4;margin:16mm}body{font-family:Outfit,Arial,sans-serif;color:#0B1220;font-size:10.5pt}h3{font-size:12pt;margin:0 0 8px}table{border-collapse:collapse;width:100%}th,td{padding:6px 8px;border-bottom:1px solid #E2E5EA;text-align:left}th{font-size:8.5pt;text-transform:uppercase;color:#64748B;background:#F4F8F6}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}';
 
 /** Download (CSV / Excel) or print (PDF) a report from its data. Returns { name, size } (size in bytes, PDF: null). */
 export function exportReport(t, d, fmt, secs, nowLabel) {
@@ -86,7 +86,7 @@ export function exportReport(t, d, fmt, secs, nowLabel) {
   document.body.appendChild(f);
   const doc = f.contentWindow.document;
   doc.open();
-  doc.write(`<!doctype html><html><head><meta charset="utf-8"><title>${name.replace('.pdf', '')}</title><style>${PRINT_CSS}</style></head><body>${body}</body></html>`);
+  doc.write(`<!doctype html><html><head><meta charset="utf-8"><title>${name.replace('.pdf', '')}</title><link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"><style>${PRINT_CSS}</style></head><body>${body}</body></html>`);
   doc.close();
   setTimeout(() => { try { f.contentWindow.focus(); f.contentWindow.print(); } catch { /* print blocked */ } setTimeout(() => f.remove(), 60000); }, 300);
   return { name, size: null };

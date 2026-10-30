@@ -96,7 +96,7 @@ export default function RegSuccessView(v) {
               </div>
               <div
                 style={{
-                  fontFamily: 'Inter,sans-serif',
+                  fontFamily: 'var(--udm-sans)',
                   fontWeight: '700',
                   fontSize: '24px',
                   lineHeight: '1.15',

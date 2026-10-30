@@ -73,7 +73,7 @@ function SameSwitch({ sameAs }) {
   return (
     <button
       type="button" role="checkbox" aria-checked={on} onClick={() => sameAs.onToggle({ target: { checked: !on } })}
-      style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', border: 0, background: 'none', padding: 0, cursor: 'pointer', font: '600 12px Inter,sans-serif', color: '#004D40' }}
+      style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', border: 0, background: 'none', padding: 0, cursor: 'pointer', font: '600 12px var(--udm-sans)', color: '#004D40' }}
     >
       <span style={{ width: '32px', height: '18px', borderRadius: '999px', background: on ? '#004D40' : '#C5D5CF', position: 'relative', flex: 'none', transition: 'background .15s' }}>
         <i style={{ position: 'absolute', top: '2px', left: on ? '16px' : '2px', width: '14px', height: '14px', borderRadius: '50%', background: '#fff', boxShadow: '0 1px 2px rgba(0,0,0,.3)', transition: 'left .15s' }} />
@@ -158,7 +158,7 @@ export default function FormField({ f, variant = 'register' }) {
               onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); c.onClick(); } }}
               style={
                 stacked
-                  ? { cursor: 'pointer', display: 'flex', alignItems: 'center', boxSizing: 'border-box', minHeight: '42px', font: '600 13px/1.25 Inter,sans-serif', padding: '8px 18px', borderRadius: '999px', background: c.bg, color: c.color, border: `1.5px solid ${f.error && c.bg !== '#0F3D2E' ? '#E9A9A4' : c.border}` }
+                  ? { cursor: 'pointer', display: 'flex', alignItems: 'center', boxSizing: 'border-box', minHeight: '42px', font: '600 13px/1.25 var(--udm-sans)', padding: '8px 18px', borderRadius: '999px', background: c.bg, color: c.color, border: `1.5px solid ${f.error && c.bg !== '#0F3D2E' ? '#E9A9A4' : c.border}` }
                   : { cursor: 'pointer', fontSize: '12.5px', fontWeight: '600', padding: '9px 14px', borderRadius: '999px', background: c.bg, color: c.color, border: `1px solid ${f.error && c.bg !== '#0F3D2E' ? '#E9A9A4' : c.border}` }
               }
             >

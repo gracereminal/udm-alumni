@@ -93,10 +93,10 @@ export default function NotificationBell() {
       {open ? (
         <>
           <div role="presentation" onClick={() => setOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 60 }} />
-          <div style={{ ...(sheet ? { position: 'fixed', left: 10, right: 10, top: sheet.top } : { position: 'absolute', right: 0, top: 50, width: 370, maxWidth: 'calc(100vw - 32px)' }), zIndex: 61, background: '#fff', border: '1px solid #E7E9ED', borderRadius: 14, boxShadow: '0 12px 32px rgba(16,24,40,.14)', overflow: 'hidden', fontFamily: 'Inter,system-ui,sans-serif' }}>
+          <div style={{ ...(sheet ? { position: 'fixed', left: 10, right: 10, top: sheet.top } : { position: 'absolute', right: 0, top: 50, width: 370, maxWidth: 'calc(100vw - 32px)' }), zIndex: 61, background: '#fff', border: '1px solid #E7E9ED', borderRadius: 14, boxShadow: '0 12px 32px rgba(16,24,40,.14)', overflow: 'hidden', fontFamily: 'var(--udm-sans)' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderBottom: '1px solid #EEF0F3' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <div style={{ fontFamily: 'Inter,sans-serif', fontWeight: 600, fontSize: 14, color: '#0B1220' }}>Notifications</div>
+                <div style={{ fontFamily: 'var(--udm-sans)', fontWeight: 600, fontSize: 14, color: '#0B1220' }}>Notifications</div>
                 {unread > 0 ? <div style={{ fontSize: 10.5, fontWeight: 700, color: '#0F3D2E', background: '#E6F0EB', padding: '2px 8px', borderRadius: 999 }}>{unread} new</div> : null}
               </div>
               {unread > 0 ? (

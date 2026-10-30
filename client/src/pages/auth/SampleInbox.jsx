@@ -79,7 +79,7 @@ export default function SampleInbox() {
   const avatarBg = sel.logo ? '#062A20' : sel.avatarBg;
 
   return (
-    <div data-screen-label="Sample Email Inbox" style={{ display: 'flex', flexDirection: 'column', height: '100dvh', background: '#F4F6F5', fontFamily: 'Inter,system-ui,sans-serif', color: '#1F2523' }}>
+    <div data-screen-label="Sample Email Inbox" style={{ display: 'flex', flexDirection: 'column', height: '100dvh', background: '#F4F6F5', fontFamily: 'var(--udm-sans)', color: '#1F2523' }}>
       <div style={{ flex: 'none', display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '8px 14px', background: '#FDF6DD', borderBottom: '1px solid #EFDFA6', padding: '8px 20px', fontSize: 12.5, color: '#5C4A12' }}>
         <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.12em', textTransform: 'uppercase', background: '#F0C428', color: '#2A2205', borderRadius: 4, padding: '3px 7px' }}>Demo</div>
         <div style={{ flex: 1, minWidth: 200 }}>Preview of the event registration emails the portal sent to {to} through the Gmail API, with the same entry pass. Registrar and career-center messages are sample mail.</div>

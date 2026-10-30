@@ -36,7 +36,7 @@ export default function PrivacyConsentView(v) {
         >
           <img src="/alumni-logo.png" alt="Universidad de Manila seal" style={{ width: '56px', height: '56px', objectFit: 'contain', marginBottom: '16px' }} />
           <div style={{ fontSize: '11px', fontWeight: '700', letterSpacing: '1.2px', textTransform: 'uppercase', color: '#B3261E' }}>Consent Not Given</div>
-          <div style={{ fontFamily: 'Inter,sans-serif', fontWeight: '700', fontSize: '24px', letterSpacing: '-.5px', color: '#0A0A0A', marginTop: '6px' }}>
+          <div style={{ fontFamily: 'var(--udm-sans)', fontWeight: '700', fontSize: '24px', letterSpacing: '-.5px', color: '#0A0A0A', marginTop: '6px' }}>
             Consent is required to continue
           </div>
           <div style={{ fontSize: '14px', lineHeight: '1.6', color: 'rgba(0,0,0,.62)', marginTop: '12px', textWrap: 'pretty' }}>
@@ -83,7 +83,7 @@ export default function PrivacyConsentView(v) {
               <div style={{ fontSize: '11.5px', fontWeight: '700', letterSpacing: '1.2px', textTransform: 'uppercase', color: '#004D40' }}>
                 Before You Register · Republic Act No. 10173
               </div>
-              <h1 style={{ margin: '2px 0 0', fontFamily: 'Inter,sans-serif', fontWeight: '700', fontSize: '28px', letterSpacing: '-.6px', color: '#0A0A0A' }}>
+              <h1 style={{ margin: '2px 0 0', fontFamily: 'var(--udm-sans)', fontWeight: '700', fontSize: '28px', letterSpacing: '-.6px', color: '#0A0A0A' }}>
                 Data Privacy Notice &amp; Consent
               </h1>
             </div>

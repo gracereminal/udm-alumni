@@ -1,6 +1,4 @@
-import React from 'react';
 import { hv } from '../lib/stateStyle';
-import { selectStyle, selectFx } from '../lib/selectStyle';
 import NavSidebar from '../components/NavSidebar';
 import RangeError from '../components/RangeError';
 import SearchPill from '../components/topbar/SearchPill';
@@ -8,64 +6,36 @@ import NotificationBell from '../components/topbar/NotificationBell';
 import UserChip from '../components/topbar/UserChip';
 import { onActivate } from '../lib/a11y';
 
-/* View layer for the "Reports" screen — converted from "Alumni Tracer Mockups.dc.html". */
+const CHEVRON = "url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 12 12%22%3E%3Cpath d=%22M2.5 4.5 6 8l3.5-3.5%22 fill=%22none%22 stroke=%22%2364748B%22 stroke-width=%221.6%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/%3E%3C/svg%3E')";
+/* Full-width form select of the scope panel. */
+const field = {
+  width: '100%', fontSize: '13px', fontWeight: '500', color: '#0B1220', appearance: 'none', WebkitAppearance: 'none', minHeight: '42px', padding: '0 36px 0 12px',
+  borderRadius: '10px', border: '1px solid #D5DBE3', backgroundColor: '#fff', backgroundImage: CHEVRON, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center',
+  backgroundSize: '12px 12px', fontFamily: 'inherit', textOverflow: 'ellipsis', cursor: 'pointer', outline: 'none', boxSizing: 'border-box', transition: 'border-color .15s, box-shadow .15s',
+};
+const fieldFx = hv({ borderColor: '#9AA6B5' });
+const label = { fontSize: '12.5px', fontWeight: '600', color: '#334155' };
+const hint = { fontSize: '12px', color: '#64748B', lineHeight: '1.45' };
+const panel = { background: '#fff', border: '1px solid #E7E9ED', borderRadius: '16px', boxShadow: '0 1px 2px rgba(16,24,40,.04)', boxSizing: 'border-box', minWidth: '0' };
+const h2 = { margin: '0', fontFamily: 'var(--udm-sans)', fontWeight: '600', fontSize: '16px', color: '#0B1220' };
+const h4 = { margin: '0', fontSize: '15px', fontWeight: '700', color: '#0B1220' };
+
+/** Numbered step marker ("1", "2", …) in front of a panel heading. */
+const Step = ({ n }) => (
+  <span aria-hidden="true" style={{ width: '22px', height: '22px', borderRadius: '50%', background: '#0F3D2E', color: '#fff', fontSize: '11.5px', fontWeight: '700', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}>{n}</span>
+);
+const Options = ({ opts }) => (opts || []).map((o) => <option key={o.value} value={o.value}>{o.label}</option>);
+
+/* View layer for the "Reports" screen — converted from the "Reports" screen of "UDM Alumni.dc.html". */
 export default function ReportsView(v) {
   const {
-    exportHover,
-    filterHover,
-    goRecords,
-    repBarGap,
-    repBars,
-    repChartNote,
-    repChartTitle,
-    repCollegeOpts,
-    repCollegeVal,
-    repCourseDisabled,
-    repCourseOpacity,
-    repCourseOpts,
-    repCourseVal,
-    repDesc,
-    repExportLabel,
-    repExportNow,
-    repExportOpacity,
-    repFindings,
-    repFormats,
-    repHasTarget,
-    repHistory,
-    repHistoryFoot,
-    repKpis,
-    repNoSections,
-    repFromOpts,
-    repFromVal,
-    repOnCollege,
-    repOnCourse,
-    repOnFrom,
-    repOnTo,
-    repToOpts,
-    repToVal,
-    repOutputMeta,
-    repPreviewRef,
-    repRecords,
-    repScopeLabel,
-    repSectionRows,
-    repShowChart,
-    repShowFindings,
-    repShowKpi,
-    repShowTable,
-    repTableGrid,
-    repTableHead,
-    repTableRows,
-    repTableTitle,
-    repTargetLabel,
-    repTargetPct,
-    repTemplateCount,
-    repTemplates,
-    repTitle,
-    repViewArchive,
-    repYearsLabel,
-    repToday,
-    rangeError,
-    rowHover,
+    goRecords, rowHover,
+    repBars, repChartNote, repChartTitle, repCollegeOpts, repCollegeVal, repCourseDisabled, repCourseOpacity, repCourseOpts, repCourseVal, repDeptCollege, repDesc,
+    repExportDisabled, repExportLabel, repExportNow, repExportOpacity, repExporting, repFindings, repFmtOpts, repFmtVal, repFromOpts, repFromVal, repHasTarget,
+    repHistory, repHistoryFoot, repIsDept, repKpis, repMetaRows, repNoSections, repNumChart, repNumFind, repNumKpi, repNumTable, repOnCollege, repOnCourse, repOnFmt,
+    repOnFrom, repOnTo, repOutputMeta, repPreviewRef, repReset, repScopeNote, repSectionRows, repShowChart, repShowFindings, repShowKpi, repShowTable,
+    repTableGrid, repTableHead, repTableRows, repTableTitle, repTargetLabel, repTargetPct, repTemplateCount, repTemplates, repTitle, repToOpts, repToVal,
+    repToday, repViewArchive, rangeError,
   } = v;
   return (
     <>
@@ -83,35 +53,13 @@ export default function ReportsView(v) {
           <div
             data-m="topbar"
             style={{
-              background: '#fff',
-              border: '1px solid #E7E9ED',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              padding: '12px 14px 12px 24px',
-              margin: '12px 12px 0',
-              borderRadius: '16px',
-              boxShadow: '0 1px 2px rgba(16,24,40,.04),0 8px 24px -12px rgba(16,24,40,.08)',
-              minHeight: '70px',
-              boxSizing: 'border-box',
-              gap: '16px',
-              minWidth: '0',
+              background: '#fff', border: '1px solid #E7E9ED', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px 12px 24px',
+              margin: '12px 12px 0', borderRadius: '16px', boxShadow: '0 1px 2px rgba(16,24,40,.04),0 8px 24px -12px rgba(16,24,40,.08)', minHeight: '70px',
+              boxSizing: 'border-box', gap: '16px', minWidth: '0',
             }}
           >
             <div style={{ minWidth: '0' }}>
-              <div
-                style={{
-                  fontFamily: 'Inter,sans-serif',
-                  fontWeight: '700',
-                  fontSize: '26px',
-                  lineHeight: '1.15',
-                  letterSpacing: '-.6px',
-                  color: '#0B1220',
-                }}
-              >
-                Reports
-              </div>
-              <div style={{ fontSize: '11px', color: 'rgba(0,0,0,.45)', fontWeight: '600', letterSpacing: '.3px' }}>UDM ALUMNI</div>
+              <div style={{ fontFamily: 'var(--udm-sans)', fontWeight: '700', fontSize: '26px', lineHeight: '1.15', letterSpacing: '-.6px', color: '#0B1220' }}>Reports</div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <SearchPill />
@@ -122,824 +70,359 @@ export default function ReportsView(v) {
           <div
             data-m="ws"
             style={{
-              margin: '14px 12px 28px',
-              padding: '24px',
-              boxSizing: 'border-box',
-              minWidth: '0',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '14px',
-              fontFamily: 'Inter,system-ui,sans-serif',
-              background: 'rgba(255,255,255,.55)',
-              border: '1px solid #E7E9ED',
-              borderRadius: '20px',
-              boxShadow: '0 1px 2px rgba(16,24,40,.03)',
+              margin: '14px 12px 28px', padding: '24px', boxSizing: 'border-box', minWidth: '0', display: 'flex', flexDirection: 'column', gap: '14px',
+              fontFamily: 'var(--udm-sans)', background: 'rgba(255,255,255,.55)', border: '1px solid #E7E9ED', borderRadius: '20px', boxShadow: '0 1px 2px rgba(16,24,40,.03)',
             }}
           >
-            <div
-              data-m="ws-head"
-              style={{
-                display: 'flex',
-                alignItems: 'flex-start',
-                justifyContent: 'space-between',
-                gap: '14px',
-                flexWrap: 'wrap',
-                padding: '0 4px 20px',
-                marginBottom: '6px',
-                borderBottom: '1px solid #E3E8E5',
-              }}
-            >
-              <div style={{ minWidth: '0' }}>
-                <div
-                  style={{
-                    fontFamily: 'Inter,sans-serif',
-                    fontWeight: '700',
-                    fontSize: '30px',
-                    lineHeight: '1.1',
-                    letterSpacing: '-.7px',
-                    color: '#0B1220',
-                  }}
-                >
-                  Reports & Submissions
-                </div>
-                <div style={{ fontSize: '13.5px', color: '#64748B', marginTop: '7px', textWrap: 'pretty' }}>
-                  Preview the analytics behind each report, then export it as PDF, Excel or CSV. College and course scope follow the alumni
-                  registration records.
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '11px', flexWrap: 'wrap' }}>
-                  <div
-                    style={{
-                      background: '#E7F0EE',
-                      color: '#0F3D2E',
-                      borderRadius: '99px',
-                      padding: '5px 11px',
-                      fontSize: '10.5px',
-                      fontWeight: '700',
-                      letterSpacing: '.6px',
-                    }}
-                  >
-                    SURVEY COVERAGE: {String(repYearsLabel || '').toUpperCase()}
+            <div data-m="ws-head" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap', padding: '0 4px 20px', borderBottom: '1px solid #E3E8E5' }}>
+              <div style={{ minWidth: '0', maxWidth: '760px' }}>
+                <h1 style={{ margin: '0', fontFamily: 'var(--udm-sans)', fontWeight: '700', fontSize: '26px', lineHeight: '1.15', letterSpacing: '-.5px', color: '#0B1220' }}>Reports &amp; Analytics</h1>
+                <p style={{ margin: '6px 0 0', fontSize: '14px', lineHeight: '1.55', color: '#475569', textWrap: 'pretty' }}>
+                  Generate aggregated reports on graduate employment, survey coverage and inclusion for university and CHED submissions. Choose a report, set its scope, review the
+                  preview, then export.
+                </p>
+                {repIsDept ? (
+                  <div style={{ display: 'flex', marginTop: '12px' }}>
+                    <span style={{ background: '#FBF3D6', color: '#7A5B00', borderRadius: '99px', padding: '4px 10px', fontSize: '11.5px', fontWeight: '600' }}>Scoped to {repDeptCollege}</span>
                   </div>
-                  <div
-                    style={{
-                      background: '#EEF1F5',
-                      color: '#475569',
-                      borderRadius: '99px',
-                      padding: '5px 11px',
-                      fontSize: '10.5px',
-                      fontWeight: '700',
-                      letterSpacing: '.6px',
-                    }}
-                  >
-                    AGGREGATED OUTPUTS · RA 10173 COMPLIANT
-                  </div>
-                </div>
+                ) : null}
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-                <select
-                  value={repCollegeVal}
-                  onChange={repOnCollege}
-                  aria-label="Filter by college"
-                  style={selectStyle('12.5px', '280px')}
-                  {...selectFx}
-                >
-                  {(repCollegeOpts || []).map((o, _i) => (
-                    <React.Fragment key={_i}>
-                      <option value={o.value}>{o.label}</option>
-                    </React.Fragment>
-                  ))}
-                </select>
-                <select
-                  value={repCourseVal}
-                  onChange={repOnCourse}
-                  aria-label="Filter by program"
-                  disabled={repCourseDisabled}
-                  style={selectStyle('12.5px', '280px', { opacity: repCourseOpacity })}
-                  {...selectFx}
-                >
-                  {(repCourseOpts || []).map((o, _i) => (
-                    <React.Fragment key={_i}>
-                      <option value={o.value}>{o.label}</option>
-                    </React.Fragment>
-                  ))}
-                </select>
-                <select
-                  aria-label="Batch from"
-                  value={repFromVal}
-                  onChange={repOnFrom}
-                  style={selectStyle('12.5px', '140px')}
-                  {...selectFx}
-                >
-                  {(repFromOpts || []).map((o, _i) => (
-                    <React.Fragment key={_i}>
-                      <option value={o.value}>{o.label}</option>
-                    </React.Fragment>
-                  ))}
-                </select>
-                <select
-                  aria-label="Batch to"
-                  value={repToVal}
-                  onChange={repOnTo}
-                  style={selectStyle('12.5px', '140px')}
-                  {...selectFx}
-                >
-                  {(repToOpts || []).map((o, _i) => (
-                    <React.Fragment key={_i}>
-                      <option value={o.value}>{o.label}</option>
-                    </React.Fragment>
-                  ))}
-                </select>
-                <div role="button" tabIndex={0} onKeyDown={onActivate(goRecords)}
-                  onClick={goRecords}
-                  style={{
-                    background: '#fff',
-                    border: '1px solid #E2E5EA',
-                    borderRadius: '12px',
-                    padding: '11px 15px',
-                    fontSize: '13px',
-                    fontWeight: '600',
-                    color: '#0F172A',
-                    cursor: 'pointer',
-                    boxShadow: '0 1px 2px rgba(16,24,40,.04)',
-                  }}
-                  {...hv(filterHover)}
-                >
-                  Manage records
-                </div>
-              </div>
+              <button type="button" onClick={goRecords}
+                style={{ fontFamily: 'inherit', background: '#fff', border: '1px solid #D5DBE3', borderRadius: '10px', padding: '0 14px', minHeight: '40px', fontSize: '13px', fontWeight: '600', color: '#0F172A', cursor: 'pointer' }}
+                {...hv({ borderColor: '#9AA6B5' })}
+              >
+                Manage records
+              </button>
             </div>
             <RangeError message={rangeError} />
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '14px', alignItems: 'flex-start' }}>
-              <div
-                style={{
-                  flex: '1 1 300px',
-                  maxWidth: '100%',
-                  minWidth: '0',
-                  background: '#fff',
-                  border: '1px solid #E7E9ED',
-                  borderRadius: '16px',
-                  boxShadow: '0 1px 2px rgba(16,24,40,.04),0 8px 24px -12px rgba(16,24,40,.08)',
-                  padding: '20px 18px 18px',
-                  boxSizing: 'border-box',
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '10px', padding: '0 4px' }}>
-                  <div style={{ fontFamily: 'Inter,sans-serif', fontWeight: '600', fontSize: '16px', color: '#0B1220' }}>Report library</div>
-                  <div style={{ fontSize: '11.5px', fontWeight: '600', color: '#94A3B8' }}>{repTemplateCount}</div>
-                </div>
-                <div style={{ fontSize: '12.5px', color: '#64748B', margin: '4px 4px 16px', textWrap: 'pretty' }}>
-                  Each card shows a snapshot for {repScopeLabel}. Select one to open the full preview.
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  {(repTemplates || []).map((t, _i) => (
-                    <React.Fragment key={_i}>
-                      <div role="button" tabIndex={0} onKeyDown={onActivate(t.onClick)}
-                        onClick={t.onClick}
+
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', alignItems: 'flex-start', marginTop: '4px' }}>
+              <div style={{ flex: '1 1 340px', maxWidth: '100%', minWidth: '0', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <section aria-labelledby="rep-lib-h" style={{ ...panel, padding: '18px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <Step n="1" />
+                    <h2 id="rep-lib-h" style={{ ...h2, flex: '1' }}>Choose a report</h2>
+                    <span style={{ fontSize: '12px', color: '#94A3B8', fontWeight: '600' }}>{repTemplateCount}</span>
+                  </div>
+                  <div role="radiogroup" aria-labelledby="rep-lib-h" style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '14px' }}>
+                    {(repTemplates || []).map((t) => (
+                      <button key={t.id} type="button" role="radio" aria-checked={t.on} onClick={t.onClick}
                         style={{
-                          border: `1px solid ${t.border}`,
-                          background: t.bg,
-                          borderRadius: '14px',
-                          padding: '13px',
-                          cursor: 'pointer',
-                          display: 'flex',
-                          gap: '13px',
-                          alignItems: 'stretch',
-                          transition: 'border-color .15s',
+                          display: 'flex', gap: '12px', alignItems: 'flex-start', width: '100%', textAlign: 'left', padding: '12px 14px', borderRadius: '12px', border: `1px solid ${t.border}`,
+                          background: t.bg, boxShadow: t.ring, cursor: 'pointer', fontFamily: 'inherit', boxSizing: 'border-box', transition: 'border-color .15s, background .15s',
                         }}
                         {...hv(t.hover)}
                       >
-                        <div
-                          style={{
-                            width: '78px',
-                            flex: 'none',
-                            borderRadius: '10px',
-                            background: t.thumbBg,
-                            border: `1px solid ${t.thumbBorder}`,
-                            padding: '9px 8px 0',
-                            boxSizing: 'border-box',
-                            display: 'flex',
-                            alignItems: 'flex-end',
-                            gap: '3px',
-                            minHeight: '68px',
-                          }}
-                        >
-                          {(t.mini || []).map((b, _i) => (
-                            <React.Fragment key={_i}>
-                              <div style={{ flex: '1', height: b.h, background: b.c, borderRadius: '2px 2px 0 0' }} />
-                            </React.Fragment>
+                        <span aria-hidden="true" style={{ width: '34px', height: '34px', borderRadius: '9px', background: t.iconBg, color: t.iconColor, display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}>
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ width: '18px', height: '18px' }}><path d={t.icon} /></svg>
+                        </span>
+                        <span style={{ flex: '1', minWidth: '0', display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                          <span style={{ fontSize: '13.5px', fontWeight: '700', color: '#0B1220', lineHeight: '1.3' }}>{t.name}</span>
+                          <span style={{ fontSize: '12.5px', color: '#475569', lineHeight: '1.45', textWrap: 'pretty' }}>{t.short}</span>
+                          <span style={{ fontSize: '11.5px', color: '#94A3B8', marginTop: '2px' }}>{t.runs}</span>
+                        </span>
+                        <span aria-hidden="true" style={{ width: '16px', height: '16px', borderRadius: '50%', border: `1.5px solid ${t.dotBorder}`, boxSizing: 'border-box', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none', marginTop: '2px' }}>
+                          <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: t.dot }} />
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </section>
+
+                <section aria-labelledby="rep-cfg-h" style={{ ...panel, padding: '18px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <Step n="2" />
+                      <h2 id="rep-cfg-h" style={{ ...h2, flex: '1' }}>Configure scope</h2>
+                      <button type="button" onClick={repReset}
+                        style={{ fontFamily: 'inherit', border: '0', background: 'none', padding: '4px 2px', fontSize: '12.5px', fontWeight: '600', color: '#0F6B4F', cursor: 'pointer' }}
+                        {...hv({ textDecoration: 'underline' })}
+                      >
+                        Reset
+                      </button>
+                    </div>
+                    <p style={{ margin: '0 0 0 32px', fontSize: '12px', color: '#64748B', lineHeight: '1.45', textWrap: 'pretty' }}>{repScopeNote}</p>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr)', gap: '14px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                      <label htmlFor="rep-college" style={label}>College</label>
+                      {repIsDept ? (
+                        <>
+                          <div id="rep-college" aria-readonly="true" style={{ display: 'flex', alignItems: 'center', gap: '8px', minHeight: '42px', padding: '0 12px', borderRadius: '10px', border: '1px solid #E2E5EA', background: '#F6F7F8', fontSize: '13px', color: '#334155', boxSizing: 'border-box' }}>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="#94A3B8" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ width: '15px', height: '15px', flex: 'none' }}><rect x="5" y="11" width="14" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /></svg>
+                            <span style={{ minWidth: '0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{repDeptCollege}</span>
+                          </div>
+                          <span style={hint}>College Coordinators can report on their assigned college only.</span>
+                        </>
+                      ) : (
+                        <select id="rep-college" aria-label="Filter by college" value={repCollegeVal} onChange={repOnCollege} style={field} {...fieldFx}>
+                          <Options opts={repCollegeOpts} />
+                        </select>
+                      )}
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                      <label htmlFor="rep-program" style={label}>Program</label>
+                      <select id="rep-program" aria-label="Filter by program" value={repCourseVal} onChange={repOnCourse} disabled={repCourseDisabled} style={{ ...field, opacity: repCourseOpacity }} {...fieldFx}>
+                        <Options opts={repCourseOpts} />
+                      </select>
+                      {repCourseDisabled ? <span style={hint}>Select a college to filter by program.</span> : null}
+                    </div>
+                    <fieldset style={{ border: '0', margin: '0', padding: '0', minWidth: '0', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                      <legend style={{ ...label, padding: '0', marginBottom: '6px' }}>Graduation batch range</legend>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) auto minmax(0,1fr)', gap: '8px', alignItems: 'center' }}>
+                        <select aria-label="Batch from" value={repFromVal} onChange={repOnFrom} style={field} {...fieldFx}><Options opts={repFromOpts} /></select>
+                        <span style={{ fontSize: '12.5px', color: '#64748B' }}>to</span>
+                        <select aria-label="Batch to" value={repToVal} onChange={repOnTo} style={field} {...fieldFx}><Options opts={repToOpts} /></select>
+                      </div>
+                    </fieldset>
+                  </div>
+
+                  <div style={{ borderTop: '1px solid #EEF0F3', paddingTop: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <Step n="3" />
+                      <h2 id="rep-sec-h" style={h2}>Report sections</h2>
+                    </div>
+                    <fieldset aria-labelledby="rep-sec-h" style={{ border: '0', margin: '0', padding: '0', minWidth: '0', display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                      {(repSectionRows || []).map((s) => (
+                        <label key={s.id} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', padding: '8px 6px', borderRadius: '8px', cursor: 'pointer' }} {...hv({ background: '#F6F8F7' })}>
+                          <input type="checkbox" checked={s.on} onChange={s.onClick} style={{ width: '17px', height: '17px', margin: '1px 0 0', accentColor: '#0F3D2E', flex: 'none', cursor: 'pointer' }} />
+                          <span style={{ display: 'flex', flexDirection: 'column', gap: '2px', minWidth: '0' }}>
+                            <span style={{ fontSize: '13px', fontWeight: '600', color: '#0B1220' }}>{s.label}</span>
+                            <span style={hint}>{s.desc}</span>
+                          </span>
+                        </label>
+                      ))}
+                    </fieldset>
+                  </div>
+                </section>
+              </div>
+
+              <section ref={repPreviewRef} aria-labelledby="rep-prev-h" style={{ ...panel, flex: '999 1 600px', maxWidth: '100%', overflow: 'hidden' }}>
+                <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap', padding: '18px 20px' }}>
+                  <div style={{ minWidth: '0', flex: '1 1 260px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <Step n="4" />
+                      <h2 id="rep-prev-h" style={h2}>Preview &amp; export</h2>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '11.5px', fontWeight: '600', color: '#0F6B4F', background: '#E6F2EC', borderRadius: '99px', padding: '3px 9px' }}>
+                        <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#1F9D6B' }} />
+                        Live
+                      </span>
+                    </div>
+                    <div style={{ marginLeft: '32px', fontSize: '12.5px', color: '#64748B' }}>{repOutputMeta}</div>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'flex-end', gap: '10px', flexWrap: 'wrap' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', width: '210px', maxWidth: '100%' }}>
+                      <label htmlFor="rep-fmt" style={{ fontSize: '12px', fontWeight: '600', color: '#334155' }}>Format</label>
+                      <select id="rep-fmt" value={repFmtVal} onChange={repOnFmt} style={field} {...fieldFx}><Options opts={repFmtOpts} /></select>
+                    </div>
+                    <button type="button" onClick={repExportNow} disabled={repExportDisabled} aria-busy={repExporting}
+                      style={{ fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', gap: '8px', minHeight: '42px', padding: '0 18px', border: '0', borderRadius: '10px', background: '#0F3D2E', color: '#fff', fontSize: '13.5px', fontWeight: '700', cursor: repExportDisabled ? 'default' : 'pointer', opacity: repExportOpacity }}
+                      {...hv({ background: '#0B2F23' })}
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ width: '16px', height: '16px' }}><path d="M12 4v11M7 10l5 5 5-5M5 20h14" /></svg>
+                      <span>{repExportLabel}</span>
+                    </button>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '7px', margin: '-6px 20px 14px', fontSize: '12px', color: '#64748B' }}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ width: '14px', height: '14px', flex: 'none' }}><path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6z" /></svg>
+                  <span>Reports contain aggregated data only, in accordance with RA 10173.</span>
+                </div>
+                {repNoSections ? (
+                  <div role="status" style={{ margin: '0 20px 14px', padding: '10px 12px', borderRadius: '10px', background: '#FDF6E3', border: '1px solid #F0DFA6', fontSize: '12.5px', color: '#6B5200' }}>
+                    Select at least one report section to preview and export.
+                  </div>
+                ) : null}
+
+                <div style={{ background: '#F2F2EE', borderTop: '1px solid #EEF0F3', padding: '24px' }}>
+                  <article aria-label="Report preview"
+                    style={{ background: '#fff', border: '1px solid #E2E4DF', borderRadius: '4px', boxShadow: '0 8px 24px -14px rgba(16,24,40,.22)', padding: '36px 40px', maxWidth: '880px', margin: '0 auto', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: '28px', color: '#0B1220' }}
+                  >
+                    <header style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '14px', flexWrap: 'wrap', paddingBottom: '14px', borderBottom: '2px solid #0F3D2E' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: '0' }}>
+                          <img src="/alumni-logo.png" alt="UDM Alumni" style={{ width: '40px', height: '40px', objectFit: 'contain', flex: 'none' }} />
+                          <div style={{ minWidth: '0' }}>
+                            <div style={{ fontSize: '13px', fontWeight: '700', color: '#0F3D2E' }}>Universidad de Manila</div>
+                            <div style={{ fontSize: '12px', color: '#64748B' }}>Alumni Relations Office</div>
+                          </div>
+                        </div>
+                        <div style={{ fontSize: '11.5px', color: '#64748B', textAlign: 'right' }}>Preview · {repToday}</div>
+                      </div>
+                      <div>
+                        <h3 style={{ margin: '0', fontFamily: 'var(--udm-sans)', fontSize: '22px', lineHeight: '1.25', fontWeight: '700', letterSpacing: '-.3px', color: '#0B1220', textWrap: 'pretty' }}>{repTitle}</h3>
+                        <p style={{ margin: '6px 0 0', fontSize: '13.5px', lineHeight: '1.6', color: '#475569', textWrap: 'pretty' }}>{repDesc}</p>
+                      </div>
+                      <dl style={{ margin: '0', display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(150px,1fr))', gap: '12px 20px', padding: '14px 16px', background: '#F8FAF9', border: '1px solid #E7ECE9', borderRadius: '8px' }}>
+                        {(repMetaRows || []).map((m) => (
+                          <div key={m.k} style={{ minWidth: '0' }}>
+                            <dt style={{ fontSize: '11.5px', color: '#64748B' }}>{m.k}</dt>
+                            <dd style={{ margin: '2px 0 0', fontSize: '13px', fontWeight: '600', color: '#0B1220', overflowWrap: 'anywhere' }}>{m.v}</dd>
+                          </div>
+                        ))}
+                      </dl>
+                    </header>
+
+                    {repNoSections ? <div style={{ padding: '36px 10px', textAlign: 'center', fontSize: '13px', color: '#94A3B8' }}>No sections selected.</div> : null}
+
+                    {repShowKpi ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                        <h4 style={h4}><span>{repNumKpi}</span> Key indicators</h4>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(100%,160px),1fr))', gap: '1px', background: '#E7E9ED', border: '1px solid #E7E9ED', borderRadius: '8px', overflow: 'hidden' }}>
+                          {(repKpis || []).map((k) => (
+                            <div key={k.label} style={{ background: '#fff', padding: '14px 16px', minWidth: '0' }}>
+                              <div style={{ fontSize: '12px', color: '#64748B' }}>{k.label}</div>
+                              <div style={{ fontSize: '22px', fontWeight: '700', letterSpacing: '-.4px', color: '#0B1220', marginTop: '4px' }}>{k.value}</div>
+                              <div style={{ fontSize: '12px', color: '#64748B', marginTop: '2px' }}>{k.sub}</div>
+                            </div>
                           ))}
                         </div>
-                        <div style={{ flex: '1', minWidth: '0', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '8px' }}>
-                            <div style={{ fontSize: '13.5px', fontWeight: '700', color: '#0B1220', lineHeight: '1.3', textWrap: 'pretty' }}>
-                              {t.name}
-                            </div>
-                            <div
-                              style={{
-                                background: t.tagBg,
-                                color: t.tagColor,
-                                borderRadius: '7px',
-                                padding: '3px 7px',
-                                fontSize: '9.5px',
-                                fontWeight: '700',
-                                letterSpacing: '.5px',
-                                textTransform: 'uppercase',
-                                whiteSpace: 'nowrap',
-                                flex: 'none',
-                              }}
-                            >
-                              {t.cadence}
-                            </div>
+                      </div>
+                    ) : null}
+
+                    {repShowChart ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '10px', flexWrap: 'wrap' }}>
+                          <h4 style={h4}><span>{repNumChart}</span> {repChartTitle}</h4>
+                          <div style={{ fontSize: '12px', color: '#64748B' }}>{repChartNote}</div>
+                        </div>
+                        {repHasTarget ? (
+                          <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', fontSize: '12px', color: '#475569' }}>
+                            <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><span style={{ width: '10px', height: '10px', borderRadius: '2px', background: '#0F3D2E' }} />Meets target</span>
+                            <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><span style={{ width: '10px', height: '10px', borderRadius: '2px', background: '#A9C3B8' }} />Below target</span>
+                            <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><span style={{ width: '16px', borderTop: '1.5px dashed #A8841A' }} />{repTargetLabel}</span>
                           </div>
-                          <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', flexWrap: 'wrap' }}>
-                            <span style={{ fontSize: '17px', fontWeight: '700', color: '#0F3D2E', letterSpacing: '-.3px' }}>{t.headline}</span>
-                            <span style={{ fontSize: '11.5px', color: '#64748B' }}>{t.headlineLabel}</span>
-                          </div>
-                          <div style={{ fontSize: '11px', color: '#94A3B8' }}>{t.runs}</div>
+                        ) : null}
+                        <div style={{ position: 'relative', height: '200px', display: 'flex', alignItems: 'flex-end', gap: '14px', padding: '0 6px', borderBottom: '1px solid #CFD6D3', marginTop: '4px' }}>
+                          {repHasTarget ? (
+                            <div aria-hidden="true" style={{ position: 'absolute', left: '0', right: '0', bottom: repTargetPct, borderTop: '1.5px dashed #A8841A', pointerEvents: 'none', zIndex: '1' }} />
+                          ) : null}
+                          {(repBars || []).map((b) => (
+                            <div key={b.tip} title={b.tip} style={{ flex: '1', minWidth: '0', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', alignItems: 'center', gap: '6px' }}>
+                              <div style={{ fontSize: '12px', fontWeight: '700', color: '#0B1220', whiteSpace: 'nowrap' }}>{b.display}</div>
+                              <div style={{ width: '100%', maxWidth: '56px', height: b.pct, background: b.color, borderRadius: '4px 4px 0 0' }} />
+                            </div>
+                          ))}
+                        </div>
+                        <div style={{ display: 'flex', gap: '14px', padding: '0 6px' }}>
+                          {(repBars || []).map((b) => (
+                            <div key={b.tip} title={b.tip} style={{ flex: '1', minWidth: '0', textAlign: 'center', fontSize: '12px', color: '#475569', fontWeight: '600', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{b.label}</div>
+                          ))}
                         </div>
                       </div>
-                    </React.Fragment>
+                    ) : null}
+
+                    {repShowTable ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                        <h4 style={h4}><span>{repNumTable}</span> {repTableTitle}</h4>
+                        <div style={{ overflowX: 'auto', border: '1px solid #E2E8E5', borderRadius: '8px' }}>
+                          <div role="table" aria-label={repTableTitle} style={{ minWidth: '540px' }}>
+                            <div role="row" style={{ display: 'grid', gridTemplateColumns: repTableGrid, gap: '12px', padding: '10px 14px', background: '#F2F6F4', borderBottom: '1px solid #D9E2DE', fontSize: '12px', fontWeight: '700', color: '#1E3A30' }}>
+                              {(repTableHead || []).map((c) => <div key={c.v} role="columnheader" style={{ textAlign: c.align }}>{c.v}</div>)}
+                            </div>
+                            {(repTableRows || []).map((r, ri) => (
+                              <div key={ri} role="row" style={{ display: 'grid', gridTemplateColumns: repTableGrid, gap: '12px', padding: '10px 14px', borderBottom: '1px solid #EEF0F3', fontSize: '13px', color: '#334155', background: r.bg, fontVariantNumeric: 'tabular-nums' }}>
+                                {(r.cells || []).map((c, ci) => (
+                                  <div key={ci} role="cell" style={{ textAlign: c.align, fontWeight: c.weight, color: c.color }}>{c.v}</div>
+                                ))}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    ) : null}
+
+                    {repShowFindings ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <h4 style={{ ...h4, margin: '0 0 6px' }}><span>{repNumFind}</span> Key findings</h4>
+                        {(repFindings || []).map((f) => (
+                          <div key={f.n} style={{ display: 'grid', gridTemplateColumns: '26px minmax(0,1fr)', gap: '12px', padding: '14px 0', borderTop: '1px solid #E5EAE7' }}>
+                            <div aria-hidden="true" style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#FBF3D6', color: '#7A5B00', fontSize: '12px', fontWeight: '700', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{f.n}</div>
+                            <div style={{ fontSize: '13.5px', lineHeight: '1.55', color: '#334155', textWrap: 'pretty', paddingTop: '2px' }}>{f.text}</div>
+                          </div>
+                        ))}
+                        <div style={{ fontSize: '12px', color: '#64748B', paddingTop: '8px', borderTop: '1px solid #E5EAE7' }}>Findings are derived from the indicators and tables in this report.</div>
+                      </div>
+                    ) : null}
+
+                    <footer style={{ display: 'flex', justifyContent: 'space-between', gap: '10px', flexWrap: 'wrap', paddingTop: '12px', borderTop: '1px solid #E5EAE7', fontSize: '11.5px', color: '#64748B' }}>
+                      <span>Source: UDM Graduate Tracer Survey. Aggregated institutional data only — no names, Membership IDs or contact details (RA 10173).</span>
+                      <span>{repOutputMeta}</span>
+                    </footer>
+                  </article>
+                </div>
+              </section>
+            </div>
+
+            <section aria-labelledby="rep-hist-h" style={{ ...panel, marginTop: '4px' }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap', padding: '18px 20px 14px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: '0' }}>
+                  <h2 id="rep-hist-h" style={h2}>Generated reports</h2>
+                  <p style={{ margin: '0', fontSize: '13px', color: '#64748B', textWrap: 'pretty' }}>
+                    Every export is logged with the requesting account and time, and retained for seven years per CHED record-keeping policy. Times in PHT (UTC+8).
+                  </p>
+                </div>
+                <div role="button" tabIndex={0} onKeyDown={onActivate(repViewArchive)} onClick={repViewArchive} style={{ fontSize: '13px', fontWeight: '600', color: '#0F6B4F', cursor: 'pointer', whiteSpace: 'nowrap' }} {...hv({ textDecoration: 'underline' })}>
+                  View archive →
+                </div>
+              </div>
+              <div data-m="tscroll" style={{ overflowX: 'auto' }}>
+                <div role="table" aria-labelledby="rep-hist-h" style={{ minWidth: '860px' }}>
+                  <div role="row" data-m="trow"
+                    style={{ display: 'grid', gridTemplateColumns: '2.2fr .7fr 1.1fr 1.3fr .9fr 1.2fr', gap: '12px', padding: '10px 20px', background: '#F8FAF9', borderTop: '1px solid #EEF0F3', borderBottom: '1px solid #EEF0F3', fontSize: '12px', fontWeight: '700', color: '#475569' }}
+                  >
+                    <div role="columnheader">Report</div>
+                    <div role="columnheader">Format</div>
+                    <div role="columnheader">Generated by</div>
+                    <div role="columnheader">Date</div>
+                    <div role="columnheader">Status</div>
+                    <div role="columnheader" style={{ textAlign: 'right' }}>Actions</div>
+                  </div>
+                  {(repHistory || []).map((h, i) => (
+                    <div key={i} role="row" data-m="trow"
+                      style={{ display: 'grid', gridTemplateColumns: '2.2fr .7fr 1.1fr 1.3fr .9fr 1.2fr', gap: '12px', padding: '13px 20px', borderBottom: '1px solid #EEF0F3', alignItems: 'center' }}
+                      {...hv(rowHover)}
+                    >
+                      <div role="cell" style={{ minWidth: '0' }}>
+                        <div style={{ fontSize: '13.5px', fontWeight: '600', color: '#0B1220', textWrap: 'pretty' }}>{h.name}</div>
+                        <div style={{ fontSize: '12px', color: '#64748B', marginTop: '2px' }}>{h.scope}</div>
+                      </div>
+                      <div role="cell" style={{ fontSize: '12.5px', fontWeight: '600', color: '#0B1220' }}>
+                        {h.fmt}
+                        <div style={{ fontSize: '11.5px', fontWeight: '400', color: '#94A3B8' }}>{h.size}</div>
+                      </div>
+                      <div role="cell" style={{ fontSize: '13px', color: '#475569' }}>{h.by}</div>
+                      <div role="cell" style={{ fontSize: '12.5px', color: '#475569' }}>{h.date}</div>
+                      <div role="cell">
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12px', fontWeight: '600', color: h.statusColor, background: h.statusBg, padding: '4px 10px', borderRadius: '99px' }}>
+                          <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: h.statusDot }} />
+                          {h.status}
+                        </span>
+                      </div>
+                      <div role="cell" style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '6px' }}>
+                        <button type="button" onClick={h.onPreview} aria-label={h.previewLabel}
+                          style={{ fontFamily: 'inherit', fontSize: '12.5px', fontWeight: '600', color: '#0F3D2E', background: '#fff', border: '1px solid #D7E3DE', borderRadius: '8px', minHeight: '34px', padding: '0 11px', cursor: 'pointer' }}
+                          {...hv({ background: '#F4F8F6' })}
+                        >
+                          Preview
+                        </button>
+                        <button type="button" onClick={h.onDownload} aria-label={h.dlLabel}
+                          style={{ fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12.5px', fontWeight: '600', color: '#fff', background: '#0F3D2E', border: '0', borderRadius: '8px', minHeight: '34px', padding: '0 11px', cursor: 'pointer' }}
+                          {...hv({ background: '#0B2F23' })}
+                        >
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ width: '14px', height: '14px' }}><path d="M12 4v11M7 10l5 5 5-5M5 20h14" /></svg>
+                          Download
+                        </button>
+                      </div>
+                    </div>
                   ))}
                 </div>
               </div>
-              <div
-                ref={repPreviewRef}
-                style={{
-                  flex: '999 1 560px',
-                  minWidth: '0',
-                  maxWidth: '100%',
-                  background: '#fff',
-                  border: '1px solid #E7E9ED',
-                  borderRadius: '16px',
-                  boxShadow: '0 1px 2px rgba(16,24,40,.04),0 8px 24px -12px rgba(16,24,40,.08)',
-                  overflow: 'hidden',
-                }}
-              >
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'flex-start',
-                    justifyContent: 'space-between',
-                    gap: '16px',
-                    flexWrap: 'wrap',
-                    padding: '20px 22px 16px',
-                  }}
-                >
-                  <div style={{ minWidth: '0', flex: '1 1 260px' }}>
-                    <div
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '7px',
-                        fontSize: '10.5px',
-                        fontWeight: '700',
-                        letterSpacing: '1px',
-                        textTransform: 'uppercase',
-                        color: '#0F6B4F',
-                      }}
-                    >
-                      <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#1F9D6B' }} />
-                      <span>Live preview</span>
-                      <span style={{ color: '#94A3B8', fontWeight: '600', letterSpacing: '.4px', textTransform: 'none' }}>· {repScopeLabel}</span>
-                    </div>
-                    <div
-                      style={{
-                        fontFamily: 'Inter,sans-serif',
-                        fontWeight: '700',
-                        fontSize: '20px',
-                        lineHeight: '1.25',
-                        color: '#0B1220',
-                        marginTop: '6px',
-                        textWrap: 'pretty',
-                      }}
-                    >
-                      {repTitle}
-                    </div>
-                    <div style={{ fontSize: '12.5px', color: '#64748B', marginTop: '4px', lineHeight: '1.5', textWrap: 'pretty' }}>{repDesc}</div>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-                    <div style={{ display: 'flex', background: '#F1F3F5', borderRadius: '11px', padding: '3px', gap: '2px' }}>
-                      {(repFormats || []).map((f, _i) => (
-                        <React.Fragment key={_i}>
-                          <div role="button" tabIndex={0} onKeyDown={onActivate(f.onClick)}
-                            onClick={f.onClick}
-                            style={{
-                              background: f.bg,
-                              color: f.color,
-                              boxShadow: f.shadow,
-                              borderRadius: '8px',
-                              padding: '8px 14px',
-                              fontSize: '12.5px',
-                              fontWeight: '700',
-                              cursor: 'pointer',
-                            }}
-                          >
-                            {f.label}
-                          </div>
-                        </React.Fragment>
-                      ))}
-                    </div>
-                    <div role="button" tabIndex={0} onKeyDown={onActivate(repExportNow)}
-                      onClick={repExportNow}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        background: '#0F3D2E',
-                        color: '#fff',
-                        borderRadius: '12px',
-                        padding: '11px 18px',
-                        fontSize: '13px',
-                        fontWeight: '700',
-                        cursor: 'pointer',
-                        opacity: repExportOpacity,
-                      }}
-                      {...hv(exportHover)}
-                    >
-                      <span style={{ fontSize: '12px' }}>↓</span>
-                      <span>{repExportLabel}</span>
-                    </div>
-                  </div>
-                </div>
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    gap: '12px',
-                    flexWrap: 'wrap',
-                    padding: '12px 22px',
-                    borderTop: '1px solid #EEF0F3',
-                    borderBottom: '1px solid #EEF0F3',
-                    background: '#FBFBFA',
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '7px', flexWrap: 'wrap' }}>
-                    <div
-                      style={{
-                        fontSize: '10.5px',
-                        fontWeight: '700',
-                        letterSpacing: '.8px',
-                        textTransform: 'uppercase',
-                        color: '#94A3B8',
-                        marginRight: '3px',
-                      }}
-                    >
-                      Include
-                    </div>
-                    {(repSectionRows || []).map((s, _i) => (
-                      <React.Fragment key={_i}>
-                        <div role="button" tabIndex={0} onKeyDown={onActivate(s.onClick)}
-                          onClick={s.onClick}
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '6px',
-                            border: `1px solid ${s.border}`,
-                            background: s.bg,
-                            color: s.color,
-                            borderRadius: '99px',
-                            padding: '5px 11px',
-                            fontSize: '12px',
-                            fontWeight: '600',
-                            cursor: 'pointer',
-                          }}
-                        >
-                          <span style={{ fontSize: '10px', width: '10px' }}>{s.mark}</span>
-                          <span>{s.label}</span>
-                        </div>
-                      </React.Fragment>
-                    ))}
-                  </div>
-                  <div style={{ fontSize: '12px', color: '#64748B' }}>{repOutputMeta}</div>
-                </div>
-                <div style={{ background: '#EFF0EC', padding: '22px' }}>
-                  <div
-                    style={{
-                      background: '#fff',
-                      border: '1px solid #E2E4DF',
-                      borderRadius: '6px',
-                      boxShadow: '0 10px 30px -14px rgba(16,24,40,.25)',
-                      padding: '28px 30px',
-                      maxWidth: '860px',
-                      margin: '0 auto',
-                      boxSizing: 'border-box',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: '24px',
-                    }}
-                  >
-                    <div
-                      style={{
-                        display: 'flex',
-                        alignItems: 'flex-start',
-                        justifyContent: 'space-between',
-                        gap: '14px',
-                        flexWrap: 'wrap',
-                        paddingBottom: '16px',
-                        borderBottom: '2px solid #0F3D2E',
-                      }}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: '0' }}>
-                        <img
-                          src="/alumni-logo.png"
-                          alt="UDM"
-                          style={{ width: '38px', height: '38px', borderRadius: '50%', objectFit: 'cover', flex: 'none' }}
-                        />
-                        <div style={{ minWidth: '0' }}>
-                          <div style={{ fontSize: '10.5px', fontWeight: '700', letterSpacing: '.8px', textTransform: 'uppercase', color: '#64748B' }}>
-                            UDM Alumni Relations Office
-                          </div>
-                          <div style={{ fontSize: '16px', fontWeight: '700', color: '#0B1220', marginTop: '3px', textWrap: 'pretty' }}>
-                            {repTitle}
-                          </div>
-                        </div>
-                      </div>
-                      <div style={{ textAlign: 'right', fontSize: '11px', color: '#64748B', lineHeight: '1.6' }}>
-                        <div>{repScopeLabel}</div>
-                        <div>{repYearsLabel} · {repRecords} verified records</div>
-                        <div>Preview · {repToday}</div>
-                      </div>
-                    </div>
-                    {repNoSections ? (
-                      <>
-                        <div style={{ padding: '40px 10px', textAlign: 'center', fontSize: '13px', color: '#94A3B8' }}>
-                          No sections selected — turn on at least one section above to preview and export.
-                        </div>
-                      </>
-                    ) : null}
-                    {repShowKpi ? (
-                      <>
-                        <div
-                          style={{
-                            display: 'grid',
-                            gridTemplateColumns: 'repeat(auto-fit,minmax(min(100%,150px),1fr))',
-                            gap: '0',
-                            border: '1px solid #E7E9ED',
-                            borderRadius: '10px',
-                            overflow: 'hidden',
-                          }}
-                        >
-                          {(repKpis || []).map((k, _i) => (
-                            <React.Fragment key={_i}>
-                              <div style={{ padding: '14px 16px', borderRight: '1px solid #EEF0F3', minWidth: '0' }}>
-                                <div
-                                  style={{
-                                    fontSize: '10.5px',
-                                    fontWeight: '700',
-                                    letterSpacing: '.5px',
-                                    textTransform: 'uppercase',
-                                    color: '#94A3B8',
-                                  }}
-                                >
-                                  {k.label}
-                                </div>
-                                <div style={{ fontSize: '23px', fontWeight: '700', letterSpacing: '-.5px', color: '#0B1220', marginTop: '5px' }}>
-                                  {k.value}
-                                </div>
-                                <div style={{ fontSize: '11.5px', color: '#64748B', marginTop: '2px' }}>{k.sub}</div>
-                              </div>
-                            </React.Fragment>
-                          ))}
-                        </div>
-                      </>
-                    ) : null}
-                    {repShowChart ? (
-                      <>
-                        <div>
-                          <div
-                            style={{
-                              display: 'flex',
-                              alignItems: 'baseline',
-                              justifyContent: 'space-between',
-                              gap: '10px',
-                              flexWrap: 'wrap',
-                              marginBottom: '14px',
-                            }}
-                          >
-                            <div style={{ fontSize: '14px', fontWeight: '700', color: '#0B1220' }}>{repChartTitle}</div>
-                            <div style={{ fontSize: '11.5px', color: '#64748B' }}>{repChartNote}</div>
-                          </div>
-                          <div
-                            style={{
-                              position: 'relative',
-                              height: '200px',
-                              display: 'flex',
-                              alignItems: 'flex-end',
-                              gap: repBarGap,
-                              padding: '0 4px',
-                              borderBottom: '1px solid #CFD6D3',
-                            }}
-                          >
-                            {repHasTarget ? (
-                              <>
-                                <div
-                                  style={{
-                                    position: 'absolute',
-                                    left: '0',
-                                    right: '0',
-                                    bottom: repTargetPct,
-                                    borderTop: '1.5px dashed #C9A21E',
-                                    pointerEvents: 'none',
-                                    zIndex: '1',
-                                  }}
-                                >
-                                  <div
-                                    style={{
-                                      position: 'absolute',
-                                      left: '0',
-                                      top: '-19px',
-                                      fontSize: '10.5px',
-                                      fontWeight: '700',
-                                      color: '#8A6D1F',
-                                      background: '#fff',
-                                      padding: '0 4px',
-                                    }}
-                                  >
-                                    {repTargetLabel}
-                                  </div>
-                                </div>
-                              </>
-                            ) : null}
-                            {(repBars || []).map((b, _i) => (
-                              <React.Fragment key={_i}>
-                                <div
-                                  title={b.tip}
-                                  style={{
-                                    flex: '1',
-                                    minWidth: '0',
-                                    height: '100%',
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    justifyContent: 'flex-end',
-                                    alignItems: 'center',
-                                    gap: '6px',
-                                  }}
-                                >
-                                  <div style={{ fontSize: '11.5px', fontWeight: '700', color: '#0B1220', whiteSpace: 'nowrap' }}>{b.display}</div>
-                                  <div style={{ width: '100%', maxWidth: '58px', height: b.pct, background: b.color, borderRadius: '6px 6px 0 0' }} />
-                                </div>
-                              </React.Fragment>
-                            ))}
-                          </div>
-                          <div style={{ display: 'flex', gap: repBarGap, padding: '8px 4px 0' }}>
-                            {(repBars || []).map((b, _i) => (
-                              <React.Fragment key={_i}>
-                                <div
-                                  title={b.tip}
-                                  style={{
-                                    flex: '1',
-                                    minWidth: '0',
-                                    textAlign: 'center',
-                                    fontSize: '11px',
-                                    color: '#64748B',
-                                    fontWeight: '600',
-                                    overflow: 'hidden',
-                                    textOverflow: 'ellipsis',
-                                    whiteSpace: 'nowrap',
-                                  }}
-                                >
-                                  {b.label}
-                                </div>
-                              </React.Fragment>
-                            ))}
-                          </div>
-                        </div>
-                      </>
-                    ) : null}
-                    {repShowTable ? (
-                      <>
-                        <div>
-                          <div style={{ fontSize: '14px', fontWeight: '700', color: '#0B1220', marginBottom: '10px' }}>{repTableTitle}</div>
-                          <div style={{ overflowX: 'auto' }}>
-                            <div style={{ minWidth: '520px' }}>
-                              <div
-                                style={{
-                                  display: 'grid',
-                                  gridTemplateColumns: repTableGrid,
-                                  gap: '10px',
-                                  padding: '9px 10px',
-                                  background: '#F4F8F6',
-                                  borderRadius: '8px',
-                                  fontSize: '10.5px',
-                                  fontWeight: '700',
-                                  letterSpacing: '.5px',
-                                  textTransform: 'uppercase',
-                                  color: '#475569',
-                                }}
-                              >
-                                {(repTableHead || []).map((c, _i) => (
-                                  <React.Fragment key={_i}>
-                                    <div style={{ textAlign: c.align }}>{c.v}</div>
-                                  </React.Fragment>
-                                ))}
-                              </div>
-                              {(repTableRows || []).map((r, _i) => (
-                                <React.Fragment key={_i}>
-                                  <div
-                                    style={{
-                                      display: 'grid',
-                                      gridTemplateColumns: repTableGrid,
-                                      gap: '10px',
-                                      padding: '10px',
-                                      borderBottom: '1px solid #EEF0F3',
-                                      fontSize: '12.5px',
-                                      color: '#334155',
-                                    }}
-                                  >
-                                    {(r.cells || []).map((c, _i) => (
-                                      <React.Fragment key={_i}>
-                                        <div style={{ textAlign: c.align, fontWeight: c.weight, color: c.color }}>{c.v}</div>
-                                      </React.Fragment>
-                                    ))}
-                                  </div>
-                                </React.Fragment>
-                              ))}
-                            </div>
-                          </div>
-                        </div>
-                      </>
-                    ) : null}
-                    {repShowFindings ? (
-                      <>
-                        <div style={{ background: '#F7F6F1', borderRadius: '10px', padding: '16px 18px' }}>
-                          <div style={{ fontSize: '14px', fontWeight: '700', color: '#0B1220', marginBottom: '10px' }}>Key findings</div>
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                            {(repFindings || []).map((f, _i) => (
-                              <React.Fragment key={_i}>
-                                <div
-                                  style={{ display: 'flex', gap: '10px', fontSize: '13px', lineHeight: '1.55', color: '#334155', textWrap: 'pretty' }}
-                                >
-                                  <span
-                                    style={{
-                                      width: '6px',
-                                      height: '6px',
-                                      borderRadius: '50%',
-                                      background: '#C9A21E',
-                                      flex: 'none',
-                                      marginTop: '8px',
-                                    }}
-                                  />
-                                  <span>{f.text}</span>
-                                </div>
-                              </React.Fragment>
-                            ))}
-                          </div>
-                        </div>
-                      </>
-                    ) : null}
-                    <div
-                      style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        gap: '10px',
-                        flexWrap: 'wrap',
-                        paddingTop: '12px',
-                        borderTop: '1px solid #EEF0F3',
-                        fontSize: '10.5px',
-                        color: '#94A3B8',
-                      }}
-                    >
-                      <span>Aggregated institutional metrics only — no names, Membership IDs or contact details (RA 10173).</span>
-                      <span>{repOutputMeta}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div
-              style={{
-                background: '#fff',
-                border: '1px solid #E7E9ED',
-                borderRadius: '16px',
-                boxShadow: '0 1px 2px rgba(16,24,40,.04),0 8px 24px -12px rgba(16,24,40,.08)',
-                padding: '22px 0 0',
-              }}
-            >
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                  justifyContent: 'space-between',
-                  gap: '12px',
-                  padding: '0 24px 18px',
-                  flexWrap: 'wrap',
-                }}
-              >
-                <div>
-                  <div style={{ fontFamily: 'Inter,sans-serif', fontWeight: '600', fontSize: '16px', color: '#0B1220' }}>Generated reports</div>
-                  <div style={{ fontSize: '13px', color: '#64748B', marginTop: '4px' }}>
-                    Audit log of exports — retained seven years per CHED record-keeping policy. Timestamps in PHT (UTC+8).
-                  </div>
-                </div>
-                <div onKeyDown={onActivate(repViewArchive)} role="button" tabIndex={0} onClick={repViewArchive} style={{ fontSize: '13px', fontWeight: '600', color: '#0F6B4F', cursor: 'pointer', whiteSpace: 'nowrap' }}>View archive →</div>
-              </div>
-              <div data-m="tscroll" style={{ overflowX: 'auto' }}>
-                <div
-                  data-m="trow"
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: '2fr 1fr 1.1fr .6fr .6fr .7fr 1fr',
-                    padding: '12px 24px',
-                    margin: '0',
-                    background: '#F8FAF9',
-                    borderTop: '1px solid #EEF0F3',
-                    borderBottom: '1px solid #EEF0F3',
-                    fontSize: '11px',
-                    fontWeight: '600',
-                    color: '#94A3B8',
-                    letterSpacing: '.7px',
-                    textTransform: 'uppercase',
-                    gap: '10px',
-                    minWidth: '820px',
-                  }}
-                >
-                  <div>Report</div>
-                  <div>Generated by</div>
-                  <div>Date</div>
-                  <div>Format</div>
-                  <div>Size</div>
-                  <div>Status</div>
-                  <div style={{ textAlign: 'right' }}>Actions</div>
-                </div>
-                {(repHistory || []).map((h, _i) => (
-                  <React.Fragment key={_i}>
-                    <div
-                      data-m="trow"
-                      style={{
-                        display: 'grid',
-                        gridTemplateColumns: '2fr 1fr 1.1fr .6fr .6fr .7fr 1fr',
-                        padding: '15px 24px',
-                        borderBottom: '1px solid #EEF0F3',
-                        alignItems: 'center',
-                        gap: '10px',
-                        minWidth: '820px',
-                      }}
-                      {...hv(rowHover)}
-                    >
-                      <div style={{ minWidth: '0' }}>
-                        <div style={{ fontSize: '13.5px', fontWeight: '600', color: '#0B1220', textWrap: 'pretty' }}>{h.name}</div>
-                        <div style={{ fontSize: '11.5px', color: '#94A3B8', marginTop: '2px' }}>{h.scope}</div>
-                      </div>
-                      <div style={{ fontSize: '13px', color: '#475569' }}>{h.by}</div>
-                      <div style={{ fontSize: '12.5px', color: '#64748B' }}>{h.date}</div>
-                      <div style={{ fontSize: '12.5px', fontWeight: '700', color: '#0B1220' }}>{h.fmt}</div>
-                      <div style={{ fontSize: '12.5px', color: '#64748B' }}>{h.size}</div>
-                      <div
-                        style={{
-                          fontSize: '11.5px',
-                          fontWeight: '700',
-                          color: h.statusColor,
-                          background: h.statusBg,
-                          padding: '5px 11px',
-                          borderRadius: '99px',
-                          width: 'fit-content',
-                        }}
-                      >
-                        {h.status}
-                      </div>
-                      <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '6px' }}>
-                        <div role="button" tabIndex={0} onKeyDown={onActivate(h.onPreview)}
-                          onClick={h.onPreview}
-                          style={{
-                            fontSize: '12.5px',
-                            fontWeight: '700',
-                            color: '#0F3D2E',
-                            border: '1px solid #D7E3DE',
-                            borderRadius: '9px',
-                            padding: '6px 11px',
-                            cursor: 'pointer',
-                          }}
-                          {...hv(filterHover)}
-                        >
-                          Preview
-                        </div>
-                        <div role="button" tabIndex={0} onKeyDown={onActivate(h.onDownload)}
-                          onClick={h.onDownload}
-                          style={{
-                            fontSize: '12.5px',
-                            fontWeight: '700',
-                            color: '#fff',
-                            background: '#0F3D2E',
-                            borderRadius: '9px',
-                            padding: '7px 11px',
-                            cursor: 'pointer',
-                          }}
-                          {...hv(exportHover)}
-                        >
-                          ↓
-                        </div>
-                      </div>
-                    </div>
-                  </React.Fragment>
-                ))}
-              </div>
-              <div style={{ padding: '16px 24px', fontSize: '12.5px', color: '#64748B' }}>{repHistoryFoot}</div>
-            </div>
+              <div style={{ padding: '14px 20px', fontSize: '12px', color: '#64748B' }}>{repHistoryFoot}</div>
+            </section>
           </div>
         </div>
       </div>
     </>
   );
 }
-
