@@ -56,6 +56,25 @@ final class TfIdf
     }
 
     /**
+     * A course name. Each part ("Business Administration", "Marketing Management" in "... Major in Marketing
+     * Management") of two or more words counts only as its word pairs, so "Information Technology" does not match a
+     * posting for "Accounting Information System" on "information" alone; a one-word part ("Nursing") stays a word.
+     *
+     * @return list<array{0: string, 1: string}>
+     */
+    public static function name(?string $text, int $weight = 1): array
+    {
+        $out = [];
+        foreach (preg_split('/\s+(?:major in|with specialization in|specialization in)\s+|[()–]/iu', (string) $text) as $part) {
+            $terms = self::terms($part, $weight);
+            $pairs = array_values(array_filter($terms, fn ($t) => str_contains($t[0], ' ')));
+            $out = array_merge($out, $pairs === [] ? $terms : $pairs);
+        }
+
+        return $out;
+    }
+
+    /**
      * A named skill as one whole term (so "Power BI" matches "Power BI" and not only "power"), plus its words.
      *
      * @return list<array{0: string, 1: string}>

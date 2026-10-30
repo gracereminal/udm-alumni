@@ -117,7 +117,7 @@ class JobService
         $course = preg_replace('/^(Bachelor|Master|Doctor|BS|BTVTE)\b( of| in)?( (Science|Arts))?( in)?\s*/i', '', (string) ($a->program ?? $a->course_other));
         $abbr = explode('-', (string) $a->abbr)[0];
         $profile = array_merge(
-            TfIdf::terms($course, 2),
+            TfIdf::name($course, 2),
             // "BSIT" -> IT, "BIT-Cyber" -> IT, "BSCS" -> CS: the short form postings use ("IT, CS and Computer Engineering graduates").
             TfIdf::terms($abbr, 2), TfIdf::terms(preg_replace('/^(BS|AB|B(?!S))(?=[A-Z]{2,}$)/', '', $abbr), 2),
             TfIdf::terms($a->industry), TfIdf::terms($a->job_title),

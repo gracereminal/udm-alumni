@@ -85,6 +85,17 @@ describe('TfIdf', function () {
             ->and($r[1]['terms'])->toBe(['IT']);
     });
 
+    it('matches a course name as a phrase, not on one shared word', function () {
+        $docs = [
+            'acct' => TfIdf::terms('Accounting Associate. For graduates of Accountancy and Accounting Information System.'),
+            'it' => TfIdf::terms('Faculty, BS Information Technology'),
+            'cx' => TfIdf::terms('Customer Experience Specialist for an international account.'),
+        ];
+        expect(array_column(TfIdf::rank(TfIdf::name('Information Technology'), $docs, 0.05), 'key'))->toBe(['it'])
+            ->and(array_column(TfIdf::rank(TfIdf::name('Accounting Information System'), $docs, 0.05), 'key'))->toBe(['acct'])
+            ->and(array_column(TfIdf::name('Secondary Education Major in Mathematics'), 0))->toBe(['secondary educ', 'mathematic']);
+    });
+
     it('stems word forms together and keeps acronyms apart from stop words', function () {
         $r = TfIdf::rank(TfIdf::terms('Nursing'), ['a' => TfIdf::terms('Staff nurse'), 'b' => TfIdf::terms('Engineering')]);
         expect(array_column($r, 'key'))->toBe(['a'])
