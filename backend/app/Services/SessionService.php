@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\UserAccount;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\Cookie;
@@ -36,28 +37,38 @@ class SessionService
     }
 
     /**
-     * The live session row for a cookie value: not revoked, not expired, not idle, and its account active.
-     * Slides the idle window at most once a minute.
+     * The live session for a cookie value (not revoked, not expired, not idle, and its account active) with its user.
+     * Slides the idle window at most once a minute. One round trip: every authenticated request runs this.
+     *
+     * @return array{session_id: int, user: UserAccount}|null
      */
-    public function resolve(?string $token): ?object
+    public function resolve(?string $token): ?array
     {
         if ($token === null || $token === '' || strlen($token) > 100) {
             return null;
         }
         $row = DB::selectOne(
-            "SELECT s.session_id, s.user_id, s.last_seen_at
-               FROM auth_session s JOIN user_account u ON u.user_id = s.user_id
-              WHERE s.session_hash = ? AND s.revoked_at IS NULL AND s.expires_at > now()
-                AND s.last_seen_at > now() - make_interval(hours => ?)
-                AND u.account_status = 'active'",
+            "WITH live AS (
+               SELECT s.session_id, s.user_id
+                 FROM auth_session s JOIN user_account u ON u.user_id = s.user_id
+                WHERE s.session_hash = ? AND s.revoked_at IS NULL AND s.expires_at > now()
+                  AND s.last_seen_at > now() - make_interval(hours => ?)
+                  AND u.account_status = 'active'
+             ), touch AS (
+               UPDATE auth_session t SET last_seen_at = now() FROM live
+                WHERE t.session_id = live.session_id AND t.last_seen_at < now() - interval '1 minute'
+             )
+             SELECT live.session_id AS auth_session_id, u.* FROM live JOIN user_account u ON u.user_id = live.user_id",
             [self::hash($token), config('auth.session.idle_hours')],
         );
         if ($row === null) {
             return null;
         }
-        DB::update("UPDATE auth_session SET last_seen_at = now() WHERE session_id = ? AND last_seen_at < now() - interval '1 minute'", [$row->session_id]);
+        $attributes = (array) $row;
+        $sessionId = (int) $attributes['auth_session_id'];
+        unset($attributes['auth_session_id']);
 
-        return $row;
+        return ['session_id' => $sessionId, 'user' => (new UserAccount)->newFromBuilder($attributes)];
     }
 
     public function revoke(int $sessionId): void

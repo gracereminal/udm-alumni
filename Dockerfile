@@ -20,6 +20,11 @@ RUN composer install --no-dev --no-scripts --no-autoloader --no-interaction --pr
 FROM php:8.4-cli-bookworm
 COPY --from=mlocati/php-extension-installer:2 /usr/bin/install-php-extensions /usr/local/bin/
 RUN install-php-extensions pdo_pgsql zip intl opcache pcntl
+# The app is served by the CLI server (docker/start.sh), and OPcache is off for the CLI by default, so without this
+# every request compiles the whole framework again. The code never changes inside a container: skip the file checks.
+RUN printf '%s\n' 'opcache.enable=1' 'opcache.enable_cli=1' 'opcache.validate_timestamps=0' \
+      'opcache.memory_consumption=128' 'opcache.interned_strings_buffer=16' 'opcache.max_accelerated_files=20000' \
+      'realpath_cache_size=4096K' 'realpath_cache_ttl=600' > /usr/local/etc/php/conf.d/zz-performance.ini
 COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer
 
 WORKDIR /app
@@ -44,7 +49,9 @@ ENV APP_ENV=production \
     SPA_INDEX_PATH=/app/resources/spa/index.html \
     EMAIL_TEMPLATES_PATH=/app/resources/emails \
     SESSION_SECURE_COOKIE=true \
-    PHP_CLI_SERVER_WORKERS=4 \
+    CACHE_STORE=file \
+    DB_PERSISTENT=true \
+    PHP_CLI_SERVER_WORKERS=8 \
     PORT=8080
 
 EXPOSE 8080

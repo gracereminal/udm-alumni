@@ -1,8 +1,10 @@
 #!/bin/sh
-# Container start (see /Dockerfile): cache config, apply migrations and lookups, then serve on $PORT.
+# Container start (see /Dockerfile): cache config, routes and events, apply migrations and lookups, then serve on $PORT.
 set -e
 
 php artisan config:cache
+php artisan route:cache
+php artisan event:cache
 php artisan migrate --force --database=pgsql_direct
 php artisan db:seed --class=LookupSeeder --force
 php artisan app:ensure-admin

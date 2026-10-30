@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Auth\SessionGuard;
 use App\Mail\GmailTransport;
 use App\Services\SessionService;
+use App\Services\SettingsService;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Foundation\Console\ServeCommand;
@@ -22,6 +23,9 @@ class AppServiceProvider extends ServiceProvider
         // `artisan serve` starts PHP with only a short list of environment variables. Without TEMP/TMP, PHP on
         // Windows has no writable temp folder and drops every upload ("unable to create a temporary file").
         ServeCommand::$passthroughVariables = array_values(array_unique([...ServeCommand::$passthroughVariables, 'TEMP', 'TMP', 'TMPDIR']));
+
+        // One instance per request, so app_setting is read once however many services ask for it.
+        $this->app->scoped(SettingsService::class);
     }
 
     public function boot(): void

@@ -2,7 +2,6 @@
 
 namespace App\Auth;
 
-use App\Models\UserAccount;
 use App\Services\SessionService;
 use Illuminate\Auth\GuardHelpers;
 use Illuminate\Contracts\Auth\Authenticatable;
@@ -30,10 +29,10 @@ class SessionGuard implements Guard
         }
         $this->resolved = true;
 
-        $row = $this->sessions->resolve($this->request->cookies->get((string) config('auth.session.cookie')));
-        if ($row !== null) {
-            $this->sessionId = (int) $row->session_id;
-            $this->user = UserAccount::find($row->user_id);
+        $session = $this->sessions->resolve($this->request->cookies->get((string) config('auth.session.cookie')));
+        if ($session !== null) {
+            $this->sessionId = $session['session_id'];
+            $this->user = $session['user'];
         }
 
         return $this->user;

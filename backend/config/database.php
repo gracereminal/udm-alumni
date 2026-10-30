@@ -49,7 +49,10 @@ return [
             'timezone' => 'UTC',
             // Neon's pooler (PgBouncer) breaks PDO's server-side prepared statements: the DEALLOCATE fails silently and
             // aborts the open transaction (SQLSTATE 25P02). Emulated prepares send plain queries instead.
-            'options' => [PDO::ATTR_EMULATE_PREPARES => true],
+            // DB_PERSISTENT keeps each server worker's connection open between requests, so a request doesn't pay a new
+            // TLS handshake and login to Neon (the image turns it on). PDO rolls back an open transaction at request
+            // end, and Laravel reconnects when the pooler has dropped the connection.
+            'options' => [PDO::ATTR_EMULATE_PREPARES => true, PDO::ATTR_PERSISTENT => (bool) env('DB_PERSISTENT', false)],
         ],
 
         'pgsql_direct' => [

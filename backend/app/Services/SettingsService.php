@@ -16,14 +16,15 @@ class SettingsService
         'new_registration_days' => 14,          // "New registration" window in the outreach list
     ];
 
+    /** @var array<string, mixed>|null read once per request (the service is scoped, AppServiceProvider) */
+    private ?array $all = null;
+
     /** @return array<string, mixed> every setting, with defaults for keys not stored yet */
     public function all(): array
     {
-        $stored = DB::table('app_setting')->pluck('value', 'key')
+        return $this->all ??= array_merge(self::DEFAULTS, DB::table('app_setting')->pluck('value', 'key')
             ->map(fn (string $json) => json_decode($json, true))
-            ->all();
-
-        return array_merge(self::DEFAULTS, $stored);
+            ->all());
     }
 
     public function get(string $key): mixed
@@ -42,5 +43,6 @@ class SettingsService
             $value = is_numeric($value) ? $value + 0 : $value;
             DB::table('app_setting')->upsert(['key' => $key, 'value' => json_encode($value), 'updated_by' => $userId], ['key'], ['value', 'updated_by']);
         }
+        $this->all = null;
     }
 }
