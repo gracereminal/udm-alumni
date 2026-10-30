@@ -43,9 +43,13 @@ const tipBox = {
 };
 const tipHead = { fontSize: '11.5px', fontWeight: '600', color: '#A7B0BC' };
 const tipVal = { fontSize: '13px', fontWeight: '700', color: '#fff' };
-const tipNote = { fontWeight: '500', color: '#A7B0BC' };
 const dot = (bg, size = '9px', radius = '50%') => ({ width: size, height: size, borderRadius: radius, background: bg, flex: 'none' });
 const legendItem = { display: 'flex', alignItems: 'center', gap: '6px' };
+/* The outcomes chart's light callout (as in the reference). */
+const ocTip = {
+  position: 'absolute', pointerEvents: 'none', zIndex: '3', background: '#fff', border: '1px solid #E7E9ED', borderRadius: '10px',
+  boxShadow: '0 8px 22px -8px rgba(16,24,40,.25)', whiteSpace: 'nowrap',
+};
 
 /** Centered dialog on a dark backdrop (closes on Esc or a backdrop click). */
 function Dialog({ label, onClose, width, bg = '#fff', children }) {
@@ -98,7 +102,7 @@ function CardHead({ title, action, onAction }) {
 const Empty = ({ children }) => <div style={{ flex: '1', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '18px 0', fontSize: '12.5px', color: '#94A3B8', textAlign: 'center' }}>{children}</div>;
 
 /** "Employability Rate by Batch" / "Total Registered Alumni" chart (geometry from lib/adminOverview.js). */
-function OutcomeChart({ c, onHover }) {
+function OutcomeChart({ c, onHover, onPick }) {
   return (
     <div data-m="ov-svg" style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
       <svg viewBox={c.vb} role="img" aria-label={c.title} style={{ width: '100%', height: 'auto', display: 'block' }}>
@@ -147,29 +151,198 @@ function OutcomeChart({ c, onHover }) {
         <text x={c.yTx} y={c.T + c.ph / 2} textAnchor="middle" fontSize={c.fsT} fontWeight="600" fill="#334155" transform={`rotate(-90 ${c.yTx} ${c.T + c.ph / 2})`}>{c.yTitle}</text>
         {c.showXTitle ? <text x={c.L + c.pw / 2} y={c.H - 8} textAnchor="middle" fontSize={c.fsT} fontWeight="600" fill="#334155">Graduation Year</text> : null}
         {c.xs.map((x) => <text key={x.t} x={x.x} y={x.y} textAnchor="middle" fontSize={c.fs} fontWeight={x.w} fill={x.c}>{x.t}</text>)}
-        {c.rate ? (
-          <g onMouseLeave={() => onHover(null)}>
-            {c.hits.map((h) => <rect key={h.key} x={h.x} y={h.y} width={h.w} height={h.h} fill="transparent" style={{ cursor: 'pointer' }} onMouseEnter={() => onHover(h.i)} />)}
-          </g>
-        ) : null}
+        <g onMouseLeave={() => onHover(null)}>
+          {c.hits.map((h) => (
+            <rect key={h.key} x={h.x} y={h.y} width={h.w} height={h.h} fill="transparent" style={{ cursor: 'pointer' }} onMouseEnter={() => onHover(h.i)} onClick={() => onPick(h.i)}>
+              <title>{h.t}</title>
+            </rect>
+          ))}
+        </g>
       </svg>
       {c.tipShow ? (
-        <div style={{ ...tipBox, left: c.tipX, top: c.tipY, transform: c.tipTf }}>
-          <div style={tipHead}>{c.tipYear}</div>
-          <div style={tipVal}>
-            <span style={{ ...dot('#5FC08F', '7px'), display: 'inline-block', marginRight: '6px' }} />{c.tipEmp} {c.tipEmpLbl}<span style={tipNote}>{c.tipEmpN}</span>
+        <div style={{ ...ocTip, left: c.tipX, top: c.tipY, transform: c.tipTf, padding: '8px 11px', display: 'flex', flexDirection: 'column', gap: '3px' }}>
+          <div style={{ fontSize: '11px', fontWeight: '700', color: '#64748B' }}>{c.tipYear}</div>
+          <div style={{ fontSize: '12px', color: '#0B1220' }}>
+            <span style={{ ...dot('#0F3D2E', '7px'), display: 'inline-block', marginRight: '6px' }} /><b>{c.tipEmp}</b> {c.tipEmpLbl}<span style={{ color: '#64748B' }}>{c.tipEmpN}</span>
           </div>
-          <div style={tipVal}>
-            <span style={{ ...dot('#E3A91B', '7px'), display: 'inline-block', marginRight: '6px' }} />{c.tipResp} {c.tipRespLbl}<span style={tipNote}>{c.tipRespN}</span>
+          <div style={{ fontSize: '12px', color: '#0B1220' }}>
+            <span style={{ ...dot('#E3A91B', '7px'), display: 'inline-block', marginRight: '6px' }} /><b>{c.tipResp}</b> {c.tipRespLbl}<span style={{ color: '#64748B' }}>{c.tipRespN}</span>
           </div>
+          {c.tipTgt ? <div style={{ fontSize: '12px', fontWeight: '600', color: c.tipTgtC }}>{c.tipTgt}</div> : null}
+          <div style={{ fontSize: '11px', color: '#94A3B8', borderTop: '1px solid #F1F2F4', paddingTop: '4px', marginTop: '1px' }}>{c.tipHint}</div>
         </div>
       ) : null}
       {!c.rate ? (
-        <div style={{ ...tipBox, left: c.tipCX, top: c.tipCY, transform: 'translate(-100%,calc(-100% - 12px))' }}>
-          <div style={tipHead}>Registered alumni</div>
-          <div style={tipVal}>{c.tipTot}</div>
+        <div style={{ ...ocTip, left: c.tipCX, top: c.tipCY, transform: c.tipCTf, padding: '7px 11px' }}>
+          <div style={{ fontSize: '15px', fontWeight: '700', color: '#0B1220' }}>{c.tipTot}</div>
+          <div style={{ fontSize: '11px', color: '#64748B' }}>{c.tipTotLbl}</div>
+          <div style={{ fontSize: '11px', color: '#94A3B8' }}>{c.tipHint}</div>
         </div>
       ) : null}
+    </div>
+  );
+}
+
+const anStat = { fontWeight: '700', fontSize: '26px', letterSpacing: '-.6px', color: '#0B1220' };
+const anLabel = { fontSize: '13px', color: '#64748B' };
+
+/** Stacked bar + legend (employment status, relevance to degree). */
+function AnSplit({ title, note, segs }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px', alignItems: 'baseline' }}>
+        <div style={{ fontWeight: '700', fontSize: '15px', color: '#0B1220' }}>{title}</div>
+        <div style={{ fontSize: '12.5px', color: '#64748B' }}>{note}</div>
+      </div>
+      <div style={{ display: 'flex', gap: '3px', height: '12px', borderRadius: '99px', overflow: 'hidden' }}>
+        {segs.map((g) => <div key={g.l} title={g.tip} style={{ width: g.w, background: g.c, transition: 'width .35s ease' }} />)}
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+        {segs.map((g) => (
+          <div key={g.l} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13.5px', color: '#475569' }}>
+            <span style={dot(g.c)} />
+            <span style={{ flex: '1', minWidth: '0' }}>{g.l}</span>
+            <b style={{ color: '#0B1220' }}>{g.p}</b>
+            <span style={{ width: '52px', textAlign: 'right', color: '#94A3B8' }}>{g.n}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/** College / program rows against the target line. */
+function AnUnitRows({ rows, cols, side, scroll, target }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', ...(scroll ? { maxHeight: '300px', overflowY: 'auto', paddingRight: '4px' } : {}) }}>
+      {rows.map((r) => (
+        <div key={r.key} title={r.full} style={{ display: 'grid', gridTemplateColumns: cols, alignItems: 'center', gap: '12px', padding: '5px 8px', borderRadius: '8px', background: r.bg }}>
+          <span style={{ fontWeight: r.fw, fontSize: '13.5px', color: '#0B1220', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.code}</span>
+          <div style={{ position: 'relative', height: '9px', borderRadius: '99px', background: '#EEF4F1' }}>
+            <div style={{ height: '100%', width: r.w, background: r.c, borderRadius: '99px', transition: 'width .35s ease' }} />
+            <div style={{ position: 'absolute', left: `${target}%`, top: '-3px', bottom: '-3px', borderLeft: '1.5px dashed #C99A12' }} />
+          </div>
+          <b style={{ textAlign: 'right', fontSize: '13.5px', color: '#0B1220' }}>{r.v}</b>
+          {side === 'tag'
+            ? <span style={{ fontSize: '12px', fontWeight: '600', color: r.tc }}>{r.tag}</span>
+            : <span style={{ textAlign: 'right', fontSize: '12px', color: '#94A3B8' }}>{r.n}</span>}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/** Employment Analysis of the clicked batch, under the outcomes chart (the reference's "Employment Analysis" screen). */
+function EmploymentAnalysis({ a }) {
+  const target = a.target;
+  const pending = a.unitsLoading ? <Empty>Loading…</Empty> : null;
+  return (
+    <div data-screen-label="Employment Analysis" style={{ borderTop: '1px solid #EEF0F3', paddingTop: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
+        <div style={{ minWidth: '0' }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: '10px', flexWrap: 'wrap' }}>
+            <div style={{ fontWeight: '700', fontSize: '18px', letterSpacing: '-.3px', color: '#0B1220' }}>Employment Analysis · {a.batch}</div>
+            <span style={{ fontSize: '12px', fontWeight: '700', padding: '3px 10px', borderRadius: '99px', background: a.kindBg, color: a.kindC }}>{a.kind}</span>
+          </div>
+          <div style={{ fontSize: '13.5px', color: '#64748B', marginTop: '4px' }}>{a.scope}</div>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+          {!a.fc ? (
+            <div role="tablist" aria-label="Employment analysis" style={{ display: 'flex', gap: '2px', padding: '4px', background: '#F1F4F2', borderRadius: '99px', flexWrap: 'wrap' }}>
+              {a.tabs.map((t) => (
+                <div key={t.k} role="tab" tabIndex={0} aria-selected={t.on} onKeyDown={onActivate(() => a.onTab(t.k))} onClick={() => a.onTab(t.k)}
+                  style={{ padding: '6px 14px', borderRadius: '99px', fontSize: '13.5px', fontWeight: '600', cursor: 'pointer', whiteSpace: 'nowrap', background: t.on ? '#fff' : 'transparent', color: t.on ? '#0B1220' : '#64748B', boxShadow: t.on ? '0 1px 3px rgba(16,24,40,.12)' : 'none', transition: 'background .15s ease' }}
+                >
+                  {t.l}
+                </div>
+              ))}
+            </div>
+          ) : null}
+          <button type="button" aria-label="Close analysis" title="Close analysis" onClick={a.onClose} style={sxRound} {...hv({ background: '#F1F4F2' })}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" style={{ width: '15px', height: '15px' }}><path d="M6 6l12 12M18 6L6 18" /></svg>
+          </button>
+        </div>
+      </div>
+      {a.fc ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', background: '#F7F9F8', borderRadius: '12px', padding: '16px 18px' }}>
+          <div style={{ display: 'flex', gap: '32px', flexWrap: 'wrap' }}>
+            <div>
+              <div style={anLabel}>Projected employment rate</div>
+              <div style={anStat}>{a.fcEmp}</div>
+              <div style={{ fontSize: '12.5px', fontWeight: '600', color: a.vsTC }}>{a.vsT}</div>
+            </div>
+            <div>
+              <div style={anLabel}>Projected tracer response</div>
+              <div style={anStat}>{a.fcResp}</div>
+            </div>
+          </div>
+          <div style={{ fontSize: '13.5px', color: '#475569', lineHeight: '1.5', textWrap: 'pretty', maxWidth: '640px' }}>{a.fcNote}</div>
+        </div>
+      ) : null}
+      {!a.fc && a.tab === 'ov' ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(160px,1fr))', gap: '12px 24px' }}>
+            <div>
+              <div style={anLabel}>Employment rate</div>
+              <div style={anStat}>{a.rate}</div>
+              <div style={{ fontSize: '12.5px', fontWeight: '600', color: a.vsTC }}>{a.vsT}</div>
+            </div>
+            <div>
+              <div style={anLabel}>Tracer response rate</div>
+              <div style={anStat}>{a.resp}</div>
+              <div style={{ fontSize: '12.5px', color: '#64748B' }}>{a.respSub}</div>
+            </div>
+            <div>
+              <div style={anLabel}>Degree-related jobs</div>
+              <div style={anStat}>{a.rel}</div>
+              <div style={{ fontSize: '12.5px', color: '#64748B' }}>of employed respondents</div>
+            </div>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(260px,1fr))', gap: '20px 32px' }}>
+            <AnSplit title="Employment status" note={`${a.traced} traced`} segs={a.status} />
+            <AnSplit title="Relevance to degree" note={`${a.employed} employed`} segs={a.deg} />
+          </div>
+        </div>
+      ) : null}
+      {!a.fc && a.tab === 'fj' ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px', alignItems: 'baseline', flexWrap: 'wrap' }}>
+            <div style={{ fontSize: '14px', color: '#475569' }}><b style={{ color: '#0B1220' }}>{a.fj6}</b> of employed graduates found their first job within 6 months</div>
+            <div style={{ flex: 'none', background: '#E8F1EC', color: '#0F3D2E', fontWeight: '700', fontSize: '13.5px', padding: '5px 12px', borderRadius: '99px' }}>Average: {a.fjAvg} months</div>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '9px' }}>
+            {a.fj.map((b) => (
+              <div key={b.l} style={{ display: 'grid', gridTemplateColumns: 'minmax(96px,120px) minmax(0,1fr) 54px 54px', alignItems: 'center', gap: '12px', fontSize: '13.5px' }}>
+                <span style={{ color: '#334155', fontWeight: '500' }}>{b.l}</span>
+                <div style={{ height: '9px', borderRadius: '99px', background: '#EEF4F1', overflow: 'hidden' }}>
+                  <div style={{ height: '100%', width: b.w, background: b.c, borderRadius: '99px', transition: 'width .35s ease' }} />
+                </div>
+                <b style={{ textAlign: 'right', color: '#0B1220' }}>{b.p}</b>
+                <span style={{ textAlign: 'right', color: '#94A3B8' }}>{b.n}</span>
+              </div>
+            ))}
+          </div>
+          <div style={{ fontSize: '12.5px', color: '#64748B' }}>Share of {a.fjN} employed respondents who answered · months between graduation and first job</div>
+        </div>
+      ) : null}
+      {!a.fc && a.tab === 'col' ? pending || (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div style={{ fontSize: '14px', color: '#475569' }}><b style={{ color: '#0B1220' }}>{a.colAbove}</b> at or above the {target}% target · {a.colNote}</div>
+          <AnUnitRows rows={a.cols} cols="64px minmax(0,1fr) 56px 92px" side="tag" target={target} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '7px', fontSize: '12px', color: '#94A3B8' }}><span style={{ width: '14px', borderTop: '1.5px dashed #C99A12' }} />Target {target}%</div>
+        </div>
+      ) : null}
+      {!a.fc && a.tab === 'pr' ? pending || (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: '8px 24px', fontSize: '13.5px', color: '#475569' }}>
+            <div>Highest · <b style={{ color: '#0F6B4F' }}>{a.prHi}</b></div>
+            <div>Lowest · <b style={{ color: '#8A6D1F' }}>{a.prLo}</b></div>
+          </div>
+          <AnUnitRows rows={a.progs} cols="minmax(72px,110px) minmax(0,1fr) 56px 76px" side="n" scroll target={target} />
+          <div style={{ fontSize: '12px', color: '#94A3B8' }}>{a.prNote}</div>
+        </div>
+      ) : null}
+      <div style={{ fontSize: '12px', color: '#94A3B8', lineHeight: '1.5' }}>Self-reported employment data from the UDM Graduate Tracer Survey · rates use the same calculation as Reports (employed ÷ traced graduates in the labour force).</div>
     </div>
   );
 }
@@ -340,7 +513,7 @@ export default function AdminDashboardView(v) {
     adDetBarTitle, adDetBars, adDetBig, adDetChips, adDetClose, adDetGo, adDetHasBars, adDetHasRing, adDetOpen, adDetRingBg, adDetRingLabel,
     adDetRingText, adDetRows, adDetSub, adDetTitle, avgMonths, chart, chartTab, chartsRef, closeForecast, engagement, exportHover,
     forecast, forecastOpen, goEvents, goRecords, goReports, kpiCards,
-    colMetric, onChartHover, onChartTab, onColMetric, popBatch, popClose, popCol, popHeat, popLoading, popMean, popOpen, popProg, popThin, popTotal,
+    analysis, colMetric, onChartHover, onChartPick, onChartTab, onColMetric, popBatch, popClose, popCol, popHeat, popLoading, popMean, popOpen, popProg, popThin, popTotal,
     popTraced, popVer, popYears, programRates, programRatesSub, programRatesTitle, regs, activeCols, sx,
     timeToJob, tipShow, tipTf, tipTitle, tipValue, tipX, tipY, ttjHas, ttjWithin6, upcoming,
   } = v;
@@ -594,7 +767,8 @@ export default function AdminDashboardView(v) {
                       <span style={{ ...legendItem, fontWeight: '400', color: '#94A3B8' }}><span style={{ width: '16px', borderTop: '2px dashed #64748B' }} />Dashed = forecast*</span>
                     </div>
                   ) : null}
-                  <OutcomeChart c={chart} onHover={onChartHover} />
+                  <OutcomeChart c={chart} onHover={onChartHover} onPick={onChartPick} />
+                  {analysis.open ? <EmploymentAnalysis a={analysis} /> : null}
                   <div style={{ borderTop: '1px solid #EEF0F3', paddingTop: '14px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', flexWrap: 'wrap' }}>
                       <div style={{ display: 'flex', alignItems: 'baseline', gap: '12px', minWidth: '0', flexWrap: 'wrap' }}>

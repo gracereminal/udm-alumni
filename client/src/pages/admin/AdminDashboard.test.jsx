@@ -52,6 +52,23 @@ describe('Admin Dashboard', () => {
     expect(screen.getByRole('img', { name: 'Total Registered Alumni' })).toBeInTheDocument();
   });
 
+  it('opens the Employment Analysis of a clicked batch', async () => {
+    const user = userEvent.setup();
+    setup();
+
+    await screen.findByText('Rafael Dizon');
+    expect(screen.getByText(/· click a batch for details$/)).toBeInTheDocument();
+    const chart = screen.getByRole('img', { name: 'Employability Rate by Batch' });
+    await user.click(within(chart).getByText(`Batch ${Y - 1}`).parentNode);
+    const panel = screen.getByText(`Employment Analysis · Batch ${Y - 1}`).closest('[data-screen-label]');
+    expect(within(panel).getByText('76.0%')).toBeInTheDocument();
+    expect(within(panel).getByText('−4.0 pts below the 80% target')).toBeInTheDocument();
+    expect(within(panel).getByText('60 of 100 graduates')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Close analysis' }));
+    expect(screen.queryByText(`Employment Analysis · Batch ${Y - 1}`)).toBeNull();
+  });
+
   it('resets every filter with the Reset button', async () => {
     const user = userEvent.setup();
     setup();

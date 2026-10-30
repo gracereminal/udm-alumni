@@ -5,12 +5,14 @@ import useChartTip from '../../hooks/useChartTip';
 import {
   ADMIN_YEARS, adminRequests, adminScope, buildAdminDash, buildKpiCards, buildPopulation, detailVals, emptyAdminData, populationRequests,
 } from '../../lib/adminDash';
-import { ACTIVE_DAYS, activeColleges, buildOutcomeChart, engagementTrend, recentRegistrations, upcomingEvents } from '../../lib/adminOverview';
+import {
+  ACTIVE_DAYS, activeColleges, analysisRequests, buildBatchAnalysis, buildOutcomeChart, engagementTrend, recentRegistrations, upcomingEvents,
+} from '../../lib/adminOverview';
 import { get } from '../../lib/api';
 import { buildForecast } from '../../lib/forecast';
 import { buildSignals, signalCount, signalRequests } from '../../lib/signals';
 import { RANGE_ERROR, pickYear } from '../../lib/batchRange';
-import { CATALOG } from '../../data/colleges';
+import { CATALOG, collegeById, programById } from '../../data/colleges';
 import { useToast } from '../../context/ToastContext';
 import { useEvents } from '../../context/EventsContext';
 
@@ -38,6 +40,9 @@ export default function AdminDashboard() {
   const [rangeError, setRangeError] = useState('');
   const [chartTab, setChartTab] = useState('rate');
   const [chartHover, setChartHover] = useState(null);
+  // Clicked batch (chart point index) whose Employment Analysis is open, and that panel's tab.
+  const [chartPick, setChartPick] = useState(null);
+  const [anTab, setAnTab] = useState('ov');
   const [sxSel, setSxSel] = useState(null);
   const [colMetric, setColMetric] = useState('rate');
   const [retry, setRetry] = useState(0);
@@ -94,6 +99,28 @@ export default function AdminDashboard() {
     return () => { live = false; };
   }, [popKey, toast]);
 
+  // Outcomes chart (per-batch rows, unaffected by the batch range) and the clicked batch's Employment Analysis.
+  const col = collegeById(d.scope.college);
+  const prog = programById(d.scope.course);
+  const chart = buildOutcomeChart(data.byBatch.data, chartTab, chartHover, CATALOG.targets.employment, null, {
+    pick: chartPick, scope: prog ? prog.abbr : col ? col.code : 'All colleges',
+  });
+  const anYear = chartPick != null && chartPick <= chart.last ? chart.yearAt(chartPick) : null;
+  // The By College / By Program breakdowns of a historical batch load only while its analysis is open.
+  const anKey = anYear == null ? null : JSON.stringify(analysisRequests(d.scope, anYear));
+  const [anUnits, setAnUnits] = useState({ key: null, res: null });
+  useEffect(() => {
+    if (!anKey) return undefined;
+    let live = true;
+    fetchAll(JSON.parse(anKey))
+      .then((res) => { if (live) setAnUnits({ key: anKey, res }); })
+      .catch((err) => { if (live) toast(err.message, false); });
+    return () => { live = false; };
+  }, [anKey, toast]);
+  const analysis = buildBatchAnalysis(chart, data.byBatch.data, chartPick, anTab, anUnits.key === anKey ? anUnits.res : null, {
+    target: CATALOG.targets.employment, scope: prog ? prog.name : col ? col.name : 'All colleges', college: d.scope.college, course: d.scope.course,
+  });
+
   const goRecords = () => navigate('/admin/records');
   const reportScope = { college: d.scope.college, course: d.scope.course, from: d.scope.from, to: d.scope.to };
   const goReports = () => navigate('/admin/reports', { state: reportScope });
@@ -120,7 +147,7 @@ export default function AdminDashboard() {
     ...(popOpen ? buildPopulation(d.admK, data.byBatch.data, years, pop) : {}),
     popClose: () => setPopOpen(false),
     ...tipVals,
-    admOnCollege: (e) => { setChartHover(null); setSel((s) => ({ ...s, college: e.target.value, course: 'all' })); },
+    admOnCollege: (e) => { setChartHover(null); setChartPick(null); setSel((s) => ({ ...s, college: e.target.value, course: 'all' })); },
     admOnCourse: (e) => setSel((s) => ({ ...s, course: e.target.value })),
     admOnFrom: onYear('from'),
     admOnTo: onYear('to'),
@@ -128,9 +155,14 @@ export default function AdminDashboard() {
     admOnStatus: (e) => setSel((s) => ({ ...s, status: e.target.value })),
     // Reset shows once any filter differs from the unfiltered scope.
     admFiltered: Object.keys(DEFAULT_SEL).some((k) => String(sel[k]) !== String(DEFAULT_SEL[k])),
-    admOnReset: () => { setChartHover(null); setRangeError(''); setSel(DEFAULT_SEL); },
-    // Outcomes chart (per-batch rows, unaffected by the batch range) and the overview panels.
-    chart: buildOutcomeChart(data.byBatch.data, chartTab, chartHover, CATALOG.targets.employment, null),
+    admOnReset: () => { setChartHover(null); setChartPick(null); setRangeError(''); setSel(DEFAULT_SEL); },
+    chart,
+    analysis: {
+      ...analysis,
+      onTab: setAnTab,
+      onClose: () => setChartPick(null),
+    },
+    onChartPick: (i) => setChartPick((p) => (p === i ? null : i)),
     chartTab,
     colMetric,
     onColMetric: setColMetric,
