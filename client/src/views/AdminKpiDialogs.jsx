@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { hv } from '../lib/stateStyle';
 import { onActivate, onBackdrop } from '../lib/a11y';
 
@@ -65,6 +65,58 @@ const Select = ({ label, value, onChange, opts, disabled, style }) => (
     {opts.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
   </select>
 );
+/** Select with a search box: the pill opens a list filtered by label (and `o.hint`, e.g. a college code). */
+function SearchSelect({ label, value, onChange, opts, placeholder, style }) {
+  const [open, setOpen] = useState(false);
+  const [q, setQ] = useState('');
+  const [hi, setHi] = useState(0);
+  const box = useRef(null);
+  const listId = useId();
+  const cur = opts.find((o) => o.value === value) || opts[0];
+  const term = q.trim().toLowerCase();
+  const shown = opts.filter((o) => !term || `${o.label} ${o.hint || ''}`.toLowerCase().includes(term));
+  useEffect(() => {
+    if (!open) return undefined;
+    const away = (e) => { if (box.current && !box.current.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', away);
+    return () => document.removeEventListener('mousedown', away);
+  }, [open]);
+  const toggle = () => { setQ(''); setHi(Math.max(0, opts.indexOf(cur))); setOpen((o) => !o); };
+  const pick = (o) => { setOpen(false); if (o && o.value !== value) onChange({ target: { value: o.value } }); };
+  const onKey = (e) => {
+    // Esc closes the list only, not the dialog behind it.
+    if (e.key === 'Escape') { e.stopPropagation(); setOpen(false); } else if (e.key === 'ArrowDown') { e.preventDefault(); setHi((i) => Math.min(i + 1, shown.length - 1)); } else if (e.key === 'ArrowUp') { e.preventDefault(); setHi((i) => Math.max(i - 1, 0)); } else if (e.key === 'Enter') { e.preventDefault(); pick(shown[hi]); }
+  };
+  return (
+    <div ref={box} style={{ position: 'relative', maxWidth: '100%', ...style }}>
+      <button type="button" aria-label={label} aria-haspopup="listbox" aria-expanded={open} onClick={toggle}
+        style={{ ...pillSel, display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', textAlign: 'left' }}
+      >
+        <span style={ellipsis}>{cur ? cur.label : ''}</span>
+        <Arrow d="M4 6l4 4 4-4" />
+      </button>
+      {open ? (
+        <div style={{ position: 'absolute', top: 'calc(100% + 6px)', left: '0', zIndex: '5', width: 'max(100%, 300px)', maxWidth: 'calc(100vw - 72px)', background: '#fff', border: '1px solid #E7E9ED', borderRadius: '14px', boxShadow: '0 12px 32px -8px rgba(0,20,16,.25)', padding: '8px', boxSizing: 'border-box' }}>
+          {/* eslint-disable-next-line jsx-a11y/no-autofocus -- the list opens to type into */}
+          <input type="search" autoFocus value={q} onChange={(e) => { setQ(e.target.value); setHi(0); }} onKeyDown={onKey}
+            placeholder={placeholder} aria-label={`Search ${label.toLowerCase()}`} aria-controls={listId}
+            style={{ ...search, width: '100%', padding: '8px 12px' }}
+          />
+          <div id={listId} role="listbox" aria-label={label} style={{ maxHeight: '260px', overflowY: 'auto', marginTop: '6px' }}>
+            {shown.map((o, i) => (
+              <div key={o.value} role="option" aria-selected={o.value === value} tabIndex={-1} onMouseEnter={() => setHi(i)} onClick={() => pick(o)} onKeyDown={onActivate(() => pick(o))}
+                style={{ padding: '8px 10px', borderRadius: '8px', fontSize: '13px', fontWeight: o.value === value ? '700' : '500', color: o.value === value ? '#0F3D2E' : '#334155', background: i === hi ? '#F1F4F3' : 'transparent', cursor: 'pointer' }}
+              >
+                {o.label}
+              </div>
+            ))}
+            {shown.length ? null : <div style={{ padding: '10px', fontSize: '12.5px', color: '#64748B', textAlign: 'center' }}>No colleges match the search</div>}
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
 const ResetLink = ({ onClick }) => (
   <button type="button" onClick={onClick} style={{ font: 'inherit', fontSize: '13px', fontWeight: '600', color: '#475569', cursor: 'pointer', padding: '6px 8px', border: '0', background: 'transparent' }} {...hv({ color: '#0F3D2E' })}>Reset filters</button>
 );
@@ -121,7 +173,7 @@ export function GraduatesTracedDialog({ g, onClose }) {
       <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
         <Select label="Batch range start" value={g.fromVal} onChange={g.onFrom} opts={g.fromOpts} />
         <Select label="Batch range end" value={g.toVal} onChange={g.onTo} opts={g.toOpts} />
-        <Select label="College" value={g.colVal} onChange={g.onCol} opts={g.colOpts} />
+        <SearchSelect label="College" value={g.colVal} onChange={g.onCol} opts={g.colOpts} placeholder="Search college name or code" style={{ maxWidth: 'min(100%,320px)' }} />
         <Select label="Program" value={g.courseVal} onChange={g.onCourse} opts={g.courseOpts} disabled={g.courseDisabled} style={{ maxWidth: 'min(100%,280px)', opacity: g.courseOpacity }} />
         {g.filtered ? <ResetLink onClick={g.reset} /> : null}
       </div>

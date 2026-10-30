@@ -29,7 +29,7 @@ function scopeSelects(colVal, courseVal) {
   const course = col && col.programs.find((p) => String(p.id) === String(courseVal)) ? String(courseVal) : 'all';
   return {
     col, course,
-    colVal: col ? String(col.id) : 'all', colOpts: [{ value: 'all', label: 'All colleges' }, ...cols.map((c) => ({ value: String(c.id), label: c.name }))],
+    colVal: col ? String(col.id) : 'all', colOpts: [{ value: 'all', label: 'All colleges' }, ...cols.map((c) => ({ value: String(c.id), label: c.name, hint: c.code }))],
     courseVal: course, courseOpts: [{ value: 'all', label: col ? 'All programs' : 'Select a college first' }, ...(col ? col.programs : []).map((p) => ({ value: String(p.id), label: p.name }))],
     courseDisabled: !col, courseOpacity: col ? 1 : 0.55,
     inScope: (r) => (!col || r.collegeId === col.id) && (course === 'all' || String(r.programId) === course),

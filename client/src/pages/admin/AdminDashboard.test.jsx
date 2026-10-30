@@ -81,6 +81,27 @@ describe('Admin Dashboard', () => {
     expect(screen.queryByRole('dialog', { name: 'Graduates Traced by Batch' })).toBeNull();
   });
 
+  it('searches the colleges in Graduates Traced by Batch', async () => {
+    const user = userEvent.setup();
+    setup();
+
+    await user.click(await screen.findByRole('button', { name: /Alumni Traced/ }));
+    const dialog = await screen.findByRole('dialog', { name: 'Graduates Traced by Batch' });
+    await user.click(within(dialog).getByRole('button', { name: 'College' }));
+    await user.type(within(dialog).getByRole('searchbox', { name: 'Search college' }), 'zzz');
+    expect(within(dialog).getByText('No colleges match the search')).toBeInTheDocument();
+
+    await user.clear(within(dialog).getByRole('searchbox', { name: 'Search college' }));
+    await user.type(within(dialog).getByRole('searchbox', { name: 'Search college' }), 'CCS');
+    const options = within(within(dialog).getByRole('listbox', { name: 'College' })).getAllByRole('option');
+    expect(options).toHaveLength(1);
+    const name = options[0].textContent;
+    await user.keyboard('{Enter}');
+    expect(within(dialog).queryByRole('listbox')).toBeNull();
+    expect(within(dialog).getByRole('button', { name: 'College' })).toHaveTextContent(name);
+    expect(screen.getByRole('dialog', { name: 'Graduates Traced by Batch' })).toBeInTheDocument();
+  });
+
   it('lists recent registrations and switches the outcomes chart', async () => {
     const user = userEvent.setup();
     setup();
