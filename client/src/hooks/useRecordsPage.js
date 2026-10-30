@@ -56,7 +56,8 @@ export default function useRecordsPage(role) {
   const [debounced, setDebounced] = useState('');
   const [program, setProgram] = useState('all');
   const [batch, setBatch] = useState('all');
-  const [emp, setEmp] = useState('all');
+  // The dashboard's Employment Status Breakdown opens the list filtered to a status.
+  const [emp, setEmp] = useState(() => (location.state && location.state.emp) || 'all');
   const [sortK, setSortK] = useState('updated');
   const [pageSize, setPageSize] = useState(10);
   const [pageN, setPageN] = useState(1);

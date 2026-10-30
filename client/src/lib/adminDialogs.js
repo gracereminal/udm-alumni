@@ -144,7 +144,7 @@ export function graduatesTraced(rows, s, set, err) {
  * @param S       GET /stats/summary
  * @param units   GET /stats/by-program rows of the dashboard scope
  * @param byBatch GET /stats/by-batch rows
- * @param o       { scopeLabel, unitLabel: 'college' | 'program', all, toggle, goStatus, goUnit(row) }
+ * @param o       { scopeLabel, unitLabel: 'college' | 'program', all, toggle, goStatus(ES_STATUS index | null), goUnit(row) }
  */
 export function employmentOverview(S, units, byBatch, o) {
   const DEF = [['Employed', S.wageEmployed, '#0F3D2E'], ['Self-employed', S.selfEmployed, '#F0C428'], ['Further studies', S.furtherStudies, '#2F7FC1'], ['Not yet employed', S.notEmployed, '#D9620B']];
@@ -171,9 +171,9 @@ export function employmentOverview(S, units, byBatch, o) {
     scopeLabel: o.scopeLabel, unitLabel: o.unitLabel, unitPlural: o.unitLabel === 'batch' ? 'batches' : `${o.unitLabel}s`,
     rate: P(S.employmentRate), emp: N(S.employed), known: N(known), traced: N(S.traced), noStatus: N(Math.max(0, (S.traced || 0) - known)),
     donut: known ? `conic-gradient(${stops.join(', ')})` : '#EEF2EF',
-    status: DEF.map(([label, n, color]) => ({ label, color, count: N(n), pct: known ? P(((n || 0) / known) * 100) : '—', go: o.goStatus })),
+    status: DEF.map(([label, n, color], i) => ({ label, color, count: N(n), pct: known ? P(((n || 0) / known) * 100) : '—', go: () => o.goStatus(i) })),
     cmp: o.all ? cmp : cmp.slice(0, 5), hasMore: cmp.length > 5, all: !!o.all, toggle: o.toggle, showN: Math.min(5, cmp.length), totN: cmp.length,
-    hi: cmp[0] || null, lo: cmp.length > 1 ? cmp[cmp.length - 1] : null, hasIns: cmp.length > 1, goStatus: o.goStatus,
+    hi: cmp[0] || null, lo: cmp.length > 1 ? cmp[cmp.length - 1] : null, hasIns: cmp.length > 1, goStatus: () => o.goStatus(null),
     fc, fcNone: `Projections appear once at least 3 batches in this view have survey responses.`,
     cards: p.ahead.map((a) => ({ yr: a.y, v: P(a.v), range: `${P(a.lo)} – ${P(a.hi)}`, conf: `${p.conf} confidence`, cc: confC[0], cb: confC[1] })),
     actualL: hist.length ? `Actual (${hist[0][0]}–${hist[h][0]})` : 'Actual', fcL: p.ahead.length ? `Forecast* (${p.ahead[0].y}–${p.ahead[p.ahead.length - 1].y})` : 'Forecast*',
@@ -183,6 +183,61 @@ export function employmentOverview(S, units, byBatch, o) {
     projLine: fc ? [pt(h, hist[h][1]), ...p.ahead.map((a, i) => pt(h + 1 + i, a.v))].join(' ') : '',
     band: fc ? [pt(h, hist[h][1]), ...p.ahead.map((a, i) => pt(h + 1 + i, a.hi)), ...p.ahead.map((a, i) => pt(h + 1 + i, a.lo)).reverse()].join(' ') : '',
     dots: pts.map((x, i) => ({ key: x.y, cx: X(i).toFixed(1), cy: Y(x.v).toFixed(1), ly: (Y(x.v) - 10).toFixed(1), fill: x.fut ? '#fff' : '#0F6B4F', stroke: x.fut ? '#B8860B' : '#0F6B4F', yr: x.fut ? `${x.y}*` : String(x.y), v: P(x.v) })),
+  };
+}
+
+/** Employment statuses of the tracer survey, in the order of the Employment Overview donut. */
+export const ES_STATUS = [
+  ['employed', 'Employed', '#0F3D2E'], ['self_employed', 'Self-employed', '#F0C428'], ['further_studies', 'Further studies', '#2F7FC1'],
+  ['not_employed', 'Not yet employed / Unemployed', '#D9620B'],
+];
+
+/**
+ * Employment Status Breakdown: status mix of traced alumni with a known status, and the alumni in a selected status.
+ * @param rows  recordRows(), null while loading
+ * @param s     { college, course, batch, sel } (sel: index into ES_STATUS or null)
+ * @param set   (patch) => void
+ */
+export function employmentStatus(rows, s, set, err) {
+  const sc = scopeSelects(s.college, s.course);
+  const all = rows || [];
+  const YS = [...new Set(all.map((r) => r.batch))].sort((a, b) => b - a);
+  const batch = YS.includes(Number(s.batch)) ? Number(s.batch) : 'all';
+  const done = all.filter((r) => r.traced && sc.inScope(r) && (batch === 'all' || r.batch === batch));
+  const known = done.filter((r) => ES_STATUS.some((d) => d[0] === r.employment));
+  const unk = done.length - known.length;
+  const tot = known.length;
+  const cn = ES_STATUS.map(([k]) => known.filter((r) => r.employment === k).length);
+  const pc = (n) => (tot ? (n / tot) * 100 : 0);
+  const mx = Math.max(...cn, 1);
+  const UN = ES_STATUS.length - 1;
+  const sel = s.sel != null && ES_STATUS[s.sel] ? s.sel : null;
+  let acc = 0;
+  const stops = cn.map((n, i) => { const a = acc; acc += pc(n); return `${ES_STATUS[i][2]} ${a.toFixed(2)}% ${acc.toFixed(2)}%`; });
+  const emp = cn[0] + cn[1];
+  const SHOW = 40;
+  const recs = sel == null ? [] : known.filter((r) => r.employment === ES_STATUS[sel][0]).sort((a, b) => String(b.updatedAt || '').localeCompare(String(a.updatedAt || '')));
+  const scope = `${sc.col ? sc.col.name : 'All colleges'}${sc.course !== 'all' ? ` · ${programById(sc.course).abbr}` : ''}${batch !== 'all' ? ` · AY ${batch - 1}–${batch}` : ' · All batches'}`;
+  return {
+    scope, loading: rows == null && !err, error: !!err, ready: rows != null,
+    total: N(done.length), known: N(tot),
+    unkNote: unk ? `${N(unk)} traced alumni gave no employment status — not counted below or as unemployed.` : 'All traced alumni gave an employment status.',
+    employed: N(emp), empPct: tot ? P(pc(emp)) : '—', un: N(cn[UN]), unPct: tot ? P(pc(cn[UN])) : '—',
+    donut: tot ? `conic-gradient(${stops.join(', ')})` : '#EEF2EF',
+    rows: ES_STATUS.map(([, label, color], i) => ({
+      key: label, label, color, count: N(cn[i]), pct: tot ? P(pc(cn[i])) : '—', w: `${((cn[i] / mx) * 100).toFixed(1)}%`, pressed: sel === i,
+      bg: sel === i ? '#EEF6F2' : i === UN ? '#FFF6EC' : '#fff', border: sel === i ? '#0F3D2E' : i === UN ? '#F3D3B0' : '#E7E9ED',
+      onClick: () => set({ sel: sel === i ? null : i }),
+    })),
+    ...sc, onCol: (e) => set({ college: e.target.value, course: 'all' }), onCourse: (e) => set({ course: e.target.value }),
+    batchVal: String(batch), batchOpts: [{ value: 'all', label: 'All academic years' }, ...YS.map((y) => ({ value: String(y), label: `AY ${y - 1}–${y} · Batch ${y}` }))],
+    onBatch: (e) => set({ batch: e.target.value }),
+    filtered: !!sc.col || batch !== 'all', reset: () => set({ college: 'all', course: 'all', batch: 'all' }),
+    hasSel: sel != null, selLabel: sel != null ? ES_STATUS[sel][1] : '', selColor: sel != null ? ES_STATUS[sel][2] : '#0F3D2E', selCount: sel != null ? N(cn[sel]) : '',
+    selCode: sel != null ? ES_STATUS[sel][0] : null, clearSel: () => set({ sel: null }),
+    recs: recs.slice(0, SHOW).map((r) => ({ id: r.id, name: r.name, prog: r.abbr, progFull: r.program, batch: String(r.batch), emp: ES_STATUS[sel][1], col: r.college, upd: fmtDate(r.updatedAt) })),
+    recsEmpty: sel != null && !recs.length,
+    recsNote: sel != null ? `Showing ${Math.min(SHOW, recs.length)} of ${N(recs.length)} alumni, most recently updated first.` : '',
   };
 }
 

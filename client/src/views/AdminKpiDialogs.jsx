@@ -2,8 +2,8 @@ import { useEffect, useId, useRef, useState } from 'react';
 import { hv } from '../lib/stateStyle';
 import { onActivate, onBackdrop } from '../lib/a11y';
 
-/* View layer for the Admin Dashboard KPI dialogs — converted from the "Graduates Traced by Batch", "Employment Overview"
-   and "Degree-to-Career Alignment" screens of "UDM Alumni.dc.html". Values come from lib/adminDialogs.js. */
+/* View layer for the Admin Dashboard KPI dialogs — converted from the "Graduates Traced by Batch", "Employment Overview",
+   "Employment Status Breakdown" and "Degree-to-Career Alignment" screens of "UDM Alumni.dc.html". Values come from lib/adminDialogs.js. */
 
 const pillSel = { border: '1px solid #E7E9ED', borderRadius: '999px', background: '#fff', padding: '9px 14px', font: 'inherit', fontSize: '13px', fontWeight: '600', color: '#0B1220', maxWidth: '100%' };
 const search = { minWidth: '0', border: '1px solid #E7E9ED', borderRadius: '999px', background: '#fff', padding: '9px 14px', font: 'inherit', fontSize: '13px', color: '#0B1220', boxSizing: 'border-box' };
@@ -354,7 +354,7 @@ export function EmploymentOverviewDialog({ m, onClose }) {
               />
               <div style={{ flex: '1', minWidth: '200px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 {m.status.map((s) => (
-                  <div key={s.label} role="button" tabIndex={0} onKeyDown={onActivate(s.go)} onClick={s.go} title={`View ${s.label} alumni in Reports`}
+                  <div key={s.label} role="button" tabIndex={0} onKeyDown={onActivate(s.go)} onClick={s.go} title={`List ${s.label} alumni`}
                     style={{ display: 'grid', gridTemplateColumns: '10px 1fr auto auto', alignItems: 'center', gap: '8px', padding: '6px 8px', borderRadius: '8px', cursor: 'pointer', fontSize: '13px' }}
                     {...hv({ background: '#F1F6F3' })}
                   >
@@ -496,6 +496,120 @@ const TopList = ({ title, items }) => (
     {items.map((j) => <div key={j.t} style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', fontSize: '12.5px', color: '#0B1220', padding: '3px 0' }}><span style={{ minWidth: '0' }}>{j.t}</span><span style={{ fontWeight: '700', fontVariantNumeric: 'tabular-nums' }}>{j.n}</span></div>)}
   </div>
 );
+
+const ES_REC = '1.5fr .8fr .7fr 1.2fr 1.4fr .8fr';
+
+/** Employment Status Breakdown (opened from the Employment Overview). */
+export function EmploymentStatusDialog({ e, onClose, onRecords }) {
+  return (
+    <Shell label="Employment Status Breakdown" onClose={onClose} width="1040px">
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', minWidth: '0' }}>
+          <BackBtn onClick={onClose} />
+          <div>
+            <div style={{ fontWeight: '700', fontSize: '22px', letterSpacing: '-.5px', color: '#0B1220' }}>Employment Status Breakdown</div>
+            <div style={{ fontSize: '12.5px', color: '#64748B', marginTop: '3px' }}>{e.scope} · respondents with a known status</div>
+          </div>
+        </div>
+        <CloseBtn onClick={onClose} />
+      </div>
+      <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
+        <Select label="Academic year and graduating batch" value={e.batchVal} onChange={e.onBatch} opts={e.batchOpts} />
+        <SearchSelect label="College" value={e.colVal} onChange={e.onCol} opts={e.colOpts} placeholder="Search college name or code" style={{ maxWidth: 'min(100%,320px)' }} />
+        <Select label="Program" value={e.courseVal} onChange={e.onCourse} opts={e.courseOpts} disabled={e.courseDisabled} style={{ maxWidth: 'min(100%,280px)', opacity: e.courseOpacity }} />
+        {e.filtered ? <ResetLink onClick={e.reset} /> : null}
+      </div>
+      {e.loading ? (
+        <div role="status" aria-label="Loading employment status" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(100%,220px),1fr))', gap: '12px' }}>
+            {[0, 1, 2].map((i) => <div key={i} style={{ height: '104px', borderRadius: '14px', background: '#EAEFEC' }} />)}
+          </div>
+          <div style={{ height: '216px', borderRadius: '14px', background: '#EAEFEC' }} />
+        </div>
+      ) : null}
+      {e.error ? (
+        <div role="alert" style={{ ...panel, padding: '28px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', textAlign: 'center' }}>
+          <div style={{ fontWeight: '700', fontSize: '16px', color: '#0B1220' }}>Couldn’t load employment status</div>
+          <div style={{ fontSize: '13px', color: '#64748B', maxWidth: '420px', textWrap: 'pretty' }}>The alumni records service didn’t respond. Your filters are kept — try again in a moment.</div>
+          <button type="button" onClick={e.retry} style={darkBtn} {...hv({ background: '#1d5a45' })}>Retry</button>
+        </div>
+      ) : null}
+      {e.ready ? (
+        <>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(100%,220px),1fr))', gap: '12px' }}>
+            <Stat label="Total traced alumni" value={e.total} sub={`Completed the tracer survey · ${e.known} gave a status`} />
+            <Stat label="Employed" value={e.employed} sub={`${e.empPct} of respondents · employed and self-employed`} color="#0F3D2E" />
+            <div style={{ background: '#FFF6EC', border: '1px solid #F3D3B0', borderRadius: '14px', padding: '16px 18px' }}>
+              <div style={{ fontSize: '12.5px', fontWeight: '700', color: '#8A4A0A' }}>Not yet employed / Unemployed</div>
+              <div style={{ fontWeight: '700', fontSize: '32px', letterSpacing: '-1px', color: '#B4500A', marginTop: '4px', lineHeight: '1.1' }}>{e.un}</div>
+              <div style={{ fontSize: '12px', color: '#8A4A0A', marginTop: '4px' }}>{e.unPct} of respondents · seeking opportunities</div>
+            </div>
+          </div>
+          <div style={{ ...panel, display: 'flex', gap: '24px', alignItems: 'center', flexWrap: 'wrap', padding: '20px' }}>
+            <div role="img" aria-label="Employment status donut chart" style={{ flex: 'none', position: 'relative', width: '176px', height: '176px', borderRadius: '50%', background: e.donut, margin: '0 auto' }}>
+              <div style={{ position: 'absolute', inset: '26px', background: '#fff', borderRadius: '50%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ fontWeight: '700', fontSize: '26px', letterSpacing: '-.8px', color: '#0B1220', lineHeight: '1' }}>{e.known}</div>
+                <div style={{ fontSize: '11.5px', fontWeight: '600', color: '#64748B', marginTop: '4px' }}>respondents</div>
+              </div>
+            </div>
+            <div style={{ flex: '1', minWidth: 'min(100%,380px)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div style={{ fontSize: '12px', color: '#64748B' }}>Select a status to list the alumni in it. {e.unkNote}</div>
+              {e.rows.map((r) => (
+                <div key={r.key} role="button" tabIndex={0} aria-pressed={r.pressed} onKeyDown={onActivate(r.onClick)} onClick={r.onClick}
+                  style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1.3fr) minmax(0,1.6fr) 64px 58px', gap: '12px', alignItems: 'center', padding: '10px 12px', borderRadius: '12px', border: `1px solid ${r.border}`, background: r.bg, cursor: 'pointer' }}
+                  {...hv({ borderColor: '#0F3D2E' })}
+                >
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13.5px', fontWeight: '600', color: '#0B1220', minWidth: '0' }}><span style={{ flex: 'none', width: '10px', height: '10px', borderRadius: '3px', background: r.color }} />{r.label}</span>
+                  <span style={{ height: '10px', borderRadius: '6px', background: '#EEF4F1', overflow: 'hidden' }}><span style={{ display: 'block', height: '100%', width: r.w, background: r.color, borderRadius: '6px' }} /></span>
+                  <span style={{ fontWeight: '700', fontSize: '14px', color: '#0B1220', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{r.count}</span>
+                  <span style={{ fontSize: '13px', color: '#475569', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{r.pct}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          {e.hasSel ? (
+            <div style={{ ...panel, overflow: 'hidden', flex: 'none' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap', padding: '14px 18px', borderBottom: '1px solid #EEF0F3' }}>
+                <div style={{ minWidth: '0' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '700', fontSize: '16px', color: '#0B1220' }}><span style={{ width: '10px', height: '10px', borderRadius: '3px', background: e.selColor }} />{e.selLabel} alumni · {e.selCount}</div>
+                  <div style={{ fontSize: '12px', color: '#64748B', marginTop: '3px' }}>{e.recsNote}</div>
+                </div>
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                  <button type="button" onClick={e.clearSel} style={ghostBtn} {...hv({ background: '#F1F4F3' })}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ flex: 'none' }}><path d="M19 12H5M11 6l-6 6 6 6" /></svg>
+                    <span>All statuses</span>
+                  </button>
+                  <button type="button" onClick={onRecords} style={darkBtn} {...hv({ background: '#1d5a45' })}>
+                    <span>Open Alumni Records</span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ flex: 'none' }}><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+                  </button>
+                </div>
+              </div>
+              <div style={{ overflow: 'auto', maxHeight: 'min(420px,55vh)', overscrollBehavior: 'contain' }}>
+                <div style={{ minWidth: '640px' }}>
+                  <div style={{ ...thRow, position: 'sticky', top: '0', zIndex: '1', display: 'grid', gridTemplateColumns: ES_REC }}>
+                    <div>Alumni</div><div>Program</div><div>Batch</div><div>Employment</div><div>College</div><div>Updated</div>
+                  </div>
+                  {e.recs.map((r) => (
+                    <div key={r.id} style={{ display: 'grid', gridTemplateColumns: ES_REC, gap: '12px', padding: '11px 18px', borderTop: '1px solid #F1F2F4', fontSize: '13px', color: '#334155', alignItems: 'center' }}>
+                      <div style={{ fontWeight: '600', color: '#0B1220' }}>{r.name}</div>
+                      <div style={{ minWidth: '0' }}><span title={r.progFull} style={{ cursor: 'help', borderBottom: '1px dotted #94A3B8' }}>{r.prog}</span></div>
+                      <div>{r.batch}</div>
+                      <div>{r.emp}</div>
+                      <div style={ellipsis}>{r.col}</div>
+                      <div><span style={pill('#475569', '#F1F4F2')}>{r.upd}</span></div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              {e.recsEmpty ? <div style={{ padding: '22px 18px', fontSize: '13px', color: '#64748B', textAlign: 'center', borderTop: '1px solid #F1F2F4' }}>No alumni with this status for the selected filters.</div> : null}
+            </div>
+          ) : null}
+        </>
+      ) : null}
+    </Shell>
+  );
+}
 
 /** Degree-to-Career Alignment (Degree-aligned Jobs card). */
 export function DegreeAlignmentDialog({ a, onClose }) {

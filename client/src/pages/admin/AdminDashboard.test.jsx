@@ -62,6 +62,28 @@ describe('Admin Dashboard', () => {
     expect(screen.queryByRole('dialog', { name: 'Employment Overview' })).toBeNull();
   });
 
+  it('opens the Employment Status Breakdown of a college from the Employment Overview', async () => {
+    const user = userEvent.setup();
+    setup();
+
+    await user.click(await screen.findByRole('button', { name: /Alumni Employed/ }));
+    const overview = await screen.findByRole('dialog', { name: 'Employment Overview' });
+    const rows = within(overview).getAllByRole('button', { name: /College CCS/ });
+    await user.click(rows[rows.length - 1]); // the "Employment rate by college" row
+    expect(screen.queryByRole('dialog', { name: 'Employment Overview' })).toBeNull();
+
+    const dialog = await screen.findByRole('dialog', { name: 'Employment Status Breakdown' });
+    expect(within(dialog).getByRole('button', { name: 'College' })).not.toHaveTextContent('All colleges');
+    expect(await within(dialog).findByText('Total traced alumni')).toBeInTheDocument();
+    await user.click(within(dialog).getByRole('button', { name: /^Employed/ }));
+    expect(within(dialog).getByText('Ana Cruz')).toBeInTheDocument();
+    expect(within(dialog).getByText('Ben Reyes')).toBeInTheDocument();
+    expect(within(dialog).queryByText('Dina Sy')).toBeNull(); // self-employed
+
+    await user.click(within(dialog).getByRole('button', { name: 'Back to Dashboard' }));
+    expect(screen.queryByRole('dialog', { name: 'Employment Status Breakdown' })).toBeNull();
+  });
+
   it('opens Graduates Traced by Batch and lists a batch by survey status', async () => {
     const user = userEvent.setup();
     setup();

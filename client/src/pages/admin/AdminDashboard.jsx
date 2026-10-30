@@ -9,7 +9,9 @@ import {
 import {
   ACTIVE_DAYS, activeColleges, analysisRequests, buildBatchAnalysis, buildOutcomeChart, engagementTrend, recentRegistrations, upcomingEvents,
 } from '../../lib/adminOverview';
-import { degreeAlignment, employmentOverview, graduatesTraced, recordRows } from '../../lib/adminDialogs';
+import {
+  ES_STATUS, degreeAlignment, employmentOverview, employmentStatus, graduatesTraced, recordRows,
+} from '../../lib/adminDialogs';
 import { get } from '../../lib/api';
 import { buildSignals, signalCount, signalRequests } from '../../lib/signals';
 import { RANGE_ERROR, pickYear } from '../../lib/batchRange';
@@ -39,6 +41,8 @@ export default function AdminDashboard() {
   const [gt, setGt] = useState(null);
   const [ovm, setOvm] = useState(null);
   const [da, setDa] = useState(null);
+  // Employment Status Breakdown (es), opened from the Employment Overview.
+  const [es, setEs] = useState(null);
   const [rangeError, setRangeError] = useState('');
   const [chartTab, setChartTab] = useState('rate');
   const [chartHover, setChartHover] = useState(null);
@@ -96,9 +100,9 @@ export default function AdminDashboard() {
 
   const d = buildAdminDash(sel, data, tipH, colMetric);
 
-  // The alumni rows behind the Graduates Traced and Degree-to-Career dialogs load when one of them opens (they filter
-  // by college, program and batch themselves).
-  const recNeeded = !!(gt || da);
+  // The alumni rows behind the Graduates Traced, Employment Status and Degree-to-Career dialogs load when one of them
+  // opens (they filter by college, program and batch themselves).
+  const recNeeded = !!(gt || es || da);
   const [recs, setRecs] = useState({ rows: null, err: false, n: 0 });
   useEffect(() => {
     if (!recNeeded) return undefined;
@@ -152,12 +156,9 @@ export default function AdminDashboard() {
     openAlignment: () => setDa({ ...dlgScope, batch: 'all', sel: null, allProg: false, selExp: false, q: '', tAl: 'all', tProg: 'all', page: 1 }),
   });
   const patch = (setter) => (p) => setter((s) => ({ ...s, ...p }));
-  // Reports holds the employment status breakdown; a college / program row hands its scope over.
-  const goUnitReport = (u) => {
-    const unitScope = d.scope.level === 'college' ? { college: u.key, course: 'all' } : d.scope.level === 'course' ? { college: d.scope.college, course: u.key } : { college: d.scope.college, course: d.scope.course };
-    setOvm(null);
-    navigate('/admin/reports', { state: { ...reportScope, ...unitScope } });
-  };
+  // Employment Status Breakdown: opened from the Employment Overview, for a status or for a college / program / batch row.
+  const openEs = (p) => { setOvm(null); setEs({ ...dlgScope, batch: 'all', sel: null, ...p }); };
+  const goUnitStatus = (u) => openEs(d.scope.level === 'college' ? { college: String(u.key), course: 'all' } : d.scope.level === 'course' ? { course: String(u.key) } : { batch: String(u.key) });
   const v = {
     ...d.vals,
     ...kpi,
@@ -170,10 +171,13 @@ export default function AdminDashboard() {
       scopeLabel: d.vals.admScopeLabel.replace(/^all colleges/, 'All colleges'),
       unitLabel: d.scope.level === 'college' ? 'college' : d.scope.level === 'course' ? 'program' : 'batch',
       all: ovm.all, toggle: () => setOvm((s) => ({ all: !s.all })),
-      goStatus: () => { setOvm(null); goReports(); },
-      goUnit: goUnitReport,
+      goStatus: (i) => openEs({ sel: i }),
+      goUnit: goUnitStatus,
     }) : null,
     ovmClose: () => setOvm(null),
+    es: es ? { ...employmentStatus(recs.rows, es, patch(setEs), recs.err), retry: () => setRecs((r) => ({ ...r, n: r.n + 1 })) } : null,
+    esClose: () => setEs(null),
+    esRecords: () => { const code = es && es.sel != null ? ES_STATUS[es.sel][0] : null; setEs(null); navigate('/admin/records', { state: { emp: code } }); },
     da: da ? degreeAlignment(recs.rows, da, patch(setDa)) : null,
     daClose: () => setDa(null),
     ...tipVals,

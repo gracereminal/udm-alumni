@@ -6,7 +6,9 @@ import NotificationBell from '../components/topbar/NotificationBell';
 import UserChip from '../components/topbar/UserChip';
 import { onActivate, onBackdrop } from '../lib/a11y';
 import RangeError from '../components/RangeError';
-import { DegreeAlignmentDialog, EmploymentOverviewDialog, GraduatesTracedDialog } from './AdminKpiDialogs';
+import {
+  DegreeAlignmentDialog, EmploymentOverviewDialog, EmploymentStatusDialog, GraduatesTracedDialog,
+} from './AdminKpiDialogs';
 import { signalPill } from '../lib/signals';
 
 const card = {
@@ -492,7 +494,7 @@ export default function AdminDashboardView(v) {
     admFiltered, admOnFrom, admOnTo, admOnCollege, admOnCourse, admOnReset, admOnStatus, admStatusOpts, admStatusVal, admToOpts, admToVal, rangeError,
     adDetBarTitle, adDetBars, adDetBig, adDetChips, adDetClose, adDetGo, adDetHasBars, adDetHasRing, adDetOpen, adDetRingBg, adDetRingLabel,
     adDetRingText, adDetRows, adDetSub, adDetTitle, avgMonths, chart, chartTab, chartsRef, engagement, exportHover,
-    da, daClose, goEvents, goRecords, goReports, gt, gtClose, kpiCards, ovm, ovmClose,
+    da, daClose, es, esClose, esRecords, goEvents, goRecords, goReports, gt, gtClose, kpiCards, ovm, ovmClose,
     analysis, colMetric, onChartHover, onChartPick, onChartTab, onColMetric, programRates, programRatesSub, programRatesTitle, regs, activeCols, sx,
     timeToJob, tipShow, tipTf, tipTitle, tipValue, tipX, tipY, ttjHas, ttjWithin6, upcoming,
   } = v;
@@ -631,6 +633,7 @@ export default function AdminDashboardView(v) {
 
           {gt ? <GraduatesTracedDialog g={gt} onClose={gtClose} /> : null}
           {ovm ? <EmploymentOverviewDialog m={ovm} onClose={ovmClose} /> : null}
+          {es ? <EmploymentStatusDialog e={es} onClose={esClose} onRecords={esRecords} /> : null}
           {da ? <DegreeAlignmentDialog a={da} onClose={daClose} /> : null}
 
           <div data-m="ov-body" style={{ flex: '1', minHeight: '0', overflowY: 'auto', padding: '10px 12px 16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
