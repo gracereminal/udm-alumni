@@ -221,22 +221,6 @@ export default function AlumniDashboardView(v) {
                     </div>
                   </>
                 ) : null}
-                <div role="button" tabIndex={0} onKeyDown={onActivate(goProfile)}
-                  onClick={goProfile}
-                  style={{
-                    border: '1px solid #0F3D2E',
-                    background: '#0F3D2E',
-                    color: '#fff',
-                    fontWeight: '700',
-                    fontSize: '13px',
-                    padding: '12px 18px',
-                    borderRadius: '12px',
-                    cursor: 'pointer',
-                    whiteSpace: 'nowrap',
-                  }}
-                >
-                  Edit Profile
-                </div>
               </div>
             </div>
             {showSurveyBanner ? (
