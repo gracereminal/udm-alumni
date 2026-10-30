@@ -8,6 +8,7 @@ import {
 import { ACTIVE_DAYS, activeColleges, buildOutcomeChart, engagementTrend, recentRegistrations, upcomingEvents } from '../../lib/adminOverview';
 import { get } from '../../lib/api';
 import { buildForecast } from '../../lib/forecast';
+import { buildSignals, signalCount, signalRequests } from '../../lib/signals';
 import { RANGE_ERROR, pickYear } from '../../lib/batchRange';
 import { CATALOG } from '../../data/colleges';
 import { useToast } from '../../context/ToastContext';
@@ -37,6 +38,9 @@ export default function AdminDashboard() {
   const [rangeError, setRangeError] = useState('');
   const [chartTab, setChartTab] = useState('rate');
   const [chartHover, setChartHover] = useState(null);
+  const [sxSel, setSxSel] = useState(null);
+  const [colMetric, setColMetric] = useState('rate');
+  const [retry, setRetry] = useState(0);
   const onYear = (key) => (e) => {
     const next = pickYear(sel, key, e.target.value);
     setRangeError(next ? '' : RANGE_ERROR);
@@ -45,13 +49,26 @@ export default function AdminDashboard() {
 
   const reqs = adminRequests(adminScope(sel));
   const reqKey = JSON.stringify(reqs);
+  // Key of the request set behind `data`, or an error: the signals wait for the statistics of the current scope.
+  const [loaded, setLoaded] = useState({ key: null, err: false });
   useEffect(() => {
     let live = true;
     fetchAll(JSON.parse(reqKey))
-      .then((res) => { if (live) setData(res); })
-      .catch((err) => { if (live) toast(err.message, false); });
+      .then((res) => { if (live) { setData(res); setLoaded({ key: reqKey, err: false }); } })
+      .catch((err) => { if (live) { setLoaded({ key: null, err: true }); toast(err.message, false); } });
     return () => { live = false; };
-  }, [reqKey, toast]);
+  }, [reqKey, retry, toast]);
+
+  // Signals Worth Acting On: sector breakdowns and Job Board totals on top of the dashboard statistics.
+  const sigKey = JSON.stringify(signalRequests(adminScope(sel)));
+  const [sig, setSig] = useState({ key: null, res: null, err: false });
+  useEffect(() => {
+    let live = true;
+    fetchAll(JSON.parse(sigKey))
+      .then((res) => { if (live) setSig({ key: sigKey, res, err: false }); })
+      .catch(() => { if (live) setSig({ key: null, res: null, err: true }); });
+    return () => { live = false; };
+  }, [sigKey, retry]);
 
   // College accounts (GET /users?role=dept) for "Active colleges"; loaded once, apart from the scoped statistics,
   // so the rest of the dashboard still loads if this list fails.
@@ -62,7 +79,7 @@ export default function AdminDashboard() {
     return () => { live = false; };
   }, []);
 
-  const d = buildAdminDash(sel, data, tipH);
+  const d = buildAdminDash(sel, data, tipH, colMetric);
   const years = d.vals.batchYears;
 
   // The population dialog's breakdowns load only while it is open.
@@ -80,6 +97,13 @@ export default function AdminDashboard() {
   const goRecords = () => navigate('/admin/records');
   const reportScope = { college: d.scope.college, course: d.scope.course, from: d.scope.from, to: d.scope.to };
   const goReports = () => navigate('/admin/reports', { state: reportScope });
+
+  const sxMode = loaded.err || sig.err ? 'error' : loaded.key !== reqKey || sig.key !== sigKey ? 'loading' : data.summary.total ? 'ready' : 'no-records';
+  const signals = sxMode === 'ready' ? buildSignals(d.scope, data, sig.res, CATALOG.targets, d.vals.admScopeLabel, {
+    records: goRecords, jobs: () => navigate('/admin/jobs'), events: () => navigate('/admin/events'), reports: goReports, tracer: () => navigate('/admin/tracer'),
+  }) : [];
+  const sxIdx = signals.findIndex((i) => i.id === sxSel);
+  const sxStep = (n) => () => { if (signals.length) setSxSel(signals[((sxIdx < 0 ? 0 : sxIdx) + n + signals.length) % signals.length].id); };
 
   const kpi = buildKpiCards(d.admK, d.vals, data.units.data, {
     openDetail: setDet,
@@ -108,6 +132,8 @@ export default function AdminDashboard() {
     // Outcomes chart (per-batch rows, unaffected by the batch range) and the overview panels.
     chart: buildOutcomeChart(data.byBatch.data, chartTab, chartHover, CATALOG.targets.employment, null),
     chartTab,
+    colMetric,
+    onColMetric: setColMetric,
     onChartTab: (t) => { setChartTab(t); setChartHover(null); },
     onChartHover: setChartHover,
     regs: recentRegistrations(data.recent && data.recent.data),
@@ -126,6 +152,13 @@ export default function AdminDashboard() {
     forecast: forecastOpen ? buildForecast(data.byBatch.data, CATALOG.targets) : null,
     closeForecast: () => setForecastOpen(false),
     exportHover: { background: '#0B3123' },
+    sx: {
+      mode: sxMode, list: signals, count: sxMode === 'ready' ? signalCount(signals) : '',
+      cur: sxIdx >= 0 ? signals[sxIdx] : null, pos: sxIdx >= 0 ? `${sxIdx + 1} of ${signals.length}` : '',
+      open: setSxSel, close: () => setSxSel(null), prev: sxStep(-1), next: sxStep(1), retry: () => setRetry((n) => n + 1),
+      // A related action leaves the drawer first.
+      go: (fn) => () => { setSxSel(null); fn(); },
+    },
   };
   return <AdminDashboardView {...v} />;
 }

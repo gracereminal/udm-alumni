@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { hv } from '../lib/stateStyle';
 import NavSidebar from '../components/NavSidebar';
 import SearchPill from '../components/topbar/SearchPill';
@@ -7,6 +7,7 @@ import UserChip from '../components/topbar/UserChip';
 import { onActivate, onBackdrop } from '../lib/a11y';
 import ForecastPanel from '../components/ForecastPanel';
 import RangeError from '../components/RangeError';
+import { signalPill } from '../lib/signals';
 
 const card = {
   background: '#fff',
@@ -174,15 +175,173 @@ function OutcomeChart({ c, onHover }) {
 }
 
 /* View layer for the "Admin Dashboard" screen — converted from the "Admin Dashboard Overview" screen of "UDM Alumni.dc.html". */
+/** Numbered section of the insight drawer. */
+function SxSection({ n, title, children }) {
+  return (
+    <div style={{ background: '#fff', border: '1px solid #E7E9ED', borderRadius: '14px', padding: '16px 18px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <span style={{ width: '22px', height: '22px', borderRadius: '50%', background: '#0F3D2E', color: '#fff', fontSize: '12px', fontWeight: '700', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}>{n}</span>
+        <span style={{ fontSize: '12px', fontWeight: '700', letterSpacing: '.7px', textTransform: 'uppercase', color: '#475569' }}>{title}</span>
+      </div>
+      {children}
+    </div>
+  );
+}
+
+const sxRound = { width: '32px', height: '32px', borderRadius: '50%', border: '1px solid #E7E9ED', background: '#fff', color: '#475569', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0' };
+const texts = (a) => (a || []).filter(Boolean);
+
+/** Insight Details: the selected signal's finding, evidence, interpretation, actions, priority and owners (side drawer). */
+function InsightDrawer({ sx }) {
+  const i = sx.cur;
+  const p = signalPill(i);
+  const closeRef = useRef(null);
+  useEffect(() => { if (closeRef.current) closeRef.current.focus(); }, [i.id]);
+  // Esc closes; the arrow keys step through the signals.
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === 'Escape') sx.close();
+      else if (e.key === 'ArrowRight') sx.next();
+      else if (e.key === 'ArrowLeft') sx.prev();
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [sx]);
+  const pill = (size, pad) => ({ fontSize: size, fontWeight: '700', padding: pad, borderRadius: '99px', color: p.pc, background: p.pbg, border: `1px solid ${p.pbd}` });
+  return (
+    <div data-screen-label="Insight Details" onClick={onBackdrop(sx.close)} role="presentation"
+      style={{ position: 'fixed', inset: '0', zIndex: '86', background: 'rgba(11,18,32,.38)', display: 'flex', justifyContent: 'flex-end', fontFamily: 'var(--udm-sans)' }}
+    >
+      <div role="dialog" aria-modal="true" aria-labelledby="sx-title"
+        style={{ width: 'min(620px,100%)', height: '100%', background: '#F7F8F7', boxShadow: '-24px 0 60px -20px rgba(0,20,16,.35)', display: 'flex', flexDirection: 'column', boxSizing: 'border-box' }}
+      >
+        <div style={{ background: '#fff', borderBottom: '1px solid #E7E9ED', padding: '16px 20px 14px', display: 'flex', flexDirection: 'column', gap: '10px', flex: 'none' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+              <span style={pill('12px', '3px 10px')}>{p.pl}</span>
+              <span style={{ fontSize: '13px', fontWeight: '600', color: '#64748B' }}>{i.cat}</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span style={{ fontSize: '12.5px', color: '#64748B', marginRight: '4px' }}>{sx.pos}</span>
+              <button type="button" onClick={sx.prev} aria-label="Previous insight" style={sxRound} {...hv({ background: '#F1F4F2' })}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ width: '15px', height: '15px' }}><path d="M15 6l-6 6 6 6" /></svg>
+              </button>
+              <button type="button" onClick={sx.next} aria-label="Next insight" style={sxRound} {...hv({ background: '#F1F4F2' })}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ width: '15px', height: '15px' }}><path d="M9 6l6 6-6 6" /></svg>
+              </button>
+              <button type="button" ref={closeRef} onClick={sx.close} aria-label="Close insight" style={{ ...sxRound, marginLeft: '4px' }} {...hv({ background: '#F1F4F2' })}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" style={{ width: '14px', height: '14px' }}><path d="M6 6l12 12M18 6L6 18" /></svg>
+              </button>
+            </div>
+          </div>
+          <div>
+            <h2 id="sx-title" style={{ margin: '0', fontWeight: '700', fontSize: '22px', letterSpacing: '-.4px', lineHeight: '1.25', color: '#0B1220', textWrap: 'pretty' }}>{i.title}</h2>
+            <div style={{ fontSize: '13px', color: '#64748B', marginTop: '4px' }}>{i.scope}</div>
+          </div>
+        </div>
+        <div style={{ flex: '1', minHeight: '0', overflowY: 'auto', overscrollBehavior: 'contain', padding: '16px 20px 20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {i.low ? (
+            <SxSection n="!" title="Not enough data">
+              <div style={{ fontSize: '14.5px', color: '#334155', lineHeight: '1.55', textWrap: 'pretty' }}>{i.low}</div>
+              <div style={{ fontSize: '13.5px', color: '#64748B', lineHeight: '1.5' }}>No finding is generated for this signal until the minimum sample is reached, to avoid misleading conclusions. Widen the dashboard filters or collect more tracer responses.</div>
+            </SxSection>
+          ) : (
+            <>
+              <SxSection n="1" title="Finding">
+                <div style={{ fontSize: '15.5px', color: '#0B1220', lineHeight: '1.55', textWrap: 'pretty' }}>{i.finding}</div>
+              </SxSection>
+              <SxSection n="2" title="Evidence">
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(130px,1fr))', gap: '10px 18px' }}>
+                  {i.stats.map((s) => (
+                    <div key={s.l}>
+                      <div style={{ fontWeight: '700', fontSize: '24px', letterSpacing: '-.6px', color: '#0B1220', fontVariantNumeric: 'tabular-nums' }}>{s.v}</div>
+                      <div style={{ fontSize: '12.5px', color: '#64748B', lineHeight: '1.35' }}>{s.l}</div>
+                    </div>
+                  ))}
+                </div>
+                {i.rows.length ? (
+                  <div style={{ borderTop: '1px solid #EEF0F3', paddingTop: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <div style={{ fontSize: '13px', fontWeight: '700', color: '#334155' }}>{i.bTitle}</div>
+                    {i.rows.map((r) => (
+                      <div key={r.l} title={r.full || r.l} style={{ display: 'grid', gridTemplateColumns: 'minmax(70px,1.1fr) minmax(0,1.4fr) auto', alignItems: 'center', gap: '12px', fontSize: '13.5px' }}>
+                        <span style={{ fontWeight: '600', color: '#0B1220', lineHeight: '1.3' }}>{r.l}</span>
+                        <span style={{ height: '8px', borderRadius: '99px', background: '#EEF4F1', overflow: 'hidden' }}>
+                          <span style={{ display: 'block', height: '100%', width: r.w, background: r.c || '#0F6B4F', borderRadius: '99px' }} />
+                        </span>
+                        <span style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
+                          <b style={{ color: '#0B1220', fontVariantNumeric: 'tabular-nums' }}>{r.v}</b>
+                          <span style={{ color: '#94A3B8', fontSize: '12.5px' }}> · {r.note}</span>
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
+              </SxSection>
+              <SxSection n="3" title="Interpretation">
+                <div style={{ fontSize: '14.5px', color: '#334155', lineHeight: '1.55', textWrap: 'pretty' }}>{i.means}</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', fontWeight: '700', color: '#0F6B4F' }}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" style={{ width: '13px', height: '13px' }}><path d="M20 6L9 17l-5-5" /></svg>
+                    Verified from tracer records
+                  </div>
+                  {texts(i.facts).map((t) => <div key={t} style={{ fontSize: '13.5px', color: '#334155', lineHeight: '1.5', paddingLeft: '19px', textWrap: 'pretty' }}>{t}</div>)}
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', background: '#FBF8EE', border: '1px solid #EFE3BD', borderRadius: '10px', padding: '10px 12px' }}>
+                  <div style={{ fontSize: '12px', fontWeight: '700', color: '#7A5E0E' }}>Possible explanations · not verified</div>
+                  {texts(i.maybes).map((t) => <div key={t} style={{ fontSize: '13.5px', color: '#5C4A12', lineHeight: '1.5', textWrap: 'pretty' }}>{t}</div>)}
+                </div>
+              </SxSection>
+              <SxSection n="4" title="Recommended actions">
+                <ol style={{ margin: '0', paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {texts(i.actions).map((t) => <li key={t} style={{ fontSize: '14px', color: '#0B1220', lineHeight: '1.5', textWrap: 'pretty' }}>{t}</li>)}
+                </ol>
+              </SxSection>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: '12px' }}>
+                <SxSection n="5" title="Priority">
+                  <span style={{ ...pill('13px', '3px 11px'), alignSelf: 'flex-start' }}>{p.pl}</span>
+                  <div style={{ fontSize: '13px', color: '#475569', lineHeight: '1.5', textWrap: 'pretty' }}>{i.criteria}</div>
+                </SxSection>
+                <SxSection n="6" title="Responsible">
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    {texts(i.roles).map((t) => <div key={t} style={{ fontSize: '14px', fontWeight: '600', color: '#0B1220' }}>{t}</div>)}
+                  </div>
+                </SxSection>
+              </div>
+              <SxSection n="7" title="Related actions">
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                  {i.links.map((a, k) => (
+                    <button key={a.l} type="button" onClick={sx.go(a.go)}
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', fontFamily: 'inherit', fontSize: '13.5px', fontWeight: '700', padding: '9px 15px', borderRadius: '99px', cursor: 'pointer', color: k ? '#0F3D2E' : '#fff', background: k ? '#fff' : '#0F3D2E', border: `1px solid ${k ? '#CFE0D7' : '#0F3D2E'}` }}
+                      {...hv({ filter: 'brightness(.96)' })}
+                    >
+                      {a.l}
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ width: '13px', height: '13px' }}><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+                    </button>
+                  ))}
+                </div>
+                <div style={{ fontSize: '13px', color: '#475569', lineHeight: '1.5', borderTop: '1px solid #EEF0F3', paddingTop: '10px' }}><b style={{ color: '#0B1220' }}>Monitor:</b> {i.monitor}</div>
+                {i.gap ? (
+                  <div style={{ fontSize: '13px', color: '#475569', lineHeight: '1.5', background: '#F4F6F8', border: '1px dashed #CBD5E1', borderRadius: '10px', padding: '10px 12px', textWrap: 'pretty' }}><b style={{ color: '#334155' }}>Workflow gap:</b> {i.gap}</div>
+                ) : null}
+              </SxSection>
+            </>
+          )}
+          <div style={{ fontSize: '12px', color: '#94A3B8', lineHeight: '1.5' }}>{i.basis}</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function AdminDashboardView(v) {
   const {
     admFromOpts, admFromVal, admCollegeOpts, admCollegeVal, admCourseDisabled, admCourseOpacity, admCourseOpts, admCourseVal,
     admFiltered, admOnFrom, admOnTo, admOnCollege, admOnCourse, admOnReset, admOnStatus, admScopeLabel, admStatusOpts, admStatusVal, admToOpts, admToVal, rangeError,
     adDetBarTitle, adDetBars, adDetBig, adDetChips, adDetClose, adDetGo, adDetHasBars, adDetHasRing, adDetOpen, adDetRingBg, adDetRingLabel,
     adDetRingText, adDetRows, adDetSub, adDetTitle, avgMonths, chart, chartTab, chartsRef, closeForecast, engagement, exportHover,
-    forecast, forecastOpen, goEvents, goRecords, goReports, insCount, insOpen, insTop, insights, kpiCards,
-    onChartHover, onChartTab, popBatch, popClose, popCol, popHeat, popLoading, popMean, popOpen, popProg, popThin, popTotal,
-    popTraced, popVer, popYears, programRates, programRatesSub, programRatesTitle, regs, activeCols,
+    forecast, forecastOpen, goEvents, goRecords, goReports, kpiCards,
+    colMetric, onChartHover, onChartTab, onColMetric, popBatch, popClose, popCol, popHeat, popLoading, popMean, popOpen, popProg, popThin, popTotal,
+    popTraced, popVer, popYears, programRates, programRatesSub, programRatesTitle, regs, activeCols, sx,
     timeToJob, tipShow, tipTf, tipTitle, tipValue, tipX, tipY, ttjHas, ttjWithin6, upcoming,
   } = v;
   const tab = (id, label) => {
@@ -508,13 +667,30 @@ export default function AdminDashboardView(v) {
                     </div>
                   </div>
 
-                  <div style={card}>
+                  <div style={{ ...card, gap: '8px' }}>
                     <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '10px' }}>
                       <div style={{ minWidth: '0' }}>
                         <div style={cardTitle}>{programRatesTitle}</div>
                         <div style={{ fontSize: '14px', color: '#64748B', marginTop: '4px' }}>{programRatesSub}</div>
                       </div>
-                      <div role="link" tabIndex={0} onKeyDown={onActivate(goReports)} onClick={goReports} style={link} {...hv(linkHover)}>Drill down ›</div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                        <div role="tablist" aria-label="Metric" style={{ display: 'flex', gap: '2px', padding: '3px', background: '#F1F4F2', borderRadius: '99px' }}>
+                          {[['rate', 'Employment Rate'], ['align', 'Course-to-Job Alignment']].map(([id, label]) => {
+                            const on = colMetric === id;
+                            return (
+                              <div key={id} role="tab" tabIndex={0} aria-selected={on} onKeyDown={onActivate(() => onColMetric(id))} onClick={() => onColMetric(id)}
+                                style={{ padding: '6px 12px', borderRadius: '99px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', whiteSpace: 'nowrap', background: on ? '#fff' : 'transparent', color: on ? '#0B1220' : '#64748B', boxShadow: on ? '0 1px 3px rgba(16,24,40,.12)' : 'none' }}
+                              >
+                                {label}
+                              </div>
+                            );
+                          })}
+                        </div>
+                        <div role="button" tabIndex={0} onKeyDown={onActivate(goReports)} onClick={goReports} style={link} {...hv(linkHover)}>
+                          Drill down
+                          <svg aria-hidden="true" width="1em" height="1em" viewBox="0 0 16 16" fill="none" style={{ display: 'inline-block', verticalAlign: '-0.15em', flex: 'none', marginLeft: '.3em' }}><path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                        </div>
+                      </div>
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', overflowY: 'auto', overflowX: 'hidden', maxHeight: '230px', padding: '0 6px' }}>
                       {!(programRates || []).length ? <Empty>No survey responses in this view yet.</Empty> : null}
@@ -588,31 +764,49 @@ export default function AdminDashboardView(v) {
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: '0' }}>
                       <span style={dot('#F16C1A', '10px')} />
-                      <div role="link" tabIndex={0} onKeyDown={onActivate(insOpen)} onClick={insOpen} style={{ ...cardTitle, cursor: 'pointer' }}>Signals Worth Acting On</div>
+                      <div style={cardTitle}>Signals Worth Acting On</div>
                     </div>
-                    <div style={{ fontSize: '13px', fontWeight: '600', color: '#64748B', whiteSpace: 'nowrap' }}>{insCount}</div>
+                    <div style={{ fontSize: '13px', fontWeight: '600', color: '#64748B', whiteSpace: 'nowrap' }}>{sx.count}</div>
                   </div>
                   <div style={{ fontSize: '13px', color: '#64748B', marginTop: '-4px' }}>Ranked by priority · open a signal for evidence and next steps</div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    {(insights && insights.length ? insights : [insTop]).map((s) => (
-                      <button key={s.lead} type="button" onClick={s.onClick || insOpen} aria-haspopup="dialog" aria-label={`${s.pl || ''} ${s.lead}`.trim()}
-                        style={{ display: 'flex', alignItems: 'center', gap: '10px', width: '100%', textAlign: 'left', fontFamily: 'inherit', background: '#fff', border: '1px solid #E7E9ED', borderRadius: '12px', padding: '11px 12px', cursor: 'pointer', transition: 'background .15s ease,border-color .15s ease' }}
-                        {...hv({ background: '#F7FAF8', borderColor: '#CFE3DA' })}
-                      >
-                        <div style={{ flex: '1', minWidth: '0', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                          {s.pl ? (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                              <span style={{ fontSize: '11.5px', fontWeight: '700', padding: '2px 9px', borderRadius: '99px', color: s.pc, background: s.pbg, border: `1px solid ${s.pbd}` }}>{s.pl}</span>
-                              <span style={{ fontSize: '12px', fontWeight: '600', color: '#64748B' }}>{s.cat}</span>
+                  {sx.mode === 'loading' ? (
+                    <div aria-busy="true" aria-label="Loading insights" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      {['#F1F4F2', '#F4F6F5', '#F7F8F7'].map((bg) => <div key={bg} style={{ height: '74px', borderRadius: '12px', background: bg }} />)}
+                    </div>
+                  ) : null}
+                  {sx.mode === 'error' ? (
+                    <div role="alert" style={{ border: '1px solid #F3C9C6', background: '#FDF1F0', borderRadius: '12px', padding: '14px', display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px', color: '#7A271A', lineHeight: '1.45' }}>
+                      <b style={{ color: '#B42318' }}>Insights couldn’t be loaded.</b>
+                      <span>The tracer statistics service did not respond. No figures are shown to avoid displaying stale data.</span>
+                      <button type="button" onClick={sx.retry} style={{ alignSelf: 'flex-start', fontFamily: 'inherit', fontSize: '13px', fontWeight: '700', color: '#B42318', background: '#fff', border: '1px solid #F3C9C6', borderRadius: '99px', padding: '6px 14px', cursor: 'pointer' }}>Try again</button>
+                    </div>
+                  ) : null}
+                  {sx.mode === 'no-records' ? (
+                    <div style={{ border: '1px dashed #D5DCD8', borderRadius: '12px', padding: '18px 14px', textAlign: 'center', fontSize: '14px', color: '#64748B', lineHeight: '1.45' }}>No verified alumni records yet. Insights appear once tracer responses are recorded.</div>
+                  ) : null}
+                  {sx.mode === 'ready' ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      {sx.list.map((s) => {
+                        const p = signalPill(s);
+                        return (
+                          <button key={s.id} type="button" onClick={() => sx.open(s.id)} aria-haspopup="dialog" aria-label={`${s.title}, ${p.pl}. Open details.`}
+                            style={{ display: 'flex', alignItems: 'center', gap: '10px', width: '100%', textAlign: 'left', fontFamily: 'inherit', background: '#fff', border: '1px solid #E7E9ED', borderRadius: '12px', padding: '11px 12px', cursor: 'pointer', transition: 'background .15s ease,border-color .15s ease' }}
+                            {...hv({ background: '#F7FAF8', borderColor: '#CFE3DA' })}
+                          >
+                            <div style={{ flex: '1', minWidth: '0', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                                <span style={{ fontSize: '11.5px', fontWeight: '700', padding: '2px 9px', borderRadius: '99px', color: p.pc, background: p.pbg, border: `1px solid ${p.pbd}` }}>{p.pl}</span>
+                                <span style={{ fontSize: '12px', fontWeight: '600', color: '#64748B' }}>{s.cat}</span>
+                              </div>
+                              <div style={{ fontSize: '15px', fontWeight: '700', color: '#0B1220', lineHeight: '1.3', textWrap: 'pretty' }}>{s.title}</div>
+                              <div style={{ fontSize: '13px', color: '#64748B', lineHeight: '1.4', textWrap: 'pretty' }}>{s.low || s.summary}</div>
                             </div>
-                          ) : null}
-                          <div style={{ fontSize: '15px', fontWeight: '700', color: '#0B1220', lineHeight: '1.3', textWrap: 'pretty' }}>{s.lead}</div>
-                          <div style={{ fontSize: '13px', color: '#64748B', lineHeight: '1.4', textWrap: 'pretty' }}>{String(s.text || '').replace(/^— /, '')}</div>
-                        </div>
-                        <svg viewBox="0 0 24 24" fill="none" stroke="#94A3B8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ width: '18px', height: '18px', flex: 'none' }}><path d="M9 6l6 6-6 6" /></svg>
-                      </button>
-                    ))}
-                  </div>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="#94A3B8" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ width: '16px', height: '16px', flex: 'none' }}><path d="M9 6l6 6-6 6" /></svg>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  ) : null}
                 </div>
               </div>
             </div>
@@ -620,6 +814,7 @@ export default function AdminDashboardView(v) {
           </div>
         </div>
       </div>
+      {sx.cur ? <InsightDrawer sx={sx} /> : null}
     </>
   );
 }

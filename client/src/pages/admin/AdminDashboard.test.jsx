@@ -6,7 +6,7 @@ import { renderAt } from '../../test/renderApp';
 
 const Y = new Date().getFullYear();
 const batch = (key, employmentRate) => ({ key, total: 100, traced: 60, coverage: 60, laborForce: 50, employed: 40, alignedRate: 70, employmentRate });
-const unit = (key, label, alignedRate) => ({ key, label, full: `College ${label}`, total: 100, traced: 60, alignedRate });
+const unit = (key, label, alignedRate) => ({ key, label, full: `College ${label}`, total: 100, traced: 60, employed: 40, alignedRate });
 
 const recent = [{ id: 7, name: 'Rafael Dizon', course: 'BS Computer Science', program: 'BSCS', batch: 2024, createdAt: '2026-05-24T09:00:00+08:00' }];
 
@@ -15,6 +15,8 @@ function setup() {
     session('admin'), ['GET', /^\/alumni\?/, listOf(recent)], ['GET', /^\/(jobs|notifications|events|announcements|alumni)(\?|$)/, listOf([])],
     ['GET', '/stats/by-batch', { data: [0, 1, 2, 3, 4].map((i) => batch(Y - 5 + i, 60 + i * 4)) }],
     ['GET', '/stats/by-program', { data: [unit(1, 'CCS', 82.5), unit(2, 'CBA', 61)] }],
+    ['GET', '/stats/summary', { total: 200, traced: 120, coverage: 60, notEmployed: 30, employed: 80, aligned: 50, alignedRate: 62.5, laborForce: 110, employmentRate: 72.7 }],
+    ['GET', '/jobs/stats', { open: 4, employers: 3 }],
     ['GET', /^\/stats\//, {}],
   ]);
   renderAt('/admin/dashboard');
@@ -80,5 +82,33 @@ describe('Admin Dashboard', () => {
 
     await user.click(within(dialog).getByRole('button', { name: 'Close' }));
     expect(screen.queryByRole('dialog', { name: 'Degree-aligned jobs' })).toBeNull();
+  });
+
+  it('ranks the signals and opens one in the insight drawer', async () => {
+    const user = userEvent.setup();
+    setup();
+
+    expect(await screen.findByText('5 signals · 2 high')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: /^30 traced alumni are not yet employed, High priority/ }));
+    const drawer = await screen.findByRole('dialog', { name: '30 traced alumni are not yet employed' });
+    expect(within(drawer).getByText('30 of 120 traced alumni (25.0%) reported in the tracer survey that they are not yet employed.')).toBeInTheDocument();
+    expect(within(drawer).getByText('1 of 5')).toBeInTheDocument();
+
+    await user.click(within(drawer).getByRole('button', { name: 'Next insight' }));
+    expect(screen.getByText('2 of 5')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Close insight' }));
+    expect(screen.queryByRole('dialog', { name: /not yet employed/ })).toBeNull();
+  });
+
+  it('switches Employability by college to course-to-job alignment', async () => {
+    const user = userEvent.setup();
+    setup();
+
+    const tab = await screen.findByRole('tab', { name: 'Course-to-Job Alignment' });
+    expect(screen.queryByText('82.5%')).toBeNull();
+    await user.click(tab);
+    expect(tab).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByText('82.5%')).toBeInTheDocument();
+    expect(screen.getByText(/^Degree-related employment, /)).toBeInTheDocument();
   });
 });

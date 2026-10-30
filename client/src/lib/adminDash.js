@@ -71,8 +71,9 @@ export function adminRequests(sc) {
  * @param sel   { college, course, from, to, status } (raw select values: ids or 'all'; from / to are batch years)
  * @param data  responses keyed like adminRequests()
  * @param tipH  (title, value) => { onTipMove, onTipLeave }
+ * @param metric  Employability card tab: 'rate' (employment rate) | 'align' (course-to-job alignment)
  */
-export function buildAdminDash(sel, data, tipH) {
+export function buildAdminDash(sel, data, tipH, metric = 'rate') {
   const sc = adminScope(sel);
   const target = CATALOG.targets;
   const S = data.summary;
@@ -80,22 +81,28 @@ export function buildAdminDash(sel, data, tipH) {
   const prog = sc.course !== 'all' ? programById(sc.course) : null;
   const label = prog ? prog.name : col ? col.name : 'all colleges';
 
-  // Employability per unit, with the change against the previous batch window.
+  // Employability per unit (employment rate, or course-to-job alignment), with the change against the previous batch window.
+  const align = metric === 'align';
+  const mk = align ? 'alignedRate' : 'employmentRate';
   const prevBy = new Map((data.unitsPrev.data || []).map((r) => [String(r.key), r]));
-  const rows = (data.unitsNow.data || []).filter((r) => r.traced > 0).map((r) => {
+  const rows = (data.unitsNow.data || []).filter((r) => (align ? r.employed : r.traced) > 0).map((r) => {
     const p = prevBy.get(String(r.key - (sc.level === 'batch' ? 1 : 0))) || prevBy.get(String(r.key));
-    const v = r.employmentRate ?? 0;
-    const d = p && p.employmentRate != null ? v - p.employmentRate : null;
-    return { program: r.label, full: sc.level === 'batch' ? `${prog ? prog.abbr : ''} · Batch ${r.key}` : r.full, v, d, m: r.monthsAvg, traced: r.traced, employed: r.employed };
+    const v = r[mk] ?? 0;
+    const d = p && p[mk] != null ? v - p[mk] : null;
+    return { program: r.label, full: sc.level === 'batch' ? `${prog ? prog.abbr : ''} · Batch ${r.key}` : r.full, v, d, n: align ? r.employed : r.laborForce, k: align ? r.aligned : r.employed };
   }).sort((a, b) => (sc.level === 'batch' ? 0 : b.v - a.v));
-  const programRates = rows.map(({ program, full, v, d }) => ({
-    program, full, pct: `${v.toFixed(1)}%`,
-    delta: d == null ? 'new' : `${d >= 0 ? '+' : '−'}${Math.abs(d).toFixed(1)}%`, arrow: d == null ? '' : d >= 0 ? '↑' : '↓',
-    deltaColor: d == null || d >= 0 ? '#0F6B4F' : d < -1 ? '#B3213C' : '#8A6D1F', deltaBg: d == null || d >= 0 ? '#E1F3EA' : d < -1 ? '#FDE7EC' : '#FBF0D8',
-    ...tipH(full, `${v.toFixed(1)}% employed${d == null ? '' : ` · ${d >= 0 ? '+' : '−'}${Math.abs(d).toFixed(1)}% from last year`}`),
+  // Trend chip as in the reference: — (nothing to compare), → 0.0%, ↑ +x% or ↓ -x%.
+  const trend = (d) => {
+    if (d == null) return { arrow: '', delta: '—', deltaColor: '#94A3B8', deltaBg: '#F1F4F2' };
+    if (Math.abs(d) < 0.05) return { arrow: '→', delta: '0.0%', deltaColor: '#64748B', deltaBg: '#F1F4F2' };
+    return d > 0 ? { arrow: '↑', delta: `+${d.toFixed(1)}%`, deltaColor: '#0F6B4F', deltaBg: '#E3F3EA' } : { arrow: '↓', delta: `${d.toFixed(1)}%`, deltaColor: '#B42318', deltaBg: '#FDF1F0' };
+  };
+  const programRates = rows.map(({ program, full, v, d, n, k }) => ({
+    program, full, pct: `${v.toFixed(1)}%`, ...trend(d),
+    ...tipH(full, `${N(k)} of ${N(n)} ${align ? 'employed in a degree-related job' : 'in the labour force employed'}${d == null ? '' : ` · ${d >= 0 ? '+' : '−'}${Math.abs(d).toFixed(1)}% from last year`}`),
   }));
 
-  const dash = admDash(sc, S, data, rows, tipH, target);
+  const dash = admDash(sc, S, data, tipH, target);
   const colleges = CATALOG.colleges.filter((c) => c.programs.length || c.code === 'OTH');
   const courses = col ? col.programs : [];
   return {
@@ -113,25 +120,25 @@ export function buildAdminDash(sel, data, tipH) {
       admStatusVal: sc.status, admStatusOpts: Object.keys(STATUS_FILTER_LABELS).map((k) => ({ value: k, label: `Status: ${STATUS_FILTER_LABELS[k]}` })),
       ...dash.vals,
       programRatesTitle: sc.level === 'college' ? 'Employability by college' : sc.level === 'course' ? 'Employability by course' : 'Employability by batch',
-      programRatesSub: sc.level === 'batch' ? `${prog.abbr} · employment rate of traced graduates in the labour force, per batch` : `Employment rate, ${sc.now.length === 1 ? `batch ${sc.now[0]}` : `batches ${sc.now[0]}–${sc.now[sc.now.length - 1]}`}${col ? ` · ${col.name}` : ''}`,
-      programRates,
+      programRatesSub: sc.level === 'batch'
+        ? `${prog.abbr} · ${align ? 'degree-related employment of employed graduates' : 'employment rate of traced graduates in the labour force'}, per batch`
+        : `${align ? 'Degree-related employment' : 'Employment rate'}, ${sc.now.length === 1 ? `batch ${sc.now[0]}` : `batches ${sc.now[0]}–${sc.now[sc.now.length - 1]}`}${col ? ` · ${col.name}` : ''}`,
+      programRates, programRatesAlign: align,
       breakdownTitle: sc.level === 'college' ? 'By college' : sc.level === 'course' ? 'By program' : 'By batch',
     },
   };
 }
 
-function admDash(sc, S, data, rows, tipH, target) {
+function admDash(sc, S, data, tipH, target) {
   const Sn = data.now;
   const Sp = data.prev;
   const delta = (a, b) => (a == null || b == null ? null : a - b);
   const change = (a, b) => (b ? ((a - b) / b) * 100 : null);
-  // Coverage by batch: all years / one batch show six batches ending at the latest (or around the selected) batch;
-  // a range shows its own batches, up to the latest twelve.
+  // Batches of the population dialog: all years / one batch show six batches ending at the latest (or around the
+  // selected) batch; a range shows its own batches, up to the latest twelve.
   const one = typeof sc.batch === 'number';
   const end = sc.batch === 'all' ? thisYear() : Math.min(thisYear(), sc.hi + 2);
   const barYears = sc.batch === 'all' || one ? [0, 1, 2, 3, 4, 5].map((i) => end - 5 + i) : sc.years.slice(-12);
-  const byBatch = new Map(((data.byBatch && data.byBatch.data) || []).map((r) => [r.key, r]));
-  const bars = barYears.map((y) => { const r = byBatch.get(y); return { y, v: r && r.total ? Math.round(r.coverage) : 0, total: r ? r.total : 0, traced: r ? r.traced : 0 }; });
   const goal = Math.ceil((S.total * target.coverage) / 100);
 
   const traced = S.traced || 0;
@@ -145,23 +152,6 @@ function admDash(sc, S, data, rows, tipH, target) {
   const ttjN = groups.reduce((a, g) => a + g[1], 0);
   const tt = groups.map((g) => Math.round(pct(g[1], ttjN)));
   if (ttjN) tt[tt.length - 1] = 100 - tt.slice(0, -1).reduce((a, b) => a + b, 0);
-
-  const tone = { r: ['#E5484D', '#C2344F', '#FDF2F4', '#F8DFE4'], y: ['#F0C428', '#8A6D1F', '#FDF9EE', '#F5E9CE'], g: ['#12A36F', '#0F6B4F', '#F0FAF4', '#D8EFE1'] };
-  const ins = [];
-  if (rows.length) {
-    const falling = rows.filter((r) => r.d != null).sort((a, b) => a.d - b.d)[0];
-    const low = rows.reduce((a, b) => (b.v < a.v ? b : a));
-    if (falling && falling.d < -0.5) ins.push([`${falling.program} employability fell ${Math.abs(falling.d).toFixed(1)}% from last year`, `— now ${falling.v.toFixed(1)}%.`, 'r', 'Employability trend']);
-    else ins.push([`${low.program} trails at ${low.v.toFixed(1)}% employability`, `— the lowest in this view (target ${target.employment}%).`, low.v < target.employment ? 'r' : 'y', 'Employability trend']);
-  }
-  const counted = bars.filter((b) => b.total > 0);
-  if (counted.length) {
-    const weak = counted.reduce((a, b) => (b.v < a.v ? b : a));
-    ins.push([`Batch ${weak.y} coverage is the weakest at ${weak.v}%.`, `${N(weak.total - weak.traced)} records still have no survey response (target ${target.coverage}%).`, weak.v < target.coverage ? 'y' : 'g', 'Tracer survey completion']);
-  }
-  const fast = rows.filter((r) => r.m != null).sort((a, b) => a.m - b.m)[0];
-  if (fast) ins.push([`${fast.program} graduates`, `reach first employment in about ${fast.m.toFixed(1)} months (bucket midpoints).`, 'g', 'Time to first job']);
-  if (!ins.length) ins.push(['No survey responses in this view yet.', 'Insights appear once alumni in this scope answer the survey.', 'y', 'Tracer survey completion']);
 
   return {
     admK: {
@@ -178,18 +168,11 @@ function admDash(sc, S, data, rows, tipH, target) {
       avgMonths: S.monthsAvg == null ? '—' : P1(S.monthsAvg),
       timeToJob: groups.map(([lb, , color], i) => ({ label: lb, pct: `${tt[i]}%`, grow: tt[i] || 0, color, ...tipH(lb, `${tt[i]}% of employed graduates`) })),
       ttjHas: ttjN > 0, ttjWithin6: `${ttjN ? tt[0] + tt[1] : 0}%`,
-      insights: ins.slice(0, 3).map(([lead, text, k, cat]) => ({
-        lead, text, cat, color: tone[k][0], leadColor: tone[k][1], bg: tone[k][2], border: tone[k][3],
-        // Priority pill of the signal list: High / Medium / Low.
-        pl: `${PRIORITY[k][0]} priority`, pc: PRIORITY[k][1], pbg: PRIORITY[k][2], pbd: PRIORITY[k][3],
-      })),
     },
   };
 }
 
 const R = (label, value) => ({ label, value });
-/** Signal tone → [priority, text, background, border]. */
-const PRIORITY = { r: ['High', '#B42318', '#FDF1F0', '#F3C9C6'], y: ['Medium', '#7A5E0E', '#FDF6DD', '#F0E0A6'], g: ['Low', '#0F6B4F', '#E6F0EB', '#CFE3DA'] };
 
 /** KPI card icons (24×24 stroke paths, from the reference design). */
 const ICONS = {
@@ -261,20 +244,12 @@ export function buildKpiCards(d, vals, units, h) {
     })),
   ];
 
-  const pRows = vals.programRates.map((p) => R(p.full, `${p.pct} (${p.arrow} ${p.delta})`));
+  const pRows = vals.programRates.map((p) => R(p.full, `${p.pct} (${`${p.arrow} ${p.delta}`.trim()})`));
   const tRows = vals.timeToJob.map((t) => R(t.label, `${t.pct} of employed`));
   return {
     kpiCards,
-    programRates: vals.programRates.map((p) => ({ ...p, onClick: open({ title: p.full, sub: 'Employed graduates in the labour force', big: p.pct, rows: pRows, hl: p.full }) })),
+    programRates: vals.programRates.map((p) => ({ ...p, onClick: open({ title: p.full, sub: vals.programRatesAlign ? 'Employed graduates in a degree-related job' : 'Employed graduates in the labour force', big: p.pct, rows: pRows, hl: p.full }) })),
     timeToJob: vals.timeToJob.map((t) => ({ ...t, onClick: open({ title: 'Months before first job', sub: `Average ${vals.avgMonths} months`, big: t.pct, rows: tRows, hl: t.label }) })),
-    insTop: vals.insights[0] || { lead: '', text: '' },
-    insCount: `${vals.insights.length} signal${vals.insights.length === 1 ? '' : 's'}`,
-    insOpen: open({ title: 'Signals worth acting on', sub: 'Recommended follow-ups', big: String(vals.insights.length), rows: vals.insights.map((i) => R(i.lead, i.text)) }),
-    // Each signal opens the same dialog with its own row highlighted.
-    insights: vals.insights.map((i) => ({
-      ...i,
-      onClick: open({ title: 'Signals worth acting on', sub: 'Recommended follow-ups', big: String(vals.insights.length), rows: vals.insights.map((x) => R(x.lead, x.text)), hl: i.lead }),
-    })),
   };
 }
 
