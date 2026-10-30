@@ -291,6 +291,35 @@ class StatsService
         ];
     }
 
+    /**
+     * One row per active alumnus in scope (v_alumni_current, so its tallies match the aggregates): the Admin
+     * Dashboard's Graduates Traced and Degree-to-Career Alignment dialogs list and count these.
+     *
+     * @param  array<string, mixed>  $f
+     * @return list<array<string, mixed>>
+     */
+    public function records(Scope $scope, array $f): array
+    {
+        [$w, $params] = $this->where($scope, $f, 'v');
+        $rows = DB::select(
+            "SELECT v.alumni_id, concat_ws(' ', a.first_name, a.last_name) AS name, v.college_id, v.program_id, v.batch, v.traced, a.updated_at,
+                    v.employment_status, v.course_relevance, v.job_title, v.line_of_business
+               FROM v_alumni_current v JOIN alumnus a ON a.alumni_id = v.alumni_id
+               {$w}
+              ORDER BY v.batch DESC, a.last_name, a.first_name, v.alumni_id",
+            $params,
+        );
+
+        return array_map(fn ($r) => [
+            'id' => (int) $r->alumni_id, 'name' => $r->name,
+            'collegeId' => $r->college_id === null ? null : (int) $r->college_id,
+            'programId' => $r->program_id === null ? null : (int) $r->program_id,
+            'batch' => (int) $r->batch, 'traced' => (bool) $r->traced, 'updatedAt' => $r->updated_at,
+            'employment' => $r->employment_status, 'relevance' => $r->course_relevance,
+            'job' => $r->job_title, 'industry' => $r->line_of_business,
+        ], $rows);
+    }
+
     public static function pct(int|float $n, int|float $d): ?float
     {
         return $d ? round($n / $d * 100, 1) : null;

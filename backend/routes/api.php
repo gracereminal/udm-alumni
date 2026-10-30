@@ -94,6 +94,7 @@ Route::prefix('stats')->middleware('role:admin,dept')->group(function () {
     Route::get('/inclusion', [StatsController::class, 'inclusion']);
     Route::get('/counters', [StatsController::class, 'counters']);
     Route::get('/unresponsive', [StatsController::class, 'unresponsive']);
+    Route::get('/records', [StatsController::class, 'records']);
 });
 Route::prefix('reports')->middleware('role:admin,dept')->group(function () {
     Route::get('/types', [ReportsController::class, 'types']);

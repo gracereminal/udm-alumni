@@ -72,6 +72,12 @@ class StatsController extends Controller
         return response()->json($this->stats->counters($this->scope($request), $this->filters($request)));
     }
 
+    /** GET /stats/records: every active alumnus in scope (batch, survey, employment, course relevance), for the dashboard dialogs. */
+    public function records(Request $request): JsonResponse
+    {
+        return response()->json(['data' => $this->stats->records($this->scope($request), $this->filters($request))]);
+    }
+
     /** GET /stats/unresponsive?reason=seeking|new|no_response&page&per_page: the College Outreach list. */
     public function unresponsive(Request $request): JsonResponse
     {

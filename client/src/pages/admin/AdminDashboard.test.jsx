@@ -6,16 +6,28 @@ import { renderAt } from '../../test/renderApp';
 
 const Y = new Date().getFullYear();
 const batch = (key, employmentRate) => ({ key, total: 100, traced: 60, coverage: 60, laborForce: 50, employed: 40, alignedRate: 70, employmentRate });
-const unit = (key, label, alignedRate) => ({ key, label, full: `College ${label}`, total: 100, traced: 60, employed: 40, alignedRate });
+const unit = (key, label, alignedRate, employmentRate) => ({ key, label, full: `College ${label}`, total: 100, traced: 60, employed: 40, laborForce: 50, alignedRate, employmentRate });
+const rec = (id, name, batchYear, traced, employment, relevance, job, industry) => ({
+  id, name, collegeId: 1, programId: 10, batch: batchYear, traced, updatedAt: '2026-05-24T09:00:00+08:00', employment, relevance, job, industry,
+});
 
 const recent = [{ id: 7, name: 'Rafael Dizon', course: 'BS Computer Science', program: 'BSCS', batch: 2024, createdAt: '2026-05-24T09:00:00+08:00' }];
+const records = [
+  rec(1, 'Ana Cruz', Y - 1, true, 'employed', 'related', 'Web Developer', 'Information and communication'),
+  rec(2, 'Ben Reyes', Y - 1, true, 'employed', 'not_related', 'Cashier', 'Wholesale and retail trade'),
+  rec(3, 'Carl Lim', Y - 1, false, null, null, null, null),
+  rec(4, 'Dina Sy', Y - 2, true, 'self_employed', 'related', 'Web Developer', 'Information and communication'),
+];
 
 function setup() {
   mockApi([
     session('admin'), ['GET', /^\/alumni\?/, listOf(recent)], ['GET', /^\/(jobs|notifications|events|announcements|alumni)(\?|$)/, listOf([])],
     ['GET', '/stats/by-batch', { data: [0, 1, 2, 3, 4].map((i) => batch(Y - 5 + i, 60 + i * 4)) }],
-    ['GET', '/stats/by-program', { data: [unit(1, 'CCS', 82.5), unit(2, 'CBA', 61)] }],
-    ['GET', '/stats/summary', { total: 200, traced: 120, coverage: 60, notEmployed: 30, employed: 80, aligned: 50, alignedRate: 62.5, laborForce: 110, employmentRate: 72.7 }],
+    ['GET', '/stats/by-program', { data: [unit(1, 'CCS', 82.5, 77), unit(2, 'CBA', 61, 55)] }],
+    ['GET', '/stats/records', { data: records }],
+    ['GET', '/stats/summary', {
+      total: 200, traced: 120, coverage: 60, wageEmployed: 70, selfEmployed: 10, furtherStudies: 5, notEmployed: 30, employed: 80, aligned: 50, alignedRate: 62.5, laborForce: 110, employmentRate: 72.7,
+    }],
     ['GET', '/jobs/stats', { open: 4, employers: 3 }],
     ['GET', /^\/stats\//, {}],
   ]);
@@ -23,21 +35,50 @@ function setup() {
 }
 
 describe('Admin Dashboard', () => {
-  it('opens and closes the forecast from the employability card', async () => {
+  it('keeps Total Alumni a plain card, as in the reference', async () => {
+    setup();
+
+    expect(await screen.findByRole('button', { name: /Alumni Traced/ })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Total Alumni/ })).toBeNull();
+  });
+
+  it('opens the Employment Overview from the Alumni Employed card', async () => {
     const user = userEvent.setup();
     setup();
 
-    const cardBtn = await screen.findByRole('button', { name: /Alumni Employed/ });
-    expect(screen.queryByRole('region', { name: 'Forecast' })).toBeNull();
-    await user.click(cardBtn);
+    await user.click(await screen.findByRole('button', { name: /Alumni Employed/ }));
+    const dialog = await screen.findByRole('dialog', { name: 'Employment Overview' });
+    const actual = within(dialog).getByRole('region', { name: 'Actual Employment Analytics' });
+    expect(within(actual).getByText('72.7%')).toBeInTheDocument();
+    expect(within(actual).getByText('of 120 traced alumni')).toBeInTheDocument();
+    expect(within(actual).getByText('115')).toBeInTheDocument(); // employed + self-employed + further studies + not employed
+    expect(within(actual).getAllByText('College CCS')).toHaveLength(2); // highest college and its rate row
+    // Section B projects the next batches from the by-batch rates (60, 64 … 76 → 80, 84, 88).
+    const forecast = within(dialog).getByRole('region', { name: 'Employment Forecast' });
+    expect(within(forecast).getByText(`Batch ${Y}`)).toBeInTheDocument();
+    expect(within(forecast).getAllByText('80.0%').length).toBeGreaterThan(0);
 
-    const panel = await screen.findByRole('region', { name: 'Forecast' });
-    expect(within(panel).getByText('Employability forecast')).toBeInTheDocument();
-    expect(within(panel).getByText('80.0%')).toBeInTheDocument();
-    expect(within(panel).getByText('Employment rate on track to reach the 80% target')).toBeInTheDocument();
+    await user.click(within(dialog).getByRole('button', { name: 'Close' }));
+    expect(screen.queryByRole('dialog', { name: 'Employment Overview' })).toBeNull();
+  });
 
-    await user.click(within(panel).getByRole('button', { name: 'Close forecast' }));
-    expect(screen.queryByRole('region', { name: 'Forecast' })).toBeNull();
+  it('opens Graduates Traced by Batch and lists a batch by survey status', async () => {
+    const user = userEvent.setup();
+    setup();
+
+    await user.click(await screen.findByRole('button', { name: /Alumni Traced/ }));
+    const dialog = await screen.findByRole('dialog', { name: 'Graduates Traced by Batch' });
+    expect(await within(dialog).findByText('Total alumni records')).toBeInTheDocument();
+    expect(within(dialog).getByText('75.0%')).toBeInTheDocument(); // 3 of 4 records traced
+
+    await user.click(within(dialog).getByText(`Batch ${Y - 1}`));
+    expect(within(dialog).getByText('Ana Cruz')).toBeInTheDocument();
+    await user.click(within(dialog).getByRole('tab', { name: /Survey not completed/ }));
+    expect(within(dialog).getByText('Carl Lim')).toBeInTheDocument();
+    expect(within(dialog).queryByText('Ana Cruz')).toBeNull();
+
+    await user.click(within(dialog).getByRole('button', { name: 'Back to Dashboard' }));
+    expect(screen.queryByRole('dialog', { name: 'Graduates Traced by Batch' })).toBeNull();
   });
 
   it('lists recent registrations and switches the outcomes chart', async () => {
@@ -87,18 +128,22 @@ describe('Admin Dashboard', () => {
     expect(screen.queryByRole('button', { name: /Reset/ })).toBeNull();
   });
 
-  it('shows a KPI breakdown by college in the stat detail dialog', async () => {
+  it('opens Degree-to-Career Alignment from the Degree-aligned Jobs card', async () => {
     const user = userEvent.setup();
     setup();
 
     await user.click(await screen.findByRole('button', { name: /Degree-aligned Jobs/ }));
-    const dialog = await screen.findByRole('dialog', { name: 'Degree-aligned jobs' });
-    expect(within(dialog).getByText('By college')).toBeInTheDocument();
-    expect(within(dialog).getAllByText('82.5%')).toHaveLength(2); // "Highest" chip and its bar
-    expect(within(dialog).getByText('21.5')).toBeInTheDocument(); // spread, highest – lowest
+    const dialog = await screen.findByRole('dialog', { name: 'Degree-to-Career Alignment' });
+    expect(await within(dialog).findByText('2 of 3 employed respondents')).toBeInTheDocument();
+    expect(within(dialog).getAllByText('66.7%').length).toBeGreaterThan(0);
 
-    await user.click(within(dialog).getByRole('button', { name: 'Close' }));
-    expect(screen.queryByRole('dialog', { name: 'Degree-aligned jobs' })).toBeNull();
+    const table = within(dialog).getByRole('region', { name: 'Detailed Breakdown' });
+    await user.selectOptions(within(table).getByRole('combobox', { name: 'Alignment classification' }), 'No');
+    expect(within(table).getByText('Ben Reyes')).toBeInTheDocument();
+    expect(within(table).queryByText('Ana Cruz')).toBeNull();
+
+    await user.keyboard('{Escape}');
+    expect(screen.queryByRole('dialog', { name: 'Degree-to-Career Alignment' })).toBeNull();
   });
 
   it('ranks the signals and opens one in the insight drawer', async () => {

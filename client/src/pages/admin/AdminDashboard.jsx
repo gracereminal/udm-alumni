@@ -3,13 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import AdminDashboardView from '../../views/AdminDashboardView';
 import useChartTip from '../../hooks/useChartTip';
 import {
-  ADMIN_YEARS, adminRequests, adminScope, buildAdminDash, buildKpiCards, buildPopulation, detailVals, emptyAdminData, populationRequests,
+  ADMIN_YEARS, adminRequests, adminScope, buildAdminDash, buildKpiCards, detailVals, emptyAdminData,
 } from '../../lib/adminDash';
 import {
   ACTIVE_DAYS, activeColleges, analysisRequests, buildBatchAnalysis, buildOutcomeChart, engagementTrend, recentRegistrations, upcomingEvents,
 } from '../../lib/adminOverview';
+import { degreeAlignment, employmentOverview, graduatesTraced, recordRows } from '../../lib/adminDialogs';
 import { get } from '../../lib/api';
-import { buildForecast } from '../../lib/forecast';
 import { buildSignals, signalCount, signalRequests } from '../../lib/signals';
 import { RANGE_ERROR, pickYear } from '../../lib/batchRange';
 import { CATALOG, collegeById, programById } from '../../data/colleges';
@@ -33,10 +33,11 @@ export default function AdminDashboard() {
   const { tipH, vals: tipVals } = useChartTip();
   const [sel, setSel] = useState(DEFAULT_SEL);
   const [data, setData] = useState(emptyAdminData);
-  const [forecastOpen, setForecastOpen] = useState(false);
   const [det, setDet] = useState(null);
-  const [popOpen, setPopOpen] = useState(false);
-  const [pop, setPop] = useState(null);
+  // KPI dialogs: Graduates Traced (gt), Employment Overview (ovm), Degree-to-Career Alignment (da); null = closed.
+  const [gt, setGt] = useState(null);
+  const [ovm, setOvm] = useState(null);
+  const [da, setDa] = useState(null);
   const [rangeError, setRangeError] = useState('');
   const [chartTab, setChartTab] = useState('rate');
   const [chartHover, setChartHover] = useState(null);
@@ -85,19 +86,20 @@ export default function AdminDashboard() {
   }, []);
 
   const d = buildAdminDash(sel, data, tipH, colMetric);
-  const years = d.vals.batchYears;
 
-  // The population dialog's breakdowns load only while it is open.
-  const popKey = popOpen ? JSON.stringify(populationRequests(d.scope, years)) : null;
+  // The alumni rows behind the Graduates Traced and Degree-to-Career dialogs load when one of them opens (they filter
+  // by college, program and batch themselves).
+  const recNeeded = !!(gt || da);
+  const [recs, setRecs] = useState({ rows: null, err: false, n: 0 });
   useEffect(() => {
-    if (!popKey) return undefined;
+    if (!recNeeded) return undefined;
     let live = true;
-    setPop(null);
-    fetchAll(JSON.parse(popKey))
-      .then((res) => { if (live) setPop(res); })
-      .catch((err) => { if (live) toast(err.message, false); });
+    setRecs((r) => ({ ...r, rows: null, err: false }));
+    get('/stats/records')
+      .then((res) => { if (live) setRecs((r) => ({ ...r, rows: recordRows(res.data) })); })
+      .catch((err) => { if (live) { setRecs((r) => ({ ...r, err: true })); toast(err.message, false); } });
     return () => { live = false; };
-  }, [popKey, toast]);
+  }, [recNeeded, recs.n, toast]);
 
   // Outcomes chart (per-batch rows, unaffected by the batch range) and the clicked batch's Employment Analysis.
   const col = collegeById(d.scope.college);
@@ -132,20 +134,39 @@ export default function AdminDashboard() {
   const sxIdx = signals.findIndex((i) => i.id === sxSel);
   const sxStep = (n) => () => { if (signals.length) setSxSel(signals[((sxIdx < 0 ? 0 : sxIdx) + n + signals.length) % signals.length].id); };
 
-  const kpi = buildKpiCards(d.admK, d.vals, data.units.data, {
+  // The KPI dialogs start from the dashboard's college / program filter.
+  const dlgScope = { college: String(d.scope.college), course: String(d.scope.course) };
+  const kpi = buildKpiCards(d.admK, d.vals, {
     openDetail: setDet,
-    openPopulation: () => setPopOpen(true),
-    openForecast: () => setForecastOpen(true),
+    openTraced: () => setGt({ ...dlgScope, from: null, to: null, batch: null, tab: 'traced', q: '', page: 1 }),
+    openEmployment: () => setOvm({ all: false }),
+    openAlignment: () => setDa({ ...dlgScope, batch: 'all', sel: null, allProg: false, selExp: false, q: '', tAl: 'all', tProg: 'all', page: 1 }),
   });
+  const patch = (setter) => (p) => setter((s) => ({ ...s, ...p }));
+  // Reports holds the employment status breakdown; a college / program row hands its scope over.
+  const goUnitReport = (u) => {
+    const unitScope = d.scope.level === 'college' ? { college: u.key, course: 'all' } : d.scope.level === 'course' ? { college: d.scope.college, course: u.key } : { college: d.scope.college, course: d.scope.course };
+    setOvm(null);
+    navigate('/admin/reports', { state: { ...reportScope, ...unitScope } });
+  };
   const v = {
     ...d.vals,
     ...kpi,
     ...detailVals(det),
     adDetClose: () => setDet(null),
     adDetGo: () => { setDet(null); goReports(); },
-    popOpen,
-    ...(popOpen ? buildPopulation(d.admK, data.byBatch.data, years, pop) : {}),
-    popClose: () => setPopOpen(false),
+    gt: gt ? { ...graduatesTraced(recs.rows, gt, patch(setGt), recs.err), retry: () => setRecs((r) => ({ ...r, n: r.n + 1 })) } : null,
+    gtClose: () => setGt(null),
+    ovm: ovm ? employmentOverview(data.summary, data.units.data, data.byBatch.data, {
+      scopeLabel: d.vals.admScopeLabel.replace(/^all colleges/, 'All colleges'),
+      unitLabel: d.scope.level === 'college' ? 'college' : d.scope.level === 'course' ? 'program' : 'batch',
+      all: ovm.all, toggle: () => setOvm((s) => ({ all: !s.all })),
+      goStatus: () => { setOvm(null); goReports(); },
+      goUnit: goUnitReport,
+    }) : null,
+    ovmClose: () => setOvm(null),
+    da: da ? degreeAlignment(recs.rows, da, patch(setDa)) : null,
+    daClose: () => setDa(null),
     ...tipVals,
     admOnCollege: (e) => { setChartHover(null); setChartPick(null); setSel((s) => ({ ...s, college: e.target.value, course: 'all' })); },
     admOnCourse: (e) => setSel((s) => ({ ...s, course: e.target.value })),
@@ -179,10 +200,6 @@ export default function AdminDashboard() {
     goEvents: () => navigate('/admin/events'),
     // Hand the dashboard's scope to Reports so the export matches what is on screen.
     goReports,
-    // Forecast dialog: projected from the per-batch rows already loaded (lib/forecast.js).
-    forecastOpen,
-    forecast: forecastOpen ? buildForecast(data.byBatch.data, CATALOG.targets) : null,
-    closeForecast: () => setForecastOpen(false),
     exportHover: { background: '#0B3123' },
     sx: {
       mode: sxMode, list: signals, count: sxMode === 'ready' ? signalCount(signals) : '',

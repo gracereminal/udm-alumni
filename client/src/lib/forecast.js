@@ -90,6 +90,9 @@ const trendText = (p) => {
   return `${s > 0 ? '↑' : '↓'} ${p.rate ? `${a.toFixed(1)} pts` : N(a)} / batch`;
 };
 
+/** The employment rate projection alone (history, fit, next batches), for the Employment Overview dialog. */
+export const projectEmployment = (rows, targets) => project(METRICS[0], rows || [], targets);
+
 /**
  * The props the forecast panel renders, from the by-batch rows.
  * @param rows     GET /stats/by-batch `data` (one row per batch, keyed by batch year)

@@ -1,12 +1,12 @@
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { hv } from '../lib/stateStyle';
 import NavSidebar from '../components/NavSidebar';
 import SearchPill from '../components/topbar/SearchPill';
 import NotificationBell from '../components/topbar/NotificationBell';
 import UserChip from '../components/topbar/UserChip';
 import { onActivate, onBackdrop } from '../lib/a11y';
-import ForecastPanel from '../components/ForecastPanel';
 import RangeError from '../components/RangeError';
+import { DegreeAlignmentDialog, EmploymentOverviewDialog, GraduatesTracedDialog } from './AdminKpiDialogs';
 import { signalPill } from '../lib/signals';
 
 const card = {
@@ -34,8 +34,6 @@ const closeBtn = {
   flex: 'none', width: '34px', height: '34px', borderRadius: '50%', border: '1px solid #E7E9ED', background: '#fff', display: 'flex',
   alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#475569', fontSize: '18px', fontFamily: 'inherit',
 };
-/* Label · bar · count · share row in the population dialog. */
-const popRow = (cols) => ({ display: 'grid', gridTemplateColumns: `${cols} minmax(0,1fr) 52px 44px`, gap: '8px', alignItems: 'center', fontSize: '12px' });
 /* The one hover tooltip used across the dashboard: dark box, grey heading, bold white value. */
 const tipBox = {
   position: 'absolute', pointerEvents: 'none', zIndex: '50', background: '#0B1220', color: '#fff', borderRadius: '8px', padding: '7px 11px',
@@ -52,7 +50,7 @@ const ocTip = {
 };
 
 /** Centered dialog on a dark backdrop (closes on Esc or a backdrop click). */
-function Dialog({ label, onClose, width, bg = '#fff', children }) {
+function Dialog({ label, onClose, width, children }) {
   useEffect(() => {
     const onKey = (e) => { if (e.key === 'Escape') onClose(); };
     document.addEventListener('keydown', onKey);
@@ -63,28 +61,10 @@ function Dialog({ label, onClose, width, bg = '#fff', children }) {
       style={{ position: 'fixed', inset: '0', zIndex: '80', background: 'rgba(11,18,32,.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', fontFamily: 'var(--udm-sans)', boxSizing: 'border-box' }}
     >
       <div role="dialog" aria-modal="true" aria-label={label}
-        style={{ width: '100%', maxWidth: width, maxHeight: '100%', overflow: 'auto', background: bg, borderRadius: '16px', boxShadow: '0 24px 60px -12px rgba(0,20,16,.35)', padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px', boxSizing: 'border-box' }}
+        style={{ width: '100%', maxWidth: width, maxHeight: '100%', overflow: 'auto', background: '#fff', borderRadius: '16px', boxShadow: '0 24px 60px -12px rgba(0,20,16,.35)', padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px', boxSizing: 'border-box' }}
       >
         {children}
       </div>
-    </div>
-  );
-}
-
-function PopBars({ title, rows, cols = '90px' }) {
-  return (
-    <div style={{ background: '#fff', border: '1px solid #E7E9ED', borderRadius: '12px', padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-      <div style={{ fontWeight: '600', fontSize: '13.5px', color: '#0B1220' }}>{title}</div>
-      {rows.map((r) => (
-        <div key={r.label} title={r.full} style={popRow(cols)}>
-          <span style={{ fontWeight: '600', color: '#334155', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{r.label}</span>
-          <div style={{ height: '7px', borderRadius: '99px', background: '#EEF4F1', overflow: 'hidden' }}>
-            <div style={{ height: '100%', width: r.w, background: r.color, borderRadius: '99px' }} />
-          </div>
-          <span style={{ fontWeight: '700', textAlign: 'right', color: '#0B1220' }}>{r.n}</span>
-          <span style={{ color: '#94A3B8', textAlign: 'right' }}>{r.pct}</span>
-        </div>
-      ))}
     </div>
   );
 }
@@ -509,12 +489,11 @@ function InsightDrawer({ sx }) {
 export default function AdminDashboardView(v) {
   const {
     admFromOpts, admFromVal, admCollegeOpts, admCollegeVal, admCourseDisabled, admCourseOpacity, admCourseOpts, admCourseVal,
-    admFiltered, admOnFrom, admOnTo, admOnCollege, admOnCourse, admOnReset, admOnStatus, admScopeLabel, admStatusOpts, admStatusVal, admToOpts, admToVal, rangeError,
+    admFiltered, admOnFrom, admOnTo, admOnCollege, admOnCourse, admOnReset, admOnStatus, admStatusOpts, admStatusVal, admToOpts, admToVal, rangeError,
     adDetBarTitle, adDetBars, adDetBig, adDetChips, adDetClose, adDetGo, adDetHasBars, adDetHasRing, adDetOpen, adDetRingBg, adDetRingLabel,
-    adDetRingText, adDetRows, adDetSub, adDetTitle, avgMonths, chart, chartTab, chartsRef, closeForecast, engagement, exportHover,
-    forecast, forecastOpen, goEvents, goRecords, goReports, kpiCards,
-    analysis, colMetric, onChartHover, onChartPick, onChartTab, onColMetric, popBatch, popClose, popCol, popHeat, popLoading, popMean, popOpen, popProg, popThin, popTotal,
-    popTraced, popVer, popYears, programRates, programRatesSub, programRatesTitle, regs, activeCols, sx,
+    adDetRingText, adDetRows, adDetSub, adDetTitle, avgMonths, chart, chartTab, chartsRef, engagement, exportHover,
+    da, daClose, goEvents, goRecords, goReports, gt, gtClose, kpiCards, ovm, ovmClose,
+    analysis, colMetric, onChartHover, onChartPick, onChartTab, onColMetric, programRates, programRatesSub, programRatesTitle, regs, activeCols, sx,
     timeToJob, tipShow, tipTf, tipTitle, tipValue, tipX, tipY, ttjHas, ttjWithin6, upcoming,
   } = v;
   const tab = (id, label) => {
@@ -587,12 +566,6 @@ export default function AdminDashboardView(v) {
           </div>
           {rangeError ? <div style={{ margin: '8px 12px 0' }}><RangeError message={rangeError} /></div> : null}
 
-          {forecastOpen && forecast ? (
-            <Dialog label="Employability forecast" onClose={closeForecast} width="860px">
-              <ForecastPanel forecast={forecast} scopeLabel={admScopeLabel} onClose={closeForecast} />
-            </Dialog>
-          ) : null}
-
           {adDetOpen ? (
             <Dialog label={adDetTitle} onClose={adDetClose} width="520px">
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px' }}>
@@ -656,65 +629,19 @@ export default function AdminDashboardView(v) {
             </Dialog>
           ) : null}
 
-          {popOpen ? (
-            <Dialog label="Alumni population" onClose={popClose} width="1120px" bg="#F7F8F7">
-              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px' }}>
-                <div style={{ minWidth: '0' }}>
-                  <div style={{ fontWeight: '700', fontSize: '20px', letterSpacing: '-.4px', color: '#0B1220' }}>Alumni population</div>
-                  <div style={{ fontSize: '12.5px', color: '#64748B', marginTop: '3px' }}>
-                    <b style={{ color: '#0B1220' }}>{popTotal}</b> total · {popTraced} traced · {popVer} verified · {admScopeLabel}
-                  </div>
-                </div>
-                <button type="button" aria-label="Close" title="Close" onClick={popClose} style={closeBtn} {...hv({ background: '#F1F4F3' })}>×</button>
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(100%,300px),1fr))', gap: '12px' }}>
-                <PopBars title="By graduation year (batch)" rows={popBatch} />
-                <PopBars title="By department / college" rows={popCol} cols="170px" />
-                <PopBars title="By program / course (top 8)" rows={popProg} />
-              </div>
-              <div style={{ background: '#fff', border: '1px solid #E7E9ED', borderRadius: '12px', padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '10px', overflowX: 'auto' }}>
-                <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
-                  <div style={{ fontWeight: '600', fontSize: '13.5px', color: '#0B1220' }}>
-                    Batch × program heatmap <span style={{ fontWeight: '500', color: '#64748B' }}>· alumni per cohort</span>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '11.5px', color: '#475569', flexWrap: 'wrap' }}>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><span style={{ width: '12px', height: '12px', borderRadius: '3px', background: '#0F3D2E' }} />Well represented</span>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <span style={{ width: '12px', height: '12px', borderRadius: '3px', background: '#FBF0D8', border: '1px solid #E3C97E' }} />
-                      Thin (under 55% of the {popMean} average) · {popThin}
-                    </span>
-                  </div>
-                </div>
-                {popLoading ? (
-                  <div style={{ padding: '24px 0', textAlign: 'center', fontSize: '13px', color: '#64748B' }}>Loading…</div>
-                ) : !popHeat.length ? (
-                  <div style={{ padding: '24px 0', textAlign: 'center', fontSize: '13px', color: '#64748B' }}>No alumni records in this view.</div>
-                ) : (
-                  <div style={{ display: 'grid', gridTemplateColumns: `90px repeat(${popYears.length},minmax(44px,1fr)) 64px`, gap: '4px', alignItems: 'center', fontSize: '11.5px', minWidth: '520px' }}>
-                    <span />
-                    {popYears.map((y) => <span key={y} style={{ textAlign: 'center', fontWeight: '700', color: '#64748B' }}>{y}</span>)}
-                    <span style={{ textAlign: 'right', fontWeight: '700', color: '#64748B' }}>Total</span>
-                    {popHeat.map((h) => (
-                      <React.Fragment key={h.full}>
-                        <span title={h.full} style={{ fontWeight: '600', color: '#0B1220', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{h.label}</span>
-                        {h.cells.map((c, i) => (
-                          <div key={popYears[i]} style={{ height: '30px', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700', background: c.bg, color: c.color, border: c.ring, boxSizing: 'border-box' }}>{c.n}</div>
-                        ))}
-                        <span style={{ textAlign: 'right', fontWeight: '700', color: '#0B1220' }}>{h.total}</span>
-                      </React.Fragment>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </Dialog>
-          ) : null}
+          {gt ? <GraduatesTracedDialog g={gt} onClose={gtClose} /> : null}
+          {ovm ? <EmploymentOverviewDialog m={ovm} onClose={ovmClose} /> : null}
+          {da ? <DegreeAlignmentDialog a={da} onClose={daClose} /> : null}
 
           <div data-m="ov-body" style={{ flex: '1', minHeight: '0', overflowY: 'auto', padding: '10px 12px 16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
             <div data-m="kpi-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,minmax(0,1fr))', gap: '16px' }}>
               {(kpiCards || []).map((k) => (
-                <div key={k.id} role="button" tabIndex={0} aria-label={`${k.label}: ${k.value}. ${k.delta} ${k.note}`} onKeyDown={onActivate(k.onClick)} onClick={k.onClick}
-                  style={{ ...card, flexDirection: 'row', alignItems: 'center', gap: '14px', padding: '10px 16px', cursor: 'pointer', transition: 'box-shadow .18s,border-color .18s' }}
-                  {...hv({ boxShadow: '0 2px 4px rgba(16,24,40,.06),0 14px 30px -12px rgba(15,61,46,.28)', borderColor: '#0F3D2E' })}
+                <div key={k.id}
+                  {...(k.onClick ? {
+                    role: 'button', tabIndex: 0, title: k.title, 'aria-label': `${k.label}: ${k.value}. ${k.delta} ${k.note}`, onKeyDown: onActivate(k.onClick), onClick: k.onClick,
+                    ...hv({ boxShadow: '0 2px 4px rgba(16,24,40,.06),0 14px 30px -12px rgba(15,61,46,.28)', borderColor: '#0F3D2E' }),
+                  } : {})}
+                  style={{ ...card, flexDirection: 'row', alignItems: 'center', gap: '14px', padding: '10px 16px', ...(k.onClick ? { cursor: 'pointer', transition: 'box-shadow .18s,border-color .18s' } : {}) }}
                 >
                   <div aria-hidden="true" style={{ width: '44px', height: '44px', borderRadius: '14px', flex: 'none', background: k.chip, color: k.acc, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" style={{ width: '24px', height: '24px' }}><path d={k.icon} /></svg>

@@ -191,6 +191,24 @@ it('lists the outreach queue in scope with the channels on file', function () {
         ->and($r->json('data.0'))->toHaveKeys(['id', 'name', 'reason', 'lastContactedAt', 'lastContactedVia', 'email', 'facebook']);
 });
 
+it('lists the alumni behind the dashboard dialogs, matching the summary counts', function () {
+    $admin = withSession(signIn('admin@udmalumni.edu'));
+    $rows = collect($admin->getJson('/api/v1/stats/records')->assertOk()->json('data'));
+    $summary = $admin->getJson('/api/v1/stats/summary')->json();
+
+    expect($rows->count())->toBe($summary['total'])
+        ->and($rows->where('traced', true)->count())->toBe($summary['traced'])
+        ->and($rows->where('traced', true)->whereIn('employment', ['employed', 'self_employed'])->where('relevance', 'related')->count())->toBe($summary['aligned'])
+        ->and($rows->first())->toHaveKeys(['id', 'name', 'collegeId', 'programId', 'batch', 'traced', 'updatedAt', 'employment', 'relevance', 'job', 'industry']);
+
+    // A dept user only gets their own college, whatever filter they send.
+    $ccs = (int) DB::table('college')->where('code', 'CCS')->value('college_id');
+    $chs = (int) DB::table('college')->where('code', 'CHS')->value('college_id');
+    $dean = collect(withSession(signIn('ccs.dean@udmalumni.edu'))->getJson("/api/v1/stats/records?college_id={$chs}")->json('data'));
+    expect($dean->pluck('collegeId')->unique()->all())->toBe([$ccs])
+        ->and($dean->count())->toBe(DB::table('v_alumni_current')->where('college_id', $ccs)->count());
+});
+
 it('stores completion with the full client rule, Admin edits included', function () {
     $maria = (int) DB::table('alumnus as a')->join('user_account as u', 'u.user_id', '=', 'a.user_id')->where('u.email', 'maria.delacruz@udmalumni.edu')->value('a.alumni_id');
     $token = signIn('maria.delacruz@udmalumni.edu');
