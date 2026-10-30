@@ -84,8 +84,8 @@ export default function AlumniDashboard() {
     dismissSurveyBanner: () => setBannerDismissed(true),
     dashSurveyPct: `${pct}%`,
     dashSurveyRemainingLabel: remaining === 1 ? '1 question still needs an answer.' : `${remaining} questions still need answers.`,
-    jobsOrder: complete ? 1 : 2,
-    announceOrder: complete ? 2 : 1,
+    jobsOrder: 1,
+    announceOrder: 2, // jobs on the left, Announcements & Events on the right
     jobsCardShadow: complete ? '0 10px 28px rgba(0,40,33,.10)' : 'none',
     dashMetrics: [
       { label: 'Portal Status', icon: ICONS.portal, value: 'Active', sub: 'Alumni account in good standing', tag: '', valueColor: '#0A0A0A', tagColor: '#0F8A5F', tagBg: '#E1F3EA' },
