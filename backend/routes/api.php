@@ -157,6 +157,7 @@ Route::prefix('jobs')->group(function () {
     Route::middleware('role:alumni,dept,admin')->group(function () {
         Route::get('/', [JobsController::class, 'index']);
         Route::get('/stats', [JobsController::class, 'stats']);
+        Route::get('/recommended', [JobsController::class, 'recommended'])->middleware('role:alumni');
         Route::get('/{id}', [JobsController::class, 'show']);
     });
     Route::middleware('role:alumni,admin')->group(function () {

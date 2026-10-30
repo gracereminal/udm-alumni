@@ -6,6 +6,7 @@ use App\Exceptions\ApiException;
 use App\Models\UserAccount;
 use App\Support\Contact;
 use App\Support\Lists;
+use App\Support\TfIdf;
 use App\Support\Vocab;
 use Illuminate\Support\Facades\DB;
 
@@ -90,6 +91,61 @@ class JobService
             'applications' => (int) $s->applications,
             'responseRate' => $s->open > 0 ? (int) round(100 * $s->responded / $s->open) : null,
         ];
+    }
+
+    /**
+     * "Recommended jobs for you": open postings ranked by TF-IDF cosine similarity between the alumnus' course, skills,
+     * industry and current job title and each posting's title, skill tags and description. Content-based, so it needs
+     * no history of who applied where. Skips the alumnus' own postings and ones already applied to. Each row carries
+     * `match` { score, terms } with the shared terms that weighed most.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function recommended(UserAccount $viewer, int $limit = 6): array
+    {
+        $alumniId = $this->viewerAlumni($viewer);
+        $a = DB::selectOne(
+            "SELECT p.name AS program, p.abbr, a.course_other, a.industry,
+                    (SELECT e.job_title FROM employment_record e WHERE e.alumni_id = a.alumni_id AND e.is_current ORDER BY e.updated_at DESC LIMIT 1) AS job_title,
+                    COALESCE((SELECT jsonb_agg(s.name) FROM alumni_skill x JOIN skill s ON s.skill_id = x.skill_id WHERE x.alumni_id = a.alumni_id), '[]'::jsonb) AS skills
+               FROM alumnus a LEFT JOIN program p ON p.program_id = a.program_id WHERE a.alumni_id = ?",
+            [$alumniId],
+        );
+        if ($a === null) {
+            return [];
+        }
+        $course = preg_replace('/^(Bachelor|Master|Doctor|BS|BTVTE)\b( of| in)?( (Science|Arts))?( in)?\s*/i', '', (string) ($a->program ?? $a->course_other));
+        $abbr = explode('-', (string) $a->abbr)[0];
+        $profile = array_merge(
+            TfIdf::terms($course, 2),
+            // "BSIT" -> IT, "BIT-Cyber" -> IT, "BSCS" -> CS: the short form postings use ("IT, CS and Computer Engineering graduates").
+            TfIdf::terms($abbr, 2), TfIdf::terms(preg_replace('/^(BS|AB|B(?!S))(?=[A-Z]{2,}$)/', '', $abbr), 2),
+            TfIdf::terms($a->industry), TfIdf::terms($a->job_title),
+            ...array_map(fn ($s) => TfIdf::phrase($s, 2), json_decode((string) $a->skills, true)),
+        );
+
+        $jobs = DB::select(
+            "SELECT j.job_id, j.title, j.description,
+                    COALESCE((SELECT jsonb_agg(sk.name) FROM job_skill js JOIN skill sk ON sk.skill_id = js.skill_id WHERE js.job_id = j.job_id), '[]'::jsonb) AS tags
+               FROM job_posting j LEFT JOIN saved_job sj ON sj.job_id = j.job_id AND sj.alumni_id = ?
+              WHERE j.deleted_at IS NULL AND j.approval_status = 'approved' AND j.is_active
+                AND j.posted_by IS DISTINCT FROM ? AND sj.applied_at IS NULL",
+            [$alumniId, $viewer->user_id],
+        );
+        $docs = [];
+        foreach ($jobs as $j) {
+            $docs[(int) $j->job_id] = array_merge(TfIdf::terms($j->title, 2), TfIdf::terms($j->description),
+                ...array_map(fn ($s) => TfIdf::phrase($s, 2), json_decode((string) $j->tags, true)));
+        }
+        $ranked = array_slice(TfIdf::rank($profile, $docs, 0.05), 0, $limit);
+        if ($ranked === []) {
+            return [];
+        }
+
+        $rows = collect(DB::select(self::SELECT.' WHERE j.job_id IN ('.implode(',', array_fill(0, count($ranked), '?')).')',
+            [$alumniId, ...array_column($ranked, 'key')]))->keyBy(fn ($j) => (int) $j->job_id);
+
+        return array_map(fn ($r) => self::out($rows[$r['key']], $viewer) + ['match' => ['score' => round($r['score'], 3), 'terms' => $r['terms']]], $ranked);
     }
 
     /** "₱35,000 - ₱48,000" / "₱45k" -> [low, high] in pesos; null when no amount is given. */

@@ -59,7 +59,7 @@ it('summarizes the open postings for the board tiles', function () {
         ->and($s->json('employers'))->toBe($before['employers'] + 1)
         ->and($s->json('applications'))->toBe($before['applications'] + 1)
         ->and($s->json('responseRate'))->toBe((int) round(100 * (DB::table('v_job_stats as s')->join('job_posting as j', 'j.job_id', '=', 's.job_id')
-            ->where(['j.approval_status' => 'approved', 'j.is_active' => true])->whereNull('j.deleted_at')->where('s.applications', '>', 0)->count()) / $open));
+        ->where(['j.approval_status' => 'approved', 'j.is_active' => true])->whereNull('j.deleted_at')->where('s.applications', '>', 0)->count()) / $open));
     if ($before['salary'] === null) {
         expect($s->json('salary'))->toBe(['low' => 35000, 'high' => 45000, 'disclosed' => 2]);
     }
@@ -131,6 +131,26 @@ it('saves, applies through a listed channel, and withdraws', function () {
 
     $veyra = adminJob(['company' => 'Veyra Analytics', 'applyVia' => 'https://veyra.ai/careers']); // a careers page
     withSession($token)->postJson("/api/v1/jobs/{$veyra}/apply", ['via' => 'website'])->assertOk()->assertJsonPath('applied.via', 'website');
+});
+
+it('recommends open postings that match the alumnus\' course and skills, best first', function () {
+    // Maria Dela Cruz: BSIT, skills Python, Spark, SQL, Power BI, Excel.
+    $data = adminJob(['title' => 'Data Analyst', 'company' => 'Insight Labs', 'tags' => ['SQL', 'Power BI'], 'desc' => 'Build dashboards and reports from sales data.']);
+    $dev = adminJob(['title' => 'Junior Developer', 'company' => 'Code Co', 'desc' => 'Open to graduates of IT and Computer Science programs.']);
+    $nurse = adminJob(['title' => 'Staff Nurse', 'company' => 'City Hospital', 'desc' => 'Provide nursing care in the medical-surgical ward.']);
+    $token = signIn('maria.delacruz@udmalumni.edu');
+
+    $r = withSession($token)->getJson('/api/v1/jobs/recommended')->assertOk();
+    $ids = array_column($r->json('data'), 'id');
+    expect(array_search($data, $ids))->toBeLessThan(array_search($dev, $ids))
+        ->and($ids)->not->toContain($nurse)
+        ->and($r->json('data.0.match.terms'))->not->toBeEmpty()
+        ->and($r->json('data.0'))->toHaveKeys(['title', 'company', 'saved', 'match']);
+
+    withSession($token)->postJson("/api/v1/jobs/{$data}/apply", ['via' => 'email'])->assertOk();
+    expect(array_column(withSession($token)->getJson('/api/v1/jobs/recommended')->json('data'), 'id'))->not->toContain($data);
+
+    withSession(signIn('admin@udmalumni.edu'))->getJson('/api/v1/jobs/recommended')->assertForbidden();
 });
 
 it('lets the admin deactivate, delete and restore a posting', function () {

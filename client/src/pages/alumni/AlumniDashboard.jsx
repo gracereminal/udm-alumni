@@ -19,7 +19,7 @@ const ICONS = {
 export default function AlumniDashboard() {
   const navigate = useNavigate();
   const { a, surveyComplete, progress, alumniName, avatar, record } = useProfile();
-  const { activeJobs } = useJobs();
+  const { activeJobs, recommended } = useJobs();
   const { announcementItems } = useEvents();
   const [bannerDismissed, setBannerDismissed] = useState(false);
   const [annTab, setAnnTab] = useState('all');
@@ -54,6 +54,11 @@ export default function AlumniDashboard() {
       countColor: on ? '#0F3D2E' : '#64748B', countBg: on ? '#E6F0EB' : '#F1F3F5', onClick: () => setAnnTab(k),
     };
   });
+
+  // "Recommended jobs for you" (matched to the course and skills by the API); the latest postings when nothing matches.
+  const recs = (recommended || []).filter((j) => j.status === 'active');
+  const cardJobs = (recs.length ? recs : activeJobs).slice(0, 3)
+    .map((j) => ({ ...j, why: j.match?.terms?.length ? `Matches: ${j.match.terms.join(', ')}` : '' }));
 
   const course = a.course || a.course_other;
   const status = RECORD_STATUS[record?.status] || null;
@@ -100,7 +105,9 @@ export default function AlumniDashboard() {
     annFeedEmpty: feed.length === 0,
     annShowFooter: feed.length > 0,
     annFeedEmptyText: annTab === 'events' ? 'No upcoming events right now.' : annTab === 'announcements' ? 'No announcements right now.' : 'Nothing posted yet.',
-    dashJobs: activeJobs.slice(0, 3),
+    dashJobs: cardJobs,
+    dashJobsMatched: recs.length > 0,
+    dashJobsTitle: recs.length ? 'Recommended jobs for you' : 'Job Board',
     dashJobsBrowseLabel: activeJobs.length === 1 ? 'Browse 1 posting →' : `Browse all ${activeJobs.length} postings →`,
     goJobs: () => navigate('/alumni/jobs'),
     goEvents: () => navigate('/alumni/events'),

@@ -36,6 +36,12 @@ class JobsController extends Controller
         return response()->json($this->jobs->stats());
     }
 
+    /** GET /jobs/recommended (alumni): open postings ranked against the alumnus' course and skills, each with `match`. */
+    public function recommended(Request $request): JsonResponse
+    {
+        return response()->json(['data' => $this->jobs->recommended($this->user($request))]);
+    }
+
     /** GET /jobs/:id */
     public function show(Request $request, int $id): JsonResponse
     {

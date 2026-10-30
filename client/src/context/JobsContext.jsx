@@ -56,17 +56,20 @@ export function JobsProvider({ children }) {
   const [mine, setMine] = useState([]);
   /** Board summary tiles (open postings, employers, salary benchmark, response rate), computed by the API. */
   const [stats, setStats] = useState(null);
+  /** Alumni only: open postings ranked against the alumnus' course and skills (TF-IDF), each with `match` { score, terms }. */
+  const [recommended, setRecommended] = useState([]);
+  const loadRecommended = useCallback(() => get('/jobs/recommended').then((r) => setRecommended((r?.data || []).map((j) => ({ ...toJob(j), match: j.match }))), () => setRecommended([])), []);
 
   const reload = useCallback(async () => {
-    if (!user || (role !== 'admin' && role !== 'alumni')) { setJobs([]); setQueue([]); setMine([]); setStats(null); return; }
+    if (!user || (role !== 'admin' && role !== 'alumni')) { setJobs([]); setQueue([]); setMine([]); setStats(null); setRecommended([]); return; }
     if (role === 'admin') {
       const [all, q] = await Promise.all([list('/jobs', { view: 'all' }), list('/jobs', { view: 'queue' })]);
       setJobs(all.map(toJob)); setQueue(q.map(toJob));
     } else {
-      const [board, own, s] = await Promise.all([list('/jobs'), list('/jobs', { view: 'mine' }), get('/jobs/stats').catch(() => null)]);
+      const [board, own, s] = await Promise.all([list('/jobs'), list('/jobs', { view: 'mine' }), get('/jobs/stats').catch(() => null), loadRecommended()]);
       setJobs(board.map(toJob)); setMine(own.map(toJob)); setStats(s);
     }
-  }, [user, role]);
+  }, [user, role, loadRecommended]);
   useEffect(() => { reload().catch(() => {}); }, [reload]);
   // Keep the board, the dashboard's Job Board card and the summary tiles in step with postings changed elsewhere
   // (an admin posting, deactivating or approving): refetch when the tab comes back into view and every minute while it is.
@@ -119,17 +122,18 @@ export function JobsProvider({ children }) {
     const cur = jobs.find((x) => x.id === id);
     replace(cur && cur.applied ? await del(`/jobs/${id}/apply`) : await post(`/jobs/${id}/apply`, { via: VIA_CODE[via] || via }));
     get('/jobs/stats').then(setStats, () => {});
-  }, [jobs]);
+    loadRecommended(); // an applied posting drops out of the recommendations
+  }, [jobs, loadRecommended]);
 
   const value = useMemo(() => {
     const activeJobs = jobs.filter((j) => j.status === 'active');
     const savedJobs = Object.fromEntries(jobs.filter((j) => j.saved).map((j) => [j.id, true]));
     const applied = Object.fromEntries(jobs.filter((j) => j.applied).map((j) => [j.id, j.applied]));
     return {
-      jobs, activeJobs, queue, mine, stats, savedJobs, applied, reload,
+      jobs, activeJobs, recommended, queue, mine, stats, savedJobs, applied, reload,
       postJob, updateJob, deleteJob, restoreJob, setJobStatus, approveQueued, rejectQueued, submitForReview, toggleSave, toggleApply,
     };
-  }, [jobs, queue, mine, stats, reload, postJob, updateJob, deleteJob, restoreJob, setJobStatus, approveQueued, rejectQueued, submitForReview, toggleSave, toggleApply]);
+  }, [jobs, recommended, queue, mine, stats, reload, postJob, updateJob, deleteJob, restoreJob, setJobStatus, approveQueued, rejectQueued, submitForReview, toggleSave, toggleApply]);
   return <JobsContext.Provider value={value}>{children}</JobsContext.Provider>;
 }
 

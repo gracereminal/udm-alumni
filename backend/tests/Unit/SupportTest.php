@@ -3,6 +3,7 @@
 use App\Support\EntryPass;
 use App\Support\Mobile;
 use App\Support\SurveyMapping;
+use App\Support\TfIdf;
 
 describe('EntryPass', function () {
     it('builds the same code as entryPassCode() in the client', function () {
@@ -67,5 +68,28 @@ describe('SurveyMapping', function () {
             ['type' => 'honor', 'name' => 'Cum Laude'],
             ['type' => 'honor', 'name' => 'Best Thesis'],
         ]);
+    });
+});
+
+describe('TfIdf', function () {
+    it('ranks the closer document first and names the shared terms', function () {
+        $docs = [
+            'dev' => TfIdf::terms('Junior Software Developer. Open to graduates of IT, CS and Computer Engineering programs.'),
+            'nurse' => TfIdf::terms('Staff Nurse. Provide nursing care in the medical-surgical ward.'),
+            'data' => array_merge(TfIdf::terms('Data Analyst'), TfIdf::phrase('Power BI'), TfIdf::phrase('SQL')),
+        ];
+        $r = TfIdf::rank(array_merge(TfIdf::terms('Information Technology', 2), TfIdf::terms('IT', 2), TfIdf::phrase('SQL', 2), TfIdf::phrase('Power BI', 2)), $docs, 0.05);
+
+        expect(array_column($r, 'key'))->toBe(['data', 'dev'])
+            ->and($r[0]['terms'])->toContain('Power BI')
+            ->and($r[1]['terms'])->toBe(['IT']);
+    });
+
+    it('stems word forms together and keeps acronyms apart from stop words', function () {
+        $r = TfIdf::rank(TfIdf::terms('Nursing'), ['a' => TfIdf::terms('Staff nurse'), 'b' => TfIdf::terms('Engineering')]);
+        expect(array_column($r, 'key'))->toBe(['a'])
+            ->and(TfIdf::rank(TfIdf::terms('engineer'), ['x' => TfIdf::terms('Engineering lead')])[0]['key'])->toBe('x')
+            ->and(TfIdf::terms('it is IT'))->toBe([['it', 'IT']])
+            ->and(TfIdf::rank([], ['x' => TfIdf::terms('anything')]))->toBe([]);
     });
 });

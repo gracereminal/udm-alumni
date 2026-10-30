@@ -28,6 +28,8 @@ export default function AlumniDashboardView(v) {
     dashBatch,
     dashJobs,
     dashJobsBrowseLabel,
+    dashJobsMatched,
+    dashJobsTitle,
     dashMetrics,
     dashStatus,
     dashSubline,
@@ -667,7 +669,7 @@ export default function AlumniDashboardView(v) {
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', minWidth: '0', order: jobsOrder }}>
                 <div style={{ background: '#fff', border: '1px solid #E7E9ED', borderRadius: '16px', boxShadow: jobsCardShadow, padding: '24px' }}>
-                  {surveyComplete ? (
+                  {dashJobsMatched ? (
                     <>
                       <div
                         style={{
@@ -682,7 +684,7 @@ export default function AlumniDashboardView(v) {
                           marginBottom: '12px',
                         }}
                       >
-                        MATCHED FOR YOU
+                        MATCHED TO YOUR COURSE &amp; SKILLS
                       </div>
                     </>
                   ) : null}
@@ -693,7 +695,7 @@ export default function AlumniDashboardView(v) {
                           <path d="M3 8h18v11H3z M8 8V6a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2 M3 13h18" />
                         </svg>
                       </span>
-                      <div style={{ fontFamily: 'var(--udm-sans)', fontWeight: '700', fontSize: '16px', letterSpacing: '-.2px', color: '#0B1220' }}>Job Board</div>
+                      <div style={{ fontFamily: 'var(--udm-sans)', fontWeight: '700', fontSize: '16px', letterSpacing: '-.2px', color: '#0B1220' }}>{dashJobsTitle}</div>
                     </div>
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '14px' }}>
@@ -750,6 +752,9 @@ export default function AlumniDashboardView(v) {
                               <div style={{ fontSize: '12px', color: '#64748B' }}>
                                 {job.company} · {job.location}
                               </div>
+                              {job.why ? (
+                                <div style={{ fontSize: '11.5px', fontWeight: '600', color: '#0F8A5F', marginTop: '4px' }}>{job.why}</div>
+                              ) : null}
                               <div style={{ fontSize: '11px', color: '#94A3B8', marginTop: '4px' }}>{job.posted}</div>
                             </div>
                           </div>
