@@ -310,7 +310,7 @@ export default function AlumniDashboardView(v) {
                         whiteSpace: 'nowrap',
                       }}
                     >
-                      Complete My Profile →
+                      Complete My Profile
                     </div>
                   </div>
                 </div>
