@@ -1,7 +1,6 @@
 # UDM Alumni Tracer API
 
-Laravel REST API under `/api/v1`. The spec is [docs/plan-backend.md](../docs/plan-backend.md); deployment is in
-[docs/deploy-notes.md](../docs/deploy-notes.md); progress is in [track-progress.md](../track-progress.md).
+Laravel REST API under `/api/v1`. Deployment is described in the [root README](../README.md#deployment).
 
 ## Local setup (Windows dev machine)
 
@@ -35,7 +34,7 @@ Databases: `udm_alumni` (dev) and `udm_alumni_test` (tests). A Neon dev branch w
 | `composer lint` | Pint (check only) + Larastan |
 | `php artisan app:create-user --role=admin --email=…` | staff account with a one-time password (`--role=dept --college=CCS` for a college) |
 | `php artisan app:coverage-alerts` / `app:notification-retention` / `app:token-cleanup` | the daily jobs (also `POST /api/v1/internal/jobs/:name` with `X-Cron-Secret`, or `php artisan schedule:run` with the schedule in `routes/console.php`) |
-| `php artisan app:google-oauth-token --client-id=… --client-secret=…` | gets the Gmail API refresh token for `udm.alumni.mailer@gmail.com` (`--manual` to paste the redirect instead; see `docs/deploy-notes.md` Step 1A) |
+| `php artisan app:google-oauth-token --client-id=… --client-secret=…` | gets the Gmail API refresh token for `udm.alumni.mailer@gmail.com` (`--manual` to paste the redirect instead) |
 | `php artisan app:mail-test you@example.com` | sends the password-reset template through the configured mailer |
 
 Demo accounts (local/staging only, password `demoPass123`): `maria.delacruz@udmalumni.edu` (alumni, Alumni ID

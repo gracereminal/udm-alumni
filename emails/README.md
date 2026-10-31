@@ -2,8 +2,7 @@
 
 These files are the **single source** for every email the portal sends. The demo inbox
 (`client/src/pages/auth/SampleInbox.jsx`, "Sample Email") renders exactly these files, and the
-Laravel API sends exactly these files through the Gmail API once the backend exists
-(`docs/plan-backend.md` → "Email"). Change the design here and both follow.
+Laravel API sends exactly these files through the Gmail API. Change the design here and both follow.
 
 | Template | Sent when | Placeholders |
 |---|---|---|

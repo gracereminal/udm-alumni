@@ -1,6 +1,7 @@
 .git
 .vercel
 .claude
+docs
 .env*
 **/node_modules
 client/dist

@@ -1,5 +1,5 @@
 # Single-host image: the Laravel API (backend/) also serves the built React client (client/).
-# Railway (or any Docker host) builds this from the repo root. Runbook: docs/deploy-notes.md.
+# Railway (or any Docker host) builds this from the repo root.
 
 # 1. Client build (the email templates in /emails are imported by the client at build time)
 FROM node:22-alpine AS client

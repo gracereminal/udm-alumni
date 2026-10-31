@@ -2,7 +2,7 @@
     "$schema": "https://getcomposer.org/schema.json",
     "name": "udm/alumni-tracer-api",
     "type": "project",
-    "description": "UDM Alumni Tracer REST API (docs/plan-backend.md).",
+    "description": "UDM Alumni Tracer REST API.",
     "license": "MIT",
     "require": {
         "php": "^8.3",

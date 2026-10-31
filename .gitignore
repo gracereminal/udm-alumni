@@ -13,9 +13,17 @@ coverage
 
 # Local list of real accounts and one-time passwords. Never commit or ship it.
 backend/account.md
-# Dummy data passwords (backend/dummy_data.sql and backend/wipe_data.sql have none and are committed).
+# Local data scripts (dummy data, passwords, wipe) are run by hand and never committed.
+backend/dummy_data.sql
 backend/dummy_data_pass.sql
-# Claude Code files (local only)
+backend/dummy_security_questions.sql
+backend/wipe_data.sql
+# Local notes and editor/tool files
+docs/
+track-progress.md
+skills-lock.json
 .claude/
 CLAUDE.md
 **/CLAUDE.md
+AGENTS.md
+**/AGENTS.md
