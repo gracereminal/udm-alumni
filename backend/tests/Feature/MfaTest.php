@@ -2,6 +2,7 @@
 
 use App\Mail\LoginCodeMail;
 use App\Services\MfaService;
+use App\Services\SecurityQuestionService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 
@@ -149,4 +150,65 @@ it('renders the shared /emails template with the code and sender', function () {
     expect($html)->toContain('Hi Maria')->toContain('482913')->toContain('10 minutes')
         ->and($mail->subject)->toBe('482913 is your UDM Alumni verification code')
         ->and($mail->from[0])->toBe(['name' => 'UDM Alumni', 'address' => 'no-reply@udmalumni.edu']);
+});
+
+/** Gives the MFA test account the answers "Santos" and "Manila". */
+function giveSecurityQuestions(string $email = MFA_USER): int
+{
+    $userId = (int) DB::table('user_account')->where('email', $email)->value('user_id');
+    app(SecurityQuestionService::class)->save($userId, securityAnswers());
+
+    return $userId;
+}
+
+it('lists the account security questions with the challenge, or none', function () {
+    $this->postJson('/api/v1/auth/login', ['identifier' => MFA_USER, 'password' => 'demoPass123'])
+        ->assertOk()->assertJsonPath('questions', []);
+
+    giveSecurityQuestions();
+    $this->postJson('/api/v1/auth/login', ['identifier' => MFA_USER, 'password' => 'demoPass123'])
+        ->assertOk()->assertJsonPath('questions', ['What was the name of your first-year adviser?', 'In what city were you born?']);
+});
+
+it('signs in with the security answers, ignoring case and spaces', function () {
+    giveSecurityQuestions();
+    [$challenge] = startMfa();
+
+    $this->postJson('/api/v1/auth/mfa/verify', ['challenge' => $challenge, 'answers' => ['  SANTOS ', 'manila']])
+        ->assertOk()->assertJsonPath('user.email', MFA_USER);
+    expect(DB::table('security_answer')->pluck('answer_hash')->implode(' '))->not->toContain('santos');
+});
+
+it('rejects wrong answers and counts them as attempts', function () {
+    giveSecurityQuestions();
+    [$challenge, $code] = startMfa();
+
+    foreach (range(1, 4) as $_) {
+        $this->postJson('/api/v1/auth/mfa/verify', ['challenge' => $challenge, 'answers' => ['Santos', 'Cebu']])
+            ->assertStatus(422)->assertJsonPath('fields.answers', SecurityQuestionService::BAD_ANSWERS);
+    }
+    $this->postJson('/api/v1/auth/mfa/verify', ['challenge' => $challenge, 'answers' => ['Santos', 'Cebu']])->assertStatus(400)->assertJsonPath('code', 'mfa_expired');
+    $this->postJson('/api/v1/auth/mfa/verify', ['challenge' => $challenge, 'code' => $code])->assertStatus(400);
+});
+
+it('refuses answers for an account without security questions', function () {
+    [$challenge] = startMfa();
+
+    $this->postJson('/api/v1/auth/mfa/verify', ['challenge' => $challenge, 'answers' => ['Santos', 'Manila']])
+        ->assertStatus(422)->assertJsonPath('code', 'no_questions');
+});
+
+it('asks a signed-in account without questions to set them up once', function () {
+    [$challenge, $code] = startMfa();
+    $token = (string) $this->postJson('/api/v1/auth/mfa/verify', ['challenge' => $challenge, 'code' => $code])
+        ->assertOk()->assertJsonPath('user.needsSecurityQuestions', true)
+        ->getCookie('udm_sid', false)?->getValue();
+
+    withSession($token)->postJson('/api/v1/auth/security-questions', [...securityAnswers(), 'sq2' => securityAnswers()['sq1']])
+        ->assertStatus(422)->assertJsonPath('fields.sq2', 'Choose a different question.');
+    withSession($token)->postJson('/api/v1/auth/security-questions', securityAnswers())
+        ->assertOk()->assertJsonPath('user.needsSecurityQuestions', false);
+    withSession($token)->postJson('/api/v1/auth/security-questions', securityAnswers())
+        ->assertStatus(409)->assertJsonPath('code', 'already_set');
+    withSession('')->postJson('/api/v1/auth/security-questions', securityAnswers())->assertUnauthorized();
 });

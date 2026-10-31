@@ -29,3 +29,12 @@ function withSession(string $token): mixed
 {
     return test()->withUnencryptedCookie('udm_sid', $token);
 }
+
+/** The registration fields for two security questions (answers "Santos" and "Manila"). */
+function securityAnswers(): array
+{
+    return [
+        'sq1' => 'What was the name of your first-year adviser?', 'sq1_answer' => 'Santos',
+        'sq2' => 'In what city were you born?', 'sq2_answer' => 'Manila',
+    ];
+}

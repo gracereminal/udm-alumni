@@ -14,6 +14,7 @@ use App\Services\AccountService;
 use App\Services\AuditService;
 use App\Services\MfaService;
 use App\Services\RegistrationService;
+use App\Services\SecurityQuestionService;
 use App\Services\SessionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -104,10 +105,11 @@ class AuthController extends Controller
         return $this->signedIn($user, $request);
     }
 
-    /** POST /auth/mfa/verify {challenge, code, trust?}: the second sign-in step. */
+    /** POST /auth/mfa/verify {challenge, code | answers[2], trust?}: the second sign-in step. */
     public function verifyMfa(MfaVerifyRequest $request): JsonResponse
     {
-        $userId = $this->mfa->verify((string) $request->input('challenge'), (string) $request->input('code'));
+        $answers = $request->has('answers') ? array_values((array) $request->input('answers')) : null;
+        $userId = $this->mfa->verify((string) $request->input('challenge'), (string) $request->input('code', ''), $answers);
 
         return $this->signedIn(UserAccount::query()->findOrFail($userId), $request, mfa: true, trust: $request->boolean('trust'));
     }
@@ -116,6 +118,16 @@ class AuthController extends Controller
     public function resendMfa(Request $request): JsonResponse
     {
         return response()->json(['ok' => true] + $this->mfa->resend((string) $request->input('challenge', '')));
+    }
+
+    /** POST /auth/security-questions {sq1, sq1_answer, sq2, sq2_answer}: the one-time setup after signing in. */
+    public function setSecurityQuestions(Request $request, SecurityQuestionService $questions): JsonResponse
+    {
+        /** @var UserAccount $user */
+        $user = $request->user();
+        $questions->setUp($user->user_id, $request->only(['sq1', 'sq1_answer', 'sq2', 'sq2_answer']));
+
+        return response()->json(['ok' => true, 'user' => $this->accounts->payload($user)]);
     }
 
     /** POST /auth/logout: revokes the session row, so the old cookie gets 401 at once. */

@@ -28,12 +28,22 @@ export default function ForgotPasswordView(v) {
     change, current, setCurrent, currentErr,
     // Two-step verification at sign-in (UDM Alumni.dc.html "MFA Verification") reuses the layout with its own card.
     mfa, expiresMinutes, codeBorder, trust, toggleTrust,
+    // Its "Email code" / "Security questions" tabs: method 'email' | 'sq', sqList [{ n, q, val, set }] ([] = none set up).
+    method, useEmail, useSq, sqList,
+    // One-time Security Questions setup after signing in (step 'sq-setup'): setupRows [{ n, q, setQ, a, setA, qErr, aErr }].
+    setup, setupRows, setupOptions,
   } = v;
-  const backLabel = change ? 'Sign out' : 'Back to Sign In';
+  const isSq = method === 'sq';
+  const tab = (on) => ({
+    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '7px', padding: '9px 10px', borderRadius: '7px', border: '0',
+    font: 'inherit', fontSize: '13px', fontWeight: '700', cursor: 'pointer',
+    background: on ? '#fff' : 'transparent', color: on ? '#0A1F18' : 'rgba(0,0,0,.5)', boxShadow: on ? '0 1px 3px rgba(0,0,0,.12)' : 'none',
+  });
+  const backLabel = change || setup ? 'Sign out' : 'Back to Sign In';
   const btnHover = hv({ background: '#0B3D2E' });
   return (
     <div
-      data-screen-label={mfa ? 'MFA Verification' : change ? 'Change Password' : 'Forgot Password'}
+      data-screen-label={mfa ? 'MFA Verification' : setup ? 'Security Questions' : change ? 'Change Password' : 'Forgot Password'}
       data-auth="1"
       data-m="si-root"
       style={{ display: 'grid', gridTemplateColumns: 'minmax(0,11fr) minmax(min(400px,100%),9fr)', minHeight: '100vh' }}
@@ -85,21 +95,23 @@ export default function ForgotPasswordView(v) {
             }}
           >
             <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#D9B45A' }} />
-            <div style={{ whiteSpace: 'nowrap', fontWeight: '700', letterSpacing: '.1em', textTransform: 'uppercase', color: '#8FD9B6' }}>{mfa ? 'Two-Step Verification' : change ? 'Account Security' : 'Account Recovery'}</div>
+            <div style={{ whiteSpace: 'nowrap', fontWeight: '700', letterSpacing: '.1em', textTransform: 'uppercase', color: '#8FD9B6' }}>{mfa || setup ? 'Two-Step Verification' : change ? 'Account Security' : 'Account Recovery'}</div>
           </div>
           <div
             data-m="si-title"
             style={{ fontWeight: '800', fontSize: 'clamp(40px,min(5.4vw,8.8dvh),104px)', lineHeight: '1', letterSpacing: '-.035em', marginBottom: 'clamp(14px,2.8dvh,32px)' }}
           >
-            {mfa ? 'One more' : change ? 'Welcome.' : 'Locked out?'}
+            {mfa || setup ? 'One more' : change ? 'Welcome.' : 'Locked out?'}
             <br />
             <span style={{ fontFamily: "'Playfair Display',serif", fontStyle: 'italic', fontWeight: '600', letterSpacing: '-.008em', color: '#D9B45A' }}>
-              {mfa ? 'step to safety.' : change ? 'Make it yours.' : "We've got you."}
+              {mfa || setup ? 'step to safety.' : change ? 'Make it yours.' : "We've got you."}
             </span>
           </div>
           <div data-m="si-desc" style={{ fontSize: 'clamp(15px,min(1.2vw,2.1dvh),21px)', lineHeight: '1.6', color: 'rgba(214,234,225,.72)', maxWidth: '34em', textWrap: 'pretty' }}>
             {mfa
               ? 'Your alumni record holds personal data. A one-time code keeps it yours even if your password is compromised.'
+              : setup
+              ? 'Security questions are a second way to verify it’s you when you sign in, in case the emailed code doesn’t reach you.'
               : change
               ? 'Your account was set up with a one-time password. Choose your own password before you continue.'
               : 'Verify the email linked to your alumni record and set a new password in three quick steps.'}
@@ -181,15 +193,48 @@ export default function ForgotPasswordView(v) {
                 </svg>
               </div>
               <div data-m="f-title" style={{ ...titleStyle, marginBottom: '14px' }}>Verify it&apos;s <span style={italic}>you</span></div>
-              <div data-m="f-desc" style={{ ...descStyle, marginBottom: '22px' }}>
-                We sent a 6-digit code to <strong style={{ color: '#0A1F18' }}>{masked}</strong>. It expires in {expiresMinutes} minutes.
+              <div role="tablist" aria-label="Verification method" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px', background: '#EEF2F0', borderRadius: '10px', padding: '4px', marginBottom: '18px' }}>
+                <button type="button" role="tab" aria-selected={!isSq} onClick={useEmail} style={tab(!isSq)}>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="M3 7l9 6 9-6" /></svg>
+                  Email code
+                </button>
+                <button type="button" role="tab" aria-selected={isSq} onClick={useSq} style={tab(isSq)}>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6V14" /><path d="M12 17h.01" /></svg>
+                  Security questions
+                </button>
               </div>
-              <label htmlFor="mfa-code" style={{ ...labelStyle, display: 'block' }}>6-digit code</label>
-              <input
-                id="mfa-code" data-m="f-input" type="text" inputMode="numeric" maxLength={6} autoComplete="one-time-code" value={code} onChange={setCode} onKeyDown={codeKey} placeholder="••••••" autoFocus
-                aria-invalid={codeMsgColor === '#B3261E' && !!codeMsg}
-                style={inputStyle(codeBorder, { fontFamily: "'JetBrains Mono',ui-monospace,monospace", fontSize: '22px', letterSpacing: '.6em', textAlign: 'center' })} {...fv(FOCUS)}
-              />
+              <div data-m="f-desc" style={{ ...descStyle, marginBottom: '22px' }}>
+                {!isSq ? (
+                  <>We sent a 6-digit code to <strong style={{ color: '#0A1F18' }}>{masked}</strong>. It expires in {expiresMinutes} minutes.</>
+                ) : sqList.length ? (
+                  'Answer the security questions you set up for your account. Answers aren’t case-sensitive.'
+                ) : (
+                  'You haven’t set up security questions yet. Use the email code this time; you can choose your questions after you sign in.'
+                )}
+              </div>
+              {isSq ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                  {sqList.map((s, i) => (
+                    <div key={s.n}>
+                      <label htmlFor={`mfa-sq${s.n}`} style={{ ...labelStyle, display: 'block' }}>{s.n}. {s.q}</label>
+                      <input
+                        id={`mfa-sq${s.n}`} data-m="f-input" type="text" autoComplete="off" value={s.val} onChange={s.set} onKeyDown={codeKey} placeholder="Your answer" autoFocus={i === 0}
+                        aria-invalid={codeMsgColor === '#B3261E' && !!codeMsg}
+                        style={inputStyle(codeBorder, { fontSize: '14px' })} {...fv(FOCUS)}
+                      />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <>
+                  <label htmlFor="mfa-code" style={{ ...labelStyle, display: 'block' }}>6-digit code</label>
+                  <input
+                    id="mfa-code" data-m="f-input" type="text" inputMode="numeric" maxLength={6} autoComplete="one-time-code" value={code} onChange={setCode} onKeyDown={codeKey} placeholder="••••••" autoFocus
+                    aria-invalid={codeMsgColor === '#B3261E' && !!codeMsg}
+                    style={inputStyle(codeBorder, { fontFamily: "'JetBrains Mono',ui-monospace,monospace", fontSize: '22px', letterSpacing: '.6em', textAlign: 'center' })} {...fv(FOCUS)}
+                  />
+                </>
+              )}
               <div role="alert" style={msgStyle(codeMsgColor)}>{codeMsg}</div>
               <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', marginBottom: '20px', fontSize: '13px', color: '#0A1F18' }}>
                 <input type="checkbox" checked={trust} onChange={toggleTrust} style={{ width: '18px', height: '18px', margin: 0, accentColor: '#0B5A40', cursor: 'pointer' }} />
@@ -197,9 +242,41 @@ export default function ForgotPasswordView(v) {
               </label>
               <div tabIndex={0} onKeyDown={onActivate(verify)} data-m="f-btn" role="button" onClick={verify} style={btnStyle(verifyBg, verifyColor, verifyCursor, { marginBottom: '18px' })}>Verify &amp; Sign In</div>
               <div style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: '6px 16px', fontSize: '13px', color: 'rgba(0,0,0,.6)' }}>
-                <div>Didn&apos;t get it? <button type="button" className="link-btn" onClick={resend} style={{ fontWeight: '700', textDecoration: 'none' }}>Resend code</button></div>
+                {isSq ? null : <div>Didn&apos;t get it? <button type="button" className="link-btn" onClick={resend} style={{ fontWeight: '700', textDecoration: 'none' }}>Resend code</button></div>}
                 <button type="button" className="link-btn" onClick={backSignin} style={{ fontWeight: '600', textDecoration: 'none' }}>Back to Sign In</button>
               </div>
+            </>
+          ) : null}
+
+          {step === 'sq-setup' ? (
+            <>
+              <div data-m="f-title" style={{ ...titleStyle, marginBottom: '14px' }}>Choose your <span style={italic}>security questions</span></div>
+              <div data-m="f-desc" style={{ ...descStyle, marginBottom: '24px' }}>
+                Pick two different questions. When you sign in, you can answer them instead of entering the emailed code. Answers aren&apos;t case-sensitive.
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '18px', marginBottom: '8px' }}>
+                {setupRows.map((r, i) => (
+                  <div key={r.n}>
+                    <label htmlFor={`sq${r.n}`} style={{ ...labelStyle, display: 'block' }}>Question {r.n}</label>
+                    <select
+                      id={`sq${r.n}`} value={r.q} onChange={r.setQ} autoFocus={i === 0} aria-invalid={!!r.qErr}
+                      style={inputStyle(r.qErr ? '#B3261E' : '#9CA3AF', { appearance: 'auto', cursor: 'pointer' })} {...fv(FOCUS)}
+                    >
+                      <option value="">Choose a question…</option>
+                      {setupOptions.map((o) => <option key={o} value={o}>{o}</option>)}
+                    </select>
+                    {r.qErr ? <div role="alert" style={{ ...msgStyle('#B3261E'), minHeight: '0', margin: '6px 0 0' }}>{r.qErr}</div> : null}
+                    <label htmlFor={`sq${r.n}_answer`} style={{ ...labelStyle, display: 'block', marginTop: '10px' }}>Answer {r.n}</label>
+                    <input
+                      id={`sq${r.n}_answer`} data-m="f-input" type="text" autoComplete="off" value={r.a} onChange={r.setA} onKeyDown={pwKey} placeholder="Your answer" aria-invalid={!!r.aErr}
+                      style={inputStyle(r.aErr ? '#B3261E' : '#9CA3AF')} {...fv(FOCUS)}
+                    />
+                    {r.aErr ? <div role="alert" style={{ ...msgStyle('#B3261E'), minHeight: '0', margin: '6px 0 0' }}>{r.aErr}</div> : null}
+                  </div>
+                ))}
+              </div>
+              <div role="alert" style={msgStyle('#B3261E')}>{pwErr}</div>
+              <div tabIndex={0} onKeyDown={onActivate(save)} data-m="f-btn" role="button" onClick={save} style={btnStyle(saveBg, saveColor, saveCursor, { marginBottom: '22px' })}>Save &amp; Continue</div>
             </>
           ) : null}
 
@@ -268,7 +345,7 @@ export default function ForgotPasswordView(v) {
             </div>
           ) : null}
 
-          {showSteps || change ? (
+          {showSteps || change || setup ? (
             <div style={{ textAlign: 'center', fontSize: '13px' }}>
               <button type="button" className="link-btn" onClick={backSignin} style={{ fontWeight: '700', textDecoration: 'none' }}>{backLabel}</button>
             </div>

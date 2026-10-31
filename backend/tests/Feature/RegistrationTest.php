@@ -12,7 +12,7 @@ function registration(array $overrides = []): array
         'gender' => 'Female', 'marital_status' => 'Single', 'indigenous' => 'No', 'pwd' => 'No',
         'mobile' => '0917 123 4567', 'email' => 'lea.garcia@example.com', 'facebook' => 'lea.garcia', 'linkedin' => 'https://linkedin.com/in/leagarcia',
         'college' => 'College of Computing Studies', 'course' => 'Bachelor of Science in Information Technology', 'course_other' => '',
-        'year_graduated' => '2025', 'reg_pw' => 'Register123', 'reg_pw2' => 'Register123', 'privacy_consent' => true,
+        'year_graduated' => '2025', 'reg_pw' => 'Register123', 'reg_pw2' => 'Register123', 'privacy_consent' => true, ...securityAnswers(),
     ], $overrides);
 }
 
@@ -100,6 +100,8 @@ it('returns every field error keyed by field id, with the client messages', func
         ->assertJsonPath('fields.year_graduated', 'Only years 1999 onward are allowed.')
         ->assertJsonPath('fields.reg_pw', 'Use at least 8 characters, including 1 number and 1 uppercase letter.')
         ->assertJsonPath('fields.reg_pw2', 'Passwords do not match.')
+        ->assertJsonPath('fields.sq1', 'Choose a question.')
+        ->assertJsonPath('fields.sq2_answer', 'Enter your answer.')
         ->assertJsonPath('fields.privacy_consent', 'Accept the privacy notice to register.');
 
     expect(DB::table('user_account')->where('email', 'nope')->exists())->toBeFalse();
@@ -134,4 +136,20 @@ it('follows the Admin tracer-question edits for required and hidden fields', fun
         ->assertJsonPath('fields.middle_name', RegistrationRules::REQUIRED);
 
     $this->postJson('/api/v1/auth/register', registration(['facebook' => '', 'middle_name' => 'Reyes']))->assertCreated();
+});
+
+it('saves the two security questions with hashed answers', function () {
+    $this->postJson('/api/v1/auth/register', registration())->assertCreated();
+
+    $userId = DB::table('user_account')->where('email', 'lea.garcia@example.com')->value('user_id');
+    $rows = DB::table('security_answer')->where('user_id', $userId)->orderBy('slot')->get();
+    expect($rows->pluck('question')->all())->toBe(['What was the name of your first-year adviser?', 'In what city were you born?'])
+        ->and($rows->pluck('answer_hash')->implode(' '))->not->toContain('anila');
+});
+
+it('asks for two different security questions', function () {
+    $this->postJson('/api/v1/auth/register', registration(['sq2' => 'What was the name of your first-year adviser?', 'sq1_answer' => 'x']))
+        ->assertStatus(422)
+        ->assertJsonPath('fields.sq2', 'Choose a different question.')
+        ->assertJsonPath('fields.sq1_answer', 'Use at least 2 characters.');
 });

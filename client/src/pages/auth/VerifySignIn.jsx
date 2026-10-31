@@ -6,14 +6,17 @@ import { post } from '../../lib/api';
 import { homeFor } from '../../routes/guards';
 
 /**
- * Two-step verification ("MFA Verification" in UDM Alumni.dc.html): after the password, the 6-digit code emailed by
- * POST /auth/login. The challenge arrives in the route state, so a reload goes back to Sign In for a new code.
+ * Two-step verification ("MFA Verification" in UDM Alumni.dc.html): after the password, either the 6-digit code emailed
+ * by POST /auth/login ("Email code") or the answers to the account's two security questions ("Security questions").
+ * The challenge arrives in the route state, so a reload goes back to Sign In for a new code.
  */
 export default function VerifySignIn() {
   const navigate = useNavigate();
   const { state } = useLocation();
   const { verifyMfa } = useAuth();
+  const [method, setMethod] = useState('email');
   const [code, setCode] = useState('');
+  const [answers, setAnswers] = useState(['', '']);
   const [err, setErr] = useState('');
   const [info, setInfo] = useState('');
   const [trust, setTrust] = useState(false);
@@ -21,18 +24,20 @@ export default function VerifySignIn() {
 
   if (!state || !state.challenge) return <Navigate to="/signin" replace />;
 
-  const ok = code.length === 6 && !busy;
+  const questions = state.questions || [];
+  const isSq = method === 'sq';
+  const ok = !busy && (isSq ? questions.length > 0 && answers.every((x) => x.trim()) : code.length === 6);
   const verify = async () => {
     if (!ok) return;
     setBusy(true);
     try {
-      const user = await verifyMfa(state.challenge, code, trust);
+      const user = await verifyMfa(state.challenge, isSq ? { answers } : code, trust);
       navigate(homeFor(user), { replace: true });
     } catch (e) {
       setBusy(false);
       setInfo('');
-      setErr((e.fields && e.fields.code) || e.message);
-      if (e.code === 'mfa_expired') setCode('');
+      setErr((e.fields && (e.fields.code || e.fields.answers)) || e.message);
+      if (e.code === 'mfa_expired') { setCode(''); setAnswers(['', '']); }
     }
   };
   const resend = async (e) => {
@@ -47,12 +52,22 @@ export default function VerifySignIn() {
       setErr(e2.message);
     }
   };
+  const pick = (m) => () => { if (m !== method) { setMethod(m); setErr(''); setInfo(''); } };
 
   return (
     <ForgotPasswordView
       mfa
       step="mfa"
       showSteps={false}
+      method={method}
+      useEmail={pick('email')}
+      useSq={pick('sq')}
+      sqList={questions.map((q, i) => ({
+        n: i + 1,
+        q,
+        val: answers[i],
+        set: (e) => { const next = answers.slice(); next[i] = e.target.value; setAnswers(next); setErr(''); },
+      }))}
       masked={state.sentTo}
       expiresMinutes={state.expiresMinutes || 10}
       code={code}

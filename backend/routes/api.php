@@ -35,6 +35,7 @@ Route::prefix('auth')->name('auth.')->group(function () {
     Route::get('/session', [AuthController::class, 'session'])->name('session');
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
     Route::post('/change-password', [AuthController::class, 'changePassword'])->middleware('auth')->name('change-password');
+    Route::post('/security-questions', [AuthController::class, 'setSecurityQuestions'])->middleware(['auth', 'throttle:10,1'])->name('security-questions');
     Route::get('/reset-password/verify', [PasswordResetController::class, 'verify'])->name('reset.verify');
 
     Route::middleware('throttle:auth')->group(function () {

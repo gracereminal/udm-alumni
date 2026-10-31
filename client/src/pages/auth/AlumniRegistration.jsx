@@ -3,14 +3,17 @@ import { useNavigate } from 'react-router-dom';
 import RegisterView from '../../views/RegisterView';
 import { useProfile } from '../../context/ProfileContext';
 import { useAuth } from '../../context/AuthContext';
-import { regStepDefs, regPasswordStep, visibleQs, answerPatch } from '../../data/formDefs';
+import { regStepDefs, regPasswordStep, regSecurityStep, visibleQs, answerPatch } from '../../data/formDefs';
 import { buildField } from '../../lib/fields';
 import { validateRegStep } from '../../lib/validation';
 import { useQuestionConfig } from '../../lib/questionStore';
 import { useToast } from '../../context/ToastContext';
 import { PRIVACY_KEY } from './PrivacyConsent';
 
-/** Multi-step alumni registration: Personal Information → Contact → Educational Background → Account Password. */
+/**
+ * Multi-step alumni registration: Personal Information → Contact → Educational Background → Account Password →
+ * Security Questions.
+ */
 export default function AlumniRegistration() {
   const navigate = useNavigate();
   useQuestionConfig(); // re-render when an Admin edits the questions
@@ -22,10 +25,10 @@ export default function AlumniRegistration() {
   const [errors, setErrors] = useState({});
   const [busy, setBusy] = useState(false);
 
-  // Password values stay in component state only — never written to the persisted profile.
-  const [pw, setPw] = useState({ reg_pw: '', reg_pw2: '' });
+  // Password and security answers stay in component state only — never written to the persisted profile.
+  const [pw, setPw] = useState({ reg_pw: '', reg_pw2: '', sq1: '', sq1_answer: '', sq2: '', sq2_answer: '' });
   const all = { ...a, ...pw };
-  const steps = [...regStepDefs(a), regPasswordStep()];
+  const steps = [...regStepDefs(a), regPasswordStep(), regSecurityStep()];
   const current = steps[step - 1];
 
   const clearErr = (id) => { if (errors[id]) setErrors((s) => { const n = { ...s }; delete n[id]; return n; }); };

@@ -74,7 +74,7 @@ it('notifies admin and that college only when an alumnus registers', function ()
         'last_name' => 'Uy', 'first_name' => 'Ben', 'dob' => '2000-01-01', 'gender' => 'Male', 'marital_status' => 'Single',
         'present_address' => '1 Mabini St., Brgy. 2, Manila', 'permanent_same' => true, 'indigenous' => 'No', 'pwd' => 'No',
         'mobile' => '09170000001', 'email' => 'ben.uy@example.com', 'facebook' => 'ben.uy', 'college' => 'CHS', 'course' => 'CHS-BSN',
-        'year_graduated' => '2024', 'reg_pw' => 'Password1', 'reg_pw2' => 'Password1', 'privacy_consent' => true,
+        'year_graduated' => '2024', 'reg_pw' => 'Password1', 'reg_pw2' => 'Password1', 'privacy_consent' => true, ...securityAnswers(),
     ])->assertCreated();
 
     $to = DB::table('notification as n')->join('user_account as u', 'u.user_id', '=', 'n.user_id')
@@ -114,7 +114,7 @@ it('makes registration follow the tracer question edits', function () {
         'last_name' => 'Go', 'first_name' => 'Ana', 'dob' => '2000-01-01', 'gender' => 'Female', 'marital_status' => 'Single',
         'present_address' => '1 Mabini St., Brgy. 2, Manila', 'permanent_same' => true, 'indigenous' => 'No', 'pwd' => 'No',
         'mobile' => '09170000002', 'email' => 'ana.go@example.com', 'college' => 'CCS', 'course' => 'CCS-BSIT',
-        'year_graduated' => '2024', 'reg_pw' => 'Password1', 'reg_pw2' => 'Password1', 'privacy_consent' => true,
+        'year_graduated' => '2024', 'reg_pw' => 'Password1', 'reg_pw2' => 'Password1', 'privacy_consent' => true, ...securityAnswers(),
     ];
     $this->postJson('/api/v1/auth/register', $body)->assertUnprocessable()->assertJsonPath('fields.facebook', fn ($m) => is_string($m));
 

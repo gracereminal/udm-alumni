@@ -8,7 +8,7 @@ use Illuminate\Validation\Validator;
 
 /**
  * POST /auth/register: every field of the registration steps at once (Personal Information, Contact & Social Media,
- * Educational Background, Account Password) plus privacy_consent. Checks and messages match the client.
+ * Educational Background, Account Password, Security Questions) plus privacy_consent. Checks and messages match the client.
  */
 class RegisterRequest extends FormRequest
 {

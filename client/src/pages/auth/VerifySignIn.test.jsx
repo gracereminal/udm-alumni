@@ -78,6 +78,41 @@ describe('Two-step verification', () => {
     expect(api.last('POST', '/auth/mfa/resend').body).toEqual({ challenge: 'chal-1' });
   });
 
+  it('signs in with the security questions instead of the code', async () => {
+    const api = mockApi([
+      session(null),
+      ['POST', '/auth/login', { ...CHALLENGE, questions: ['In what city were you born?', 'What was the name of your first pet?'] }],
+      ['POST', '/auth/mfa/verify', (req) => (req.body.answers[1] === 'Bantay'
+        ? { user: USERS.alumni }
+        : { status: 422, body: { error: 'x', code: 'invalid_answers', fields: { answers: 'One or more answers don’t match our records.' } } })],
+    ]);
+    renderFlow();
+    await signInToVerify();
+    await userEvent.click(screen.getByRole('tab', { name: 'Security questions' }));
+    expect(screen.queryByRole('button', { name: 'Resend code' })).toBeNull();
+
+    const button = screen.getByRole('button', { name: 'Verify & Sign In' });
+    await userEvent.type(screen.getByLabelText('1. In what city were you born?'), 'Manila');
+    await userEvent.type(screen.getByLabelText('2. What was the name of your first pet?'), 'Brownie');
+    await userEvent.click(button);
+    expect(await screen.findByRole('alert')).toHaveTextContent('One or more answers don’t match our records.');
+
+    await userEvent.clear(screen.getByLabelText('2. What was the name of your first pet?'));
+    await userEvent.type(screen.getByLabelText('2. What was the name of your first pet?'), 'Bantay');
+    await userEvent.click(button);
+    expect(await screen.findByTestId('page')).toHaveTextContent('/alumni/dashboard');
+    expect(api.last('POST', '/auth/mfa/verify').body).toEqual({ challenge: 'chal-1', answers: ['Manila', 'Bantay'], trust: false });
+  });
+
+  it('points an account without security questions to the email code', async () => {
+    mockApi([session(null), ['POST', '/auth/login', { ...CHALLENGE, questions: [] }]]);
+    renderFlow();
+    await signInToVerify();
+    await userEvent.click(screen.getByRole('tab', { name: 'Security questions' }));
+    expect(screen.getByText(/You haven’t set up security questions yet/)).toBeInTheDocument();
+    expect(screen.queryByPlaceholderText('Your answer')).toBeNull();
+  });
+
   it('sends a direct visit without a challenge back to Sign In', async () => {
     mockApi([session(null)]);
     render(

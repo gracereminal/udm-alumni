@@ -15,7 +15,9 @@ use Throwable;
 /**
  * Two-step verification at sign-in (UDM Alumni.dc.html "MFA Verification"). A correct password opens a login challenge:
  * a random token for the browser and a 6-digit code by email, both stored only as hashes, 10-minute expiry, single use,
- * at most 5 code attempts and 3 resends. A trusted device (udm_tdev cookie, 30 days) skips the code.
+ * at most 5 code attempts and 3 resends. The "Security questions" tab finishes the same challenge with the answers to
+ * the account's two security questions instead (SecurityQuestionService); wrong answers count as attempts too.
+ * A trusted device (udm_tdev cookie, 30 days) skips this step.
  */
 class MfaService
 {
@@ -25,7 +27,10 @@ class MfaService
 
     public const SEND_FAILED = 'We couldn’t send your verification code. Try again in a few minutes.';
 
-    public function __construct(private readonly AuditService $audit) {}
+    public function __construct(
+        private readonly AuditService $audit,
+        private readonly SecurityQuestionService $questions,
+    ) {}
 
     /** The code is bound to its challenge row, so a code from one email never verifies another sign-in. */
     private static function codeHash(string $tokenHash, string $code): string
@@ -56,9 +61,10 @@ class MfaService
     }
 
     /**
-     * Opens a challenge and emails its code. Returns what the Verify screen needs.
+     * Opens a challenge and emails its code. Returns what the Verify screen needs, with the account's security
+     * questions ([] when none are set up yet).
      *
-     * @return array{challenge: string, sentTo: string, expiresMinutes: int}
+     * @return array{challenge: string, sentTo: string, expiresMinutes: int, questions: list<string>}
      */
     public function start(UserAccount $user): array
     {
@@ -88,7 +94,10 @@ class MfaService
             throw new ApiException(503, self::SEND_FAILED, 'mfa_send_failed');
         }
 
-        return ['challenge' => $token, 'sentTo' => AuditService::maskEmail($user->email), 'expiresMinutes' => (int) config('auth.mfa.ttl_minutes')];
+        return [
+            'challenge' => $token, 'sentTo' => AuditService::maskEmail($user->email), 'expiresMinutes' => (int) config('auth.mfa.ttl_minutes'),
+            'questions' => $this->questions->questionsFor($user->user_id),
+        ];
     }
 
     /**
@@ -129,19 +138,30 @@ class MfaService
         return $out ?? throw new ApiException(400, self::EXPIRED, 'mfa_expired');
     }
 
-    /** Checks the code and closes the challenge. Returns the account to sign in. */
-    public function verify(string $token, string $code): int
+    /**
+     * Checks the emailed code, or the security answers when $answers is given, and closes the challenge. Returns the
+     * account to sign in.
+     *
+     * @param  list<mixed>|null  $answers
+     */
+    public function verify(string $token, string $code, ?array $answers = null): int
     {
         $code = (string) preg_replace('/\D+/', '', $code);
         // The failed attempt must be counted even though the request fails, so the outcome leaves the transaction.
-        $result = DB::transaction(function () use ($token, $code) {
+        $result = DB::transaction(function () use ($token, $code, $answers) {
             $c = $this->active($token);
             if ($c === null) {
                 return 'expired';
             }
-            if (strlen($code) !== 6 || ! hash_equals($c->code_hash, self::codeHash($c->token_hash, $code))) {
+            if ($answers !== null && ! $this->questions->has((int) $c->user_id)) {
+                return 'none';
+            }
+            $ok = $answers !== null
+                ? $this->questions->matches((int) $c->user_id, $answers)
+                : strlen($code) === 6 && hash_equals($c->code_hash, self::codeHash($c->token_hash, $code));
+            if (! $ok) {
                 $attempts = (int) DB::selectOne('UPDATE login_challenge SET attempts = attempts + 1 WHERE challenge_id = ? RETURNING attempts', [$c->challenge_id])->attempts;
-                $this->audit->log('login_failed', 'user', (int) $c->user_id, (int) $c->user_id, ['reason' => 'mfa_code']);
+                $this->audit->log('login_failed', 'user', (int) $c->user_id, (int) $c->user_id, ['reason' => $answers !== null ? 'mfa_answers' : 'mfa_code']);
 
                 return $attempts >= (int) config('auth.mfa.max_code_attempts') ? 'locked' : 'bad';
             }
@@ -152,8 +172,11 @@ class MfaService
 
         return match ($result) {
             'expired' => throw new ApiException(400, self::EXPIRED, 'mfa_expired'),
-            'locked' => throw new ApiException(400, 'Too many incorrect codes. Sign in again to get a new one.', 'mfa_expired'),
-            'bad' => throw new ApiException(422, self::BAD_CODE, 'invalid_code', ['code' => self::BAD_CODE]),
+            'locked' => throw new ApiException(400, 'Too many incorrect tries. Sign in again to start over.', 'mfa_expired'),
+            'none' => throw new ApiException(422, 'Security questions aren’t set up for this account. Use the email code.', 'no_questions'),
+            'bad' => $answers !== null
+                ? throw new ApiException(422, SecurityQuestionService::BAD_ANSWERS, 'invalid_answers', ['answers' => SecurityQuestionService::BAD_ANSWERS])
+                : throw new ApiException(422, self::BAD_CODE, 'invalid_code', ['code' => self::BAD_CODE]),
             default => $result,
         };
     }

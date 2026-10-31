@@ -86,6 +86,8 @@ export default function AdminDashboard() {
   const [deptUsers, setDeptUsers] = useState([]);
   const loadDeptUsers = () => get('/users?role=dept').then((res) => setDeptUsers(res.data || [])).catch(() => {});
   useEffect(() => { loadDeptUsers(); }, []);
+  // A college sign-in shows within seconds: this one small query refreshes faster than the statistics below.
+  useLiveRefresh(loadDeptUsers, { ms: 15_000 });
 
   // Keep the numbers in step with registrations, approvals and survey answers made while the page is open. A
   // background refresh fails silently and is dropped if the filters changed while it was in flight.
@@ -95,7 +97,6 @@ export default function AdminDashboard() {
     const { reqKey: k, sigKey: sk } = shown.current;
     fetchAll(JSON.parse(k)).then((res) => { if (shown.current.reqKey === k) { setData(res); setLoaded({ key: k, err: false }); } }).catch(() => {});
     fetchAll(JSON.parse(sk)).then((res) => { if (shown.current.sigKey === sk) setSig({ key: sk, res, err: false }); }).catch(() => {});
-    loadDeptUsers();
   });
 
   const d = buildAdminDash(sel, data, tipH, colMetric);

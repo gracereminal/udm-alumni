@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Services\AccountService;
+use App\Services\SecurityQuestionService;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -29,6 +30,8 @@ final class RegistrationRules
         $e = self::base($a);
         if ($profile) {
             unset($e['reg_pw'], $e['reg_pw2']);
+        } else {
+            $e += SecurityQuestionService::errors($a);
         }
         $overrides ??= self::overrides($profile ? 'profile' : 'register');
 

@@ -46,7 +46,7 @@ export function AuthProvider({ children }) {
     if (!password) return { ok: false, field: 'password', error: 'Enter your password.' };
     try {
       const r = await post('/auth/login', { identifier: id, password });
-      if (r.mfaRequired) return { ok: true, mfa: { challenge: r.challenge, sentTo: r.sentTo, expiresMinutes: r.expiresMinutes } };
+      if (r.mfaRequired) return { ok: true, mfa: { challenge: r.challenge, sentTo: r.sentTo, expiresMinutes: r.expiresMinutes, questions: r.questions || [] } };
       setUser(r.user);
       return { ok: true, user: r.user };
     } catch (err) {
@@ -54,9 +54,12 @@ export function AuthProvider({ children }) {
     }
   }, [setUser]);
 
-  /** The second sign-in step: the emailed 6-digit code. Throws ApiError (422 wrong code, 400 `mfa_expired`). */
-  const verifyMfa = useCallback(async (challenge, code, trust) => {
-    const r = await post('/auth/mfa/verify', { challenge, code, trust: !!trust });
+  /**
+   * The second sign-in step: the emailed 6-digit code, or `{ answers }` to the two security questions.
+   * Throws ApiError (422 wrong code / answers, 400 `mfa_expired`).
+   */
+  const verifyMfa = useCallback(async (challenge, proof, trust) => {
+    const r = await post('/auth/mfa/verify', { challenge, ...(typeof proof === 'string' ? { code: proof } : proof), trust: !!trust });
     setUser(r.user);
     return r.user;
   }, [setUser]);

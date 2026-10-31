@@ -4,8 +4,11 @@ import { useProfile } from '../context/ProfileContext';
 import { ROLE_HOME } from '../data/navigation';
 import { PRIVACY_KEY } from '../pages/auth/PrivacyConsent';
 
-/** Where a signed-in user belongs: Change Password while on a one-time password, else their own dashboard. */
-export const homeFor = (user) => (user.mustChangePassword ? '/change-password' : ROLE_HOME[user.role]);
+/**
+ * Where a signed-in user belongs: Change Password while on a one-time password, then the one-time Security Questions
+ * setup (two-step verification on and none chosen yet), else their own dashboard.
+ */
+export const homeFor = (user) => (user.mustChangePassword ? '/change-password' : user.needsSecurityQuestions ? '/security-questions' : ROLE_HOME[user.role]);
 
 /** Signed-in users are sent to their own dashboard instead of the auth screens. */
 export function PublicOnly() {
@@ -19,7 +22,15 @@ export function RequirePasswordChange() {
   const { user, ready } = useAuth();
   if (!ready) return null;
   if (!user) return <Navigate to="/signin" replace />;
-  return user.mustChangePassword ? <Outlet /> : <Navigate to={ROLE_HOME[user.role]} replace />;
+  return user.mustChangePassword ? <Outlet /> : <Navigate to={homeFor(user)} replace />;
+}
+
+/** Security Questions setup is only for a signed-in account that has not chosen its questions yet. */
+export function RequireSecurityQuestions() {
+  const { user, ready } = useAuth();
+  if (!ready) return null;
+  if (!user) return <Navigate to="/signin" replace />;
+  return homeFor(user) === '/security-questions' ? <Outlet /> : <Navigate to={homeFor(user)} replace />;
 }
 
 /** Only the given role may open these routes; everyone else is redirected (to sign-in, or to their own dashboard). */
@@ -28,7 +39,7 @@ export function RequireRole({ role }) {
   const location = useLocation();
   if (!ready) return null;
   if (!user) return <Navigate to="/signin" replace state={{ from: location.pathname }} />;
-  if (user.mustChangePassword || user.role !== role) return <Navigate to={homeFor(user)} replace />;
+  if (user.mustChangePassword || user.needsSecurityQuestions || user.role !== role) return <Navigate to={homeFor(user)} replace />;
   return <Outlet />;
 }
 

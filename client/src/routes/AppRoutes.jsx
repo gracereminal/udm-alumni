@@ -1,6 +1,6 @@
 import { lazy, useEffect } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
-import { PublicOnly, RequireConsent, RequirePasswordChange, RequireRegistered, RequireRole, homeFor } from './guards';
+import { PublicOnly, RequireConsent, RequirePasswordChange, RequireRegistered, RequireRole, RequireSecurityQuestions, homeFor } from './guards';
 import { useAuth } from '../context/AuthContext';
 import { startupData } from '../lib/startup';
 import SignIn from '../pages/auth/SignIn';
@@ -8,6 +8,7 @@ import ForgotPassword, { ResetPasswordLink } from '../pages/auth/ForgotPassword'
 import PrivacyConsent from '../pages/auth/PrivacyConsent';
 import ChangePassword from '../pages/auth/ChangePassword';
 import VerifySignIn from '../pages/auth/VerifySignIn';
+import SetupSecurityQuestions from '../pages/auth/SetupSecurityQuestions';
 
 // Registration and signed-in pages load on demand (the Suspense in App.jsx) so sign-in ships a small first bundle.
 // Each also waits for the start-up catalog its forms read, fetched in parallel with its code.
@@ -73,6 +74,9 @@ export default function AppRoutes() {
       </Route>
       <Route element={<RequirePasswordChange />}>
         <Route path="/change-password" element={<ChangePassword />} />
+      </Route>
+      <Route element={<RequireSecurityQuestions />}>
+        <Route path="/security-questions" element={<SetupSecurityQuestions />} />
       </Route>
       {/* The emailed reset link works whether or not someone is signed in. */}
       <Route path="/reset-password" element={<ResetPasswordLink />} />

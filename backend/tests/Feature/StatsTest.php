@@ -17,7 +17,7 @@ function newAlumnus(string $college = 'CCS', string $course = 'CCS-BSIT', int $y
         'present_address' => '12 Rizal St., Brgy. 5, Manila', 'permanent_same' => true, 'indigenous' => 'No', 'pwd' => 'No',
         'mobile' => '09171230000', 'email' => 'lia.ramos@example.com', 'facebook' => 'lia.ramos',
         'college' => $college, 'course' => $course, 'year_graduated' => (string) $year,
-        'reg_pw' => 'Password1', 'reg_pw2' => 'Password1', 'privacy_consent' => true,
+        'reg_pw' => 'Password1', 'reg_pw2' => 'Password1', 'privacy_consent' => true, ...securityAnswers(),
     ])->assertCreated();
     DB::table('user_account')->where('email', 'lia.ramos@example.com')->update(['account_status' => 'active']);
 

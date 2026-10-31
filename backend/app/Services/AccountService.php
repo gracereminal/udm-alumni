@@ -46,7 +46,8 @@ class AccountService
     public function payload(UserAccount $user): array
     {
         $row = DB::selectOne(
-            'SELECT c.name AS college_name, c.code AS college_code, a.alumni_id, a.membership_id, a.student_no
+            'SELECT c.name AS college_name, c.code AS college_code, a.alumni_id, a.membership_id, a.student_no,
+                    EXISTS (SELECT 1 FROM security_answer s WHERE s.user_id = u.user_id) AS has_questions
                FROM user_account u
                LEFT JOIN college c ON c.college_id = u.college_id
                LEFT JOIN alumnus a ON a.user_id = u.user_id
@@ -72,6 +73,8 @@ class AccountService
             'membershipId' => $row?->membership_id,
             'studentNo' => $row?->student_no,
             'mustChangePassword' => (bool) $user->must_change_password,
+            // With two-step verification on, an account without security questions is asked to set them up once.
+            'needsSecurityQuestions' => config('auth.mfa.enabled') && ! $row?->has_questions,
         ];
     }
 

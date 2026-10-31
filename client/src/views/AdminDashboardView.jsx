@@ -772,12 +772,13 @@ export default function AdminDashboardView(v) {
                   </div>
 
                   <div style={{ ...card, gap: '8px' }}>
-                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '10px' }}>
-                      <div style={{ minWidth: '0' }}>
+                    {/* Wraps so the metric tabs drop below the title in a narrow card instead of squeezing the subtitle. */}
+                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '10px 14px', flexWrap: 'wrap' }}>
+                      <div style={{ flex: '1 1 220px', minWidth: '0' }}>
                         <div style={cardTitle}>{programRatesTitle}</div>
-                        <div style={{ fontSize: '14px', color: '#64748B', marginTop: '4px' }}>{programRatesSub}</div>
+                        <div style={{ fontSize: '14px', color: '#64748B', marginTop: '4px', textWrap: 'pretty' }}>{programRatesSub}</div>
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap', justifyContent: 'flex-end', marginLeft: 'auto', maxWidth: '100%' }}>
                         <div role="tablist" aria-label="Metric" style={{ display: 'flex', gap: '2px', padding: '3px', background: '#F1F4F2', borderRadius: '99px' }}>
                           {[['rate', 'Employment Rate'], ['align', 'Course-to-Job Alignment']].map(([id, label]) => {
                             const on = colMetric === id;

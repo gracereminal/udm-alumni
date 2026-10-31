@@ -1,4 +1,5 @@
 import { regStepDefs, regPasswordStep, visibleQs, isAnswered } from '../data/formDefs';
+import { securityQuestionErrors } from '../data/securityQuestions';
 import { profileGroups } from './profileProgress';
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -36,8 +37,9 @@ function applyRules(e, qs, a) { // `qs`: the section's questions including hidde
   return e;
 }
 
-/** Validate one registration step (0 = Personal, 1 = Contact, 2 = Education, 3 = Password). Returns { fieldId: message }. */
+/** Validate one registration step (0 = Personal, 1 = Contact, 2 = Education, 3 = Password, 4 = Security Questions). Returns { fieldId: message }. */
 export function validateRegStep(step, a) {
+  if (step === 4) return securityQuestionErrors(a);
   const def = step === 3 ? regPasswordStep({ raw: true }) : regStepDefs(a, { raw: true })[step];
   return def ? applyRules(baseRegErrors(step, a), def.questions, a) : {};
 }

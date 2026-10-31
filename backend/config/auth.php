@@ -55,10 +55,11 @@ return [
         'max_per_window' => 3,
     ],
 
-    // Two-step verification: a 6-digit code emailed after the password. Off unless MFA_ENABLED=true, because every
-    // account must then have a real inbox (the built-in admin included) or it can no longer sign in.
+    // Two-step verification: after the password, a 6-digit code emailed or the answers to two security questions. On
+    // unless MFA_ENABLED=false. An account with neither a real inbox nor security questions can no longer sign in, so
+    // dummy accounts get theirs from dummy_security_questions.sql.
     'mfa' => [
-        'enabled' => (bool) env('MFA_ENABLED', false),
+        'enabled' => (bool) env('MFA_ENABLED', true),
         'ttl_minutes' => 10,
         'max_code_attempts' => 5,
         'max_resends' => 3,

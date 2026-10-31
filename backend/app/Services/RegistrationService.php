@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
 /**
- * Self-registration: user_account + alumnus + social links + record_review + audit_log + notifications, in one
+ * Self-registration: user_account + security answers + alumnus + social links + record_review + audit_log + notifications, in one
  * transaction. The account is active right away (staff still verify the record), but no session is created here: the
  * alumnus signs in afterwards.
  */
@@ -21,6 +21,7 @@ class RegistrationService
     public function __construct(
         private readonly AuditService $audit,
         private readonly NotificationService $notifications,
+        private readonly SecurityQuestionService $questions,
     ) {}
 
     /**
@@ -48,6 +49,7 @@ class RegistrationService
                 $userId = (int) DB::table('user_account')->insertGetId([
                     'email' => $email, 'password_hash' => $hash, 'role' => 'alumni', 'display_name' => $name, 'account_status' => 'active',
                 ], 'user_id');
+                $this->questions->save($userId, $a);
 
                 $membershipId = $this->nextMembershipId($year);
                 $married = $t('marital_status') === 'Married';

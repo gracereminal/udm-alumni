@@ -42,16 +42,28 @@ function renderRegistration(draft) {
 
 const next = () => userEvent.click(screen.getByRole('button', { name: /Continue|Submit Registration/ }));
 
+const SQ1 = 'What was the name of your first-year adviser?';
+const SQ2 = 'In what city were you born?';
+/** Fills the Security Questions step ("Santos" / "Manila"); skipFirst keeps an answered first question. */
+async function answerSecurityQuestions({ skipFirst = false } = {}) {
+  if (!skipFirst) {
+    await userEvent.selectOptions(screen.getByLabelText('Question 1'), SQ1);
+    await userEvent.type(screen.getByLabelText('Answer 1'), 'Santos');
+  }
+  await userEvent.selectOptions(screen.getByLabelText('Question 2'), SQ2);
+  await userEvent.type(screen.getByLabelText('Answer 2'), 'Manila');
+}
+
 describe('Alumni registration', () => {
   it('shows field errors and stays on the step when required answers are missing', async () => {
     mockApi([session(null)]);
     renderRegistration();
-    expect(screen.getByText('STEP 1 OF 4')).toBeInTheDocument();
+    expect(screen.getByText('STEP 1 OF 5')).toBeInTheDocument();
     await next();
     expect(screen.getByText('Enter your last name.')).toBeInTheDocument();
     expect(screen.getByText('Enter your first name.')).toBeInTheDocument();
     expect(screen.getByLabelText('Last Name')).toHaveAttribute('aria-invalid', 'true');
-    expect(screen.getByText('STEP 1 OF 4')).toBeInTheDocument();
+    expect(screen.getByText('STEP 1 OF 5')).toBeInTheDocument();
   });
 
   it('clears a field error as soon as the field is edited', async () => {
@@ -67,18 +79,18 @@ describe('Alumni registration', () => {
     mockApi([session(null)]);
     renderRegistration({ ...VALID, mobile: '12345', email: 'not-an-email' });
     await next();
-    expect(screen.getByText('STEP 2 OF 4')).toBeInTheDocument();
+    expect(screen.getByText('STEP 2 OF 5')).toBeInTheDocument();
     await next();
     expect(screen.getByText('Enter a valid mobile number (e.g. 09XX XXX XXXX).')).toBeInTheDocument();
     expect(screen.getByText('Enter a valid email address.')).toBeInTheDocument();
-    expect(screen.getByText('STEP 2 OF 4')).toBeInTheDocument();
+    expect(screen.getByText('STEP 2 OF 5')).toBeInTheDocument();
   });
 
   it('jumping ahead from the step list stops at the first step with errors', async () => {
     mockApi([session(null)]);
     renderRegistration({ ...VALID, email: '' });
     await userEvent.click(screen.getByText('Account Password'));
-    expect(screen.getByText('STEP 2 OF 4')).toBeInTheDocument();
+    expect(screen.getByText('STEP 2 OF 5')).toBeInTheDocument();
     expect(screen.getByText('Enter your email address.')).toBeInTheDocument();
   });
 
@@ -87,7 +99,7 @@ describe('Alumni registration', () => {
     const api = mockApi([session(null), ['POST', '/auth/register', { status: 201, body: { ok: true, status: 'active', membershipId: 'AM-2022-00001', message: 'Registration received.' } }]]);
     renderRegistration(VALID);
     await next(); await next(); await next();
-    expect(screen.getByText('STEP 4 OF 4')).toBeInTheDocument();
+    expect(screen.getByText('STEP 4 OF 5')).toBeInTheDocument();
 
     await userEvent.type(screen.getByLabelText('Password'), 'weakpass');
     await userEvent.type(screen.getByLabelText('Confirm Password'), 'different');
@@ -102,9 +114,24 @@ describe('Alumni registration', () => {
     await userEvent.type(screen.getByLabelText('Confirm Password'), 'Secret123');
     await next();
 
+    expect(screen.getByText('STEP 5 OF 5')).toBeInTheDocument();
+    await userEvent.selectOptions(screen.getByLabelText('Question 1'), SQ1);
+    await userEvent.selectOptions(screen.getByLabelText('Question 2'), SQ1);
+    await userEvent.type(screen.getByLabelText('Answer 1'), 'Santos');
+    await next();
+    expect(screen.getByText('Choose a different question.')).toBeInTheDocument();
+    expect(screen.getByText('Enter your answer.')).toBeInTheDocument();
+    expect(api.find('POST', '/auth/register')).toHaveLength(0);
+
+    await answerSecurityQuestions({ skipFirst: true });
+    await next();
+
     expect(await screen.findByTestId('page')).toHaveTextContent('/register/success');
     const sent = api.last('POST', '/auth/register').body;
-    expect(sent).toMatchObject({ ...VALID, reg_pw: 'Secret123', reg_pw2: 'Secret123', privacy_consent: true, marketing_opt_in: true });
+    expect(sent).toMatchObject({
+      ...VALID, reg_pw: 'Secret123', reg_pw2: 'Secret123', privacy_consent: true, marketing_opt_in: true,
+      sq1: SQ1, sq1_answer: 'Santos', sq2: SQ2, sq2_answer: 'Manila',
+    });
     // The draft and the consent are cleared once the account exists; the password is never stored.
     expect(localStorage.getItem(DRAFT_KEY)).toBeNull();
     expect(sessionStorage.getItem(PRIVACY_KEY)).toBeNull();
@@ -112,12 +139,15 @@ describe('Alumni registration', () => {
     expect(api.find('GET', '/me')).toHaveLength(0);
   });
 
-  it('never writes the password into the saved draft', async () => {
+  it('never writes the password or the security answers into the saved draft', async () => {
     mockApi([session(null)]);
     renderRegistration(VALID);
     await next(); await next(); await next();
     await userEvent.type(screen.getByLabelText('Password'), 'Secret123');
-    expect(localStorage.getItem(DRAFT_KEY)).not.toMatch(/Secret123/);
+    await userEvent.type(screen.getByLabelText('Confirm Password'), 'Secret123');
+    await next();
+    await answerSecurityQuestions();
+    expect(localStorage.getItem(DRAFT_KEY)).not.toMatch(/Secret123|Santos|sq\d/);
   });
 
   it('shows server field errors on the step they belong to', async () => {
@@ -127,7 +157,9 @@ describe('Alumni registration', () => {
     await userEvent.type(screen.getByLabelText('Password'), 'Secret123');
     await userEvent.type(screen.getByLabelText('Confirm Password'), 'Secret123');
     await next();
-    expect(await screen.findByText('STEP 2 OF 4')).toBeInTheDocument();
+    await answerSecurityQuestions();
+    await next();
+    expect(await screen.findByText('STEP 2 OF 5')).toBeInTheDocument();
     expect(screen.getByLabelText('Email Address')).toHaveAttribute('aria-invalid', 'true');
     expect(screen.getAllByText('That email is already registered.').length).toBeGreaterThan(0);
   });

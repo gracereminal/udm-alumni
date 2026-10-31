@@ -1,5 +1,6 @@
 import { COLLEGES, gradYears } from './colleges';
 import { applyQuestions } from '../lib/questionStore';
+import { SECURITY_QUESTIONS } from './securityQuestions';
 
 // Each section's questions go through applyQuestions(), so the Admin "Alumni Tracer" edits (text, options, required,
 // hidden, order, added questions) reach the Register form and Edit Profile. `raw: true` keeps hidden ones (admin page only).
@@ -85,6 +86,20 @@ const PASSWORD_STEP = {
   ],
 };
 export const regPasswordStep = ({ raw = false } = {}) => ({ ...PASSWORD_STEP, key: 'password', questions: applyQuestions('password', PASSWORD_STEP.questions, { raw }) });
+
+// Registration step 5 — the two security questions for two-step verification. Like the password, the answers are
+// never persisted, and the Admin cannot edit or hide them (they do not go through applyQuestions).
+export const regSecurityStep = () => ({
+  key: 'security', title: 'Security Questions', sub: 'For two-step verification',
+  heading: 'Choose Your Security Questions',
+  desc: 'When you sign in, you can answer these instead of entering the emailed code. Answers are not case-sensitive.',
+  questions: [
+    { id: 'sq1', core: true, required: true, label: 'Question 1', type: 'select', span: 'span 2', placeholder: 'Choose a question…', options: SECURITY_QUESTIONS },
+    { id: 'sq1_answer', core: true, required: true, label: 'Answer 1', type: 'text', span: 'span 2', placeholder: 'Your answer' },
+    { id: 'sq2', core: true, required: true, label: 'Question 2', type: 'select', span: 'span 2', placeholder: 'Choose a different question…', options: SECURITY_QUESTIONS },
+    { id: 'sq2_answer', core: true, required: true, label: 'Answer 2', type: 'text', span: 'span 2', placeholder: 'Your answer' },
+  ],
+});
 
 // Everything else stays in the Alumni Survey. Survey questions start Required, so they count toward progress;
 // the Admin can switch any of them off in Alumni Tracer.

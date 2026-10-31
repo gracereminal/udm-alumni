@@ -4,6 +4,7 @@ import ForgotPasswordView from '../../views/ForgotPasswordView';
 import { useAuth } from '../../context/AuthContext';
 import { ROLE_HOME } from '../../data/navigation';
 import { post } from '../../lib/api';
+import { homeFor } from '../../routes/guards';
 
 const button = (ok) => ({ bg: ok ? '#062A20' : '#E5E7EB', color: ok ? '#fff' : 'rgba(0,0,0,.38)', cursor: ok ? 'pointer' : 'not-allowed' });
 
@@ -35,7 +36,7 @@ export default function ChangePassword() {
     try {
       await post('/auth/change-password', { current, password: pw });
       const fresh = await refresh();
-      navigate(ROLE_HOME[(fresh || user).role], { replace: true });
+      navigate(fresh ? homeFor(fresh) : ROLE_HOME[user.role], { replace: true });
     } catch (err) {
       setBusy(false);
       if (err.fields && err.fields.current) setCurrentErr(err.fields.current);
